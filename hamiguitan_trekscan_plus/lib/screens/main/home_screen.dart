@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import '../../components/bottom_navigation.dart';
 import '../../components/do_and_dont.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -39,14 +38,6 @@ class _HomeScreenState extends State<HomeScreen> {
                   ],
                 ),
               ),
-            ),
-            BottomNavigation(
-              currentIndex: _selectedNavIndex,
-              onTap: (index) {
-                setState(() {
-                  _selectedNavIndex = index;
-                });
-              },
             ),
           ],
         ),
