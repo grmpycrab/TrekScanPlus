@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import '../../components/station_card.dart';
+import '../../data/stations.dart';
+import '../../data/stations.dart';
 
 class StationScreen extends StatefulWidget {
   const StationScreen({super.key});
@@ -67,7 +70,7 @@ class _StationScreenState extends State<StationScreen> {
         child: Row(
           children: [
             _buildTab(0, 'Visited (1)'),
-            _buildTab(1, 'Not Visited (15)'),
+            _buildTab(1, 'Not Visited (14)'),
           ],
         ),
       ),
@@ -109,7 +112,12 @@ class _StationScreenState extends State<StationScreen> {
             style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 16),
-          _buildStationCard('assets/images/station1.jpg'),
+          StationCard(
+            imagePath: 'assets/stations/test_station.png',
+            stationName: 'Crossing Stampa',
+            difficulty: 'Moderate',
+            elevation: 880,
+          ),
         ],
       ),
     );
@@ -128,31 +136,17 @@ class _StationScreenState extends State<StationScreen> {
           const SizedBox(height: 16),
           Expanded(
             child: ListView.builder(
-              itemCount: 15,
+              itemCount: stations.length,
               itemBuilder: (context, index) {
-                return _buildStationCard(
-                  'assets/images/station${index + 2}.jpg',
+                final station = stations[index];
+                return StationCard(
+                  imagePath: 'assets/stations/station${index + 1}.jpg',
+                  stationName: station.name,
+                  difficulty: station.difficulty,
+                  elevation: station.elevation,
                 );
               },
             ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildStationCard(String imagePath) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 16),
-      height: 200,
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(12),
-        image: DecorationImage(image: AssetImage(imagePath), fit: BoxFit.cover),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.1),
-            blurRadius: 8,
-            offset: const Offset(0, 4),
           ),
         ],
       ),
