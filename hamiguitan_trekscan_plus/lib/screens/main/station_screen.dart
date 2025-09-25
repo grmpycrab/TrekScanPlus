@@ -108,7 +108,7 @@ class _StationScreenState extends State<StationScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const Text(
-            'You visited these',
+            'You visited these', //visited stations
             style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 16),
