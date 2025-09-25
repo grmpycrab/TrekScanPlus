@@ -10,7 +10,7 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  int _selectedNavIndex = 0;
+  //int _selectedNavIndex = 0;
   int _selectedSegmentIndex = 0;
 
   @override

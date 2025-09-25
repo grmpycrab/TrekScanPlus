@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'screens/auth/login_screen.dart';
 import 'screens/auth/signup_screen.dart';
 import 'screens/main/main_screen.dart';
-import 'theme/color.dart';
 
 void main() {
   runApp(const MyApp());
@@ -14,10 +13,11 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      debugShowCheckedModeBanner: false,
       title: 'Hamiguitan TrekScan+',
       theme: ThemeData(
-        primaryColor: AppColors.primary,
-        colorScheme: ColorScheme.fromSeed(seedColor: AppColors.primary),
+        primaryColor: const Color(0xFF252B30),
+        colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF252B30)),
         useMaterial3: true,
       ),
       initialRoute: '/login',
