@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:qr_code_scanner/qr_code_scanner.dart';
+import 'package:mobile_scanner/mobile_scanner.dart';
+import '../../theme/color.dart';
 
 class ScannerScreen extends StatefulWidget {
   const ScannerScreen({super.key});
@@ -9,13 +10,12 @@ class ScannerScreen extends StatefulWidget {
 }
 
 class _ScannerScreenState extends State<ScannerScreen> {
-  final GlobalKey qrKey = GlobalKey(debugLabel: 'QR');
-  QRViewController? controller;
+  MobileScannerController controller = MobileScannerController();
   bool isFlashOn = false;
 
   @override
   void dispose() {
-    controller?.dispose();
+    controller.dispose();
     super.dispose();
   }
 
@@ -25,21 +25,25 @@ class _ScannerScreenState extends State<ScannerScreen> {
       backgroundColor: Colors.black,
       body: Stack(
         children: [
-          QRView(
-            key: qrKey,
-            onQRViewCreated: _onQRViewCreated,
-            overlay: QrScannerOverlayShape(
-              borderColor: Colors.white,
-              borderRadius: 10,
-              borderLength: 30,
-              borderWidth: 10,
-              cutOutSize: 300,
-            ),
+          MobileScanner(
+            controller: controller,
+            onDetect: (capture) {
+              final List<Barcode> barcodes = capture.barcodes;
+              for (final barcode in barcodes) {
+                debugPrint('Barcode found! ${barcode.rawValue}');
+                // Handle the scanned QR code here
+              }
+            },
           ),
+          _buildOverlay(),
           _buildControls(),
         ],
       ),
     );
+  }
+
+  Widget _buildOverlay() {
+    return CustomPaint(painter: ScannerOverlay(), child: Container());
   }
 
   Widget _buildControls() {
@@ -52,32 +56,39 @@ class _ScannerScreenState extends State<ScannerScreen> {
               children: [
                 GestureDetector(
                   onTap: () => Navigator.pop(context),
-                  child: const Icon(
+                  child: Icon(
                     Icons.arrow_back,
-                    color: Colors.white,
+                    color: AppColors.iconPrimary,
                     size: 28,
                   ),
                 ),
                 const Spacer(),
-                GestureDetector(
-                  onTap: () => Navigator.pop(context),
-                  child: Row(
-                    children: [
-                      Image.asset(
-                        'assets/icons/gallery.png',
+                Row(
+                  children: [
+                    IconButton(
+                      icon: Image.asset(
+                        'assets/icons/switch-camera.png',
                         width: 24,
                         height: 24,
-                        color: Colors.white,
+                        color: AppColors.iconPrimary,
                       ),
-                      const SizedBox(width: 8),
-                      Image.asset(
-                        'assets/icons/flash.png',
-                        width: 24,
-                        height: 24,
-                        color: Colors.white,
+                      onPressed: () {
+                        // Handle gallery selection
+                      },
+                    ),
+                    IconButton(
+                      icon: Icon(
+                        isFlashOn ? Icons.flash_on : Icons.flash_off,
+                        color: AppColors.iconPrimary,
                       ),
-                    ],
-                  ),
+                      onPressed: () {
+                        controller.toggleTorch();
+                        setState(() {
+                          isFlashOn = !isFlashOn;
+                        });
+                      },
+                    ),
+                  ],
                 ),
               ],
             ),
@@ -88,26 +99,14 @@ class _ScannerScreenState extends State<ScannerScreen> {
             child: Center(
               child: GestureDetector(
                 onTap: () {
-                  if (controller != null) {
-                    controller!.pauseCamera();
-                  }
+                  controller.stop();
                 },
                 child: Container(
                   width: 64,
                   height: 64,
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: AppColors.buttonText,
                     borderRadius: BorderRadius.circular(32),
-                  ),
-                  child: const Center(
-                    child: Text(
-                      'Stop',
-                      style: TextStyle(
-                        color: Colors.black,
-                        fontSize: 16,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
                   ),
                 ),
               ),
@@ -117,15 +116,92 @@ class _ScannerScreenState extends State<ScannerScreen> {
       ),
     );
   }
+}
 
-  void _onQRViewCreated(QRViewController controller) {
-    this.controller = controller;
-    controller.scannedDataStream.listen((scanData) {
-      // Handle QR code data here
-      if (scanData.code != null) {
-        // Process the QR code data
-        print('QR Code: ${scanData.code}');
-      }
-    });
+class ScannerOverlay extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = Colors.black54
+      ..style = PaintingStyle.fill;
+
+    const cutOutSize = 300.0;
+    final cutOutRect = Rect.fromCenter(
+      center: Offset(size.width / 2, size.height / 2),
+      width: cutOutSize,
+      height: cutOutSize,
+    );
+
+    // Draw overlay with cutout
+    canvas.drawPath(
+      Path.combine(
+        PathOperation.difference,
+        Path()..addRect(Rect.fromLTWH(0, 0, size.width, size.height)),
+        Path()..addRRect(
+          RRect.fromRectAndRadius(cutOutRect, const Radius.circular(12)),
+        ),
+      ),
+      paint,
+    );
+
+    // Draw corners
+    final borderPaint = Paint()
+      ..color = Colors.white
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 4;
+
+    const length = 30.0;
+    const padding = 4.0;
+
+    // Top left corner
+    canvas.drawLine(
+      cutOutRect.topLeft.translate(padding, padding),
+      cutOutRect.topLeft.translate(length + padding, padding),
+      borderPaint,
+    );
+    canvas.drawLine(
+      cutOutRect.topLeft.translate(padding, padding),
+      cutOutRect.topLeft.translate(padding, length + padding),
+      borderPaint,
+    );
+
+    // Top right corner
+    canvas.drawLine(
+      cutOutRect.topRight.translate(-padding, padding),
+      cutOutRect.topRight.translate(-(length + padding), padding),
+      borderPaint,
+    );
+    canvas.drawLine(
+      cutOutRect.topRight.translate(-padding, padding),
+      cutOutRect.topRight.translate(-padding, length + padding),
+      borderPaint,
+    );
+
+    // Bottom left corner
+    canvas.drawLine(
+      cutOutRect.bottomLeft.translate(padding, -padding),
+      cutOutRect.bottomLeft.translate(length + padding, -padding),
+      borderPaint,
+    );
+    canvas.drawLine(
+      cutOutRect.bottomLeft.translate(padding, -padding),
+      cutOutRect.bottomLeft.translate(padding, -(length + padding)),
+      borderPaint,
+    );
+
+    // Bottom right corner
+    canvas.drawLine(
+      cutOutRect.bottomRight.translate(-padding, -padding),
+      cutOutRect.bottomRight.translate(-(length + padding), -padding),
+      borderPaint,
+    );
+    canvas.drawLine(
+      cutOutRect.bottomRight.translate(-padding, -padding),
+      cutOutRect.bottomRight.translate(-padding, -(length + padding)),
+      borderPaint,
+    );
   }
+
+  @override
+  bool shouldRepaint(CustomPainter oldDelegate) => false;
 }
