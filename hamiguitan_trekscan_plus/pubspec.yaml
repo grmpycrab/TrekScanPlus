@@ -9,8 +9,9 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  qr_code_scanner: ^1.0.1
-  permission_handler: ^10.2.0
+  mobile_scanner: ^3.4.1
+  permission_handler: ^11.3.1
+  permission_handler_android: ^12.0.0  # Explicitly adding the Android implementation
 
 dev_dependencies:
   flutter_test:
@@ -24,4 +25,3 @@ flutter:
     - assets/images/
     - assets/icons/
     - assets/stations/
-    - lib/theme/

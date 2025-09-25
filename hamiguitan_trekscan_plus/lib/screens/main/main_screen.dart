@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import '../../components/bottom_navigation.dart';
 import 'home_screen.dart';
 import 'station_screen.dart';
-//import 'scanner_screen.dart';
+import 'scanner_screen.dart';
 import 'settings_screen.dart';
 
 class MainScreen extends StatefulWidget {
@@ -18,7 +18,7 @@ class _MainScreenState extends State<MainScreen> {
   final List<Widget> _screens = [
     const HomeScreen(),
     const StationScreen(),
-    const Placeholder(),
+    const ScannerScreen(),
     const Placeholder(), // Book screen placeholder
     const SettingsScreen(),
   ];

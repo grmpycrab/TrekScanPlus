@@ -24,10 +24,10 @@ android {
         applicationId = "com.example.hamiguitan_trekscan_plus"
         // You can update the following values to match your application needs.
         // For more information, see: https://flutter.dev/to/review-gradle-config.
-        minSdk = flutter.minSdkVersion
-        targetSdk = flutter.targetSdkVersion
-        versionCode = flutter.versionCode
-        versionName = flutter.versionName
+        minSdk = flutter.minSdkVersion // Explicitly set minimum SDK version
+        targetSdk = 33 // Set target SDK version
+        versionCode = 1
+        versionName = "1.0.0"
     }
 
     buildTypes {
