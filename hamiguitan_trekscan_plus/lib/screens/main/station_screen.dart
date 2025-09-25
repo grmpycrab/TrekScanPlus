@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../components/station_card.dart';
 import '../../data/stations.dart';
-import '../../data/stations.dart';
+import '../../theme/color.dart';
 
 class StationScreen extends StatefulWidget {
   const StationScreen({super.key});
@@ -16,7 +16,7 @@ class _StationScreenState extends State<StationScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.grey[100],
+      backgroundColor: AppColors.background,
       body: SafeArea(
         child: Column(
           children: [
@@ -38,18 +38,18 @@ class _StationScreenState extends State<StationScreen> {
   Widget _buildAppBar() {
     return Container(
       padding: const EdgeInsets.all(16),
-      color: const Color(0xFF252B30),
+      color: AppColors.primary,
       child: Row(
         children: [
           GestureDetector(
             onTap: () => Navigator.pop(context),
-            child: const Icon(Icons.arrow_back_ios, color: Colors.white),
+            child: Icon(Icons.arrow_back_ios, color: AppColors.iconPrimary),
           ),
           const SizedBox(width: 16),
           const Text(
             'Stations',
             style: TextStyle(
-              color: Colors.white,
+              color: AppColors.buttonText,
               fontSize: 20,
               fontWeight: FontWeight.bold,
             ),
@@ -64,7 +64,7 @@ class _StationScreenState extends State<StationScreen> {
       padding: const EdgeInsets.symmetric(horizontal: 16),
       child: Container(
         decoration: BoxDecoration(
-          color: Colors.grey[200],
+          color: AppColors.segmentBackground,
           borderRadius: BorderRadius.circular(8),
         ),
         child: Row(
@@ -85,7 +85,7 @@ class _StationScreenState extends State<StationScreen> {
         child: Container(
           padding: const EdgeInsets.symmetric(vertical: 12),
           decoration: BoxDecoration(
-            color: isSelected ? const Color(0xFF252B30) : Colors.transparent,
+            color: isSelected ? AppColors.primary : Colors.transparent,
             borderRadius: BorderRadius.circular(8),
           ),
           child: Text(

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'login_screen.dart';
 import '../main/main_screen.dart';
+import '../../theme/color.dart';
 
 class SignUpScreen extends StatelessWidget {
   const SignUpScreen({super.key});
@@ -8,7 +9,7 @@ class SignUpScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: AppColors.cardBackground,
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 24.0),
@@ -53,7 +54,7 @@ class SignUpScreen extends StatelessWidget {
                   Checkbox(
                     value: false,
                     onChanged: (value) {},
-                    activeColor: const Color(0xFF252B30),
+                    activeColor: AppColors.primary,
                   ),
                   const Text('Agree With Term & Condition'),
                 ],
@@ -67,7 +68,7 @@ class SignUpScreen extends StatelessWidget {
                   );
                 },
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF252B30),
+                  backgroundColor: AppColors.buttonPrimary,
                   padding: const EdgeInsets.symmetric(vertical: 16),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(8),
@@ -75,7 +76,7 @@ class SignUpScreen extends StatelessWidget {
                 ),
                 child: const Text(
                   'Sign up',
-                  style: TextStyle(color: Colors.white, fontSize: 16),
+                  style: TextStyle(color: AppColors.buttonText, fontSize: 16),
                 ),
               ),
               const SizedBox(height: 16),
@@ -84,7 +85,10 @@ class SignUpScreen extends StatelessWidget {
                   const Expanded(child: Divider()),
                   const Padding(
                     padding: EdgeInsets.symmetric(horizontal: 16.0),
-                    child: Text('OR', style: TextStyle(color: Colors.grey)),
+                    child: Text(
+                      'OR',
+                      style: TextStyle(color: AppColors.textSecondary),
+                    ),
                   ),
                   const Expanded(child: Divider()),
                 ],
@@ -94,7 +98,7 @@ class SignUpScreen extends StatelessWidget {
                 onPressed: () {},
                 style: OutlinedButton.styleFrom(
                   padding: const EdgeInsets.symmetric(vertical: 16),
-                  side: const BorderSide(color: Color(0xFF252B30)),
+                  side: BorderSide(color: AppColors.primary),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(8),
                   ),
@@ -102,7 +106,7 @@ class SignUpScreen extends StatelessWidget {
                 icon: Image.asset('assets/icons/google_icon.png', height: 24),
                 label: const Text(
                   'Continue with Google',
-                  style: TextStyle(color: Color(0xFF252B30), fontSize: 16),
+                  style: TextStyle(color: AppColors.textPrimary, fontSize: 16),
                 ),
               ),
               const SizedBox(height: 16),
@@ -122,7 +126,7 @@ class SignUpScreen extends StatelessWidget {
                     child: Text(
                       'Sign in',
                       style: TextStyle(
-                        color: const Color(0xFF252B30),
+                        color: AppColors.textPrimary,
                         fontWeight: FontWeight.bold,
                       ),
                     ),

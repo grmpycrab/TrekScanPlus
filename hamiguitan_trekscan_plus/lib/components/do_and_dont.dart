@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../theme/color.dart';
 
 class DoAndDont extends StatelessWidget {
   final int selectedIndex;
@@ -19,7 +20,7 @@ class DoAndDont extends StatelessWidget {
         children: [
           Container(
             decoration: BoxDecoration(
-              color: Colors.grey[200],
+              color: AppColors.segmentBackground,
               borderRadius: BorderRadius.circular(8),
             ),
             child: Row(
@@ -44,14 +45,14 @@ class DoAndDont extends StatelessWidget {
         child: Container(
           padding: const EdgeInsets.symmetric(vertical: 12),
           decoration: BoxDecoration(
-            color: isSelected ? const Color(0xFF252B30) : Colors.transparent,
+            color: isSelected ? AppColors.primary : Colors.transparent,
             borderRadius: BorderRadius.circular(8),
           ),
           child: Text(
             text,
             textAlign: TextAlign.center,
             style: TextStyle(
-              color: isSelected ? Colors.white : Colors.black,
+              color: isSelected ? AppColors.buttonText : AppColors.textPrimary,
               fontWeight: FontWeight.w500,
             ),
           ),
@@ -81,9 +82,9 @@ class DoAndDont extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppColors.cardBackground,
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: Colors.grey[300]!),
+        border: Border.all(color: AppColors.borderColor),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,

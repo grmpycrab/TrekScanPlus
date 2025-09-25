@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../theme/color.dart';
 
 class StationCard extends StatelessWidget {
   final String imagePath;
@@ -24,7 +25,7 @@ class StationCard extends StatelessWidget {
         image: DecorationImage(image: AssetImage(imagePath), fit: BoxFit.cover),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.1),
+            color: AppColors.shadowMedium,
             blurRadius: 8,
             offset: const Offset(0, 4),
           ),
@@ -36,7 +37,7 @@ class StationCard extends StatelessWidget {
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
-            colors: [Colors.transparent, Colors.black.withOpacity(0.7)],
+            colors: [Colors.transparent, AppColors.shadowOverlay],
           ),
         ),
         padding: const EdgeInsets.all(16),
@@ -74,7 +75,7 @@ class StationCard extends StatelessWidget {
         Text(
           stationName,
           style: const TextStyle(
-            color: Colors.white,
+            color: AppColors.buttonText,
             fontSize: 20,
             fontWeight: FontWeight.bold,
           ),
@@ -86,7 +87,7 @@ class StationCard extends StatelessWidget {
             const SizedBox(width: 4),
             Text(
               '$elevation MASL',
-              style: const TextStyle(color: Colors.white70, fontSize: 14),
+              style: TextStyle(color: AppColors.textLight, fontSize: 14),
             ),
           ],
         ),

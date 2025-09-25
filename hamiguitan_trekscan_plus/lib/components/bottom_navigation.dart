@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../theme/color.dart';
 
 class BottomNavigation extends StatelessWidget {
   final int currentIndex;
@@ -15,10 +16,10 @@ class BottomNavigation extends StatelessWidget {
     return Container(
       height: 65,
       decoration: BoxDecoration(
-        color: const Color(0xFF252B30),
+        color: AppColors.primary,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.2),
+            color: AppColors.shadowDark,
             blurRadius: 10,
             offset: const Offset(0, -3),
           ),
