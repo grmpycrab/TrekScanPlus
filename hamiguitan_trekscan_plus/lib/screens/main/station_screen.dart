@@ -140,7 +140,7 @@ class _StationScreenState extends State<StationScreen> {
               itemBuilder: (context, index) {
                 final station = stations[index];
                 return StationCard(
-                  imagePath: 'assets/stations/station${index + 1}.jpg',
+                  imagePath: 'assets/stations/black_mountain.jpg',
                   stationName: station.name,
                   difficulty: station.difficulty,
                   elevation: station.elevation,
