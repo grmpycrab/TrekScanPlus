@@ -214,8 +214,8 @@ This project is currently in active development as part of a BSIT Capstone Proje
 This is an academic capstone project. For collaboration inquiries, please contact the development team through the university.
 
 ### Development Team
-- **Shannen G. Mendoza** - Lead Developer
-- **Keynt Harly S. Adol** - Co-Developer
+- **Shannen G. Mendoza**
+- **Keynt Harly S. Adol**
 
 **Institution**: Davao Oriental State University  
 **Faculty**: Computing, Engineering, and Technology
@@ -227,7 +227,7 @@ This project is developed for academic purposes as part of a Bachelor of Science
 ## 📧 Contact
 
 For questions or collaboration opportunities:
-- Email: [University Contact Information]
+- Email: 
 - Institution: Davao Oriental State University
 - Location: City of Mati, Davao Oriental, Philippines
 
