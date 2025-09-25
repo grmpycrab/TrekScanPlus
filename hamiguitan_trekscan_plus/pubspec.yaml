@@ -24,3 +24,4 @@ flutter:
     - assets/images/
     - assets/icons/
     - assets/stations/
+    - lib/theme/

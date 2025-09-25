@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../components/do_and_dont.dart';
+import '../../theme/color.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -15,7 +16,7 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.grey[100],
+      backgroundColor: AppColors.background,
       body: SafeArea(
         child: Column(
           children: [
@@ -55,8 +56,8 @@ class _HomeScreenState extends State<HomeScreen> {
           Row(
             children: [
               const CircleAvatar(
-                backgroundColor: Color(0xFF252B30),
-                child: Icon(Icons.person, color: Colors.white),
+                backgroundColor: AppColors.primary,
+                child: Icon(Icons.person, color: AppColors.iconPrimary),
               ),
               const SizedBox(width: 12),
               Column(
@@ -64,7 +65,10 @@ class _HomeScreenState extends State<HomeScreen> {
                 children: [
                   const Text(
                     'Welcome,',
-                    style: TextStyle(color: Colors.grey, fontSize: 14),
+                    style: TextStyle(
+                      color: AppColors.textSecondary,
+                      fontSize: 14,
+                    ),
                   ),
                   const Text(
                     'Grmpycrab!',
@@ -87,7 +91,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   width: 8,
                   height: 8,
                   decoration: const BoxDecoration(
-                    color: Colors.red,
+                    color: AppColors.notificationDot,
                     shape: BoxShape.circle,
                   ),
                 ),
@@ -104,7 +108,7 @@ class _HomeScreenState extends State<HomeScreen> {
       margin: const EdgeInsets.symmetric(horizontal: 16),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: const Color(0xFF252B30),
+        color: AppColors.primary,
         borderRadius: BorderRadius.circular(12),
       ),
       child: Column(
@@ -112,12 +116,12 @@ class _HomeScreenState extends State<HomeScreen> {
         children: [
           const Row(
             children: [
-              Icon(Icons.landscape, color: Colors.white),
+              Icon(Icons.landscape, color: AppColors.iconPrimary),
               SizedBox(width: 8),
               Text(
                 'Mt. Hamiguitan',
                 style: TextStyle(
-                  color: Colors.white,
+                  color: AppColors.buttonText,
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
                 ),
@@ -127,7 +131,7 @@ class _HomeScreenState extends State<HomeScreen> {
           const SizedBox(height: 8),
           const Text(
             'Explore the unique beauty and biodiversity of Mt. Hamiguitan, a UNESCO World Heritage Site.',
-            style: TextStyle(color: Colors.white70),
+            style: TextStyle(color: AppColors.textLight),
           ),
         ],
       ),
