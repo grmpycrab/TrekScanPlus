@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../theme/color.dart';
+import './trek_tips.dart';
 
 class DoAndDont extends StatelessWidget {
   final int selectedIndex;
@@ -25,13 +26,16 @@ class DoAndDont extends StatelessWidget {
             ),
             child: Row(
               children: [
-                _buildSegment(0, 'Tips & Tricks'),
-                _buildSegment(1, "Do's & Dont's"),
+                _buildSegment(0, "Do's & Dont's"),
+                _buildSegment(1, 'Tips & Tricks'),
               ],
             ),
           ),
           const SizedBox(height: 20),
-          if (selectedIndex == 0) _buildTipsList(),
+          if (selectedIndex == 0)
+            _buildTipsList()
+          else if (selectedIndex == 1)
+            const TrekTips(),
         ],
       ),
     );
@@ -66,18 +70,69 @@ class DoAndDont extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const Text(
-          'Tips',
-          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+          'Do\'s',
+          style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
         ),
-        const SizedBox(height: 12),
-        _buildTipCard(1),
-        _buildTipCard(2),
-        _buildTipCard(3),
+        const SizedBox(height: 16),
+        _buildCard(
+          'Secure a permit ahead of time',
+          'You must coordinate with the MHRWS Protected Area Management Office (PAMO) to get the necessary permits.',
+        ),
+        _buildCard(
+          'Submit required documentation',
+          'This usually includes a medical certificate (to show you\'re fit for the trek), a valid ID, and sometimes a signed waiver.',
+        ),
+        _buildCard(
+          'Hire a local guide',
+          'Guided treks are mandatory. Guides help with navigation, safety, and also contribute to local livelihoods.',
+        ),
+        _buildCard(
+          'Follow trail regulations',
+          'Stay in approved trails, use existing campsites; don\'t cut new paths or camp anywhere not allowed.',
+        ),
+        _buildCard(
+          'Leave no trace',
+          'Bring down all your trash. Don\'t leave behind plastic, wrappers, bottles, etc. What you bring up, bring down.',
+        ),
+        _buildCard(
+          'Respect wildlife and plants',
+          'Don\'t feed animals, don\'t disturb nesting or breeding areas, don\'t pick or damage plants, saplings, or fungus.',
+        ),
+        const SizedBox(height: 24),
+        const Text(
+          'Don\'ts',
+          style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+        ),
+        const SizedBox(height: 16),
+        _buildCard(
+          'Don\'t walk in without permit',
+          'Walk-in trekkers are generally not allowed.',
+        ),
+        _buildCard(
+          'Don\'t stray off the trail',
+          'Some trails are permanently closed or are open only by special arrangement.',
+        ),
+        _buildCard(
+          'Don\'t litter, burn, or pollute',
+          'No dumping waste, no throwing cigarette butts, no bathing with soap in streams.',
+        ),
+        _buildCard(
+          'Don\'t disturb wildlife or pick plants',
+          'This includes feeding animals, harvesting flora, removing anything from its place. It\'s a protected area with many endemic species.',
+        ),
+        _buildCard(
+          'Don\'t ignore physical fitness & safety',
+          'The trails are challenging. If you\'re not prepared (fitness-wise or gear-wise), you may be putting yourself or others at risk.',
+        ),
+        _buildCard(
+          'Don\'t set off fireworks or make noise',
+          'Disrupts wildlife and other trekkers. Respect the quietness of the forest.',
+        ),
       ],
     );
   }
 
-  Widget _buildTipCard(int number) {
+  Widget _buildCard(String title, String content) {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(16),
@@ -86,20 +141,15 @@ class DoAndDont extends StatelessWidget {
         borderRadius: BorderRadius.circular(8),
         border: Border.all(color: AppColors.borderColor),
       ),
-      child: Row(
+      child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            '$number.',
+            title,
             style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
           ),
-          const SizedBox(width: 8),
-          const Expanded(
-            child: Text(
-              'Tip content will go here',
-              style: TextStyle(fontSize: 16),
-            ),
-          ),
+          const SizedBox(height: 8),
+          Text(content, style: const TextStyle(fontSize: 14)),
         ],
       ),
     );
