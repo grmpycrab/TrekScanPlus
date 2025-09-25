@@ -73,7 +73,8 @@ class _ScannerScreenState extends State<ScannerScreen> {
                         color: AppColors.iconPrimary,
                       ),
                       onPressed: () {
-                        // Handle gallery selection
+                        // handle siwtch camera
+                        controller.switchCamera();
                       },
                     ),
                     IconButton(
