@@ -53,19 +53,40 @@ class StationService {
   }
 
   Future<void> updateStationVisited(String stationId, bool isVisited) async {
-    // Update station in memory
-    var station = _stations.firstWhere((s) => s.id == stationId);
-    station.updateVisited(isVisited);
+    try {
+      // Find the station by ID or temporary ID
+      var station = _stations.firstWhere(
+        (s) =>
+            s.id == stationId ||
+            (s.id.startsWith('stn') && s.id.substring(3) == stationId),
+      );
 
-    // Update visited stations in SharedPreferences
-    Set<String> visitedStationIds =
-        prefs.getStringList(VISITED_STATIONS_KEY)?.toSet() ?? {};
-    if (isVisited) {
-      visitedStationIds.add(stationId);
-    } else {
-      visitedStationIds.remove(stationId);
+      // Update station in memory
+      station.updateVisited(isVisited);
+
+      // Store both the actual ID and QR code (if different)
+      Set<String> visitedStationIds =
+          prefs.getStringList(VISITED_STATIONS_KEY)?.toSet() ?? {};
+
+      if (isVisited) {
+        visitedStationIds.add(station.id);
+        // If this is a QR code different from station.id, store it too
+        if (stationId != station.id) {
+          await prefs.setString('qr_key_${station.id}', stationId);
+        }
+      } else {
+        visitedStationIds.remove(station.id);
+        await prefs.remove('qr_key_${station.id}');
+      }
+
+      await prefs.setStringList(
+        VISITED_STATIONS_KEY,
+        visitedStationIds.toList(),
+      );
+    } catch (e) {
+      print('Error updating station visited status: $e');
+      rethrow;
     }
-    await prefs.setStringList(VISITED_STATIONS_KEY, visitedStationIds.toList());
   }
 
   Future<void> resetAllStations() async {
@@ -77,9 +98,32 @@ class StationService {
 
   StationData? getStationById(String id) {
     try {
+      // First try to find by exact ID
       return _stations.firstWhere((station) => station.id == id);
     } catch (e) {
-      return null;
+      try {
+        // Check the metadata for alternative keys
+        return _stations.firstWhere((station) {
+          // Check if the station has metadata with alternative keys
+          if (station.metadata.containsKey('altKeys')) {
+            List<String> altKeys = List<String>.from(
+              station.metadata['altKeys'],
+            );
+            return altKeys.contains(id);
+          }
+          return false;
+        });
+      } catch (e) {
+        try {
+          // If still not found and the ID starts with 'stn', try to match by number
+          if (id.startsWith('stn')) {
+            return _stations.firstWhere((s) => s.id == id);
+          }
+        } catch (e) {
+          // Ignore and return null
+        }
+        return null;
+      }
     }
   }
 
@@ -93,5 +137,9 @@ class StationService {
 
   List<StationData> getUnvisitedStations() {
     return _stations.where((station) => !station.isVisited).toList();
+  }
+
+  Future<String?> getQRKeyForStation(String stationId) async {
+    return prefs.getString('qr_key_$stationId');
   }
 }

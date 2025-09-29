@@ -1,6 +1,6 @@
 [
     {
-        "id": "stn1",
+        "id": "56okrkt0pb",
         "name": "Station 1: UNESCO Marker",
         "description": "The starting point of the trek, marked as a UNESCO heritage entry marker.",
         "difficulty": "Easy",
@@ -76,7 +76,7 @@
         "isCheckpoint": true
     },
     {
-        "id": "stn5",
+        "id": "33ii1jrc5s",
         "name": "Station 5: Camp 4",
         "description": "Resting camp site for trekkers.",
         "difficulty": "Moderate",
@@ -95,7 +95,7 @@
         "isCheckpoint": true
     },
     {
-        "id": "stn6",
+        "id": "vaatj8uomu",
         "name": "Station 6: Uwang-Uwang Trail",
         "description": "Trail segment known as Uwang-Uwang.",
         "difficulty": "Hard",
@@ -137,7 +137,7 @@
         "isCheckpoint": true
     },
     {
-        "id": "stn8",
+        "id": "utvrrkfkh9",
         "name": "Station 8: Camp 3",
         "description": "Another camp site along the trail.",
         "difficulty": "Moderate",
@@ -156,7 +156,7 @@
         "isCheckpoint": true
     },
     {
-        "id": "stn9",
+        "id": "62n05d42d6",
         "name": "Station 9: Pygmy Field",
         "description": "Unique pygmy forest ecosystem with dwarf trees.",
         "difficulty": "Moderate",
@@ -259,7 +259,7 @@
         "isCheckpoint": true
     },
     {
-        "id": "stn15",
+        "id": "44r5tebjrc",
         "name": "Station 15: Black Mountain",
         "description": "A mountain segment with dark rock formations.",
         "difficulty": "Moderate",
@@ -278,7 +278,7 @@
         "isCheckpoint": false
     },
     {
-        "id": "stn16",
+        "id": "r5kntj3sae",
         "name": "Station 16: Twin Falls",
         "description": "Twin waterfall attraction along the trek.",
         "difficulty": "Moderate",

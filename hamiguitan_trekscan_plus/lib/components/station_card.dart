@@ -6,6 +6,8 @@ class StationCard extends StatelessWidget {
   final String stationName;
   final String difficulty;
   final int elevation;
+  final bool isVisited;
+  final VoidCallback? onTap;
 
   const StationCard({
     super.key,
@@ -13,44 +15,64 @@ class StationCard extends StatelessWidget {
     required this.stationName,
     required this.difficulty,
     required this.elevation,
+    required this.isVisited,
+    this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 16),
-      height: 200,
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(12),
-        image: DecorationImage(
-          image: AssetImage('assets/images/$imagePath'),
-          fit: BoxFit.cover,
-          onError: (_, __) {
-            debugPrint('Error loading image: $imagePath');
-          },
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.shadowMedium,
-            blurRadius: 8,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
+    return GestureDetector(
+      onTap: isVisited
+          ? onTap
+          : () {
+              // Show a message if the station hasn't been scanned yet
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text(
+                    'Scan the QR code at this station to unlock its details',
+                  ),
+                  duration: Duration(seconds: 2),
+                ),
+              );
+            },
       child: Container(
+        margin: const EdgeInsets.only(bottom: 16),
+        height: 200,
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(12),
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [Colors.transparent, AppColors.shadowOverlay],
+          image: DecorationImage(
+            image: AssetImage('assets/images/$imagePath'),
+            fit: BoxFit.cover,
+            colorFilter: isVisited
+                ? null
+                : ColorFilter.mode(Colors.grey, BlendMode.saturation),
+            onError: (_, __) {
+              debugPrint('Error loading image: $imagePath');
+            },
           ),
+          boxShadow: [
+            BoxShadow(
+              color: AppColors.shadowMedium,
+              blurRadius: 8,
+              offset: const Offset(0, 4),
+            ),
+          ],
         ),
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [_buildDifficultyTag(), _buildStationInfo()],
+        child: Container(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(12),
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [Colors.transparent, AppColors.shadowOverlay],
+            ),
+          ),
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [_buildDifficultyTag(), _buildStationInfo()],
+          ),
         ),
       ),
     );

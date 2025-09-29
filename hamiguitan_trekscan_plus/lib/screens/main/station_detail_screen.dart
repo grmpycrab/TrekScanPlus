@@ -9,41 +9,46 @@ class StationDetailScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (station == null) {
+    try {
+      return Scaffold(
+        body: CustomScrollView(
+          slivers: [
+            _buildAppBar(),
+            SliverToBoxAdapter(
+              child: SingleChildScrollView(
+                child: Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _buildStationInfo(),
+                      const SizedBox(height: 24),
+                      _buildDescription(),
+                      if (station.warnings.isNotEmpty) ...[
+                        const SizedBox(height: 24),
+                        _buildWarnings(),
+                      ],
+                      if (station.flora.isNotEmpty ||
+                          station.fauna.isNotEmpty) ...[
+                        const SizedBox(height: 24),
+                        _buildBiodiversity(),
+                      ],
+                      const SizedBox(height: 24),
+                      _buildMetadata(),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      );
+    } catch (e) {
       return const Scaffold(
         body: Center(child: Text('Error: Station data not available')),
       );
     }
-    return Scaffold(
-      body: CustomScrollView(
-        slivers: [
-          _buildAppBar(),
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _buildStationInfo(),
-                  const SizedBox(height: 24),
-                  _buildDescription(),
-                  if (station.warnings.isNotEmpty) ...[
-                    const SizedBox(height: 24),
-                    _buildWarnings(),
-                  ],
-                  if (station.flora.isNotEmpty || station.fauna.isNotEmpty) ...[
-                    const SizedBox(height: 24),
-                    _buildBiodiversity(),
-                  ],
-                  const SizedBox(height: 24),
-                  _buildMetadata(),
-                ],
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
   }
 
   Widget _buildAppBar() {
@@ -70,66 +75,79 @@ class StationDetailScreen extends StatelessWidget {
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                _buildInfoItem(
-                  Icons.height,
-                  '${station.elevation} MASL',
-                  'Elevation',
+        child: IntrinsicHeight(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              IntrinsicHeight(
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Flexible(
+                      flex: 1,
+                      child: _buildInfoItem(
+                        Icons.height,
+                        '${station.elevation} MASL',
+                        'Elevation',
+                      ),
+                    ),
+                    const SizedBox(width: 24),
+                    Flexible(
+                      flex: 1,
+                      child: _buildInfoItem(
+                        Icons.trending_up,
+                        station.difficulty,
+                        'Difficulty',
+                      ),
+                    ),
+                  ],
                 ),
-                const SizedBox(width: 24),
+              ),
+              if (station.steps != null) ...[
+                const SizedBox(height: 16),
                 _buildInfoItem(
-                  Icons.trending_up,
-                  station.difficulty,
-                  'Difficulty',
+                  Icons.directions_walk,
+                  '${station.steps} steps',
+                  'From Previous',
                 ),
               ],
-            ),
-            if (station.steps != null) ...[
-              const SizedBox(height: 16),
-              _buildInfoItem(
-                Icons.directions_walk,
-                '${station.steps} steps',
-                'From Previous',
-              ),
             ],
-          ],
+          ),
         ),
       ),
     );
   }
 
   Widget _buildInfoItem(IconData icon, String value, String label) {
-    return Expanded(
-      child: ConstrainedBox(
-        constraints: const BoxConstraints(minHeight: 0),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Icon(icon, size: 16, color: AppColors.primary),
-                const SizedBox(width: 8),
-                Text(
+    return Container(
+      constraints: const BoxConstraints(minHeight: 50),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(icon, size: 16, color: AppColors.primary),
+              const SizedBox(width: 8),
+              Flexible(
+                child: Text(
                   value,
                   style: const TextStyle(
                     fontWeight: FontWeight.bold,
                     fontSize: 16,
                   ),
                 ),
-              ],
-            ),
-            const SizedBox(height: 4),
-            Text(
-              label,
-              style: TextStyle(color: AppColors.textSecondary, fontSize: 12),
-            ),
-          ],
-        ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 4),
+          Text(
+            label,
+            style: TextStyle(color: AppColors.textSecondary, fontSize: 12),
+          ),
+        ],
       ),
     );
   }

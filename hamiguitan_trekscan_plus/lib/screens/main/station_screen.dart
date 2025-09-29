@@ -148,21 +148,34 @@ class _StationScreenState extends State<StationScreen> {
               itemCount: visitedStations.length,
               itemBuilder: (context, index) {
                 final station = visitedStations[index];
+                // Only allow navigation if the station is actually visited
                 return GestureDetector(
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) =>
-                            StationDetailScreen(station: station),
-                      ),
-                    );
-                  },
+                  onTap: station.isVisited
+                      ? () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) =>
+                                  StationDetailScreen(station: station),
+                            ),
+                          );
+                        }
+                      : () {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text(
+                                'Scan the QR code at this station to unlock its details',
+                              ),
+                              duration: Duration(seconds: 2),
+                            ),
+                          );
+                        },
                   child: StationCard(
                     imagePath: station.images.first,
                     stationName: station.name,
                     difficulty: station.difficulty,
                     elevation: station.elevation,
+                    isVisited: true,
                   ),
                 );
               },
@@ -193,11 +206,13 @@ class _StationScreenState extends State<StationScreen> {
                 final station = unvisitedStations[index];
                 return GestureDetector(
                   onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) =>
-                            StationDetailScreen(station: station),
+                    // Always show message for unvisited stations
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text(
+                          'Scan the QR code at this station to unlock its details',
+                        ),
+                        duration: Duration(seconds: 2),
                       ),
                     );
                   },
@@ -206,6 +221,7 @@ class _StationScreenState extends State<StationScreen> {
                     stationName: station.name,
                     difficulty: station.difficulty,
                     elevation: station.elevation,
+                    isVisited: false,
                   ),
                 );
               },
