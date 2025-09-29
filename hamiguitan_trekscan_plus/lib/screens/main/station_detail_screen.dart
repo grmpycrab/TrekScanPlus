@@ -127,14 +127,6 @@ class _StationDetailScreenState extends State<StationDetailScreen> {
                   'From Previous Station',
                 ),
               ],
-              if (station.nextStationId != null) ...[
-                const SizedBox(height: 16),
-                _buildInfoItem(
-                  Icons.arrow_forward,
-                  station.nextStationId,
-                  'Next Station',
-                ),
-              ],
               if (station.isCheckpoint) ...[
                 const SizedBox(height: 16),
                 _buildInfoItem(Icons.flag, 'Major Checkpoint', 'Station Type'),
@@ -220,7 +212,7 @@ class _StationDetailScreenState extends State<StationDetailScreen> {
     final regex = RegExp('$direction:(\\d+)°(\\d+)\'(\\d+\\.\\d+)\'\'');
     final match = regex.firstMatch(coordinates);
     if (match != null) {
-      return '${match.group(1)}° ${match.group(2)}\' ${match.group(3)}\"';
+      return '${match.group(1)}° ${match.group(2)}\' ${match.group(3)}"';
     }
     return coordinates;
   }
