@@ -13,9 +13,31 @@ class StationScreen extends StatefulWidget {
 
 class _StationScreenState extends State<StationScreen> {
   int _selectedTabIndex = 0;
+  late StationService _stationService;
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _initializeStationService();
+  }
+
+  Future<void> _initializeStationService() async {
+    _stationService = await StationService.init();
+    await _stationService.loadStations();
+    if (mounted) {
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
+    if (_isLoading) {
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    }
+
     return Scaffold(
       backgroundColor: AppColors.background,
       body: SafeArea(
@@ -72,11 +94,11 @@ class _StationScreenState extends State<StationScreen> {
           children: [
             _buildTab(
               0,
-              'Visited (${StationService().getVisitedStations().length})',
+              'Visited (${_stationService.getVisitedStations().length})',
             ),
             _buildTab(
               1,
-              'Not Visited (${StationService().getUnvisitedStations().length})',
+              'Not Visited (${_stationService.getUnvisitedStations().length})',
             ),
           ],
         ),
@@ -109,7 +131,7 @@ class _StationScreenState extends State<StationScreen> {
   }
 
   Widget _buildVisitedStations() {
-    final visitedStations = StationService().getVisitedStations();
+    final visitedStations = _stationService.getVisitedStations();
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -152,7 +174,7 @@ class _StationScreenState extends State<StationScreen> {
   }
 
   Widget _buildNotVisitedStations() {
-    final unvisitedStations = StationService().getUnvisitedStations();
+    final unvisitedStations = _stationService.getUnvisitedStations();
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),

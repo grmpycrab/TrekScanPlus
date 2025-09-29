@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:permission_handler/permission_handler.dart';
-import '../../models/station_data.dart';
 import '../../theme/color.dart';
 import '../../services/station_service.dart';
 import 'station_detail_screen.dart';
@@ -18,6 +17,8 @@ class _ScannerScreenState extends State<ScannerScreen>
   MobileScannerController? controller;
   bool isFlashOn = false;
   bool hasPermission = false;
+  late StationService stationService;
+  bool _isLoading = true;
 
   @override
   void initState() {
@@ -34,7 +35,13 @@ class _ScannerScreenState extends State<ScannerScreen>
 
     if (hasPermission) {
       controller = MobileScannerController();
-      await StationService().initialize(); // Initialize station data
+      stationService = await StationService.init();
+      await stationService.loadStations(); // Load station data
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
     }
   }
 
@@ -54,7 +61,7 @@ class _ScannerScreenState extends State<ScannerScreen>
 
   @override
   Widget build(BuildContext context) {
-    if (!hasPermission) {
+    if (!hasPermission || _isLoading) {
       return Scaffold(
         backgroundColor: Colors.black,
         body: Center(
@@ -66,10 +73,13 @@ class _ScannerScreenState extends State<ScannerScreen>
                 style: TextStyle(color: Colors.white),
               ),
               const SizedBox(height: 16),
-              ElevatedButton(
-                onPressed: _initializeScanner,
-                child: const Text('Grant Permission'),
-              ),
+              if (_isLoading)
+                const CircularProgressIndicator()
+              else
+                ElevatedButton(
+                  onPressed: _initializeScanner,
+                  child: const Text('Grant Permission'),
+                ),
             ],
           ),
         ),
@@ -106,46 +116,26 @@ class _ScannerScreenState extends State<ScannerScreen>
               final code = capture.barcodes.first.rawValue;
               if (code == null) return;
 
-              final stationService = StationService();
-              final station = await stationService.getStationById(code);
+              final station = stationService.getStationById(code);
 
               if (station != null) {
                 // Mark station as visited and save
-                final updatedStation = StationData(
-                  id: station.id,
-                  name: station.name,
-                  description: station.description,
-                  difficulty: station.difficulty,
-                  elevation: station.elevation,
-                  coordinates: station.coordinates,
-                  images: station.images,
-                  metadata: station.metadata,
-                  lastScanned: DateTime.now(),
-                  steps: station.steps,
-                  nextStationId: station.nextStationId,
-                  flora: station.flora,
-                  fauna: station.fauna,
-                  warnings: station.warnings,
-                  isCheckpoint: station.isCheckpoint,
-                  isVisited: true,
-                );
-
-                await stationService.updateStation(updatedStation);
+                await stationService.updateStationVisited(code, true);
 
                 if (!mounted) return;
                 await Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (context) =>
-                        StationDetailScreen(station: updatedStation),
+                    builder: (context) => StationDetailScreen(station: station),
                   ),
                 );
               } else {
                 if (!mounted) return;
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(
-                    content: Text('Invalid QR code or station not found'),
+                    content: Text('Invalid QR code - Station not found'),
                     backgroundColor: Colors.red,
+                    duration: Duration(seconds: 2),
                   ),
                 );
               }

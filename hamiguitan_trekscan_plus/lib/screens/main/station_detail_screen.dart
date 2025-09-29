@@ -47,7 +47,16 @@ class StationDetailScreen extends StatelessWidget {
       pinned: true,
       flexibleSpace: FlexibleSpaceBar(
         title: Text(station.name),
-        background: Image.asset(station.images.first, fit: BoxFit.cover),
+        background: Image.asset(
+          'assets/images/${station.images.first}',
+          fit: BoxFit.cover,
+          errorBuilder: (context, error, stackTrace) {
+            return Container(
+              color: Colors.grey[300],
+              child: const Icon(Icons.image_not_supported, size: 50),
+            );
+          },
+        ),
       ),
     );
   }
