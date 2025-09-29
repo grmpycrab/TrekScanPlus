@@ -1,239 +1,283 @@
 [
     {
-        "id": "stn1",
+        "id": "56okrkt0pb",
         "name": "Station 1: UNESCO Marker",
-        "description": "The starting point of the trek, marked as a UNESCO heritage entry marker.",
+        "description": "The entry point to Mt. Hamiguitan, marked as part of its UNESCO World Heritage designation.",
         "difficulty": "Easy",
         "elevation": 449,
         "coordinates": "N:06°44’10.65’’ E:126°08’29.99’’",
         "images": [
             "station1.jpg"
         ],
-        "metadata": {},
-        "lastScanned": null,
         "steps": null,
+        "distanceToNextKm": null,
         "nextStationId": "hu2c5c0kfn",
-        "flora": [],
-        "fauna": [],
-        "warnings": {},
+        "nextStationName": "Station 2: Crossing Stampa",
+        "flora": [
+            "Dipterocarp trees"
+        ],
+        "fauna": [
+            "Philippine deer"
+        ],
+        "warnings": {
+            "general": "Stay with your guide at all times."
+        },
         "isCheckpoint": true
     },
     {
         "id": "hu2c5c0kfn",
         "name": "Station 2: Crossing Stampa",
-        "description": "Trail crossing point named Stampa.",
+        "description": "A forest trail crossing point shaded by tall native trees.",
         "difficulty": "Easy",
         "elevation": 682,
         "coordinates": "N:06°44’05.54’’ E:126°08’34.09’’",
         "images": [
             "station2.jpg"
         ],
-        "metadata": {},
-        "lastScanned": null,
         "steps": 948,
+        "distanceToNextKm": 0.7,
         "nextStationId": "um6j8dnii4",
-        "flora": [],
-        "fauna": [],
+        "nextStationName": "Station 3: Puting Bato",
+        "flora": [
+            "Ferns"
+        ],
+        "fauna": [
+            "Long-tailed macaque"
+        ],
         "warnings": {},
         "isCheckpoint": false
     },
     {
         "id": "um6j8dnii4",
         "name": "Station 3: Puting Bato",
-        "description": "Rocky area known as Puting Bato.",
+        "description": "A white rock formation offering a rest point along the trail.",
         "difficulty": "Moderate",
         "elevation": 623,
         "coordinates": "N:06°43’46.66’’ E:126°09’22.06’’",
         "images": [
             "station3.jpg"
         ],
-        "metadata": {},
-        "lastScanned": null,
         "steps": null,
+        "distanceToNextKm": null,
         "nextStationId": "3ko938o2gb",
-        "flora": [],
-        "fauna": [],
+        "nextStationName": "Station 4: Lantawan 1",
+        "flora": [
+            "Orchids"
+        ],
+        "fauna": [
+            "Civets"
+        ],
         "warnings": {},
         "isCheckpoint": false
     },
     {
         "id": "3ko938o2gb",
         "name": "Station 4: Lantawan 1",
-        "description": "Viewpoint area for resting and observation.",
+        "description": "A viewing point overlooking the lower forest canopy.",
         "difficulty": "Moderate",
         "elevation": 830,
         "coordinates": "N:06°43’23.06’’ E:126°09’38.12’’",
         "images": [
             "station4.jpg"
         ],
-        "metadata": {},
-        "lastScanned": null,
         "steps": 5194,
-        "nextStationId": "stn5",
-        "flora": [],
-        "fauna": [],
-        "warnings": {},
+        "distanceToNextKm": 4.0,
+        "nextStationId": "33ii1jrc5s",
+        "nextStationName": "Station 5: Camp 4",
+        "flora": [
+            "Rattan"
+        ],
+        "fauna": [
+            "Hornbills"
+        ],
+        "warnings": {
+            "cliff": "Do not lean over the ledges."
+        },
         "isCheckpoint": true
     },
     {
-        "id": "stn5",
+        "id": "33ii1jrc5s",
         "name": "Station 5: Camp 4",
-        "description": "Resting camp site for trekkers.",
+        "description": "A resting camp for trekkers before entering higher elevations.",
         "difficulty": "Moderate",
         "elevation": 908,
         "coordinates": "N:06°43’23.06’’ E:126°09’38.21’’",
         "images": [
             "station5.jpg"
         ],
-        "metadata": {},
-        "lastScanned": null,
         "steps": 8200,
-        "nextStationId": "stn6",
-        "flora": [],
-        "fauna": [],
+        "distanceToNextKm": 6.3,
+        "nextStationId": "vaatj8uomu",
+        "nextStationName": "Station 6: Uwang-Uwang Trail",
+        "flora": [
+            "Bamboo"
+        ],
+        "fauna": [
+            "Wild pigs"
+        ],
         "warnings": {},
         "isCheckpoint": true
     },
     {
-        "id": "stn6",
+        "id": "vaatj8uomu",
         "name": "Station 6: Uwang-Uwang Trail",
-        "description": "Trail segment known as Uwang-Uwang.",
+        "description": "A steep trail section lined with dense montane forest.",
         "difficulty": "Hard",
         "elevation": 1121,
         "coordinates": "N:06°43’56.04’’ E:126°10’38.58’’",
         "images": [
             "station6.jpg"
         ],
-        "metadata": {},
-        "lastScanned": null,
-        "steps": null,
+        "steps": 2,
+        "distanceToNextKm": 0.0,
         "nextStationId": "cbensi5juq",
-        "flora": [],
-        "fauna": [],
-        "warnings": {},
+        "nextStationName": "Station 7: Lantawan 2",
+        "flora": [
+            "Mosses"
+        ],
+        "fauna": [
+            "Butterflies"
+        ],
+        "warnings": {
+            "slippery": "Trail may be muddy and slick."
+        },
         "isCheckpoint": false
     },
     {
         "id": "cbensi5juq",
         "name": "Station 7: Lantawan 2",
-        "description": "Second viewing point along the trek.",
+        "description": "A second viewpoint with higher elevation and panoramic views.",
         "difficulty": "Moderate",
         "elevation": 1215,
         "coordinates": "N:06°43’53.30’’ E:126°10’41.70’’",
         "images": [
             "station7.jpg"
         ],
-        "metadata": {
-            "altKeys": [
-                "fcuvr8h9fb"
-            ]
-        },
-        "lastScanned": null,
         "steps": 3767,
-        "nextStationId": "stn8",
-        "flora": [],
-        "fauna": [],
+        "distanceToNextKm": 2.9,
+        "nextStationId": "utvrrkfkh9",
+        "nextStationName": "Station 8: Camp 3",
+        "flora": [
+            "Wild orchids"
+        ],
+        "fauna": [
+            "Philippine eagle (sightings)"
+        ],
         "warnings": {},
         "isCheckpoint": true
     },
     {
-        "id": "stn8",
+        "id": "utvrrkfkh9",
         "name": "Station 8: Camp 3",
-        "description": "Another camp site along the trail.",
+        "description": "Another camp site for resting and overnight stops.",
         "difficulty": "Moderate",
         "elevation": 1190,
         "coordinates": "N:06°43’34.44’’ E:126°11’03.75’’",
         "images": [
             "station8.jpg"
         ],
-        "metadata": {},
-        "lastScanned": null,
         "steps": 6627,
-        "nextStationId": "stn9",
-        "flora": [],
-        "fauna": [],
+        "distanceToNextKm": 5.1,
+        "nextStationId": "62n05d42d6",
+        "nextStationName": "Station 9: Pygmy Field",
+        "flora": [
+            "Tree ferns"
+        ],
+        "fauna": [
+            "Owls"
+        ],
         "warnings": {},
         "isCheckpoint": true
     },
     {
-        "id": "stn9",
+        "id": "62n05d42d6",
         "name": "Station 9: Pygmy Field",
-        "description": "Unique pygmy forest ecosystem with dwarf trees.",
+        "description": "An iconic site with a bonsai forest of century-old dwarf trees.",
         "difficulty": "Moderate",
         "elevation": 1214,
         "coordinates": "N:06°43’12.97’’ E:126°11’00.22’’",
         "images": [
             "station9.jpg"
         ],
-        "metadata": {},
-        "lastScanned": null,
         "steps": 1595,
+        "distanceToNextKm": 1.2,
         "nextStationId": "g5iabiveqd",
+        "nextStationName": "Station 10/11: Lantawan 3 / Mossy Forest",
         "flora": [
-            "Pygmy dipterocarps"
+            "Bonsai trees"
         ],
-        "fauna": [],
-        "warnings": {},
+        "fauna": [
+            "Mountain shrew"
+        ],
+        "warnings": {
+            "plants": "Do not touch or step on pygmy trees."
+        },
         "isCheckpoint": false
     },
     {
         "id": "g5iabiveqd",
         "name": "Station 10/11: Lantawan 3 / Mossy Forest",
-        "description": "Viewpoint and mossy forest ecosystem.",
+        "description": "A mossy forest ecosystem with unique biodiversity.",
         "difficulty": "Hard",
         "elevation": 1363,
         "coordinates": "N:06°42’46.08’’ E:126°11’14.02’’",
         "images": [
             "station10.jpg"
         ],
-        "metadata": {
-            "altKeys": [
-                "hvv6lp6bha"
-            ]
-        },
-        "lastScanned": null,
         "steps": 5241,
+        "distanceToNextKm": 4.0,
         "nextStationId": "79t42cmo77",
+        "nextStationName": "Station 12: Tinagong Dagat",
         "flora": [
             "Mosses"
         ],
-        "fauna": [],
-        "warnings": {},
+        "fauna": [
+            "Tree frogs"
+        ],
+        "warnings": {
+            "weather": "Area is often foggy and slippery."
+        },
         "isCheckpoint": true
     },
     {
         "id": "79t42cmo77",
         "name": "Station 12: Tinagong Dagat",
-        "description": "Hidden sea-like basin area.",
+        "description": "A seasonal lake basin known as the 'Hidden Sea'.",
         "difficulty": "Moderate",
         "elevation": 1108,
         "coordinates": "N:06°42’27.55’’ E:126°11’43.11’’",
         "images": [
             "station12.jpg"
         ],
-        "metadata": {},
-        "lastScanned": null,
         "steps": 8895,
+        "distanceToNextKm": 6.8,
         "nextStationId": "stn13",
-        "flora": [],
-        "fauna": [],
-        "warnings": {},
+        "nextStationName": "Station 13: Hidden Garden",
+        "flora": [
+            "Grasses"
+        ],
+        "fauna": [
+            "Wading birds"
+        ],
+        "warnings": {
+            "flood": "Area can be waterlogged during rains."
+        },
         "isCheckpoint": true
     },
     {
         "id": "stn13",
         "name": "Station 13: Hidden Garden",
-        "description": "No data available for this site.",
+        "description": "A less-documented area with potential for rich biodiversity.",
         "difficulty": "Unknown",
         "elevation": 0,
         "coordinates": "N: -- E: --",
         "images": [
             "station13.jpg"
         ],
-        "metadata": {},
-        "lastScanned": null,
         "steps": null,
+        "distanceToNextKm": null,
         "nextStationId": "stn14",
+        "nextStationName": "Station 14: Peak",
         "flora": [],
         "fauna": [],
         "warnings": {},
@@ -242,58 +286,74 @@
     {
         "id": "stn14",
         "name": "Station 14: Peak",
-        "description": "Highest peak of Mt. Hamiguitan.",
+        "description": "The highest peak of Mt. Hamiguitan offering 360° views.",
         "difficulty": "Hard",
         "elevation": 1641,
         "coordinates": "N:06°44’23.90’’ E:126°10’55.25’’",
         "images": [
             "station14.jpg"
         ],
-        "metadata": {},
-        "lastScanned": null,
         "steps": 6342,
-        "nextStationId": "stn15",
-        "flora": [],
-        "fauna": [],
-        "warnings": {},
+        "distanceToNextKm": 4.9,
+        "nextStationId": "44r5tebjrc",
+        "nextStationName": "Station 15: Black Mountain",
+        "flora": [
+            "Alpine grasses"
+        ],
+        "fauna": [
+            "Eagles"
+        ],
+        "warnings": {
+            "weather": "Strong winds and sudden fog may occur."
+        },
         "isCheckpoint": true
     },
     {
-        "id": "stn15",
+        "id": "44r5tebjrc",
         "name": "Station 15: Black Mountain",
-        "description": "A mountain segment with dark rock formations.",
+        "description": "A dark rock mountain section known for its rugged terrain.",
         "difficulty": "Moderate",
         "elevation": 1238,
         "coordinates": "N:06°43’35.73’’ E:126°10’49.34’’",
         "images": [
             "station15.jpg"
         ],
-        "metadata": {},
-        "lastScanned": null,
         "steps": 1709,
-        "nextStationId": "stn16",
-        "flora": [],
-        "fauna": [],
+        "distanceToNextKm": 1.3,
+        "nextStationId": "r5kntj3sae",
+        "nextStationName": "Station 16: Twin Falls",
+        "flora": [
+            "Hardwood trees"
+        ],
+        "fauna": [
+            "Wild boars"
+        ],
         "warnings": {},
         "isCheckpoint": false
     },
     {
-        "id": "stn16",
+        "id": "r5kntj3sae",
         "name": "Station 16: Twin Falls",
-        "description": "Twin waterfall attraction along the trek.",
+        "description": "Twin waterfalls surrounded by lush vegetation.",
         "difficulty": "Moderate",
         "elevation": 1130,
         "coordinates": "N:06°43’25.74’’ E:126°10’59.02’’",
         "images": [
             "station16.jpg"
         ],
-        "metadata": {},
-        "lastScanned": null,
         "steps": 4133,
+        "distanceToNextKm": 3.2,
         "nextStationId": null,
-        "flora": [],
-        "fauna": [],
-        "warnings": {},
+        "nextStationName": null,
+        "flora": [
+            "Philippine ferns"
+        ],
+        "fauna": [
+            "Kingfishers"
+        ],
+        "warnings": {
+            "slippery": "Rocks around falls are slippery."
+        },
         "isCheckpoint": true
     }
 ]

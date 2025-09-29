@@ -10,6 +10,8 @@ class StationData {
   final DateTime? lastScanned;
   final int? steps; // Steps from previous station
   final String? nextStationId; // For linear progression
+  final String? nextStationName; // Name of the next station
+  final double? distanceToNextKm; // Distance to next station in kilometers
   final List<String> flora; // Notable flora in the area
   final List<String> fauna; // Notable fauna in the area
   final Map<String, String> warnings; // Safety warnings for this station
@@ -28,6 +30,8 @@ class StationData {
     this.lastScanned,
     this.steps,
     this.nextStationId,
+    this.nextStationName,
+    this.distanceToNextKm,
     this.flora = const [],
     this.fauna = const [],
     this.warnings = const {},
@@ -50,6 +54,8 @@ class StationData {
           : null,
       steps: json['steps'],
       nextStationId: json['nextStationId'],
+      nextStationName: json['nextStationName'],
+      distanceToNextKm: (json['distanceToNextKm'] as num?)?.toDouble(),
       flora: List<String>.from(json['flora'] ?? []),
       fauna: List<String>.from(json['fauna'] ?? []),
       warnings: Map<String, String>.from(json['warnings'] ?? {}),
@@ -71,6 +77,8 @@ class StationData {
       'lastScanned': lastScanned?.toIso8601String(),
       'steps': steps,
       'nextStationId': nextStationId,
+      'nextStationName': nextStationName,
+      'distanceToNextKm': distanceToNextKm,
       'flora': flora,
       'fauna': fauna,
       'warnings': warnings,
