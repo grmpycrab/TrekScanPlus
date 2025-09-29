@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
+import 'package:permission_handler/permission_handler.dart';
+import '../../models/station_data.dart';
 import '../../theme/color.dart';
+import '../../services/station_service.dart';
+import 'station_detail_screen.dart';
 
 class ScannerScreen extends StatefulWidget {
   const ScannerScreen({super.key});
@@ -9,29 +13,141 @@ class ScannerScreen extends StatefulWidget {
   State<ScannerScreen> createState() => _ScannerScreenState();
 }
 
-class _ScannerScreenState extends State<ScannerScreen> {
-  MobileScannerController controller = MobileScannerController();
+class _ScannerScreenState extends State<ScannerScreen>
+    with WidgetsBindingObserver {
+  MobileScannerController? controller;
   bool isFlashOn = false;
+  bool hasPermission = false;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    _initializeScanner();
+  }
+
+  Future<void> _initializeScanner() async {
+    final status = await Permission.camera.request();
+    setState(() {
+      hasPermission = status.isGranted;
+    });
+
+    if (hasPermission) {
+      controller = MobileScannerController();
+      await StationService().initialize(); // Initialize station data
+    }
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      _initializeScanner();
+    }
+  }
 
   @override
   void dispose() {
-    controller.dispose();
+    controller?.dispose();
+    WidgetsBinding.instance.removeObserver(this);
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
+    if (!hasPermission) {
+      return Scaffold(
+        backgroundColor: Colors.black,
+        body: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Text(
+                'Camera permission is required',
+                style: TextStyle(color: Colors.white),
+              ),
+              const SizedBox(height: 16),
+              ElevatedButton(
+                onPressed: _initializeScanner,
+                child: const Text('Grant Permission'),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    if (controller == null) {
+      return const Scaffold(
+        backgroundColor: Colors.black,
+        body: Center(child: CircularProgressIndicator()),
+      );
+    }
+
     return Scaffold(
       backgroundColor: Colors.black,
       body: Stack(
         children: [
           MobileScanner(
-            controller: controller,
-            onDetect: (capture) {
-              final List<Barcode> barcodes = capture.barcodes;
-              for (final barcode in barcodes) {
-                debugPrint('Barcode found! ${barcode.rawValue}');
-                // Handle the scanned QR code here
+            controller: controller!,
+            errorBuilder: (context, error, child) {
+              return Center(
+                child: Text(
+                  'Error initializing camera: $error',
+                  style: const TextStyle(color: Colors.white),
+                ),
+              );
+            },
+            onScannerStarted: (arguments) {
+              debugPrint('Scanner started successfully');
+            },
+            onDetect: (capture) async {
+              if (capture.barcodes.isEmpty) return;
+
+              final code = capture.barcodes.first.rawValue;
+              if (code == null) return;
+
+              final stationService = StationService();
+              final station = await stationService.getStationById(code);
+
+              if (station != null) {
+                // Mark station as visited and save
+                final updatedStation = StationData(
+                  id: station.id,
+                  name: station.name,
+                  description: station.description,
+                  difficulty: station.difficulty,
+                  elevation: station.elevation,
+                  coordinates: station.coordinates,
+                  images: station.images,
+                  metadata: station.metadata,
+                  lastScanned: DateTime.now(),
+                  steps: station.steps,
+                  nextStationId: station.nextStationId,
+                  flora: station.flora,
+                  fauna: station.fauna,
+                  warnings: station.warnings,
+                  isCheckpoint: station.isCheckpoint,
+                  isVisited: true,
+                );
+
+                await stationService.updateStation(updatedStation);
+
+                if (!mounted) return;
+                await Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) =>
+                        StationDetailScreen(station: updatedStation),
+                  ),
+                );
+              } else {
+                if (!mounted) return;
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Invalid QR code or station not found'),
+                    backgroundColor: Colors.red,
+                  ),
+                );
               }
             },
           ),
@@ -74,7 +190,7 @@ class _ScannerScreenState extends State<ScannerScreen> {
                       ),
                       onPressed: () {
                         // handle siwtch camera
-                        controller.switchCamera();
+                        controller?.switchCamera();
                       },
                     ),
                     IconButton(
@@ -83,7 +199,7 @@ class _ScannerScreenState extends State<ScannerScreen> {
                         color: AppColors.iconPrimary,
                       ),
                       onPressed: () {
-                        controller.toggleTorch();
+                        controller?.toggleTorch();
                         setState(() {
                           isFlashOn = !isFlashOn;
                         });
@@ -100,7 +216,7 @@ class _ScannerScreenState extends State<ScannerScreen> {
             child: Center(
               child: GestureDetector(
                 onTap: () {
-                  controller.stop();
+                  controller?.stop();
                 },
                 child: Container(
                   width: 64,
