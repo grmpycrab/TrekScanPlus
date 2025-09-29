@@ -29,6 +29,8 @@ class _StationDetailScreenState extends State<StationDetailScreen> {
                     mainAxisSize: MainAxisSize.min,
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
+                      _buildStationTitle(),
+                      const SizedBox(height: 16),
                       _buildStationInfo(),
                       const SizedBox(height: 24),
                       _buildDescription(),
@@ -66,8 +68,20 @@ class _StationDetailScreenState extends State<StationDetailScreen> {
     return SliverAppBar(
       expandedHeight: 200.0,
       pinned: true,
+      leading: IconButton(
+        icon: const Icon(Icons.arrow_back),
+        onPressed: () {
+          Navigator.pushReplacementNamed(context, '/main');
+        },
+      ),
+      title: Text(
+        station.name,
+        style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+      ),
       flexibleSpace: FlexibleSpaceBar(
-        title: Text(station.name),
+        titlePadding: EdgeInsets.zero,
+        expandedTitleScale: 1.0,
+        title: const SizedBox.shrink(),
         background: Image.asset(
           'assets/images/${station.images.first}',
           fit: BoxFit.cover,
@@ -133,6 +147,31 @@ class _StationDetailScreenState extends State<StationDetailScreen> {
               ],
             ],
           ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildStationTitle() {
+    return Card(
+      elevation: 2,
+      margin: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+        child: Row(
+          children: [
+            Expanded(
+              child: Text(
+                station.name,
+                style: const TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.textPrimary,
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );

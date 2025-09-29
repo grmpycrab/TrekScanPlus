@@ -123,7 +123,7 @@ class _ScannerScreenState extends State<ScannerScreen>
                 await stationService.updateStationVisited(code, true);
 
                 if (!mounted) return;
-                await Navigator.push(
+                await Navigator.pushReplacement(
                   context,
                   MaterialPageRoute(
                     builder: (context) => StationDetailScreen(station: station),

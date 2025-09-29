@@ -152,7 +152,7 @@ class _StationScreenState extends State<StationScreen> {
                 return GestureDetector(
                   onTap: station.isVisited
                       ? () {
-                          Navigator.push(
+                          Navigator.pushReplacement(
                             context,
                             MaterialPageRoute(
                               builder: (context) =>
