@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import '../../components/station_card.dart';
-import '../../data/stations.dart';
+import '../../services/station_service.dart';
 import '../../theme/color.dart';
+import 'station_detail_screen.dart';
 
 class StationScreen extends StatefulWidget {
   const StationScreen({super.key});
@@ -69,8 +70,14 @@ class _StationScreenState extends State<StationScreen> {
         ),
         child: Row(
           children: [
-            _buildTab(0, 'Visited (1)'),
-            _buildTab(1, 'Not Visited (14)'),
+            _buildTab(
+              0,
+              'Visited (${StationService().getVisitedStations().length})',
+            ),
+            _buildTab(
+              1,
+              'Not Visited (${StationService().getUnvisitedStations().length})',
+            ),
           ],
         ),
       ),
@@ -102,21 +109,42 @@ class _StationScreenState extends State<StationScreen> {
   }
 
   Widget _buildVisitedStations() {
+    final visitedStations = StationService().getVisitedStations();
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            'You visited these', //visited stations
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+          Text(
+            'You visited these (${visitedStations.length})',
+            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 16),
-          StationCard(
-            imagePath: 'assets/stations/test_station.png',
-            stationName: 'Crossing Stampa',
-            difficulty: 'Moderate',
-            elevation: 880,
+          Expanded(
+            child: ListView.builder(
+              itemCount: visitedStations.length,
+              itemBuilder: (context, index) {
+                final station = visitedStations[index];
+                return GestureDetector(
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) =>
+                            StationDetailScreen(station: station),
+                      ),
+                    );
+                  },
+                  child: StationCard(
+                    imagePath: station.images.first,
+                    stationName: station.name,
+                    difficulty: station.difficulty,
+                    elevation: station.elevation,
+                  ),
+                );
+              },
+            ),
           ),
         ],
       ),
@@ -124,26 +152,39 @@ class _StationScreenState extends State<StationScreen> {
   }
 
   Widget _buildNotVisitedStations() {
+    final unvisitedStations = StationService().getUnvisitedStations();
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            'Stations',
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+          Text(
+            'Not Visited (${unvisitedStations.length})',
+            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 16),
           Expanded(
             child: ListView.builder(
-              itemCount: stations.length,
+              itemCount: unvisitedStations.length,
               itemBuilder: (context, index) {
-                final station = stations[index];
-                return StationCard(
-                  imagePath: 'assets/stations/black_mountain.jpg',
-                  stationName: station.name,
-                  difficulty: station.difficulty,
-                  elevation: station.elevation,
+                final station = unvisitedStations[index];
+                return GestureDetector(
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) =>
+                            StationDetailScreen(station: station),
+                      ),
+                    );
+                  },
+                  child: StationCard(
+                    imagePath: station.images.first,
+                    stationName: station.name,
+                    difficulty: station.difficulty,
+                    elevation: station.elevation,
+                  ),
                 );
               },
             ),
