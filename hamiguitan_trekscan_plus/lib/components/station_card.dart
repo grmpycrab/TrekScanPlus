@@ -22,7 +22,13 @@ class StationCard extends StatelessWidget {
       height: 200,
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(12),
-        image: DecorationImage(image: AssetImage(imagePath), fit: BoxFit.cover),
+        image: DecorationImage(
+          image: AssetImage('assets/images/$imagePath'),
+          fit: BoxFit.cover,
+          onError: (_, __) {
+            debugPrint('Error loading image: $imagePath');
+          },
+        ),
         boxShadow: [
           BoxShadow(
             color: AppColors.shadowMedium,
@@ -69,29 +75,33 @@ class StationCard extends StatelessWidget {
   }
 
   Widget _buildStationInfo() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          stationName,
-          style: const TextStyle(
-            color: AppColors.buttonText,
-            fontSize: 20,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        const SizedBox(height: 4),
-        Row(
-          children: [
-            const Icon(Icons.height, color: Colors.white70, size: 16),
-            const SizedBox(width: 4),
-            Text(
-              '$elevation MASL',
-              style: TextStyle(color: AppColors.textLight, fontSize: 14),
+    return ConstrainedBox(
+      constraints: const BoxConstraints(minHeight: 0),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            stationName,
+            style: const TextStyle(
+              color: AppColors.buttonText,
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
             ),
-          ],
-        ),
-      ],
+          ),
+          const SizedBox(height: 4),
+          Row(
+            children: [
+              const Icon(Icons.height, color: Colors.white70, size: 16),
+              const SizedBox(width: 4),
+              Text(
+                '$elevation MASL',
+                style: TextStyle(color: AppColors.textLight, fontSize: 14),
+              ),
+            ],
+          ),
+        ],
+      ),
     );
   }
 

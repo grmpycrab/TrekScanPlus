@@ -9,6 +9,11 @@ class StationDetailScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    if (station == null) {
+      return const Scaffold(
+        body: Center(child: Text('Error: Station data not available')),
+      );
+    }
     return Scaffold(
       body: CustomScrollView(
         slivers: [
@@ -47,7 +52,16 @@ class StationDetailScreen extends StatelessWidget {
       pinned: true,
       flexibleSpace: FlexibleSpaceBar(
         title: Text(station.name),
-        background: Image.asset(station.images.first, fit: BoxFit.cover),
+        background: Image.asset(
+          'assets/images/${station.images.first}',
+          fit: BoxFit.cover,
+          errorBuilder: (context, error, stackTrace) {
+            return Container(
+              color: Colors.grey[300],
+              child: const Icon(Icons.image_not_supported, size: 50),
+            );
+          },
+        ),
       ),
     );
   }
@@ -90,28 +104,32 @@ class StationDetailScreen extends StatelessWidget {
 
   Widget _buildInfoItem(IconData icon, String value, String label) {
     return Expanded(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Icon(icon, size: 16, color: AppColors.primary),
-              const SizedBox(width: 8),
-              Text(
-                value,
-                style: const TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 16,
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(minHeight: 0),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(icon, size: 16, color: AppColors.primary),
+                const SizedBox(width: 8),
+                Text(
+                  value,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
+                  ),
                 ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 4),
-          Text(
-            label,
-            style: TextStyle(color: AppColors.textSecondary, fontSize: 12),
-          ),
-        ],
+              ],
+            ),
+            const SizedBox(height: 4),
+            Text(
+              label,
+              style: TextStyle(color: AppColors.textSecondary, fontSize: 12),
+            ),
+          ],
+        ),
       ),
     );
   }

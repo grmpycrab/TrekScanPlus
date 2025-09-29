@@ -2,8 +2,12 @@ import 'package:flutter/material.dart';
 import 'screens/auth/login_screen.dart';
 import 'screens/auth/signup_screen.dart';
 import 'screens/main/main_screen.dart';
+import 'services/station_service.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  final stationService = await StationService.init();
+  await stationService.loadStations();
   runApp(const MyApp());
 }
 

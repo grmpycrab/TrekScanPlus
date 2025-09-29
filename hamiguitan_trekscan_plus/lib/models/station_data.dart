@@ -14,9 +14,9 @@ class StationData {
   final List<String> fauna; // Notable fauna in the area
   final Map<String, String> warnings; // Safety warnings for this station
   final bool isCheckpoint; // Whether this is a major checkpoint
-  final bool isVisited; // Track if station has been visited
+  bool isVisited; // Track if station has been visited
 
-  const StationData({
+  StationData({
     required this.id,
     required this.name,
     required this.description,
@@ -77,5 +77,9 @@ class StationData {
       'isCheckpoint': isCheckpoint,
       'isVisited': isVisited,
     };
+  }
+
+  void updateVisited(bool value) {
+    isVisited = value;
   }
 }
