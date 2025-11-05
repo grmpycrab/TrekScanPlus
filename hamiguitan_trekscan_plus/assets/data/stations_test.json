@@ -2,7 +2,7 @@
     {
         "id": "56okrkt0pb",
         "name": "Station 1: UNESCO Marker",
-        "description": "The entry point to Mt. Hamiguitan, marked as part of its UNESCO World Heritage designation.",
+        "description": "The official entry point to Mt. Hamiguitan Wildlife Sanctuary, marked by the UNESCO World Heritage inscription. This station highlights the global recognition of the mountain’s ecological importance. Trekkers usually gather here for orientation, safety briefings, and group photos before beginning their ascent. It sets the tone for the journey, reminding visitors that they are entering a protected and fragile environment.",
         "difficulty": "Easy",
         "elevation": 449,
         "coordinates": "N:06°44’10.65’’ E:126°08’29.99’’",
@@ -27,7 +27,7 @@
     {
         "id": "hu2c5c0kfn",
         "name": "Station 2: Crossing Stampa",
-        "description": "A forest trail crossing point shaded by tall native trees.",
+        "description": "A shaded forest crossing where several trails intersect. The canopy here is thick, providing a cool rest stop for hikers. Its name, Stampa, is remembered by locals as a place where the trail divides, offering both challenge and reprieve. Trekkers often pause here to take in the sounds of birds and insects before pressing deeper into the sanctuary.",
         "difficulty": "Easy",
         "elevation": 682,
         "coordinates": "N:06°44’05.54’’ E:126°08’34.09’’",
@@ -50,7 +50,7 @@
     {
         "id": "um6j8dnii4",
         "name": "Station 3: Puting Bato",
-        "description": "A white rock formation offering a rest point along the trail.",
+        "description": "Named after its distinctive white rock formation, Puting Bato provides both a scenic landmark and a natural resting point. The pale stones stand in contrast to the surrounding greenery, making it a memorable stop along the trail. From here, trekkers begin to notice the gradual shift in vegetation as they climb higher. It is also a spot where small mammals and insects are often observed.",
         "difficulty": "Moderate",
         "elevation": 623,
         "coordinates": "N:06°43’46.66’’ E:126°09’22.06’’",
@@ -73,7 +73,7 @@
     {
         "id": "3ko938o2gb",
         "name": "Station 4: Lantawan 1",
-        "description": "A viewing point overlooking the lower forest canopy.",
+        "description": "The first major viewpoint on the trek, offering wide panoramas of the forest canopy below. Lantawan, meaning 'view deck' in the local dialect, is a favorite stop for photography and quiet reflection. The air is cooler here, and the breeze carries the scent of mountain flora. It serves as a checkpoint for guides to assess the group’s condition before moving further uphill.",
         "difficulty": "Moderate",
         "elevation": 830,
         "coordinates": "N:06°43’23.06’’ E:126°09’38.12’’",
@@ -98,7 +98,7 @@
     {
         "id": "33ii1jrc5s",
         "name": "Station 5: Camp 4",
-        "description": "A resting camp for trekkers before entering higher elevations.",
+        "description": "A designated campsite where trekkers often rest or spend the night. This stop is surrounded by tall trees, creating a sheltered environment from wind and sun. It is a strategic point for acclimatization before tackling steeper sections ahead. Camp 4 is known for its cool evenings and the sound of nocturnal wildlife.",
         "difficulty": "Moderate",
         "elevation": 908,
         "coordinates": "N:06°43’23.06’’ E:126°09’38.21’’",
@@ -121,7 +121,7 @@
     {
         "id": "vaatj8uomu",
         "name": "Station 6: Uwang-Uwang Trail",
-        "description": "A steep trail section lined with dense montane forest.",
+        "description": "A challenging trail section known for its steep inclines and dense vegetation. The name 'Uwang-Uwang' reflects the narrow, winding nature of the path. Here, the forest grows thicker, with mosses carpeting rocks and branches. Trekkers often slow down in this section, taking care as the trail can be muddy and slippery.",
         "difficulty": "Hard",
         "elevation": 1121,
         "coordinates": "N:06°43’56.04’’ E:126°10’38.58’’",
@@ -146,7 +146,7 @@
     {
         "id": "cbensi5juq",
         "name": "Station 7: Lantawan 2",
-        "description": "A second viewpoint with higher elevation and panoramic views.",
+        "description": "The second major view deck along the trail, located at a higher elevation. Lantawan 2 provides sweeping views of the surrounding valleys and distant mountain ridges. The cooler climate here supports orchids and other epiphytes. Trekkers often take extended breaks to enjoy the scenery and spot rare bird species like the Philippine eagle.",
         "difficulty": "Moderate",
         "elevation": 1215,
         "coordinates": "N:06°43’53.30’’ E:126°10’41.70’’",
@@ -169,7 +169,7 @@
     {
         "id": "utvrrkfkh9",
         "name": "Station 8: Camp 3",
-        "description": "Another camp site for resting and overnight stops.",
+        "description": "A camp area commonly used for overnight stays during multi-day treks. It sits near mid-elevation forest, where the sound of owls and other nocturnal animals fill the night. The site offers relative safety and flat ground for tents. It is also a good place to observe the transition between lowland and montane ecosystems.",
         "difficulty": "Moderate",
         "elevation": 1190,
         "coordinates": "N:06°43’34.44’’ E:126°11’03.75’’",
@@ -192,7 +192,7 @@
     {
         "id": "62n05d42d6",
         "name": "Station 9: Pygmy Field",
-        "description": "An iconic site with a bonsai forest of century-old dwarf trees.",
+        "description": "One of the most iconic features of Mt. Hamiguitan, the Pygmy Field is home to century-old bonsai-like trees that only grow a few feet tall. This unique ecosystem exists due to thin soils, strong winds, and high-altitude conditions. The area is highly fragile, and visitors are strictly advised to stay on the trail. It is both a scientific wonder and a symbol of the sanctuary’s uniqueness.",
         "difficulty": "Moderate",
         "elevation": 1214,
         "coordinates": "N:06°43’12.97’’ E:126°11’00.22’’",
@@ -215,9 +215,9 @@
         "isCheckpoint": false
     },
     {
-        "id": "g5iabiveqd",
+        "id": "6mm4kle34g",
         "name": "Station 10/11: Lantawan 3 / Mossy Forest",
-        "description": "A mossy forest ecosystem with unique biodiversity.",
+        "description": "A combined site where trekkers encounter both another viewpoint and the start of the mossy forest ecosystem. The air is damp and cool, with thick moss blanketing tree trunks and rocks. This environment supports amphibians, orchids, and rare ferns. The atmosphere is often misty, giving it an enchanting and otherworldly feel.",
         "difficulty": "Hard",
         "elevation": 1363,
         "coordinates": "N:06°42’46.08’’ E:126°11’14.02’’",
@@ -242,7 +242,7 @@
     {
         "id": "79t42cmo77",
         "name": "Station 12: Tinagong Dagat",
-        "description": "A seasonal lake basin known as the 'Hidden Sea'.",
+        "description": "Known as the 'Hidden Sea,' Tinagong Dagat is a seasonal lake basin that fills with water during heavy rains. It resembles an inland sea, adding to its mysterious charm. During the dry season, the ground may be grassy and firm, providing open space amidst the dense forest. It is a favorite spot for nature photography and ecological studies.",
         "difficulty": "Moderate",
         "elevation": 1108,
         "coordinates": "N:06°42’27.55’’ E:126°11’43.11’’",
@@ -267,7 +267,7 @@
     {
         "id": "stn13",
         "name": "Station 13: Hidden Garden",
-        "description": "A less-documented area with potential for rich biodiversity.",
+        "description": "A little-documented site, the Hidden Garden is believed to contain diverse yet understudied flora. Trekkers describe it as a serene clearing, though official ecological surveys remain incomplete. Its mystery adds to the sense of discovery along the Hamiguitan trek. More research may reveal rare plants or animals in this area.",
         "difficulty": "Unknown",
         "elevation": 0,
         "coordinates": "N: -- E: --",
@@ -286,7 +286,7 @@
     {
         "id": "stn14",
         "name": "Station 14: Peak",
-        "description": "The highest peak of Mt. Hamiguitan offering 360° views.",
+        "description": "The highest point of Mt. Hamiguitan, offering 360-degree views of Davao Oriental and neighboring landscapes. The summit is often shrouded in clouds, but on clear days trekkers can see as far as the Pacific coast. It is a rewarding finale to the climb, with alpine grasses and occasional sightings of raptors. Weather can change rapidly here, adding challenge and excitement.",
         "difficulty": "Hard",
         "elevation": 1641,
         "coordinates": "N:06°44’23.90’’ E:126°10’55.25’’",
@@ -311,7 +311,7 @@
     {
         "id": "44r5tebjrc",
         "name": "Station 15: Black Mountain",
-        "description": "A dark rock mountain section known for its rugged terrain.",
+        "description": "This rugged section of the trek is named after its dark rock outcrops. Black Mountain provides a stark contrast to the greener parts of the sanctuary. Its slopes support hardy plant species and are frequented by wild animals such as boars. The path is rocky, making it both a challenge and an adventure for trekkers.",
         "difficulty": "Moderate",
         "elevation": 1238,
         "coordinates": "N:06°43’35.73’’ E:126°10’49.34’’",
@@ -334,7 +334,7 @@
     {
         "id": "r5kntj3sae",
         "name": "Station 16: Twin Falls",
-        "description": "Twin waterfalls surrounded by lush vegetation.",
+        "description": "A scenic finale to the trek, Twin Falls features two waterfalls cascading side by side into a natural pool. The area is lush with greenery and is a favorite spot for cooling down after the long hike. Birds, butterflies, and frogs are often spotted here, adding life to the refreshing environment. It is both a recreational stop and a symbol of Mt. Hamiguitan’s natural beauty.",
         "difficulty": "Moderate",
         "elevation": 1130,
         "coordinates": "N:06°43’25.74’’ E:126°10’59.02’’",
