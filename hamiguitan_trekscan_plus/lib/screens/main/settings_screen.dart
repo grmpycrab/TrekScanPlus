@@ -60,14 +60,20 @@ class SettingsScreen extends StatelessWidget {
       color: const Color(0xFF252B30),
       child: Row(
         children: [
-          const Text(
-            'Settings',
-            style: TextStyle(
-              color: Colors.white,
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
+          const SizedBox(width: 8),
+          Expanded(
+            child: Center(
+              child: const Text(
+                'Settings',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
             ),
           ),
+          const SizedBox(width: 8),
         ],
       ),
     );

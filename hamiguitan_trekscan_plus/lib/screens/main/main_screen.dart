@@ -4,6 +4,7 @@ import 'home_screen.dart';
 import 'station_screen.dart';
 import 'scanner_screen.dart';
 import 'settings_screen.dart';
+import 'book_a_climb.dart';
 
 class MainScreen extends StatefulWidget {
   const MainScreen({super.key});
@@ -19,7 +20,7 @@ class _MainScreenState extends State<MainScreen> {
     const HomeScreen(),
     const StationScreen(),
     const ScannerScreen(),
-    const Placeholder(), // Book screen placeholder
+    const BookAClimbScreen(),
     const SettingsScreen(),
   ];
 
