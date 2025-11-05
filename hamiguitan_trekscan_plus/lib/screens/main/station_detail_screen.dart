@@ -14,41 +14,54 @@ class StationDetailScreen extends StatefulWidget {
 class _StationDetailScreenState extends State<StationDetailScreen> {
   StationData get station => widget.station;
 
+  Color _getDifficultyColor(String difficulty) {
+    switch (difficulty.toLowerCase()) {
+      case 'easy':
+        return Colors.green;
+      case 'moderate':
+        return Colors.orange;
+      case 'hard':
+        return Colors.red;
+      default:
+        return Colors.blue;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     try {
       return Scaffold(
+        backgroundColor: Colors.white,
         body: CustomScrollView(
           slivers: [
             _buildAppBar(),
             SliverToBoxAdapter(
               child: SingleChildScrollView(
                 child: Padding(
-                  padding: const EdgeInsets.all(16.0),
+                  padding: const EdgeInsets.symmetric(horizontal: 20.0),
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      _buildStationTitle(),
-                      const SizedBox(height: 16),
                       _buildStationInfo(),
-                      const SizedBox(height: 24),
                       _buildDescription(),
                       if (station.warnings.isNotEmpty) ...[
-                        const SizedBox(height: 24),
+                        const SizedBox(height: 32),
                         _buildWarnings(),
                       ],
                       if (station.flora.isNotEmpty ||
                           station.fauna.isNotEmpty) ...[
-                        const SizedBox(height: 24),
+                        const SizedBox(height: 32),
                         _buildBiodiversity(),
                       ],
                       if (station.nextStationId != null) ...[
-                        const SizedBox(height: 24),
+                        const SizedBox(height: 32),
                         _buildNextStation(),
                       ],
-                      const SizedBox(height: 24),
-                      _buildMetadata(),
+                      if (station.metadata.isNotEmpty) ...[
+                        const SizedBox(height: 32),
+                        _buildMetadata(),
+                      ],
                     ],
                   ),
                 ),
@@ -64,111 +77,174 @@ class _StationDetailScreenState extends State<StationDetailScreen> {
     }
   }
 
+  Widget _buildMetricBadge(IconData icon, String value, String label) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      decoration: BoxDecoration(
+        color: Colors.black.withOpacity(0.6),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, color: Colors.grey[400], size: 16),
+          const SizedBox(width: 8),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                value,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              Text(
+                label,
+                style: TextStyle(
+                  color: Colors.grey[400],
+                  fontSize: 10,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildAppBar() {
     return SliverAppBar(
-      expandedHeight: 200.0,
+      expandedHeight: 400.0,
       pinned: true,
+      backgroundColor: Colors.white,
+      elevation: 0,
       leading: IconButton(
-        icon: const Icon(Icons.arrow_back),
+        icon: const Icon(Icons.arrow_back, color: Colors.black),
         onPressed: () {
           Navigator.pushReplacementNamed(context, '/main');
         },
       ),
       title: Text(
-        station.name,
-        style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+        "STATION ${station.id}",
+        style: const TextStyle(
+          fontSize: 16,
+          fontWeight: FontWeight.w600,
+          color: Colors.black,
+        ),
       ),
       flexibleSpace: FlexibleSpaceBar(
         titlePadding: EdgeInsets.zero,
         expandedTitleScale: 1.0,
-        title: const SizedBox.shrink(),
-        background: Image.asset(
-          'assets/images/${station.images.first}',
-          fit: BoxFit.cover,
-          errorBuilder: (context, error, stackTrace) {
-            return Container(
-              color: Colors.grey[300],
-              child: const Icon(Icons.image_not_supported, size: 50),
-            );
-          },
-        ),
-      ),
-    );
-  }
-
-  Widget _buildStationInfo() {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: IntrinsicHeight(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Basic Info Row
-              IntrinsicHeight(
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Flexible(
-                      flex: 1,
-                      child: _buildInfoItem(
-                        Icons.height,
-                        '${station.elevation} MASL',
-                        'Elevation',
-                      ),
-                    ),
-                    const SizedBox(width: 24),
-                    Flexible(
-                      flex: 1,
-                      child: _buildInfoItem(
-                        Icons.trending_up,
-                        station.difficulty,
-                        'Difficulty',
-                      ),
-                    ),
+        background: Stack(
+          fit: StackFit.expand,
+          children: [
+            Image.asset(
+              'assets/images/${station.images.first}',
+              fit: BoxFit.cover,
+              errorBuilder: (context, error, stackTrace) {
+                return Container(
+                  decoration: BoxDecoration(color: Colors.grey[300]),
+                  child: const Icon(Icons.image_not_supported, size: 50),
+                );
+              },
+            ),
+            Container(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  stops: const [0.0, 0.3, 0.5, 0.7, 1.0],
+                  colors: [
+                    Colors.black.withOpacity(0.3),
+                    Colors.transparent,
+                    Colors.transparent,
+                    Colors.black.withOpacity(0.5),
+                    Colors.black.withOpacity(0.8),
                   ],
                 ),
               ),
-              const SizedBox(height: 16),
-              // Location Info
-              _buildCoordinates(),
-              if (station.steps != null) ...[
-                const SizedBox(height: 16),
-                _buildInfoItem(
-                  Icons.directions_walk,
-                  '${station.steps} steps',
-                  'From Previous Station',
+            ),
+            // Add a subtle wave-like gradient at the bottom
+            Positioned(
+              bottom: 0,
+              left: 0,
+              right: 0,
+              height: 200,
+              child: Container(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.bottomCenter,
+                    end: Alignment.topCenter,
+                    colors: [
+                      Colors.black.withOpacity(0.8),
+                      Colors.black.withOpacity(0.6),
+                      Colors.black.withOpacity(0.3),
+                      Colors.transparent,
+                    ],
+                  ),
                 ),
-              ],
-              if (station.isCheckpoint) ...[
-                const SizedBox(height: 16),
-                _buildInfoItem(Icons.flag, 'Major Checkpoint', 'Station Type'),
-              ],
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildStationTitle() {
-    return Card(
-      elevation: 2,
-      margin: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-        child: Row(
-          children: [
-            Expanded(
-              child: Text(
-                station.name,
-                style: const TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                  color: AppColors.textPrimary,
-                ),
+              ),
+            ),
+            Positioned(
+              bottom: 20,
+              left: 20,
+              right: 20,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 6,
+                    ),
+                    decoration: BoxDecoration(
+                      color: _getDifficultyColor(station.difficulty),
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                    child: Text(
+                      station.difficulty.toUpperCase(),
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  Text(
+                    station.name,
+                    style: const TextStyle(
+                      fontSize: 32,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  Row(
+                    children: [
+                      _buildMetricBadge(
+                        Icons.height,
+                        '${station.elevation}m',
+                        'ELEVATION',
+                      ),
+                      const SizedBox(width: 12),
+                      _buildMetricBadge(
+                        Icons.directions_walk,
+                        '${station.steps ?? 0}',
+                        'STEPS',
+                      ),
+                      const SizedBox(width: 12),
+                      _buildMetricBadge(
+                        Icons.route,
+                        '${station.distanceToNextKm ?? 0} km',
+                        'DISTANCE',
+                      ),
+                    ],
+                  ),
+                ],
               ),
             ),
           ],
@@ -177,29 +253,18 @@ class _StationDetailScreenState extends State<StationDetailScreen> {
     );
   }
 
-  Widget _buildCoordinates() {
+  Widget _buildStationInfo() {
     return Container(
-      margin: const EdgeInsets.only(bottom: 16),
+      margin: const EdgeInsets.symmetric(vertical: 20),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              Icon(Icons.location_on, size: 16, color: AppColors.primary),
-              const SizedBox(width: 8),
-              const Text(
-                'Location',
-                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-              ),
-            ],
-          ),
-          const SizedBox(height: 8),
+          // Location coordinates
           Container(
-            padding: const EdgeInsets.all(12),
+            padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
-              color: Colors.grey[100],
-              borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: Colors.grey[300]!),
+              color: const Color.fromARGB(255, 110, 110, 110),
+                borderRadius: BorderRadius.circular(20),
             ),
             child: Row(
               children: [
@@ -208,36 +273,52 @@ class _StationDetailScreenState extends State<StationDetailScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'North: ${_formatCoordinate(station.coordinates, 'N')}',
-                        style: const TextStyle(
-                          fontFamily: 'monospace',
-                          height: 1.5,
+                        "LATITUDE",
+                        style: TextStyle(
+                          color: Colors.grey[400],
+                          fontSize: 12,
+                          fontWeight: FontWeight.w500,
                         ),
                       ),
+                      const SizedBox(height: 4),
                       Text(
-                        'East: ${_formatCoordinate(station.coordinates, 'E')}',
+                        _formatCoordinate(station.coordinates, 'N'),
                         style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
                           fontFamily: 'monospace',
-                          height: 1.5,
                         ),
                       ),
                     ],
                   ),
                 ),
-                IconButton(
-                  icon: const Icon(Icons.copy),
-                  onPressed: () {
-                    // Call platform clipboard API
-                    // Add your clipboard functionality here
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Coordinates copied to clipboard'),
-                        duration: Duration(seconds: 2),
+                Container(height: 40, width: 1, color: Colors.grey[700]),
+                const SizedBox(width: 20),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        "LONGITUDE",
+                        style: TextStyle(
+                          color: Colors.grey[400],
+                          fontSize: 12,
+                          fontWeight: FontWeight.w500,
+                        ),
                       ),
-                    );
-                  },
-                  tooltip: 'Copy coordinates',
-                  color: AppColors.primary,
+                      const SizedBox(height: 4),
+                      Text(
+                        _formatCoordinate(station.coordinates, 'E'),
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                          fontFamily: 'monospace',
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ],
             ),
@@ -256,58 +337,45 @@ class _StationDetailScreenState extends State<StationDetailScreen> {
     return coordinates;
   }
 
-  Widget _buildInfoItem(IconData icon, String? value, String label) {
+  Widget _buildDescription() {
     return Container(
-      constraints: const BoxConstraints(minHeight: 50),
+      margin: const EdgeInsets.only(top: 8),
       child: Column(
-        mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
-            mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(icon, size: 16, color: AppColors.primary),
-              const SizedBox(width: 8),
-              Flexible(
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: Colors.blue[50],
+                  borderRadius: BorderRadius.circular(8),
+                ),
                 child: Text(
-                  value ?? 'Not available',
+                  "1",
                   style: TextStyle(
+                    color: Colors.blue[700],
                     fontWeight: FontWeight.bold,
-                    fontSize: 16,
-                    color: value != null ? AppColors.textPrimary : Colors.grey,
                   ),
                 ),
               ),
+              const SizedBox(width: 12),
+              const Text(
+                'About This Station',
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+              ),
             ],
           ),
-          const SizedBox(height: 4),
+          const SizedBox(height: 16),
           Text(
-            label,
-            style: TextStyle(color: AppColors.textSecondary, fontSize: 12),
+            station.description,
+            style: const TextStyle(
+              fontSize: 16,
+              height: 1.6,
+              color: Colors.black87,
+            ),
           ),
         ],
-      ),
-    );
-  }
-
-  Widget _buildDescription() {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              'About this Station',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 12),
-            Text(
-              station.description,
-              style: TextStyle(color: AppColors.textPrimary, height: 1.5),
-            ),
-          ],
-        ),
       ),
     );
   }
