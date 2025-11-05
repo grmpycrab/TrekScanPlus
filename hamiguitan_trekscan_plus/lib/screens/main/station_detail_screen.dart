@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import '../../models/station_data.dart';
+import 'station_screen.dart';
 import '../../theme/color.dart';
 
 class StationDetailScreen extends StatefulWidget {
@@ -36,33 +38,46 @@ class _StationDetailScreenState extends State<StationDetailScreen> {
           slivers: [
             _buildAppBar(),
             SliverToBoxAdapter(
-              child: SingleChildScrollView(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20.0),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      _buildStationInfo(),
-                      _buildDescription(),
-                      if (station.warnings.isNotEmpty) ...[
-                        const SizedBox(height: 32),
-                        _buildWarnings(),
-                      ],
-                      if (station.flora.isNotEmpty ||
-                          station.fauna.isNotEmpty) ...[
-                        const SizedBox(height: 32),
-                        _buildBiodiversity(),
-                      ],
-                      if (station.nextStationId != null) ...[
-                        const SizedBox(height: 32),
-                        _buildNextStation(),
-                      ],
-                      if (station.metadata.isNotEmpty) ...[
-                        const SizedBox(height: 32),
-                        _buildMetadata(),
-                      ],
-                    ],
+              child: ClipRRect(
+                borderRadius: const BorderRadius.only(
+                  topLeft: Radius.circular(20),
+                  topRight: Radius.circular(20),
+                ),
+                child: Material(
+                  color: Colors.white,
+                  elevation: 6,
+                  clipBehavior: Clip.antiAlias,
+                  child: Container(
+                    padding: const EdgeInsets.only(top: 20), // Add top padding
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 20.0),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          _buildStationInfo(),
+                          _buildDescription(),
+                          if (station.warnings.isNotEmpty) ...[
+                            const SizedBox(height: 32),
+                            _buildWarnings(),
+                          ],
+                          if (station.flora.isNotEmpty ||
+                              station.fauna.isNotEmpty) ...[
+                            const SizedBox(height: 32),
+                            _buildBiodiversity(),
+                          ],
+                          if (station.nextStationId != null) ...[
+                            const SizedBox(height: 32),
+                            _buildNextStation(),
+                          ],
+                          if (station.metadata.isNotEmpty) ...[
+                            const SizedBox(height: 32),
+                            _buildMetadata(),
+                          ],
+                          const SizedBox(height: 40),
+                        ],
+                      ),
+                    ),
                   ),
                 ),
               ),
@@ -124,7 +139,10 @@ class _StationDetailScreenState extends State<StationDetailScreen> {
       leading: IconButton(
         icon: const Icon(Icons.arrow_back, color: Colors.black),
         onPressed: () {
-          Navigator.pushReplacementNamed(context, '/main');
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => const StationScreen()),
+          );
         },
       ),
       title: Text(
@@ -167,7 +185,6 @@ class _StationDetailScreenState extends State<StationDetailScreen> {
                 ),
               ),
             ),
-            // Add a subtle wave-like gradient at the bottom
             Positioned(
               bottom: 0,
               left: 0,
@@ -254,73 +271,130 @@ class _StationDetailScreenState extends State<StationDetailScreen> {
   }
 
   Widget _buildStationInfo() {
+    final lat = _formatCoordinate(station.coordinates, 'N');
+    final lng = _formatCoordinate(station.coordinates, 'E');
+
+    Future<void> copyToClipboard(String text) async {
+      await Clipboard.setData(ClipboardData(text: text));
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Coordinates copied to clipboard'),
+            duration: Duration(seconds: 2),
+          ),
+        );
+      }
+    }
+
     return Container(
       margin: const EdgeInsets.symmetric(vertical: 20),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      child: Row(
         children: [
-          // Location coordinates
-          Container(
-            padding: const EdgeInsets.all(20),
-            decoration: BoxDecoration(
-              color: const Color.fromARGB(255, 110, 110, 110),
-                borderRadius: BorderRadius.circular(20),
+          // Latitude box
+          Expanded(
+            child: Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.grey[900],
+                borderRadius: BorderRadius.circular(16),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.05),
+                    blurRadius: 6,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
+              ),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'LATITUDE',
+                          style: TextStyle(
+                            color: Colors.grey[400],
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        const SizedBox(height: 6),
+                        Text(
+                          lat,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 16,
+                            fontWeight: FontWeight.w700,
+                            fontFamily: 'monospace',
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  IconButton(
+                    icon: Icon(Icons.copy, color: AppColors.primary),
+                    onPressed: () => copyToClipboard(lat),
+                    tooltip: 'Copy latitude',
+                    splashRadius: 20,
+                  ),
+                ],
+              ),
             ),
-            child: Row(
-              children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        "LATITUDE",
-                        style: TextStyle(
-                          color: Colors.grey[400],
-                          fontSize: 12,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        _formatCoordinate(station.coordinates, 'N'),
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                          fontFamily: 'monospace',
-                        ),
-                      ),
-                    ],
+          ),
+          const SizedBox(width: 12),
+          // Longitude box
+          Expanded(
+            child: Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.grey[900],
+                borderRadius: BorderRadius.circular(16),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.05),
+                    blurRadius: 6,
+                    offset: const Offset(0, 2),
                   ),
-                ),
-                Container(height: 40, width: 1, color: Colors.grey[700]),
-                const SizedBox(width: 20),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        "LONGITUDE",
-                        style: TextStyle(
-                          color: Colors.grey[400],
-                          fontSize: 12,
-                          fontWeight: FontWeight.w500,
+                ],
+              ),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'LONGITUDE',
+                          style: TextStyle(
+                            color: Colors.grey[400],
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        _formatCoordinate(station.coordinates, 'E'),
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                          fontFamily: 'monospace',
+                        const SizedBox(height: 6),
+                        Text(
+                          lng,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 16,
+                            fontWeight: FontWeight.w700,
+                            fontFamily: 'monospace',
+                          ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
-                ),
-              ],
+                  IconButton(
+                    icon: Icon(Icons.copy, color: AppColors.primary),
+                    onPressed: () => copyToClipboard(lng),
+                    tooltip: 'Copy longitude',
+                    splashRadius: 20,
+                  ),
+                ],
+              ),
             ),
           ),
         ],

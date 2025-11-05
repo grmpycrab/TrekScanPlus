@@ -64,19 +64,21 @@ class _StationScreenState extends State<StationScreen> {
       color: AppColors.primary,
       child: Row(
         children: [
-          GestureDetector(
-            onTap: () => Navigator.pop(context),
-            child: Icon(Icons.arrow_back_ios, color: AppColors.iconPrimary),
-          ),
-          const SizedBox(width: 16),
-          const Text(
-            'Stations',
-            style: TextStyle(
-              color: AppColors.buttonText,
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
+          // Left spacer to keep consistent horizontal padding
+          const SizedBox(width: 8),
+          Expanded(
+            child: Center(
+              child: const Text(
+                'Stations',
+                style: TextStyle(
+                  color: AppColors.buttonText,
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
             ),
           ),
+          const SizedBox(width: 8),
         ],
       ),
     );
