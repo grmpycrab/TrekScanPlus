@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
+import 'dart:io' show File;
+import 'package:firebase_core/firebase_core.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import '../../services/validators.dart';
 import '../../models/climb.dart';
 import '../../components/climb_card.dart';
@@ -15,23 +19,25 @@ class _BookAClimbScreenState extends State<BookAClimbScreen> {
   final _formKey = GlobalKey<FormState>();
   String _climbType = 'General';
 
-  List<String> _uploadedFiles = [];
+  // Store picked PlatformFile objects so we can upload bytes/paths to Firebase
+  List<PlatformFile> _pickedFiles = [];
 
   // Demo bookings list shown on main screen. Replace with real data source.
-  // Keep as dynamic to tolerate older Map<String,String> entries (converted at runtime).
+  // Keep as dynamic for backward compatibility, but initialize with Climb
+  // instances to avoid type-mismatch issues.
   final List<dynamic> _bookings = [
-    {
-      'name': 'John Doe',
-      'date': '2025-11-10',
-      'type': 'General',
-      'status': 'Pending',
-    },
-    {
-      'name': 'Jane Smith',
-      'date': '2025-11-15',
-      'type': 'Research',
-      'status': 'Approved',
-    },
+    Climb(
+      name: 'John Doe',
+      date: DateTime(2025, 11, 10),
+      type: 'General',
+      status: 'Pending',
+    ),
+    Climb(
+      name: 'Jane Smith',
+      date: DateTime(2025, 11, 15),
+      type: 'Research',
+      status: 'Approved',
+    ),
   ];
 
   // Controllers for text fields
@@ -50,9 +56,56 @@ class _BookAClimbScreenState extends State<BookAClimbScreen> {
     );
     if (result != null) {
       setState(() {
-        _uploadedFiles = result.files.map((f) => f.name).toList();
+        _pickedFiles = result.files;
       });
     }
+  }
+
+  Future<void> _submitBookingToFirebase(
+    Climb climb,
+    List<PlatformFile> files,
+    Map<String, String> meta,
+  ) async {
+    // Ensure Firebase initialized (user must generate firebase_options.dart with FlutterFire CLI)
+    if (Firebase.apps.isEmpty) {
+      await Firebase.initializeApp();
+    }
+
+    final storage = FirebaseStorage.instance;
+    final firestore = FirebaseFirestore.instance;
+
+    // Upload files and collect URLs
+    final List<String> fileUrls = [];
+    for (final f in files) {
+      try {
+        final timestamp = DateTime.now().millisecondsSinceEpoch;
+        final ref = storage.ref('bookings/${timestamp}_${f.name}');
+        if (f.path != null) {
+          // On mobile platforms we can upload via file path
+          final uploadTask = ref.putFile(File(f.path!));
+          await uploadTask.whenComplete(() {});
+        } else if (f.bytes != null) {
+          final uploadTask = ref.putData(f.bytes!);
+          await uploadTask.whenComplete(() {});
+        } else {
+          continue;
+        }
+        final url = await ref.getDownloadURL();
+        fileUrls.add(url);
+      } catch (e) {
+        // Swallow individual file errors and continue
+      }
+    }
+
+    // Create booking document in Firestore
+    final doc = {
+      ...climb.toMap(),
+      'documents': fileUrls,
+      'meta': meta,
+      'createdAt': FieldValue.serverTimestamp(),
+      'status': 'Pending',
+    };
+    await firestore.collection('bookings').add(doc);
   }
 
   @override
@@ -162,20 +215,38 @@ class _BookAClimbScreenState extends State<BookAClimbScreen> {
 
   // Convert internal _bookings (dynamic) to a list of Climb objects.
   List<Climb> _asClimbs() {
-    return _bookings.map<Climb>((e) {
-      if (e is Climb) return e;
+    // Convert and *mutate* the internal _bookings list so that returned Climb
+    // instances stay in sync with the source and can be updated (e.g. cancel).
+    final List<Climb> list = [];
+    for (var i = 0; i < _bookings.length; i++) {
+      final e = _bookings[i];
+      if (e is Climb) {
+        list.add(e);
+        continue;
+      }
       if (e is Map) {
         try {
           final map = Map<String, String>.from(
             e.map((k, v) => MapEntry(k.toString(), v.toString())),
           );
-          return Climb.fromMap(map);
+          final converted = Climb.fromMap(map);
+          // replace the map entry with the Climb instance so later updates
+          // (like setting status) affect the stored object
+          _bookings[i] = converted;
+          list.add(converted);
+          continue;
         } catch (_) {
-          return Climb(name: '', date: DateTime(1970));
+          final fallback = Climb(name: '', date: DateTime(1970));
+          _bookings[i] = fallback;
+          list.add(fallback);
+          continue;
         }
       }
-      return Climb(name: '', date: DateTime(1970));
-    }).toList();
+      final fallback = Climb(name: '', date: DateTime(1970));
+      _bookings[i] = fallback;
+      list.add(fallback);
+    }
+    return list;
   }
 
   void _confirmCancelModel(Climb booking) {
@@ -395,14 +466,14 @@ class _BookAClimbScreenState extends State<BookAClimbScreen> {
                   'Documents:',
                   style: TextStyle(fontWeight: FontWeight.w600),
                 ),
-                ...(_uploadedFiles.isEmpty
+                ...(_pickedFiles.isEmpty
                     ? [
                         const Text(
                           'No files uploaded.',
                           style: TextStyle(color: Colors.black38),
                         ),
                       ]
-                    : _uploadedFiles.map((f) => Text(f)).toList()),
+                    : _pickedFiles.map((f) => Text(f.name)).toList()),
               ],
             ),
           ),
@@ -418,23 +489,46 @@ class _BookAClimbScreenState extends State<BookAClimbScreen> {
                   borderRadius: BorderRadius.circular(8),
                 ),
               ),
-              onPressed: () {
-                // Create new Climb entry and add to bookings (in-memory)
+              onPressed: () async {
+                // Create new Climb entry (local object)
                 final newClimb = Climb(
                   name: _nameController.text.trim(),
                   date:
-                      DateTime.now(), // defaulting to now; replace with date input later
+                      DateTime.now(), // TODO: replace with selected date once date-picker added
                   type: _climbType,
                   status: 'Pending',
-                  documents: List<String>.from(_uploadedFiles),
+                  documents: _pickedFiles.map((f) => f.name).toList(),
                 );
+
+                // Try to send to Firebase; if Firebase isn't configured the code
+                // will catch the error and fall back to local insertion only.
+                try {
+                  await _submitBookingToFirebase(newClimb, _pickedFiles, {
+                    'contact': _contactController.text,
+                    'age': _ageController.text,
+                    'email': _emailController.text,
+                    'affiliation': _affiliationController.text,
+                    'porters': _portersController.text,
+                  });
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Booking submitted to server.'),
+                    ),
+                  );
+                } catch (e) {
+                  // Firebase not available or upload failed — keep local booking and notify
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('Saved locally (upload failed): $e'),
+                    ),
+                  );
+                }
+
+                // Always insert locally so user sees the booking immediately.
                 setState(() {
                   _bookings.insert(0, newClimb);
                 });
                 Navigator.of(context).pop();
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Submission proceeded!')),
-                );
                 // Clear form for next use
                 _nameController.clear();
                 _contactController.clear();
@@ -442,7 +536,7 @@ class _BookAClimbScreenState extends State<BookAClimbScreen> {
                 _emailController.clear();
                 _affiliationController.clear();
                 _portersController.clear();
-                _uploadedFiles = [];
+                _pickedFiles = [];
                 _climbType = 'General';
               },
               child: const Text(
@@ -522,13 +616,13 @@ class _BookAClimbScreenState extends State<BookAClimbScreen> {
               ),
             ),
             const SizedBox(height: 8),
-            if (_uploadedFiles.isEmpty)
+            if (_pickedFiles.isEmpty)
               const Text(
                 'No files uploaded.',
                 style: TextStyle(color: Colors.black38),
               )
             else
-              ..._uploadedFiles.map(
+              ..._pickedFiles.map(
                 (f) => Row(
                   children: [
                     const Icon(
@@ -538,7 +632,7 @@ class _BookAClimbScreenState extends State<BookAClimbScreen> {
                     ),
                     const SizedBox(width: 6),
                     Expanded(
-                      child: Text(f, style: const TextStyle(fontSize: 14)),
+                      child: Text(f.name, style: const TextStyle(fontSize: 14)),
                     ),
                   ],
                 ),
