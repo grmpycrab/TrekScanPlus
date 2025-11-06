@@ -26,15 +26,26 @@ class _MainScreenState extends State<MainScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: _screens[_currentIndex],
-      bottomNavigationBar: BottomNavigation(
-        currentIndex: _currentIndex,
-        onTap: (index) {
+    return WillPopScope(
+      onWillPop: () async {
+        if (_currentIndex != 0) {
           setState(() {
-            _currentIndex = index;
+            _currentIndex = 0;
           });
-        },
+          return false;
+        }
+        return true;
+      },
+      child: Scaffold(
+        body: _screens[_currentIndex],
+        bottomNavigationBar: BottomNavigation(
+          currentIndex: _currentIndex,
+          onTap: (index) {
+            setState(() {
+              _currentIndex = index;
+            });
+          },
+        ),
       ),
     );
   }
