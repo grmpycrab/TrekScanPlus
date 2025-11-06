@@ -1,5 +1,3 @@
-import 'package:flutter/material.dart';
-
 class Validators {
   static String? requiredField(String? value, String fieldName) {
     if (value == null || value.trim().isEmpty) {
