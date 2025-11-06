@@ -1,0 +1,322 @@
+{
+    "badges": [
+        {
+            "id": "first_steps",
+            "name": "First Steps",
+            "description": "Complete your first trail",
+            "category": "trail_completion",
+            "icon": "footprints",
+            "requirement": {
+                "type": "trails_completed",
+                "value": 1
+            },
+            "rarity": "common"
+        },
+        {
+            "id": "summit_seeker",
+            "name": "Summit Seeker",
+            "description": "Reach the peak of Mt. Hamiguitan",
+            "category": "trail_completion",
+            "icon": "mountain",
+            "requirement": {
+                "type": "reach_summit",
+                "value": true
+            },
+            "rarity": "rare"
+        },
+        {
+            "id": "trail_blazer",
+            "name": "Trail Blazer",
+            "description": "Complete all major trails",
+            "category": "trail_completion",
+            "icon": "compass",
+            "requirement": {
+                "type": "all_trails_completed",
+                "value": true
+            },
+            "rarity": "epic"
+        },
+        {
+            "id": "speed_hiker",
+            "name": "Speed Hiker",
+            "description": "Complete a trail under target time",
+            "category": "trail_completion",
+            "icon": "timer",
+            "requirement": {
+                "type": "trail_time_under",
+                "value": 180
+            },
+            "rarity": "rare"
+        },
+        {
+            "id": "dawn_patrol",
+            "name": "Dawn Patrol",
+            "description": "Start a hike before 6 AM",
+            "category": "trail_completion",
+            "icon": "sunrise",
+            "requirement": {
+                "type": "hike_start_time",
+                "value": "06:00"
+            },
+            "rarity": "uncommon"
+        },
+        {
+            "id": "5k_trekker",
+            "name": "5K Trekker",
+            "description": "Hike 5 kilometers total distance",
+            "category": "distance_elevation",
+            "icon": "route",
+            "requirement": {
+                "type": "total_distance_km",
+                "value": 5
+            },
+            "rarity": "common"
+        },
+        {
+            "id": "marathon_master",
+            "name": "Marathon Master",
+            "description": "Reach 42km cumulative distance",
+            "category": "distance_elevation",
+            "icon": "medal",
+            "requirement": {
+                "type": "total_distance_km",
+                "value": 42
+            },
+            "rarity": "epic"
+        },
+        {
+            "id": "elevation_hero",
+            "name": "Elevation Hero",
+            "description": "Climb 1,000m total elevation gain",
+            "category": "distance_elevation",
+            "icon": "trending_up",
+            "requirement": {
+                "type": "total_elevation_m",
+                "value": 1000
+            },
+            "rarity": "rare"
+        },
+        {
+            "id": "species_spotter",
+            "name": "Species Spotter",
+            "description": "Document 10 different species",
+            "category": "biodiversity",
+            "icon": "camera",
+            "requirement": {
+                "type": "species_documented",
+                "value": 10
+            },
+            "rarity": "uncommon"
+        },
+        {
+            "id": "endemic_expert",
+            "name": "Endemic Expert",
+            "description": "Find and photograph endemic species",
+            "category": "biodiversity",
+            "icon": "star",
+            "requirement": {
+                "type": "endemic_species_found",
+                "value": 5
+            },
+            "rarity": "rare"
+        },
+        {
+            "id": "pygmy_forest_explorer",
+            "name": "Pygmy Forest Explorer",
+            "description": "Visit the famous pygmy forest zone",
+            "category": "biodiversity",
+            "icon": "forest",
+            "requirement": {
+                "type": "visit_zone",
+                "value": "pygmy_forest"
+            },
+            "rarity": "uncommon"
+        },
+        {
+            "id": "flora_fanatic",
+            "name": "Flora Fanatic",
+            "description": "Identify 20+ plant species",
+            "category": "biodiversity",
+            "icon": "flower",
+            "requirement": {
+                "type": "plants_identified",
+                "value": 20
+            },
+            "rarity": "rare"
+        },
+        {
+            "id": "leave_no_trace",
+            "name": "Leave No Trace Champion",
+            "description": "Complete 10 eco-friendly hikes",
+            "category": "conservation",
+            "icon": "eco",
+            "requirement": {
+                "type": "eco_hikes_completed",
+                "value": 10
+            },
+            "rarity": "uncommon"
+        },
+        {
+            "id": "trail_keeper",
+            "name": "Trail Keeper",
+            "description": "Report 5 trail maintenance needs",
+            "category": "conservation",
+            "icon": "report",
+            "requirement": {
+                "type": "maintenance_reports",
+                "value": 5
+            },
+            "rarity": "uncommon"
+        },
+        {
+            "id": "waste_warrior",
+            "name": "Waste Warrior",
+            "description": "Participate in 3 trail cleanup activities",
+            "category": "conservation",
+            "icon": "delete",
+            "requirement": {
+                "type": "cleanup_participation",
+                "value": 3
+            },
+            "rarity": "rare"
+        },
+        {
+            "id": "group_leader",
+            "name": "Group Leader",
+            "description": "Hike with 5+ different people",
+            "category": "social",
+            "icon": "group",
+            "requirement": {
+                "type": "unique_hiking_partners",
+                "value": 5
+            },
+            "rarity": "uncommon"
+        },
+        {
+            "id": "solo_adventurer",
+            "name": "Solo Adventurer",
+            "description": "Complete 5 solo hikes",
+            "category": "social",
+            "icon": "person",
+            "requirement": {
+                "type": "solo_hikes",
+                "value": 5
+            },
+            "rarity": "uncommon"
+        },
+        {
+            "id": "photo_pro",
+            "name": "Photo Pro",
+            "description": "Upload 25 high-quality trail photos",
+            "category": "social",
+            "icon": "photo_camera",
+            "requirement": {
+                "type": "photos_uploaded",
+                "value": 25
+            },
+            "rarity": "rare"
+        },
+        {
+            "id": "weekend_warrior",
+            "name": "Weekend Warrior",
+            "description": "Hike every weekend for a month",
+            "category": "challenge",
+            "icon": "calendar",
+            "requirement": {
+                "type": "consecutive_weekend_hikes",
+                "value": 4
+            },
+            "rarity": "epic"
+        },
+        {
+            "id": "century_club",
+            "name": "Century Club",
+            "description": "Complete 100 total hikes",
+            "category": "challenge",
+            "icon": "trophy",
+            "requirement": {
+                "type": "total_hikes",
+                "value": 100
+            },
+            "rarity": "legendary"
+        },
+        {
+            "id": "year_round_trekker",
+            "name": "Year-Round Trekker",
+            "description": "Hike every month of the year",
+            "category": "challenge",
+            "icon": "event",
+            "requirement": {
+                "type": "hike_all_months",
+                "value": 12
+            },
+            "rarity": "epic"
+        },
+        {
+            "id": "unesco_explorer",
+            "name": "UNESCO Explorer",
+            "description": "Visit all UNESCO heritage zones",
+            "category": "challenge",
+            "icon": "public",
+            "requirement": {
+                "type": "heritage_zones_visited",
+                "value": "all"
+            },
+            "rarity": "legendary"
+        }
+    ],
+    "categories": [
+        {
+            "id": "trail_completion",
+            "name": "Trail Completion",
+            "description": "Badges earned by completing trails and reaching destinations"
+        },
+        {
+            "id": "distance_elevation",
+            "name": "Distance & Elevation",
+            "description": "Badges for achieving distance and elevation milestones"
+        },
+        {
+            "id": "biodiversity",
+            "name": "Biodiversity & Nature",
+            "description": "Badges for documenting and learning about wildlife and plants"
+        },
+        {
+            "id": "conservation",
+            "name": "Conservation & Stewardship",
+            "description": "Badges for environmental protection and trail maintenance"
+        },
+        {
+            "id": "social",
+            "name": "Social & Community",
+            "description": "Badges for community engagement and sharing experiences"
+        },
+        {
+            "id": "challenge",
+            "name": "Challenge",
+            "description": "Elite badges for dedicated trekkers who go above and beyond"
+        }
+    ],
+    "rarity_levels": {
+        "common": {
+            "color": "#9E9E9E",
+            "name": "Common"
+        },
+        "uncommon": {
+            "color": "#4CAF50",
+            "name": "Uncommon"
+        },
+        "rare": {
+            "color": "#2196F3",
+            "name": "Rare"
+        },
+        "epic": {
+            "color": "#9C27B0",
+            "name": "Epic"
+        },
+        "legendary": {
+            "color": "#FF9800",
+            "name": "Legendary"
+        }
+    }
+}

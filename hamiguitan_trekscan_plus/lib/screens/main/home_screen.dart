@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../components/do_and_dont.dart';
 import '../../theme/color.dart';
+import 'profile_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -53,30 +54,40 @@ class _HomeScreenState extends State<HomeScreen> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Row(
-            children: [
-              const CircleAvatar(
-                backgroundColor: AppColors.primary,
-                child: Icon(Icons.person, color: AppColors.iconPrimary),
-              ),
-              const SizedBox(width: 12),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    'Welcome,',
-                    style: TextStyle(
-                      color: AppColors.textSecondary,
-                      fontSize: 14,
+          GestureDetector(
+            onTap: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(builder: (context) => const ProfileScreen()),
+              );
+            },
+            child: Row(
+              children: [
+                const CircleAvatar(
+                  backgroundColor: AppColors.primary,
+                  child: Icon(Icons.person, color: AppColors.iconPrimary),
+                ),
+                const SizedBox(width: 12),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: const [
+                    Text(
+                      'Welcome,',
+                      style: TextStyle(
+                        color: AppColors.textSecondary,
+                        fontSize: 14,
+                      ),
                     ),
-                  ),
-                  const Text(
-                    'Grmpycrab!',
-                    style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16),
-                  ),
-                ],
-              ),
-            ],
+                    Text(
+                      'Grmpycrab!',
+                      style: TextStyle(
+                        fontWeight: FontWeight.w600,
+                        fontSize: 16,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
           ),
           Stack(
             children: [
