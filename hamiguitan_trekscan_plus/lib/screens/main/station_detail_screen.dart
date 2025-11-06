@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../../models/station_data.dart';
-import 'station_screen.dart';
 import '../../theme/color.dart';
 
 class StationDetailScreen extends StatefulWidget {
@@ -139,10 +138,7 @@ class _StationDetailScreenState extends State<StationDetailScreen> {
       leading: IconButton(
         icon: const Icon(Icons.arrow_back, color: Colors.black),
         onPressed: () {
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(builder: (context) => const StationScreen()),
-          );
+          Navigator.pop(context);
         },
       ),
       title: Text(
