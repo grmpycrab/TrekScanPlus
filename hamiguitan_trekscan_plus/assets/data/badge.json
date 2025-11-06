@@ -49,18 +49,6 @@
             "rarity": "rare"
         },
         {
-            "id": "dawn_patrol",
-            "name": "Dawn Patrol",
-            "description": "Start a hike before 6 AM",
-            "category": "trail_completion",
-            "icon": "sunrise",
-            "requirement": {
-                "type": "hike_start_time",
-                "value": "06:00"
-            },
-            "rarity": "uncommon"
-        },
-        {
             "id": "5k_trekker",
             "name": "5K Trekker",
             "description": "Hike 5 kilometers total distance",
@@ -97,150 +85,6 @@
             "rarity": "rare"
         },
         {
-            "id": "species_spotter",
-            "name": "Species Spotter",
-            "description": "Document 10 different species",
-            "category": "biodiversity",
-            "icon": "camera",
-            "requirement": {
-                "type": "species_documented",
-                "value": 10
-            },
-            "rarity": "uncommon"
-        },
-        {
-            "id": "endemic_expert",
-            "name": "Endemic Expert",
-            "description": "Find and photograph endemic species",
-            "category": "biodiversity",
-            "icon": "star",
-            "requirement": {
-                "type": "endemic_species_found",
-                "value": 5
-            },
-            "rarity": "rare"
-        },
-        {
-            "id": "pygmy_forest_explorer",
-            "name": "Pygmy Forest Explorer",
-            "description": "Visit the famous pygmy forest zone",
-            "category": "biodiversity",
-            "icon": "forest",
-            "requirement": {
-                "type": "visit_zone",
-                "value": "pygmy_forest"
-            },
-            "rarity": "uncommon"
-        },
-        {
-            "id": "flora_fanatic",
-            "name": "Flora Fanatic",
-            "description": "Identify 20+ plant species",
-            "category": "biodiversity",
-            "icon": "flower",
-            "requirement": {
-                "type": "plants_identified",
-                "value": 20
-            },
-            "rarity": "rare"
-        },
-        {
-            "id": "leave_no_trace",
-            "name": "Leave No Trace Champion",
-            "description": "Complete 10 eco-friendly hikes",
-            "category": "conservation",
-            "icon": "eco",
-            "requirement": {
-                "type": "eco_hikes_completed",
-                "value": 10
-            },
-            "rarity": "uncommon"
-        },
-        {
-            "id": "trail_keeper",
-            "name": "Trail Keeper",
-            "description": "Report 5 trail maintenance needs",
-            "category": "conservation",
-            "icon": "report",
-            "requirement": {
-                "type": "maintenance_reports",
-                "value": 5
-            },
-            "rarity": "uncommon"
-        },
-        {
-            "id": "waste_warrior",
-            "name": "Waste Warrior",
-            "description": "Participate in 3 trail cleanup activities",
-            "category": "conservation",
-            "icon": "delete",
-            "requirement": {
-                "type": "cleanup_participation",
-                "value": 3
-            },
-            "rarity": "rare"
-        },
-        {
-            "id": "group_leader",
-            "name": "Group Leader",
-            "description": "Hike with 5+ different people",
-            "category": "social",
-            "icon": "group",
-            "requirement": {
-                "type": "unique_hiking_partners",
-                "value": 5
-            },
-            "rarity": "uncommon"
-        },
-        {
-            "id": "solo_adventurer",
-            "name": "Solo Adventurer",
-            "description": "Complete 5 solo hikes",
-            "category": "social",
-            "icon": "person",
-            "requirement": {
-                "type": "solo_hikes",
-                "value": 5
-            },
-            "rarity": "uncommon"
-        },
-        {
-            "id": "photo_pro",
-            "name": "Photo Pro",
-            "description": "Upload 25 high-quality trail photos",
-            "category": "social",
-            "icon": "photo_camera",
-            "requirement": {
-                "type": "photos_uploaded",
-                "value": 25
-            },
-            "rarity": "rare"
-        },
-        {
-            "id": "weekend_warrior",
-            "name": "Weekend Warrior",
-            "description": "Hike every weekend for a month",
-            "category": "challenge",
-            "icon": "calendar",
-            "requirement": {
-                "type": "consecutive_weekend_hikes",
-                "value": 4
-            },
-            "rarity": "epic"
-        },
-        {
-            "id": "century_club",
-            "name": "Century Club",
-            "description": "Complete 100 total hikes",
-            "category": "challenge",
-            "icon": "trophy",
-            "requirement": {
-                "type": "total_hikes",
-                "value": 100
-            },
-            "rarity": "legendary"
-        },
-        {
             "id": "year_round_trekker",
             "name": "Year-Round Trekker",
             "description": "Hike every month of the year",
@@ -251,18 +95,6 @@
                 "value": 12
             },
             "rarity": "epic"
-        },
-        {
-            "id": "unesco_explorer",
-            "name": "UNESCO Explorer",
-            "description": "Visit all UNESCO heritage zones",
-            "category": "challenge",
-            "icon": "public",
-            "requirement": {
-                "type": "heritage_zones_visited",
-                "value": "all"
-            },
-            "rarity": "legendary"
         }
     ],
     "categories": [
