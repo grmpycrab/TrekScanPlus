@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../components/do_and_dont.dart';
 import '../../components/event_calendar.dart';
+import '../../components/connectivity_banner.dart';
 import '../../models/calendar_model.dart';
 import '../../theme/color.dart';
 import 'profile_screen.dart';
@@ -63,6 +64,7 @@ class _HomeScreenState extends State<HomeScreen> {
       body: SafeArea(
         child: Column(
           children: [
+            const ConnectivityBanner(),
             _buildHeader(),
             Expanded(
               child: SingleChildScrollView(
@@ -93,7 +95,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Widget _buildHeader() {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
       color: Colors.white,
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
