@@ -160,11 +160,18 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Widget _buildCalendar() {
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16),
+      margin: const EdgeInsets.only(top: 2, left: 16, right: 16),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.10), // Shadow color with opacity
+            blurRadius: 10, // How blurred/soft the shadow is
+            offset: const Offset(2, 2), // Horizontal and vertical offset
+          ),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -197,35 +204,72 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Widget _buildWelcomeBanner() {
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16),
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+      clipBehavior: Clip.none,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppColors.primary,
+        color: const Color(0xFF252B30), // pale beige background
         borderRadius: BorderRadius.circular(12),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Row(
-            children: [
-              Icon(Icons.landscape, color: AppColors.iconPrimary),
-              SizedBox(width: 8),
-              Text(
-                'Mt. Hamiguitan',
-                style: TextStyle(
-                  color: AppColors.buttonText,
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          const Text(
-            'Explore the unique beauty and biodiversity of Mt. Hamiguitan, a UNESCO World Heritage Site.',
-            style: TextStyle(color: AppColors.textLight),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.06),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
           ),
         ],
+      ),
+      child: SizedBox(
+        height: 160,
+        child: Row(
+          children: [
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.only(right: 8.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: const [
+                    Text(
+                      'Mt. Hamiguitan Trek Scan Plus',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 24,
+                        fontWeight: FontWeight.w800,
+                        height: 1.2,
+                      ),
+                    ),
+                    SizedBox(height: 12),
+                    Text(
+                      'Explore the unique beauty and biodiversity of Mt. Hamiguitan, a UNESCO World Heritage Site.',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 15,
+                        height: 1.4,
+                      ),
+                      maxLines: 5,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            // Illustration on the right. use an OverflowBox so the image can extend outside the card
+            SizedBox(
+              width: 140,
+              child: Transform.translate(
+                offset: const Offset(6, 0),
+                child: Image.asset(
+                  'assets/images/Trekking.png',
+                  width: 200,
+                  height: 200,
+                  fit: BoxFit.cover,
+                  errorBuilder: (context, error, stack) =>
+                      Icon(Icons.landscape, size: 72, color: Colors.brown[300]),
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
