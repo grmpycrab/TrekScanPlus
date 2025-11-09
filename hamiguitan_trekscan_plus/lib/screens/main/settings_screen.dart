@@ -21,6 +21,11 @@ class SettingsScreen extends StatelessWidget {
                     subtitle: 'Personal information',
                   ),
                   _buildSettingItem(
+                    icon: Icons.emoji_events_outlined,
+                    title: 'Badges',
+                    subtitle: 'View and track your achievements',
+                  ),
+                  _buildSettingItem(
                     icon: Icons.notifications_outlined,
                     title: 'Notifications',
                     subtitle: 'Message, app & email notifications',
