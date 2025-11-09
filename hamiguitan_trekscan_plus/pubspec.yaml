@@ -11,12 +11,13 @@ dependencies:
     sdk: flutter
   mobile_scanner: ^3.4.1
   permission_handler: ^11.3.1
-  permission_handler_android: ^12.0.0  # Explicitly adding the Android implementation
+  permission_handler_android: ^12.0.0
   shared_preferences: ^2.2.2
   file_picker: ^10.3.3
   firebase_core: ^2.13.0
   cloud_firestore: ^4.9.0
   firebase_storage: ^11.3.0
+  intl: ^0.20.2
 
 dev_dependencies:
   flutter_test:
@@ -30,3 +31,4 @@ flutter:
     - assets/images/
     - assets/icons/
     - assets/data/
+    - assets/data/badge.json
