@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'notification_screen.dart';
 import '../../components/do_and_dont.dart';
 import '../../components/event_calendar.dart';
 import '../../components/connectivity_banner.dart';
@@ -139,7 +140,14 @@ class _HomeScreenState extends State<HomeScreen> {
             children: [
               IconButton(
                 icon: const Icon(Icons.notifications_outlined, size: 28),
-                onPressed: () {},
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const NotificationScreen(),
+                    ),
+                  );
+                },
               ),
               Positioned(
                 right: 12,
