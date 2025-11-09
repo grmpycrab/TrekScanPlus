@@ -161,7 +161,14 @@ class _ScannerScreenState extends State<ScannerScreen>
             child: Row(
               children: [
                 GestureDetector(
-                  onTap: () => Navigator.pop(context),
+                  onTap: () {
+                    // If there's a route to pop, pop it. Otherwise navigate back to main
+                    if (Navigator.of(context).canPop()) {
+                      Navigator.of(context).pop();
+                    } else {
+                      Navigator.of(context).pushReplacementNamed('/main');
+                    }
+                  },
                   child: Icon(
                     Icons.arrow_back,
                     color: AppColors.iconPrimary,
