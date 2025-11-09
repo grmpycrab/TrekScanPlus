@@ -22,10 +22,22 @@ class _TrekTipsState extends State<TrekTips> {
   @override
   Widget build(BuildContext context) {
     return SingleChildScrollView(
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 24),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(12),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.grey.withOpacity(0.1),
+              spreadRadius: 1,
+              blurRadius: 4,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
         child: ExpansionPanelList(
-          elevation: 1,
+          elevation: 0,
           expandedHeaderPadding: EdgeInsets.zero,
           animationDuration: const Duration(milliseconds: 200),
           expansionCallback: (index, isExpanded) {
@@ -111,8 +123,8 @@ class _TrekTipsState extends State<TrekTips> {
 
   Widget _buildTipItem(String text) {
     return Container(
-      margin: const EdgeInsets.only(bottom: 8, left: 16, right: 16),
-      padding: const EdgeInsets.all(12),
+      margin: const EdgeInsets.only(bottom: 16, left: 16, right: 16),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: AppColors.cardBackground,
         borderRadius: BorderRadius.circular(8),
