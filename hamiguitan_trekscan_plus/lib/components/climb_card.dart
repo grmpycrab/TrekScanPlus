@@ -8,8 +8,7 @@ class ClimbCard extends StatelessWidget {
   final VoidCallback? onTap;
   final ClimbCallback? onCancel;
 
-  const ClimbCard({Key? key, required this.climb, this.onTap, this.onCancel})
-    : super(key: key);
+  const ClimbCard({super.key, required this.climb, this.onTap, this.onCancel});
 
   @override
   Widget build(BuildContext context) {

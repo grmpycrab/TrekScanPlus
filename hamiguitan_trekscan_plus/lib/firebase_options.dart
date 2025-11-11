@@ -19,10 +19,7 @@ class DefaultFirebaseOptions {
       case TargetPlatform.macOS:
         return macos;
       case TargetPlatform.windows:
-        throw UnsupportedError(
-          'DefaultFirebaseOptions has not been configured for windows - '
-          'you can reconfigure this by running the FlutterFire CLI again.',
-        );
+        return windows;
       case TargetPlatform.linux:
         throw UnsupportedError(
           'DefaultFirebaseOptions has not been configured for linux - '
@@ -37,38 +34,47 @@ class DefaultFirebaseOptions {
   }
 
   static const FirebaseOptions web = FirebaseOptions(
-    apiKey: 'YOUR_WEB_API_KEY',
-    appId: 'YOUR_WEB_APP_ID',
-    messagingSenderId: 'YOUR_MESSAGING_SENDER_ID',
-    projectId: 'YOUR_PROJECT_ID',
-    authDomain: 'YOUR_AUTH_DOMAIN',
-    storageBucket: 'YOUR_STORAGE_BUCKET',
-    measurementId: 'YOUR_MEASUREMENT_ID',
+    apiKey: 'AIzaSyAr-3aDayxiHaRjbQoJ6wll1QRTvCoPAf8',
+    appId: '1:431638508645:web:ad5f1ebd7e4c942baf028c',
+    messagingSenderId: '431638508645',
+    projectId: 'trekscanplus',
+    authDomain: 'trekscanplus.firebaseapp.com',
+    storageBucket: 'trekscanplus.firebasestorage.app',
   );
 
   static const FirebaseOptions android = FirebaseOptions(
-    apiKey: 'YOUR_ANDROID_API_KEY',
-    appId: 'YOUR_ANDROID_APP_ID',
-    messagingSenderId: 'YOUR_MESSAGING_SENDER_ID',
-    projectId: 'YOUR_PROJECT_ID',
-    storageBucket: 'YOUR_STORAGE_BUCKET',
+    apiKey: 'AIzaSyAEVhCzB7gY6ubvCXcJ_8svmINIDs_RyTo',
+    appId: '1:431638508645:android:764c90e43cdee6e6af028c',
+    messagingSenderId: '431638508645',
+    projectId: 'trekscanplus',
+    storageBucket: 'trekscanplus.firebasestorage.app',
   );
 
   static const FirebaseOptions ios = FirebaseOptions(
-    apiKey: 'YOUR_IOS_API_KEY',
-    appId: 'YOUR_IOS_APP_ID',
-    messagingSenderId: 'YOUR_MESSAGING_SENDER_ID',
-    projectId: 'YOUR_PROJECT_ID',
-    storageBucket: 'YOUR_STORAGE_BUCKET',
-    iosBundleId: 'com.example.hamiguitan.trekscan.plus',
+    apiKey: 'AIzaSyCIyupYL4JzTuoJwfZVUrXg0CVnvR-UiEs',
+    appId: '1:431638508645:ios:9b13fb5ea96dfbd1af028c',
+    messagingSenderId: '431638508645',
+    projectId: 'trekscanplus',
+    storageBucket: 'trekscanplus.firebasestorage.app',
+    iosBundleId: 'com.example.hamiguitanTrekscanPlus',
   );
 
   static const FirebaseOptions macos = FirebaseOptions(
-    apiKey: 'YOUR_MACOS_API_KEY',
-    appId: 'YOUR_MACOS_APP_ID',
-    messagingSenderId: 'YOUR_MESSAGING_SENDER_ID',
-    projectId: 'YOUR_PROJECT_ID',
-    storageBucket: 'YOUR_STORAGE_BUCKET',
-    iosBundleId: 'com.example.hamiguitan.trekscan.plus',
+    apiKey: 'AIzaSyCIyupYL4JzTuoJwfZVUrXg0CVnvR-UiEs',
+    appId: '1:431638508645:ios:9b13fb5ea96dfbd1af028c',
+    messagingSenderId: '431638508645',
+    projectId: 'trekscanplus',
+    storageBucket: 'trekscanplus.firebasestorage.app',
+    iosBundleId: 'com.example.hamiguitanTrekscanPlus',
   );
+
+  static const FirebaseOptions windows = FirebaseOptions(
+    apiKey: 'AIzaSyAr-3aDayxiHaRjbQoJ6wll1QRTvCoPAf8',
+    appId: '1:431638508645:web:e0f2a3491880bd4daf028c',
+    messagingSenderId: '431638508645',
+    projectId: 'trekscanplus',
+    authDomain: 'trekscanplus.firebaseapp.com',
+    storageBucket: 'trekscanplus.firebasestorage.app',
+  );
+
 }

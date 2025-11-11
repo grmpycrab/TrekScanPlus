@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "431638508645",
+    "project_id": "trekscanplus",
+    "storage_bucket": "trekscanplus.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:431638508645:android:764c90e43cdee6e6af028c",
+        "android_client_info": {
+          "package_name": "com.example.hamiguitan_trekscan_plus"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAEVhCzB7gY6ubvCXcJ_8svmINIDs_RyTo"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
