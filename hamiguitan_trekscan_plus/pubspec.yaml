@@ -15,6 +15,7 @@ dependencies:
   shared_preferences: ^2.2.2
   file_picker: ^10.3.3
   firebase_core: ^2.13.0
+  firebase_auth: ^4.10.0
   cloud_firestore: ^4.9.0
   firebase_storage: ^11.3.0
   intl: ^0.20.2
