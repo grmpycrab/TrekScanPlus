@@ -32,14 +32,20 @@ cd c:\Users\Admin\Desktop\TrekScanPlus\hamiguitan_trekscan_plus
 # Install FlutterFire CLI
 dart pub global activate flutterfire_cli
 
-# Configure Firebase (this will guide you through iOS and Android setup)
+# Configure Firebase (use the full path or the dart command below)
+# Option 1: If flutterfire is in your PATH, use:
 flutterfire configure
+
+# Option 2: If you get a "not recognized" error, use:
+dart pub global run flutterfire_cli:flutterfire configure
 ```
 
 This command will:
 - Ask you to select your Firebase project
 - Generate `firebase_options.dart` automatically with your credentials
 - Configure Android and iOS configurations
+
+**Note**: If you get a "flutterfire is not recognized" error, add this to your PowerShell profile or use Option 2 above. To add to PATH permanently, see the "Fix PATH" section below.
 
 ## Step 4: Android Setup (Automatic via flutterfire configure)
 
@@ -140,6 +146,33 @@ service cloud.firestore {
 ```
 
 ## Common Issues
+
+### Issue: `flutterfire` command not recognized
+
+This means the Dart Pub cache bin directory is not in your system PATH.
+
+**Quick Fix (Temporary for current terminal):**
+```powershell
+dart pub global run flutterfire_cli:flutterfire configure
+```
+
+**Permanent Fix (Add to Windows PATH):**
+
+1. Open PowerShell as Administrator and run:
+```powershell
+$path = [Environment]::GetEnvironmentVariable("Path", "User")
+$pubCache = "$env:APPDATA\Local\Pub\Cache\bin"
+if ($path -notlike "*$pubCache*") {
+    [Environment]::SetEnvironmentVariable("Path", "$path;$pubCache", "User")
+    Write-Host "PATH updated. Please close and reopen PowerShell."
+} else {
+    Write-Host "PATH already contains Pub cache."
+}
+```
+
+2. Close and reopen PowerShell
+
+3. Now you can use `flutterfire configure` directly
 
 ### Issue: `google-services.json` not found
 **Solution**: Run `flutterfire configure` or download it manually from Firebase Console
