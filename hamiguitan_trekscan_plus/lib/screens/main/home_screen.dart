@@ -29,7 +29,9 @@ class _HomeScreenState extends State<HomeScreen> {
     super.initState();
     _initializeTrekDays();
     _firebaseUser = FirebaseAuthService.instance.currentUser;
-    _authSubscription = FirebaseAuthService.instance.authStateChanges.listen((user) {
+    _authSubscription = FirebaseAuthService.instance.authStateChanges.listen((
+      user,
+    ) {
       setState(() {
         _firebaseUser = user;
       });
@@ -124,7 +126,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 MaterialPageRoute(builder: (context) => const ProfileScreen()),
               );
             },
-                child: Row(
+            child: Row(
               children: [
                 CircleAvatar(
                   backgroundColor: AppColors.primary,
