@@ -139,23 +139,27 @@ class _HomeScreenState extends State<HomeScreen> {
             const ConnectivityBanner(),
             _buildHeader(),
             Expanded(
-              child: SingleChildScrollView(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    _buildWelcomeBanner(),
-                    const SizedBox(height: 20),
-                    _buildCalendar(),
-                    const SizedBox(height: 20),
-                    DoAndDont(
-                      selectedIndex: _selectedSegmentIndex,
-                      onSegmentTapped: (index) {
-                        setState(() {
-                          _selectedSegmentIndex = index;
-                        });
-                      },
-                    ),
-                  ],
+              child: RefreshIndicator(
+                onRefresh: _refreshAll,
+                child: SingleChildScrollView(
+                  physics: const AlwaysScrollableScrollPhysics(),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      _buildWelcomeBanner(),
+                      const SizedBox(height: 20),
+                      _buildCalendar(),
+                      const SizedBox(height: 20),
+                      DoAndDont(
+                        selectedIndex: _selectedSegmentIndex,
+                        onSegmentTapped: (index) {
+                          setState(() {
+                            _selectedSegmentIndex = index;
+                          });
+                        },
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ),
@@ -214,30 +218,39 @@ class _HomeScreenState extends State<HomeScreen> {
               ],
             ),
           ),
-          Stack(
+          Row(
             children: [
               IconButton(
-                icon: const Icon(Icons.notifications_outlined, size: 28),
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => const NotificationScreen(),
-                    ),
-                  );
-                },
+                icon: const Icon(Icons.refresh, size: 24),
+                tooltip: 'Refresh calendar',
+                onPressed: () => _subscribeBookingsForMonth(DateTime.now()),
               ),
-              Positioned(
-                right: 12,
-                top: 12,
-                child: Container(
-                  width: 8,
-                  height: 8,
-                  decoration: const BoxDecoration(
-                    color: AppColors.notificationDot,
-                    shape: BoxShape.circle,
+              Stack(
+                children: [
+                  IconButton(
+                    icon: const Icon(Icons.notifications_outlined, size: 28),
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const NotificationScreen(),
+                        ),
+                      );
+                    },
                   ),
-                ),
+                  Positioned(
+                    right: 12,
+                    top: 12,
+                    child: Container(
+                      width: 8,
+                      height: 8,
+                      decoration: const BoxDecoration(
+                        color: AppColors.notificationDot,
+                        shape: BoxShape.circle,
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ],
           ),
@@ -289,6 +302,71 @@ class _HomeScreenState extends State<HomeScreen> {
         ],
       ),
     );
+  }
+
+  /// Pull-to-refresh handler for the Home screen. Performs a one-time
+  /// query for the current month and updates the calendar immediately.
+  Future<void> _refreshAll() async {
+    final month = DateTime.now();
+    final firstDay = DateTime(month.year, month.month, 1);
+    final lastDay = DateTime(month.year, month.month + 1, 0, 23, 59, 59);
+
+    final startTs = Timestamp.fromDate(
+      DateTime(firstDay.year, firstDay.month, firstDay.day),
+    );
+    final endTs = Timestamp.fromDate(lastDay);
+
+    // Cancel current subscription to avoid stale data
+    _bookingsSubscription?.cancel();
+
+    final snap = await FirebaseFirestore.instance
+        .collection('bookings')
+        .where('trekDate', isGreaterThanOrEqualTo: startTs)
+        .where('trekDate', isLessThanOrEqualTo: endTs)
+        .get();
+
+    final Map<String, int> slotsPerDay = {};
+    for (final doc in snap.docs) {
+      final data = doc.data();
+      final Timestamp? t = data['trekDate'] as Timestamp?;
+      if (t == null) continue;
+      final d = t.toDate();
+      final key = '${d.year}-${d.month}-${d.day}';
+      final porters = (data['numberOfPorters'] as num?)?.toInt() ?? 0;
+      final used = 1 + porters;
+      slotsPerDay[key] = (slotsPerDay[key] ?? 0) + used;
+    }
+
+    if (!mounted) return;
+    setState(() {
+      final now = month;
+      final daysInMonth = DateTime(now.year, now.month + 1, 0).day;
+      _trekDays = List.generate(daysInMonth, (index) {
+        final date = DateTime(now.year, now.month, index + 1);
+        final key = '${date.year}-${date.month}-${date.day}';
+        final booked = slotsPerDay[key] ?? 0;
+        const maxSlots = 30;
+        TrekDayStatus status;
+        if (booked >= maxSlots) {
+          status = TrekDayStatus.full;
+        } else if (booked >= (maxSlots - 5)) {
+          status = TrekDayStatus.critical;
+        } else {
+          status = TrekDayStatus.available;
+        }
+        final isResearchDay = date.weekday == DateTime.wednesday;
+        return TrekDay(
+          date: date,
+          status: status,
+          isResearchDay: isResearchDay,
+          bookedSlots: booked,
+          maxSlots: maxSlots,
+        );
+      });
+    });
+
+    // Re-subscribe to live updates for the month
+    _subscribeBookingsForMonth(month);
   }
 
   Widget _buildWelcomeBanner() {
