@@ -1,6 +1,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import 'user_service.dart';
 
 class FirebaseAuthService {
   FirebaseAuthService._internal();
@@ -25,6 +26,12 @@ class FirebaseAuthService {
         email: email,
         password: password,
       );
+      // Ensure the user document exists in Firestore for newly created users
+      if (userCredential.user != null) {
+        await UserService.instance.createOrUpdateUserFromFirebase(
+          userCredential.user!,
+        );
+      }
       return userCredential;
     } on FirebaseAuthException catch (e) {
       if (kDebugMode) {
@@ -44,6 +51,12 @@ class FirebaseAuthService {
         email: email,
         password: password,
       );
+      // Update/create the Firestore user document when logging in
+      if (userCredential.user != null) {
+        await UserService.instance.createOrUpdateUserFromFirebase(
+          userCredential.user!,
+        );
+      }
       return userCredential;
     } on FirebaseAuthException catch (e) {
       if (kDebugMode) {
@@ -148,6 +161,10 @@ class FirebaseAuthService {
           if (kDebugMode) {
             print('Returning fallback currentUser: ${fallbackUser.email}');
           }
+          // Ensure Firestore has a user document for this account and then return it.
+          await UserService.instance.createOrUpdateUserFromFirebase(
+            fallbackUser,
+          );
           return fallbackUser;
         }
 
