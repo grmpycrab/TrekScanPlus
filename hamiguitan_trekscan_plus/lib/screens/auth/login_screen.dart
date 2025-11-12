@@ -193,7 +193,45 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
               const SizedBox(height: 16),
               OutlinedButton.icon(
-                onPressed: _isLoading ? null : () {},
+                onPressed: _isLoading
+                    ? null
+                    : () async {
+                        setState(() {
+                          _isLoading = true;
+                          _errorMessage = null;
+                        });
+
+                        try {
+                          final user = await FirebaseAuthService.instance
+                              .signInWithGoogle();
+                          if (user != null && mounted) {
+                            Navigator.pushReplacement(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => const MainScreen(),
+                              ),
+                            );
+                          } else if (mounted) {
+                            // User cancelled Google sign-in or sign-in did not complete
+                            setState(() {
+                              _isLoading = false;
+                            });
+                          }
+                        } catch (e) {
+                          if (mounted) {
+                            setState(() {
+                              _errorMessage =
+                                  'Google sign-in error: ${e.toString()}';
+                            });
+                          }
+                        } finally {
+                          if (mounted) {
+                            setState(() {
+                              _isLoading = false;
+                            });
+                          }
+                        }
+                      },
                 style: OutlinedButton.styleFrom(
                   padding: const EdgeInsets.symmetric(vertical: 16),
                   side: BorderSide(color: AppColors.primary),

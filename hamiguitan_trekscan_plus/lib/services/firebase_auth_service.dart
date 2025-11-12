@@ -1,5 +1,6 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 
 class FirebaseAuthService {
   FirebaseAuthService._internal();
@@ -79,5 +80,91 @@ class FirebaseAuthService {
   /// Check if user is logged in
   bool isLoggedIn() {
     return _firebaseAuth.currentUser != null;
+  }
+
+  /// Sign in with Google
+  ///
+  /// Returns the signed in [User] when successful, or `null` when the
+  /// user cancelled the sign-in flow. This method is resilient to a
+  /// plugin/platform-side Pigeon type-cast mismatch: if `signInWithCredential`
+  /// throws but the Firebase native SDK reports a current user, we return
+  /// that user so the app can continue.
+  Future<User?> signInWithGoogle() async {
+    try {
+      // Trigger the authentication flow
+      final GoogleSignInAccount? googleUser = await GoogleSignIn().signIn();
+      if (googleUser == null) {
+        // User canceled the sign-in
+        if (kDebugMode) {
+          print('Google sign-in cancelled by user');
+        }
+        return null;
+      }
+
+      if (kDebugMode) {
+        print('Google user signed in: ${googleUser.email}');
+      }
+
+      final GoogleSignInAuthentication googleAuth =
+          await googleUser.authentication;
+
+      if (kDebugMode) {
+        print(
+          'Google auth obtained. Access token: ${googleAuth.accessToken != null}, ID token: ${googleAuth.idToken != null}',
+        );
+      }
+
+      // Create a new credential
+      final credential = GoogleAuthProvider.credential(
+        accessToken: googleAuth.accessToken,
+        idToken: googleAuth.idToken,
+      );
+
+      // Once signed in, return the User (or, if the platform code throws a
+      // Pigeon-related type error, fall back to the current user reported by
+      // the Firebase SDK).
+      try {
+        final userCredential = await _firebaseAuth.signInWithCredential(
+          credential,
+        );
+
+        if (kDebugMode) {
+          print('Firebase sign in successful: ${userCredential.user?.email}');
+        }
+
+        return userCredential.user;
+      } catch (e, st) {
+        // Sometimes a mismatch between plugin/platform generated Pigeon
+        // types causes a Dart-side cast error even though the native SDK
+        // has completed the sign-in. Detect that case and return the
+        // current user if available.
+        if (kDebugMode) {
+          print('Error while converting UserCredential: $e');
+          print(st);
+        }
+
+        final fallbackUser = _firebaseAuth.currentUser;
+        if (fallbackUser != null) {
+          if (kDebugMode) {
+            print('Returning fallback currentUser: ${fallbackUser.email}');
+          }
+          return fallbackUser;
+        }
+
+        rethrow;
+      }
+    } on FirebaseAuthException catch (e) {
+      if (kDebugMode) {
+        print(
+          'FirebaseAuthException - Google sign in failed: ${e.code} - ${e.message}',
+        );
+      }
+      rethrow;
+    } catch (e) {
+      if (kDebugMode) {
+        print('Generic exception - Google sign in failed: $e');
+      }
+      rethrow;
+    }
   }
 }

@@ -5,6 +5,9 @@ import '../../components/event_calendar.dart';
 import '../../components/connectivity_banner.dart';
 import '../../models/calendar_model.dart';
 import '../../theme/color.dart';
+import '../../services/firebase_auth_service.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'dart:async';
 import 'profile_screen.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -18,11 +21,25 @@ class _HomeScreenState extends State<HomeScreen> {
   //int _selectedNavIndex = 0;
   int _selectedSegmentIndex = 0;
   late List<TrekDay> _trekDays;
+  User? _firebaseUser;
+  StreamSubscription<User?>? _authSubscription;
 
   @override
   void initState() {
     super.initState();
     _initializeTrekDays();
+    _firebaseUser = FirebaseAuthService.instance.currentUser;
+    _authSubscription = FirebaseAuthService.instance.authStateChanges.listen((user) {
+      setState(() {
+        _firebaseUser = user;
+      });
+    });
+  }
+
+  @override
+  void dispose() {
+    _authSubscription?.cancel();
+    super.dispose();
   }
 
   void _initializeTrekDays() {
@@ -107,17 +124,22 @@ class _HomeScreenState extends State<HomeScreen> {
                 MaterialPageRoute(builder: (context) => const ProfileScreen()),
               );
             },
-            child: Row(
+                child: Row(
               children: [
-                const CircleAvatar(
+                CircleAvatar(
                   backgroundColor: AppColors.primary,
-                  child: Icon(Icons.person, color: AppColors.iconPrimary),
+                  backgroundImage: _firebaseUser?.photoURL != null
+                      ? NetworkImage(_firebaseUser!.photoURL!)
+                      : null,
+                  child: _firebaseUser?.photoURL == null
+                      ? const Icon(Icons.person, color: AppColors.iconPrimary)
+                      : null,
                 ),
                 const SizedBox(width: 12),
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
-                  children: const [
-                    Text(
+                  children: [
+                    const Text(
                       'Welcome,',
                       style: TextStyle(
                         color: AppColors.textSecondary,
@@ -125,8 +147,10 @@ class _HomeScreenState extends State<HomeScreen> {
                       ),
                     ),
                     Text(
-                      'Grmpycrab!',
-                      style: TextStyle(
+                      _firebaseUser?.displayName ??
+                          _firebaseUser?.email?.split('@').first ??
+                          'Grmpycrab!',
+                      style: const TextStyle(
                         fontWeight: FontWeight.w600,
                         fontSize: 16,
                       ),
