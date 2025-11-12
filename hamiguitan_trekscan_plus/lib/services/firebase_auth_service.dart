@@ -104,8 +104,20 @@ class FirebaseAuthService {
   /// that user so the app can continue.
   Future<User?> signInWithGoogle() async {
     try {
+      // Use a single GoogleSignIn instance so we can control cached state.
+      final googleSignIn = GoogleSignIn();
+
+      // Ensure any previously cached Google account for this app is cleared so
+      // the system will show the account chooser. Without this, the plugin may
+      // return the last used account silently.
+      try {
+        await googleSignIn.signOut();
+      } catch (_) {
+        // ignore errors from signOut; proceed to signIn which will still show chooser
+      }
+
       // Trigger the authentication flow
-      final GoogleSignInAccount? googleUser = await GoogleSignIn().signIn();
+      final GoogleSignInAccount? googleUser = await googleSignIn.signIn();
       if (googleUser == null) {
         // User canceled the sign-in
         if (kDebugMode) {
@@ -140,6 +152,13 @@ class FirebaseAuthService {
         final userCredential = await _firebaseAuth.signInWithCredential(
           credential,
         );
+
+        // Ensure Firestore has a user document for this account
+        if (userCredential.user != null) {
+          await UserService.instance.createOrUpdateUserFromFirebase(
+            userCredential.user!,
+          );
+        }
 
         if (kDebugMode) {
           print('Firebase sign in successful: ${userCredential.user?.email}');

@@ -214,38 +214,110 @@ class _BookAClimbScreenState extends State<BookAClimbScreen> {
   }
 
   Widget _buildBookingsList(List<Climb> bookings) {
+    // Wrap lists in a RefreshIndicator so user can pull-to-refresh bookings
     if (bookings.isEmpty) {
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
+      return RefreshIndicator(
+        onRefresh: _refreshBookings,
+        child: ListView(
+          padding: const EdgeInsets.all(16),
           children: [
-            Icon(Icons.list_alt, size: 64, color: Colors.grey[400]),
-            const SizedBox(height: 16),
-            Text(
-              'No bookings',
-              style: TextStyle(color: Colors.grey[600], fontSize: 16),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              'Tap the + button to create a booking',
-              style: TextStyle(color: Colors.grey[500]),
+            SizedBox(
+              height: 240,
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.list_alt, size: 64, color: Colors.grey[400]),
+                  const SizedBox(height: 16),
+                  Text(
+                    'No bookings',
+                    style: TextStyle(color: Colors.grey[600], fontSize: 16),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Tap the + button to create a booking',
+                    style: TextStyle(color: Colors.grey[500]),
+                  ),
+                ],
+              ),
             ),
           ],
         ),
       );
     }
 
-    return ListView.builder(
-      padding: const EdgeInsets.all(16),
-      itemCount: bookings.length,
-      itemBuilder: (context, index) {
-        final booking = bookings[index];
-        return ClimbCard(
-          climb: booking,
-          onCancel: (c) => _confirmCancelModel(c),
-        );
-      },
+    return RefreshIndicator(
+      onRefresh: _refreshBookings,
+      child: ListView.builder(
+        padding: const EdgeInsets.all(16),
+        itemCount: bookings.length,
+        itemBuilder: (context, index) {
+          final booking = bookings[index];
+          return ClimbCard(
+            climb: booking,
+            onCancel: (c) => _confirmCancelModel(c),
+          );
+        },
+      ),
     );
+  }
+
+  Future<void> _refreshBookings() async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) return;
+    try {
+      // Cancel current subscription and clear local state first
+      _bookingSub?.cancel();
+      setState(() => _bookings = []);
+
+      // Fetch fresh data from Firestore
+      final bookings = await BookingService.instance
+          .streamBookingsForUser(user.uid)
+          .first;
+
+      if (!mounted) return;
+      setState(() {
+        _bookings = bookings
+            .map(
+              (b) => Climb(
+                name: FirebaseAuth.instance.currentUser?.displayName ?? 'You',
+                date: b.trekDate.toDate(),
+                type: b.trekType,
+                status: b.status,
+                documents: b.attachments.map((a) => a.fileName).toList(),
+              ),
+            )
+            .toList();
+      });
+
+      // Re-subscribe to live updates
+      if (mounted && user == FirebaseAuth.instance.currentUser) {
+        _bookingSub = BookingService.instance
+            .streamBookingsForUser(user.uid)
+            .listen((bookings) {
+              if (mounted) {
+                setState(() {
+                  _bookings = bookings
+                      .map(
+                        (b) => Climb(
+                          name:
+                              FirebaseAuth.instance.currentUser?.displayName ??
+                              'You',
+                          date: b.trekDate.toDate(),
+                          type: b.trekType,
+                          status: b.status,
+                          documents: b.attachments
+                              .map((a) => a.fileName)
+                              .toList(),
+                        ),
+                      )
+                      .toList();
+                });
+              }
+            });
+      }
+    } catch (e) {
+      print('Error refreshing bookings: $e');
+    }
   }
 
   // Convert internal _bookings (dynamic) to a list of Climb objects.
