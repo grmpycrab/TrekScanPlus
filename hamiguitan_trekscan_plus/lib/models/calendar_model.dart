@@ -16,10 +16,7 @@ class TrekDay {
   bool get isFull => bookedSlots >= maxSlots;
   bool get isWeekend =>
       date.weekday == DateTime.saturday || date.weekday == DateTime.sunday;
-  bool get isAvailable =>
-      status == TrekDayStatus.available &&
-      (isResearchDay || isWeekend) &&
-      !isFull;
+  bool get isAvailable => status == TrekDayStatus.available && !isFull;
 }
 
 enum TrekDayStatus {
