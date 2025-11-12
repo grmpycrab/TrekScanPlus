@@ -1,4 +1,5 @@
 class Climb {
+  String? id;
   String name;
   DateTime date;
   String type;
@@ -6,6 +7,7 @@ class Climb {
   List<String> documents;
 
   Climb({
+    this.id,
     required this.name,
     required this.date,
     this.type = 'General',
@@ -21,6 +23,7 @@ class Climb {
       dt = DateTime(1970);
     }
     return Climb(
+      id: m['id'],
       name: m['name'] ?? '',
       date: dt,
       type: m['type'] ?? 'General',
@@ -28,18 +31,25 @@ class Climb {
     );
   }
 
-  Map<String, String> toMap() => {
-    'name': name,
-    'date': date.toIso8601String(),
-    'type': type,
-    'status': status,
-  };
+  Map<String, String> toMap() {
+    final map = {
+      'name': name,
+      'date': date.toIso8601String(),
+      'type': type,
+      'status': status,
+    };
+    if (id != null) map['id'] = id!;
+    return map;
+  }
 
   String computedStatus() {
-    if (status == 'Cancelled') return 'Cancelled';
+    final st = status.toLowerCase();
+    if (st == 'cancelled') return 'Cancelled';
     final today = DateTime.now();
     final todayDate = DateTime(today.year, today.month, today.day);
     if (date.isBefore(todayDate)) return 'Expired';
-    return status;
+    // Capitalize status for display (e.g. 'approved' -> 'Approved')
+    if (st.isEmpty) return status;
+    return st[0].toUpperCase() + st.substring(1);
   }
 }

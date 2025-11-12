@@ -59,10 +59,11 @@ class _BookAClimbScreenState extends State<BookAClimbScreen> {
           .streamBookingsForUser(user.uid)
           .listen((bookings) {
             setState(() {
-              // Map BookingModel -> Climb for display
+              // Map BookingModel -> Climb for display (include the booking id)
               _bookings = bookings
                   .map(
                     (b) => Climb(
+                      id: b.id,
                       name:
                           FirebaseAuth.instance.currentUser?.displayName ??
                           'You',
@@ -151,13 +152,12 @@ class _BookAClimbScreenState extends State<BookAClimbScreen> {
         backgroundColor: const Color(0xFF252B30),
         elevation: 0,
         centerTitle: true,
+        // Prevent the automatic leading (back) button so the top-left
+        // area no longer navigates back (avoids reported black-screen bug).
+        automaticallyImplyLeading: false,
         title: const Text(
           'Book a Climb',
           style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-        ),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.white),
-          onPressed: () => Navigator.pop(context),
         ),
         shape: const RoundedRectangleBorder(
           borderRadius: BorderRadius.vertical(top: Radius.circular(8)),
@@ -279,6 +279,7 @@ class _BookAClimbScreenState extends State<BookAClimbScreen> {
         _bookings = bookings
             .map(
               (b) => Climb(
+                id: b.id,
                 name: FirebaseAuth.instance.currentUser?.displayName ?? 'You',
                 date: b.trekDate.toDate(),
                 type: b.trekType,
@@ -299,6 +300,7 @@ class _BookAClimbScreenState extends State<BookAClimbScreen> {
                   _bookings = bookings
                       .map(
                         (b) => Climb(
+                          id: b.id,
                           name:
                               FirebaseAuth.instance.currentUser?.displayName ??
                               'You',
@@ -369,10 +371,32 @@ class _BookAClimbScreenState extends State<BookAClimbScreen> {
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(backgroundColor: Colors.redAccent),
-            onPressed: () {
-              setState(() {
-                booking.status = 'Cancelled';
-              });
+            onPressed: () async {
+              // If booking has an id, persist cancellation to Firestore.
+              if (booking.id != null) {
+                try {
+                  await BookingService.instance.cancelBooking(booking.id!);
+                  // Let the Firestore stream update the UI. Optionally
+                  // update local model immediately for snappy feedback.
+                  if (mounted) {
+                    setState(() {
+                      booking.status = 'Cancelled';
+                    });
+                  }
+                } catch (e) {
+                  // Show error to user
+                  if (mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text('Failed to cancel booking: $e')),
+                    );
+                  }
+                }
+              } else {
+                // No id (likely local-only); just update locally
+                if (mounted) {
+                  setState(() => booking.status = 'Cancelled');
+                }
+              }
               Navigator.pop(context);
             },
             child: const Text('Yes, cancel'),
