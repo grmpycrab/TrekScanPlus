@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import '../../models/user_model.dart';
+import '../../services/firebase_auth_service.dart';
+import '../auth/login_screen.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -10,17 +13,38 @@ class ProfileScreen extends StatefulWidget {
 
 class _ProfileScreenState extends State<ProfileScreen> {
   late UserModel _user;
+  User? _firebaseUser;
 
   @override
   void initState() {
     super.initState();
-    _user = UserModel(
-      firstName: 'John',
-      lastName: 'Doe',
-      email: 'john.doe@example.com',
-      birthDate: '01/01/1990',
-      gender: 'Male',
-    );
+    _firebaseUser = FirebaseAuthService.instance.currentUser;
+
+    if (_firebaseUser != null) {
+      final display = _firebaseUser!.displayName ?? '';
+      final parts = display.isNotEmpty ? display.split(' ') : [];
+      final first = parts.isNotEmpty
+          ? parts.first
+          : (_firebaseUser!.email?.split('@').first ?? '');
+      final last = parts.length > 1 ? parts.sublist(1).join(' ') : '';
+
+      _user = UserModel(
+        firstName: first,
+        lastName: last,
+        email: _firebaseUser!.email ?? '',
+        birthDate: '01/01/1990',
+        gender: 'Not specified',
+        profileImage: _firebaseUser!.photoURL,
+      );
+    } else {
+      _user = UserModel(
+        firstName: 'John',
+        lastName: 'Doe',
+        email: 'john.doe@example.com',
+        birthDate: '01/01/1990',
+        gender: 'Male',
+      );
+    }
   }
 
   @override
@@ -99,7 +123,19 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     ),
                     const SizedBox(height: 16),
                     TextButton(
-                      onPressed: () {},
+                      onPressed: () async {
+                        // Log out the current user and return to the login screen.
+                        await FirebaseAuthService.instance.signOut();
+                        if (mounted) {
+                          Navigator.pushAndRemoveUntil(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const LoginScreen(),
+                            ),
+                            (route) => false,
+                          );
+                        }
+                      },
                       style: TextButton.styleFrom(
                         padding: const EdgeInsets.symmetric(vertical: 16),
                         minimumSize: const Size(double.infinity, 50),
