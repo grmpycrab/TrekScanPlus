@@ -6,12 +6,14 @@ import '../theme/color.dart';
 class EventCalendar extends StatefulWidget {
   final DateTime initialDate;
   final Function(DateTime)? onDaySelected;
+  final Function(DateTime)? onMonthChanged;
   final List<TrekDay> trekDays;
 
   EventCalendar({
     super.key,
     DateTime? initialDate,
     this.onDaySelected,
+    this.onMonthChanged,
     required this.trekDays,
   }) : initialDate = initialDate ?? DateTime.now();
 
@@ -34,12 +36,14 @@ class _EventCalendarState extends State<EventCalendar> {
     setState(() {
       _currentMonth = DateTime(_currentMonth.year, _currentMonth.month - 1);
     });
+    if (widget.onMonthChanged != null) widget.onMonthChanged!(_currentMonth);
   }
 
   void _nextMonth() {
     setState(() {
       _currentMonth = DateTime(_currentMonth.year, _currentMonth.month + 1);
     });
+    if (widget.onMonthChanged != null) widget.onMonthChanged!(_currentMonth);
   }
 
   TrekDay? _getTrekDay(DateTime date) {
@@ -215,7 +219,7 @@ class _EventCalendarState extends State<EventCalendar> {
       children: [
         _buildLegendItem('Available', Colors.green),
         const SizedBox(width: 16),
-        _buildLegendItem('Critical', Colors.orange),
+        _buildLegendItem('Limited Slots Remaining', Colors.orange),
         const SizedBox(width: 16),
         _buildLegendItem('Full', Colors.red),
       ],

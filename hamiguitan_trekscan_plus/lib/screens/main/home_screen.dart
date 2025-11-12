@@ -6,6 +6,8 @@ import '../../components/connectivity_banner.dart';
 import '../../models/calendar_model.dart';
 import '../../theme/color.dart';
 import '../../services/firebase_auth_service.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+// booking service/model not required here; we query Firestore directly for calendar aggregation
 import 'package:firebase_auth/firebase_auth.dart';
 import 'dart:async';
 import 'profile_screen.dart';
@@ -23,6 +25,7 @@ class _HomeScreenState extends State<HomeScreen> {
   late List<TrekDay> _trekDays;
   User? _firebaseUser;
   StreamSubscription<User?>? _authSubscription;
+  StreamSubscription<QuerySnapshot>? _bookingsSubscription;
 
   @override
   void initState() {
@@ -36,11 +39,14 @@ class _HomeScreenState extends State<HomeScreen> {
         _firebaseUser = user;
       });
     });
+    // Subscribe to bookings for the current month to update calendar availability
+    _subscribeBookingsForMonth(DateTime.now());
   }
 
   @override
   void dispose() {
     _authSubscription?.cancel();
+    _bookingsSubscription?.cancel();
     super.dispose();
   }
 
@@ -49,32 +55,78 @@ class _HomeScreenState extends State<HomeScreen> {
     final now = DateTime.now();
     final daysInMonth = DateTime(now.year, now.month + 1, 0).day;
 
+    // Initialize with closed status; real statuses will be set when bookings
+    // snapshot is received.
     _trekDays = List.generate(daysInMonth, (index) {
       final date = DateTime(now.year, now.month, index + 1);
-      final isWeekend =
-          date.weekday == DateTime.saturday || date.weekday == DateTime.sunday;
-
-      // Sample logic for research days (e.g., every Wednesday)
       final isResearchDay = date.weekday == DateTime.wednesday;
-
-      // Sample status assignment
-      var status = TrekDayStatus.closed;
-      if (isWeekend || isResearchDay) {
-        final random = index % 3; // Just for demo
-        status = random == 0
-            ? TrekDayStatus.available
-            : random == 1
-            ? TrekDayStatus.critical
-            : TrekDayStatus.full;
-      }
-
       return TrekDay(
         date: date,
-        status: status,
+        status: TrekDayStatus.closed,
         isResearchDay: isResearchDay,
-        bookedSlots: isWeekend ? (index % 20) : 0, // Sample booking data
+        bookedSlots: 0,
       );
     });
+  }
+
+  void _subscribeBookingsForMonth(DateTime month) {
+    _bookingsSubscription?.cancel();
+    final firstDay = DateTime(month.year, month.month, 1);
+    final lastDay = DateTime(month.year, month.month + 1, 0, 23, 59, 59);
+
+    final startTs = Timestamp.fromDate(
+      DateTime(firstDay.year, firstDay.month, firstDay.day),
+    );
+    final endTs = Timestamp.fromDate(lastDay);
+
+    _bookingsSubscription = FirebaseFirestore.instance
+        .collection('bookings')
+        .where('trekDate', isGreaterThanOrEqualTo: startTs)
+        .where('trekDate', isLessThanOrEqualTo: endTs)
+        .snapshots()
+        .listen((snap) {
+          // Map date -> booked slots. Count each booking as 1 + numberOfPorters
+          final Map<String, int> slotsPerDay = {};
+          for (final doc in snap.docs) {
+            final data = doc.data();
+            final Timestamp? t = data['trekDate'] as Timestamp?;
+            if (t == null) continue;
+            final d = t.toDate();
+            final key = '${d.year}-${d.month}-${d.day}';
+            final porters = (data['numberOfPorters'] as num?)?.toInt() ?? 0;
+            final used =
+                1 + porters; // each booking occupies the requester + porters
+            slotsPerDay[key] = (slotsPerDay[key] ?? 0) + used;
+          }
+
+          // Rebuild trekDays for the month using a maxSlots of 30
+          setState(() {
+            final now = month;
+            final daysInMonth = DateTime(now.year, now.month + 1, 0).day;
+            _trekDays = List.generate(daysInMonth, (index) {
+              final date = DateTime(now.year, now.month, index + 1);
+              final key = '${date.year}-${date.month}-${date.day}';
+              final booked = slotsPerDay[key] ?? 0;
+              const maxSlots = 30;
+              TrekDayStatus status;
+              if (booked >= maxSlots) {
+                status = TrekDayStatus.full;
+              } else if (booked >= (maxSlots - 5)) {
+                status = TrekDayStatus.critical;
+              } else {
+                status = TrekDayStatus.available;
+              }
+              final isResearchDay = date.weekday == DateTime.wednesday;
+              return TrekDay(
+                date: date,
+                status: status,
+                isResearchDay: isResearchDay,
+                bookedSlots: booked,
+                maxSlots: maxSlots,
+              );
+            });
+          });
+        });
   }
 
   @override
@@ -219,6 +271,7 @@ class _HomeScreenState extends State<HomeScreen> {
           const SizedBox(height: 16),
           EventCalendar(
             trekDays: _trekDays,
+            onMonthChanged: (d) => _subscribeBookingsForMonth(d),
             onDaySelected: (date) {
               // Handle day selection
               if (_trekDays.any(
@@ -244,7 +297,7 @@ class _HomeScreenState extends State<HomeScreen> {
       clipBehavior: Clip.none,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: const Color(0xFF252B30), // pale beige background
+        color: const Color(0xFF252B30),
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(

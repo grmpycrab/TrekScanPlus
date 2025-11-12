@@ -1,0 +1,42 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Users collection: users can read/write their own doc, admins can read all
+    match /users/{userId} {
+      allow read: if request.auth != null && (request.auth.uid == userId || request.auth.token.admin == true);
+      allow write: if request.auth != null && request.auth.uid == userId; // users can update their own profile
+    }
+
+    // Top-level bookings collection
+    match /bookings/{bookingId} {
+      // Create: allow authenticated users to create bookings for themselves
+      // (relaxed: only require ownership; field validation is done server-side or in client)
+      allow create: if request.auth != null && request.resource.data.userId == request.auth.uid;
+
+      // Read: owners or admins
+      allow read: if request.auth != null && (resource.data.userId == request.auth.uid || request.auth.token.admin == true);
+
+      // Update: owners can update their booking while it's still pending (e.g., upload attachments, cancel)
+      // Admins can also update.
+      allow update: if request.auth != null && (
+        // owner may update while booking is pending
+        (resource.data.userId == request.auth.uid && resource.data.status == 'pending')
+        // admin override
+        || request.auth.token.admin == true
+      );
+
+      // Delete: only admins can delete bookings
+      allow delete: if request.auth != null && request.auth.token.admin == true;
+    }
+
+    // If you use subcollections, allow collection-group queries for admin:
+    match /users/{userId}/bookings/{bookingId} {
+      allow create: if request.auth != null && request.auth.uid == userId;
+      allow read: if request.auth != null && (request.auth.uid == userId || request.auth.token.admin == true);
+      allow update: if request.auth != null && request.auth.uid == userId;
+      allow delete: if request.auth != null && (request.auth.uid == userId || request.auth.token.admin == true);
+    }
+
+  }
+}

@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
+import 'dart:async';
 import 'package:file_picker/file_picker.dart';
-import 'dart:io' show File;
+// dart:io not required here anymore
 import 'package:firebase_core/firebase_core.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_storage/firebase_storage.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import '../../models/booking_model.dart';
+import '../../services/booking_service.dart';
 import '../../services/validators.dart';
 import '../../models/climb.dart';
 import '../../components/climb_card.dart';
@@ -22,31 +25,63 @@ class _BookAClimbScreenState extends State<BookAClimbScreen> {
   // Store picked PlatformFile objects so we can upload bytes/paths to Firebase
   List<PlatformFile> _pickedFiles = [];
 
-  // Demo bookings list shown on main screen. Replace with real data source.
-  // Keep as dynamic for backward compatibility, but initialize with Climb
-  // instances to avoid type-mismatch issues.
-  final List<dynamic> _bookings = [
-    Climb(
-      name: 'John Doe',
-      date: DateTime(2025, 11, 10),
-      type: 'General',
-      status: 'Pending',
-    ),
-    Climb(
-      name: 'Jane Smith',
-      date: DateTime(2025, 11, 15),
-      type: 'Research',
-      status: 'Approved',
-    ),
-  ];
+  // Bookings shown on main screen. This will be populated from Firestore
+  // for the current authenticated user. Keep as dynamic to preserve
+  // compatibility with the existing UI helper methods.
+  List<dynamic> _bookings = [];
+
+  StreamSubscription<List<BookingModel>>? _bookingSub;
+  StreamSubscription<User?>? _authSub;
 
   // Controllers for text fields
-  final TextEditingController _nameController = TextEditingController();
+  // Note: name/email are obtained from the authenticated user; do not request
+  // them in the booking form per the solo-booking UX. Keep controllers for
+  // affiliation and porters only.
   final TextEditingController _contactController = TextEditingController();
-  final TextEditingController _ageController = TextEditingController();
-  final TextEditingController _emailController = TextEditingController();
-  final TextEditingController _affiliationController = TextEditingController();
   final TextEditingController _portersController = TextEditingController();
+  final TextEditingController _affiliationController = TextEditingController();
+  DateTime? _selectedDate;
+
+  @override
+  void initState() {
+    super.initState();
+    // Listen for auth state changes so we can (re)subscribe to bookings for
+    // the signed-in user. This handles cases where the screen loads before
+    // authentication completes.
+    _authSub = FirebaseAuth.instance.authStateChanges().listen((user) {
+      // cancel previous bookings subscription
+      _bookingSub?.cancel();
+      if (user == null) {
+        setState(() => _bookings = []);
+        return;
+      }
+      _bookingSub = BookingService.instance
+          .streamBookingsForUser(user.uid)
+          .listen((bookings) {
+            setState(() {
+              // Map BookingModel -> Climb for display
+              _bookings = bookings
+                  .map(
+                    (b) => Climb(
+                      name:
+                          FirebaseAuth.instance.currentUser?.displayName ??
+                          'You',
+                      date: b.trekDate.toDate(),
+                      type: b.trekType,
+                      status: b.status,
+                      documents: b.attachments.map((a) => a.fileName).toList(),
+                    ),
+                  )
+                  .toList();
+            });
+          });
+    });
+  }
+
+  String _formatSelectedDate() {
+    if (_selectedDate == null) return 'Select date';
+    return '${_selectedDate!.year}-${_selectedDate!.month.toString().padLeft(2, '0')}-${_selectedDate!.day.toString().padLeft(2, '0')}';
+  }
 
   Future<void> _pickFiles() async {
     FilePickerResult? result = await FilePicker.platform.pickFiles(
@@ -71,41 +106,41 @@ class _BookAClimbScreenState extends State<BookAClimbScreen> {
       await Firebase.initializeApp();
     }
 
-    final storage = FirebaseStorage.instance;
-    final firestore = FirebaseFirestore.instance;
+    // Build BookingModel from the form + current user info
+    final now = DateTime.now();
+    final currentUser = FirebaseAuth.instance.currentUser;
+    final booking = BookingModel(
+      userId: currentUser?.uid ?? meta['userId'] ?? '',
+      affiliation: meta['affiliation'] ?? '',
+      trekDate: Timestamp.fromDate(_selectedDate ?? now),
+      numberOfPorters: int.tryParse(meta['porters'] ?? '') ?? 0,
+      trekType: meta['trekType'] ?? _climbType.toLowerCase(),
+      notes: meta['notes'],
+    );
 
-    // Upload files and collect URLs
-    final List<String> fileUrls = [];
+    // Use BookingService to create booking first, then upload attachments in background
+    final bookingService = BookingService.instance;
+    final String bookingId = await bookingService.createBooking(booking);
+
+    // Start uploads as fire-and-forget so UI isn't blocked by platform/plugin issues
     for (final f in files) {
-      try {
-        final timestamp = DateTime.now().millisecondsSinceEpoch;
-        final ref = storage.ref('bookings/${timestamp}_${f.name}');
-        if (f.path != null) {
-          // On mobile platforms we can upload via file path
-          final uploadTask = ref.putFile(File(f.path!));
-          await uploadTask.whenComplete(() {});
-        } else if (f.bytes != null) {
-          final uploadTask = ref.putData(f.bytes!);
-          await uploadTask.whenComplete(() {});
-        } else {
-          continue;
-        }
-        final url = await ref.getDownloadURL();
-        fileUrls.add(url);
-      } catch (e) {
-        // Swallow individual file errors and continue
-      }
+      bookingService
+          .uploadAttachment(bookingId, f)
+          .then((meta) {
+            if (mounted) {
+              ScaffoldMessenger.of(this.context).showSnackBar(
+                SnackBar(content: Text('Uploaded ${meta.fileName}')),
+              );
+            }
+          })
+          .catchError((e) {
+            if (mounted) {
+              ScaffoldMessenger.of(this.context).showSnackBar(
+                SnackBar(content: Text('Failed to upload ${f.name}: $e')),
+              );
+            }
+          });
     }
-
-    // Create booking document in Firestore
-    final doc = {
-      ...climb.toMap(),
-      'documents': fileUrls,
-      'meta': meta,
-      'createdAt': FieldValue.serverTimestamp(),
-      'status': 'Pending',
-    };
-    await firestore.collection('bookings').add(doc);
   }
 
   @override
@@ -316,40 +351,67 @@ class _BookAClimbScreenState extends State<BookAClimbScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        _buildRoundedTextField(
-                          'Full Name',
-                          controller: _nameController,
+                        // Show the authenticated user's name/email (read-only)
+                        Builder(
+                          builder: (context) {
+                            final user = FirebaseAuth.instance.currentUser;
+                            return Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'Booking for',
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.w600,
+                                    color: Colors.grey[700],
+                                  ),
+                                ),
+                                const SizedBox(height: 6),
+                                Container(
+                                  padding: const EdgeInsets.all(12),
+                                  decoration: BoxDecoration(
+                                    color: Colors.grey[100],
+                                    borderRadius: BorderRadius.circular(12),
+                                    border: Border.all(color: Colors.black12),
+                                  ),
+                                  child: Row(
+                                    children: [
+                                      Expanded(
+                                        child: Column(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
+                                          children: [
+                                            Text(
+                                              user?.displayName ?? 'Guest',
+                                              style: const TextStyle(
+                                                fontWeight: FontWeight.w600,
+                                              ),
+                                            ),
+                                            const SizedBox(height: 4),
+                                            Text(
+                                              user?.email ?? '',
+                                              style: const TextStyle(
+                                                color: Colors.black54,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            );
+                          },
                         ),
                         const SizedBox(height: 12),
-                        Row(
-                          children: [
-                            Expanded(
-                              child: _buildRoundedTextField(
-                                'Contact Number',
-                                controller: _contactController,
-                                keyboardType: TextInputType.phone,
-                                validator: (value) =>
-                                    Validators.validPhone(value),
-                              ),
-                            ),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: _buildRoundedTextField(
-                                'Age',
-                                controller: _ageController,
-                                keyboardType: TextInputType.number,
-                                validator: (value) =>
-                                    Validators.validAge(value),
-                              ),
-                            ),
-                          ],
+                        // Contact number (still editable)
+                        _buildRoundedTextField(
+                          'Contact Number',
+                          controller: _contactController,
+                          keyboardType: TextInputType.phone,
+                          validator: (value) => Validators.validPhone(value),
                         ),
                         const SizedBox(height: 12),
-                        _buildRoundedTextField(
-                          'Email',
-                          controller: _emailController,
-                          keyboardType: TextInputType.emailAddress,
-                        ),
                         const SizedBox(height: 12),
                         _buildRoundedTextField(
                           'Affiliation',
@@ -360,6 +422,49 @@ class _BookAClimbScreenState extends State<BookAClimbScreen> {
                           'Number of Porters',
                           controller: _portersController,
                           keyboardType: TextInputType.number,
+                        ),
+                        const SizedBox(height: 12),
+                        // Date picker row
+                        Row(
+                          children: [
+                            Expanded(
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 12,
+                                  vertical: 8,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: Colors.white,
+                                  borderRadius: BorderRadius.circular(16),
+                                  border: Border.all(color: Colors.black26),
+                                ),
+                                child: Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Text(_formatSelectedDate()),
+                                    TextButton(
+                                      onPressed: () async {
+                                        final now = DateTime.now();
+                                        final picked = await showDatePicker(
+                                          context: context,
+                                          initialDate: _selectedDate ?? now,
+                                          firstDate: now,
+                                          lastDate: DateTime(now.year + 2),
+                                        );
+                                        if (picked != null) {
+                                          setState(
+                                            () => _selectedDate = picked,
+                                          );
+                                        }
+                                      },
+                                      child: const Text('Pick Date'),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
                         const SizedBox(height: 12),
                         _buildDropdown(),
@@ -442,109 +547,143 @@ class _BookAClimbScreenState extends State<BookAClimbScreen> {
 
   void _showReviewDialog() {
     if (!_formKey.currentState!.validate()) return;
+    bool isSubmitting = false;
     showDialog(
       context: context,
+      barrierDismissible: false,
       builder: (context) {
-        return AlertDialog(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-          ),
-          title: const Text('Review Your Submission'),
-          content: SingleChildScrollView(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _reviewRow('Full Name', _nameController.text),
-                _reviewRow('Contact Number', _contactController.text),
-                _reviewRow('Age', _ageController.text),
-                _reviewRow('Email', _emailController.text),
-                _reviewRow('Affiliation', _affiliationController.text),
-                _reviewRow('Number of Porters', _portersController.text),
-                _reviewRow('Climb Type', _climbType),
-                const SizedBox(height: 8),
-                const Text(
-                  'Documents:',
-                  style: TextStyle(fontWeight: FontWeight.w600),
+        return StatefulBuilder(
+          builder: (context, dialogSetState) {
+            final user = FirebaseAuth.instance.currentUser;
+            return AlertDialog(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
+              title: const Text('Review Your Submission'),
+              content: SingleChildScrollView(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Show user and booking details in the review
+                    _reviewRow('Full Name', user?.displayName ?? 'Guest'),
+                    _reviewRow('Email', user?.email ?? ''),
+                    _reviewRow('Contact Number', _contactController.text),
+                    _reviewRow('Affiliation', _affiliationController.text),
+                    _reviewRow('Number of Porters', _portersController.text),
+                    _reviewRow('Climb Type', _climbType),
+                    _reviewRow(
+                      'Trek Date',
+                      _selectedDate != null ? _formatSelectedDate() : 'Not set',
+                    ),
+                    const SizedBox(height: 8),
+                    const Text(
+                      'Documents:',
+                      style: TextStyle(fontWeight: FontWeight.w600),
+                    ),
+                    ...(_pickedFiles.isEmpty
+                        ? [
+                            const Text(
+                              'No files uploaded.',
+                              style: TextStyle(color: Colors.black38),
+                            ),
+                          ]
+                        : _pickedFiles.map((f) => Text(f.name)).toList()),
+                  ],
                 ),
-                ...(_pickedFiles.isEmpty
-                    ? [
-                        const Text(
-                          'No files uploaded.',
-                          style: TextStyle(color: Colors.black38),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: isSubmitting
+                      ? null
+                      : () => Navigator.of(context).pop(),
+                  child: const Text('Cancel'),
+                ),
+                ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.blueGrey[700],
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
+                  onPressed: isSubmitting
+                      ? null
+                      : () async {
+                          // create local object for immediate insertion
+                          final newClimb = Climb(
+                            name: user?.displayName ?? 'Guest',
+                            date: _selectedDate ?? DateTime.now(),
+                            type: _climbType,
+                            status: 'Pending',
+                            documents: _pickedFiles.map((f) => f.name).toList(),
+                          );
+
+                          // show loading state inside dialog
+                          dialogSetState(() => isSubmitting = true);
+
+                          try {
+                            await _submitBookingToFirebase(
+                              newClimb,
+                              _pickedFiles,
+                              {
+                                'contact': _contactController.text,
+                                'affiliation': _affiliationController.text,
+                                'porters': _portersController.text,
+                                'trekType': _climbType.toLowerCase(),
+                              },
+                            );
+
+                            // show snack on the main scaffold
+                            ScaffoldMessenger.of(this.context).showSnackBar(
+                              const SnackBar(
+                                content: Text('Booking submitted to server.'),
+                              ),
+                            );
+                          } catch (e) {
+                            // show error on main scaffold
+                            ScaffoldMessenger.of(this.context).showSnackBar(
+                              SnackBar(
+                                content: Text(
+                                  'Saved locally (upload failed): $e',
+                                ),
+                              ),
+                            );
+                          }
+
+                          // update main UI list if we aren't already subscribed
+                          // to the Firestore stream (avoid duplicate entries).
+                          if (mounted) {
+                            setState(() {
+                              if (_bookingSub == null) {
+                                _bookings.insert(0, newClimb);
+                              }
+                            });
+                          }
+
+                          // reset form state
+                          _contactController.clear();
+                          _affiliationController.clear();
+                          _portersController.clear();
+                          _pickedFiles = [];
+                          _climbType = 'General';
+                          _selectedDate = null;
+
+                          // close the dialog (use rootNavigator to ensure dialog is dismissed)
+                          Navigator.of(context, rootNavigator: true).pop();
+                        },
+                  child: isSubmitting
+                      ? const SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : const Text(
+                          'Proceed',
+                          style: TextStyle(color: Colors.white),
                         ),
-                      ]
-                    : _pickedFiles.map((f) => Text(f.name)).toList()),
-              ],
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: const Text('Cancel'),
-            ),
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.blueGrey[700],
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
                 ),
-              ),
-              onPressed: () async {
-                // Create new Climb entry (local object)
-                final newClimb = Climb(
-                  name: _nameController.text.trim(),
-                  date:
-                      DateTime.now(), // TODO: replace with selected date once date-picker added
-                  type: _climbType,
-                  status: 'Pending',
-                  documents: _pickedFiles.map((f) => f.name).toList(),
-                );
-
-                // Try to send to Firebase; if Firebase isn't configured the code
-                // will catch the error and fall back to local insertion only.
-                try {
-                  await _submitBookingToFirebase(newClimb, _pickedFiles, {
-                    'contact': _contactController.text,
-                    'age': _ageController.text,
-                    'email': _emailController.text,
-                    'affiliation': _affiliationController.text,
-                    'porters': _portersController.text,
-                  });
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Booking submitted to server.'),
-                    ),
-                  );
-                } catch (e) {
-                  // Firebase not available or upload failed — keep local booking and notify
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text('Saved locally (upload failed): $e'),
-                    ),
-                  );
-                }
-
-                // Always insert locally so user sees the booking immediately.
-                setState(() {
-                  _bookings.insert(0, newClimb);
-                });
-                Navigator.of(context).pop();
-                // Clear form for next use
-                _nameController.clear();
-                _contactController.clear();
-                _ageController.clear();
-                _emailController.clear();
-                _affiliationController.clear();
-                _portersController.clear();
-                _pickedFiles = [];
-                _climbType = 'General';
-              },
-              child: const Text(
-                'Proceed',
-                style: TextStyle(color: Colors.white),
-              ),
-            ),
-          ],
+              ],
+            );
+          },
         );
       },
     );
@@ -641,5 +780,15 @@ class _BookAClimbScreenState extends State<BookAClimbScreen> {
         ),
       ),
     );
+  }
+
+  @override
+  void dispose() {
+    _bookingSub?.cancel();
+    _authSub?.cancel();
+    _contactController.dispose();
+    _portersController.dispose();
+    _affiliationController.dispose();
+    super.dispose();
   }
 }
