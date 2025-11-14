@@ -9,7 +9,7 @@ class TrekDay {
     required this.date,
     required this.status,
     this.isResearchDay = false,
-    this.maxSlots = 20, // Default max slots per day
+    this.maxSlots = 20,
     this.bookedSlots = 0,
   });
 

@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'dart:async';
 import 'package:file_picker/file_picker.dart';
-// dart:io not required here anymore
 import 'package:firebase_core/firebase_core.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -59,10 +58,11 @@ class _BookAClimbScreenState extends State<BookAClimbScreen> {
           .streamBookingsForUser(user.uid)
           .listen((bookings) {
             setState(() {
-              // Map BookingModel -> Climb for display
+              // Map BookingModel -> Climb for display (include the booking id)
               _bookings = bookings
                   .map(
                     (b) => Climb(
+                      id: b.id,
                       name:
                           FirebaseAuth.instance.currentUser?.displayName ??
                           'You',
@@ -96,11 +96,21 @@ class _BookAClimbScreenState extends State<BookAClimbScreen> {
     }
   }
 
-  Future<void> _submitBookingToFirebase(
+  /// Create booking and upload files sequentially using BookingService.
+  /// Attachments will be stored in Firestore as the booking is created.
+  /// Returns the created bookingId.
+  Future<String> _submitBookingToFirebase(
     Climb climb,
     List<PlatformFile> files,
-    Map<String, String> meta,
-  ) async {
+    Map<String, String> meta, {
+    void Function(
+      int uploadedCount,
+      int totalCount,
+      String? fileName,
+      double? filePercent,
+    )?
+    onProgress,
+  }) async {
     // Ensure Firebase initialized (user must generate firebase_options.dart with FlutterFire CLI)
     if (Firebase.apps.isEmpty) {
       await Firebase.initializeApp();
@@ -118,29 +128,38 @@ class _BookAClimbScreenState extends State<BookAClimbScreen> {
       notes: meta['notes'],
     );
 
-    // Use BookingService to create booking first, then upload attachments in background
     final bookingService = BookingService.instance;
-    final String bookingId = await bookingService.createBooking(booking);
 
-    // Start uploads as fire-and-forget so UI isn't blocked by platform/plugin issues
-    for (final f in files) {
-      bookingService
-          .uploadAttachment(bookingId, f)
-          .then((meta) {
-            if (mounted) {
-              ScaffoldMessenger.of(this.context).showSnackBar(
-                SnackBar(content: Text('Uploaded ${meta.fileName}')),
-              );
-            }
-          })
-          .catchError((e) {
-            if (mounted) {
-              ScaffoldMessenger.of(this.context).showSnackBar(
-                SnackBar(content: Text('Failed to upload ${f.name}: $e')),
-              );
-            }
-          });
+    // If no files, just create booking
+    if (files.isEmpty) {
+      return await bookingService.createBooking(booking);
     }
+
+    // Create booking first to get its ID
+    final bookingId = await bookingService.createBooking(booking);
+
+    // Upload files sequentially with progress reporting
+    int uploadedCount = 0;
+    for (final f in files) {
+      try {
+        await bookingService.uploadAttachment(
+          bookingId,
+          f,
+          onProgress: (sent, total) {
+            final percent = total > 0 ? sent / total : 0.0;
+            onProgress?.call(uploadedCount, files.length, f.name, percent);
+          },
+        );
+        uploadedCount++;
+        onProgress?.call(uploadedCount, files.length, f.name, 1.0);
+      } catch (e) {
+        print('Error uploading ${f.name}: $e');
+        // Continue with next file rather than failing entire booking
+        continue;
+      }
+    }
+
+    return bookingId;
   }
 
   @override
@@ -151,13 +170,12 @@ class _BookAClimbScreenState extends State<BookAClimbScreen> {
         backgroundColor: const Color(0xFF252B30),
         elevation: 0,
         centerTitle: true,
+        // Prevent the automatic leading (back) button so the top-left
+        // area no longer navigates back (avoids reported black-screen bug).
+        automaticallyImplyLeading: false,
         title: const Text(
           'Book a Climb',
           style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-        ),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.white),
-          onPressed: () => Navigator.pop(context),
         ),
         shape: const RoundedRectangleBorder(
           borderRadius: BorderRadius.vertical(top: Radius.circular(8)),
@@ -279,6 +297,7 @@ class _BookAClimbScreenState extends State<BookAClimbScreen> {
         _bookings = bookings
             .map(
               (b) => Climb(
+                id: b.id,
                 name: FirebaseAuth.instance.currentUser?.displayName ?? 'You',
                 date: b.trekDate.toDate(),
                 type: b.trekType,
@@ -299,6 +318,7 @@ class _BookAClimbScreenState extends State<BookAClimbScreen> {
                   _bookings = bookings
                       .map(
                         (b) => Climb(
+                          id: b.id,
                           name:
                               FirebaseAuth.instance.currentUser?.displayName ??
                               'You',
@@ -369,10 +389,32 @@ class _BookAClimbScreenState extends State<BookAClimbScreen> {
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(backgroundColor: Colors.redAccent),
-            onPressed: () {
-              setState(() {
-                booking.status = 'Cancelled';
-              });
+            onPressed: () async {
+              // If booking has an id, persist cancellation to Firestore.
+              if (booking.id != null) {
+                try {
+                  await BookingService.instance.cancelBooking(booking.id!);
+                  // Let the Firestore stream update the UI. Optionally
+                  // update local model immediately for snappy feedback.
+                  if (mounted) {
+                    setState(() {
+                      booking.status = 'Cancelled';
+                    });
+                  }
+                } catch (e) {
+                  // Show error to user
+                  if (mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text('Failed to cancel booking: $e')),
+                    );
+                  }
+                }
+              } else {
+                // No id (likely local-only); just update locally
+                if (mounted) {
+                  setState(() => booking.status = 'Cancelled');
+                }
+              }
               Navigator.pop(context);
             },
             child: const Text('Yes, cancel'),
@@ -627,6 +669,10 @@ class _BookAClimbScreenState extends State<BookAClimbScreen> {
         return StatefulBuilder(
           builder: (context, dialogSetState) {
             final user = FirebaseAuth.instance.currentUser;
+            // Local dialog upload progress state
+            int uploadedCount = 0;
+            double filePercent = 0.0;
+            String? currentFile;
             return AlertDialog(
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(16),
@@ -660,6 +706,16 @@ class _BookAClimbScreenState extends State<BookAClimbScreen> {
                             ),
                           ]
                         : _pickedFiles.map((f) => Text(f.name)).toList()),
+
+                    // Upload progress area (visible while submitting)
+                    if (isSubmitting) ...[
+                      const SizedBox(height: 12),
+                      Text(
+                        'Uploading ${uploadedCount}/${_pickedFiles.length}: ${currentFile ?? ''}',
+                      ),
+                      const SizedBox(height: 6),
+                      LinearProgressIndicator(value: filePercent),
+                    ],
                   ],
                 ),
               ),
@@ -692,6 +748,8 @@ class _BookAClimbScreenState extends State<BookAClimbScreen> {
                           // show loading state inside dialog
                           dialogSetState(() => isSubmitting = true);
 
+                          // We'll show a progress indicator inside the dialog by
+                          // updating the StatefulBuilder's state via dialogSetState.
                           try {
                             await _submitBookingToFirebase(
                               newClimb,
@@ -702,45 +760,61 @@ class _BookAClimbScreenState extends State<BookAClimbScreen> {
                                 'porters': _portersController.text,
                                 'trekType': _climbType.toLowerCase(),
                               },
+                              onProgress: (uploaded, total, fileName, percent) {
+                                // Update the dialog-scoped progress variables
+                                uploadedCount = uploaded;
+                                filePercent = percent ?? 0.0;
+                                currentFile = fileName;
+                                dialogSetState(() {});
+                              },
                             );
 
                             // show snack on the main scaffold
-                            ScaffoldMessenger.of(this.context).showSnackBar(
-                              const SnackBar(
-                                content: Text('Booking submitted to server.'),
-                              ),
-                            );
+                            if (mounted) {
+                              ScaffoldMessenger.of(this.context).showSnackBar(
+                                const SnackBar(
+                                  content: Text('Booking submitted to server.'),
+                                ),
+                              );
+                            }
+
+                            // update main UI list if we aren't already subscribed
+                            // to the Firestore stream (avoid duplicate entries).
+                            if (mounted) {
+                              setState(() {
+                                if (_bookingSub == null) {
+                                  // In this case we don't have the bookingId in the
+                                  // newClimb instance; the Firestore stream will
+                                  // populate attachments once uploads complete.
+                                  _bookings.insert(0, newClimb);
+                                }
+                              });
+                            }
+
+                            // reset form state
+                            _contactController.clear();
+                            _affiliationController.clear();
+                            _portersController.clear();
+                            _pickedFiles = [];
+                            _climbType = 'General';
+                            _selectedDate = null;
+
+                            // close the dialog (use rootNavigator to ensure dialog is dismissed)
+                            Navigator.of(context, rootNavigator: true).pop();
                           } catch (e) {
                             // show error on main scaffold
-                            ScaffoldMessenger.of(this.context).showSnackBar(
-                              SnackBar(
-                                content: Text(
-                                  'Saved locally (upload failed): $e',
+                            if (mounted) {
+                              ScaffoldMessenger.of(this.context).showSnackBar(
+                                SnackBar(
+                                  content: Text(
+                                    'Saved locally (upload failed): $e',
+                                  ),
                                 ),
-                              ),
-                            );
+                              );
+                            }
+                            // leave form data intact so user can retry
+                            dialogSetState(() => isSubmitting = false);
                           }
-
-                          // update main UI list if we aren't already subscribed
-                          // to the Firestore stream (avoid duplicate entries).
-                          if (mounted) {
-                            setState(() {
-                              if (_bookingSub == null) {
-                                _bookings.insert(0, newClimb);
-                              }
-                            });
-                          }
-
-                          // reset form state
-                          _contactController.clear();
-                          _affiliationController.clear();
-                          _portersController.clear();
-                          _pickedFiles = [];
-                          _climbType = 'General';
-                          _selectedDate = null;
-
-                          // close the dialog (use rootNavigator to ensure dialog is dismissed)
-                          Navigator.of(context, rootNavigator: true).pop();
                         },
                   child: isSubmitting
                       ? const SizedBox(

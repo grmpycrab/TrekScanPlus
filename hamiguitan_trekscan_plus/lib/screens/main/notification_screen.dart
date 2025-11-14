@@ -1,5 +1,8 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import '../../theme/color.dart';
+import '../../models/notification_model.dart';
+import '../../services/notification_services.dart';
 
 class NotificationScreen extends StatefulWidget {
   const NotificationScreen({super.key});
@@ -9,37 +12,9 @@ class NotificationScreen extends StatefulWidget {
 }
 
 class _NotificationScreenState extends State<NotificationScreen> {
-  // Sample notification data - In a real app, this would come from a service
-  final List<NotificationItem> _notifications = [
-    NotificationItem(
-      title: 'Booking Confirmed',
-      message: 'Your trek for November 15, 2025 has been confirmed.',
-      type: NotificationType.success,
-      timestamp: DateTime.now().subtract(const Duration(minutes: 30)),
-      isRead: false,
-    ),
-    NotificationItem(
-      title: 'Weather Alert',
-      message: 'Heavy rain expected this weekend. Some trails may be affected.',
-      type: NotificationType.warning,
-      timestamp: DateTime.now().subtract(const Duration(hours: 2)),
-      isRead: false,
-    ),
-    NotificationItem(
-      title: 'Trail Update',
-      message: 'Station 3 trail maintenance scheduled for next week.',
-      type: NotificationType.info,
-      timestamp: DateTime.now().subtract(const Duration(days: 1)),
-      isRead: true,
-    ),
-    NotificationItem(
-      title: 'Limited Slots',
-      message: 'Only 5 slots remaining for November 20, 2025.',
-      type: NotificationType.alert,
-      timestamp: DateTime.now().subtract(const Duration(days: 2)),
-      isRead: true,
-    ),
-  ];
+  final NotificationService _service = NotificationService();
+
+  String? get _userId => FirebaseAuth.instance.currentUser?.uid;
 
   @override
   Widget build(BuildContext context) {
@@ -62,12 +37,10 @@ class _NotificationScreenState extends State<NotificationScreen> {
         ),
         actions: [
           TextButton(
-            onPressed: () {
-              setState(() {
-                for (var notification in _notifications) {
-                  notification.isRead = true;
-                }
-              });
+            onPressed: () async {
+              if (_userId == null) return;
+              await _service.markAllAsRead(_userId!);
+              setState(() {});
             },
             child: const Text(
               'Mark all as read',
@@ -79,19 +52,29 @@ class _NotificationScreenState extends State<NotificationScreen> {
           ),
         ],
       ),
-      body: _notifications.isEmpty
-          ? _buildEmptyState()
-          : ListView.builder(
-              itemCount: _notifications.length,
-              itemBuilder: (context, index) {
-                final notification = _notifications[index];
-                return _buildNotificationItem(notification);
+      body: _userId == null
+          ? _buildEmptyState(message: 'Please sign in to see notifications')
+          : StreamBuilder<List<NotificationModel>>(
+              stream: _service.notificationsStream(_userId!),
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const Center(child: CircularProgressIndicator());
+                }
+                final items = snapshot.data ?? [];
+                if (items.isEmpty) return _buildEmptyState();
+                return ListView.builder(
+                  itemCount: items.length,
+                  itemBuilder: (context, index) {
+                    final notification = items[index];
+                    return _buildNotificationItem(notification);
+                  },
+                );
               },
             ),
     );
   }
 
-  Widget _buildEmptyState() {
+  Widget _buildEmptyState({String? message}) {
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -103,7 +86,7 @@ class _NotificationScreenState extends State<NotificationScreen> {
           ),
           const SizedBox(height: 16),
           Text(
-            'No notifications yet',
+            message == null ? 'No notifications yet' : message,
             style: TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.w500,
@@ -120,7 +103,7 @@ class _NotificationScreenState extends State<NotificationScreen> {
     );
   }
 
-  Widget _buildNotificationItem(NotificationItem notification) {
+  Widget _buildNotificationItem(NotificationModel notification) {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       decoration: BoxDecoration(
@@ -137,11 +120,14 @@ class _NotificationScreenState extends State<NotificationScreen> {
       child: Material(
         color: Colors.transparent,
         child: InkWell(
-          onTap: () {
+          onTap: () async {
+            if (_userId != null) {
+              await _service.markAsRead(_userId!, notification.id);
+            }
             setState(() {
               notification.isRead = true;
             });
-            // Handle notification tap
+            // Handle notification tap (navigate or show details)
           },
           borderRadius: BorderRadius.circular(12),
           child: Padding(
@@ -239,22 +225,4 @@ class _NotificationScreenState extends State<NotificationScreen> {
       return '${timestamp.day}/${timestamp.month}/${timestamp.year}';
     }
   }
-}
-
-enum NotificationType { success, warning, info, alert }
-
-class NotificationItem {
-  final String title;
-  final String message;
-  final NotificationType type;
-  final DateTime timestamp;
-  bool isRead;
-
-  NotificationItem({
-    required this.title,
-    required this.message,
-    required this.type,
-    required this.timestamp,
-    this.isRead = false,
-  });
 }
