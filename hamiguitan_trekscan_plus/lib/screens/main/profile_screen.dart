@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../models/user_model.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../services/firebase_auth_service.dart';
 import '../auth/login_screen.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -36,6 +37,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         gender: 'Not specified',
         profileImage: _firebaseUser!.photoURL,
       );
+      _loadBadges();
     } else {
       _user = UserModel(
         firstName: 'John',
@@ -44,6 +46,28 @@ class _ProfileScreenState extends State<ProfileScreen> {
         birthDate: '01/01/1990',
         gender: 'Male',
       );
+    }
+  }
+
+  Future<void> _loadBadges() async {
+    try {
+      final uid = _firebaseUser?.uid;
+      if (uid == null) return;
+      final doc = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(uid)
+          .get();
+      if (!doc.exists) return;
+      final data = doc.data();
+      if (data == null) return;
+      final raw = data['badges'] as List<dynamic>?;
+      final badges = raw?.whereType<String>().toList() ?? [];
+      setState(() {
+        _user = _user.copyWith(badges: badges);
+      });
+    } catch (e) {
+      // ignore: avoid_print
+      print('Failed to load badges: $e');
     }
   }
 
@@ -218,6 +242,36 @@ class _ProfileScreenState extends State<ProfileScreen> {
             _user.email,
             style: TextStyle(fontSize: 16, color: Colors.grey[600]),
           ),
+          const SizedBox(height: 8),
+          // Badges row (replace hashtags with badges acquired by user)
+          if (_user.badges.isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.only(top: 8.0),
+              child: Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: _user.badges.map((b) {
+                  return Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 6,
+                    ),
+                    decoration: BoxDecoration(
+                      color: Colors.grey[100],
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(color: Colors.grey.shade300),
+                    ),
+                    child: Text(
+                      b,
+                      style: const TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  );
+                }).toList(),
+              ),
+            ),
         ],
       ),
     );

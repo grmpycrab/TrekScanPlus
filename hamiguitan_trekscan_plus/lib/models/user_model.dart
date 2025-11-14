@@ -5,6 +5,7 @@ class UserModel {
   final String birthDate;
   final String gender;
   final String? profileImage;
+  final List<String> badges;
 
   UserModel({
     required this.firstName,
@@ -13,6 +14,7 @@ class UserModel {
     required this.birthDate,
     required this.gender,
     this.profileImage,
+    this.badges = const [],
   });
 
   UserModel copyWith({
@@ -22,6 +24,7 @@ class UserModel {
     String? birthDate,
     String? gender,
     String? profileImage,
+    List<String>? badges,
   }) {
     return UserModel(
       firstName: firstName ?? this.firstName,
@@ -30,6 +33,7 @@ class UserModel {
       birthDate: birthDate ?? this.birthDate,
       gender: gender ?? this.gender,
       profileImage: profileImage ?? this.profileImage,
+      badges: badges ?? this.badges,
     );
   }
 }
