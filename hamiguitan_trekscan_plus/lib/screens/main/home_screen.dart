@@ -238,18 +238,37 @@ class _HomeScreenState extends State<HomeScreen> {
                       );
                     },
                   ),
-                  Positioned(
-                    right: 12,
-                    top: 12,
-                    child: Container(
-                      width: 8,
-                      height: 8,
-                      decoration: const BoxDecoration(
-                        color: AppColors.notificationDot,
-                        shape: BoxShape.circle,
-                      ),
+                  // Show red dot only when there are unread notifications for the signed-in user
+                  if (_firebaseUser != null)
+                    StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+                      stream: FirebaseFirestore.instance
+                          .collection('users')
+                          .doc(_firebaseUser!.uid)
+                          .collection('notifications')
+                          .where('isRead', isEqualTo: false)
+                          .limit(1)
+                          .snapshots(),
+                      builder: (context, snapshot) {
+                        final hasUnread =
+                            snapshot.hasData && snapshot.data!.docs.isNotEmpty;
+                        return hasUnread
+                            ? const Positioned(
+                                right: 12,
+                                top: 12,
+                                child: SizedBox(
+                                  width: 8,
+                                  height: 8,
+                                  child: DecoratedBox(
+                                    decoration: BoxDecoration(
+                                      color: AppColors.notificationDot,
+                                      shape: BoxShape.circle,
+                                    ),
+                                  ),
+                                ),
+                              )
+                            : const SizedBox.shrink();
+                      },
                     ),
-                  ),
                 ],
               ),
             ],
