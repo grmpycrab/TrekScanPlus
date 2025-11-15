@@ -3,6 +3,7 @@ import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:permission_handler/permission_handler.dart';
 import '../../theme/color.dart';
 import '../../services/station_service.dart';
+import '../../services/geofencing_service.dart';
 import 'station_detail_screen.dart';
 
 class ScannerScreen extends StatefulWidget {
@@ -19,6 +20,8 @@ class _ScannerScreenState extends State<ScannerScreen>
   bool hasPermission = false;
   late StationService stationService;
   bool _isLoading = true;
+  String? _lastScannedCode;
+  DateTime? _lastScanTime;
 
   @override
   void initState() {
@@ -57,6 +60,92 @@ class _ScannerScreenState extends State<ScannerScreen>
     controller?.dispose();
     WidgetsBinding.instance.removeObserver(this);
     super.dispose();
+  }
+
+  void _showGeofenceFailureDialog(
+    BuildContext context,
+    dynamic station,
+    GeofenceCheckResult result,
+  ) {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => AlertDialog(
+        title: const Text('Location Verification Failed'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'You are too far from ${station.name} to scan this QR code.',
+              style: const TextStyle(fontSize: 14),
+            ),
+            const SizedBox(height: 16),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.orange[50],
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: Colors.orange),
+              ),
+              child: Row(
+                children: [
+                  Icon(Icons.location_on, color: Colors.orange[700], size: 20),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Distance: ${GeofencingService.formatDistance(result.distanceMeters ?? 0)}',
+                          style: const TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 13,
+                          ),
+                        ),
+                        Text(
+                          'Required: ${GeofencingService.formatDistance(GeofencingService.GEOFENCE_RADIUS_METERS)}',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Colors.grey[600],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 12),
+            Text(
+              'This geofence requirement ensures you are physically at the station location to verify authentic visits.',
+              style: TextStyle(
+                fontSize: 12,
+                color: Colors.grey[600],
+                fontStyle: FontStyle.italic,
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Dismiss'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(context);
+              // Continue scanning
+            },
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.orange),
+            child: const Text(
+              'Try Again',
+              style: TextStyle(color: Colors.white),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
@@ -116,19 +205,59 @@ class _ScannerScreenState extends State<ScannerScreen>
               final code = capture.barcodes.first.rawValue;
               if (code == null) return;
 
+              // Debounce: Ignore if same code scanned within 2 seconds
+              final now = DateTime.now();
+              if (_lastScannedCode == code &&
+                  _lastScanTime != null &&
+                  now.difference(_lastScanTime!).inSeconds < 2) {
+                return;
+              }
+
+              // Update last scanned info
+              _lastScannedCode = code;
+              _lastScanTime = now;
+
               final station = stationService.getStationById(code);
 
               if (station != null) {
+                // Check geofence before allowing scan completion
+                if (station.latitude != null && station.longitude != null) {
+                  final geofenceResult = await GeofencingService.checkGeofence(
+                    stationLat: station.latitude!,
+                    stationLng: station.longitude!,
+                    radiusMeters: GeofencingService.GEOFENCE_RADIUS_METERS,
+                  );
+
+                  if (!mounted) return;
+
+                  if (!geofenceResult.isWithinGeofence) {
+                    // User is outside geofence - show warning dialog
+                    _showGeofenceFailureDialog(
+                      context,
+                      station,
+                      geofenceResult,
+                    );
+                    // Reset scan tracking to allow retry
+                    _lastScannedCode = null;
+                    _lastScanTime = null;
+                    return;
+                  }
+                }
+
                 // Mark station as visited and save
                 await stationService.updateStationVisited(code, true);
 
                 if (!mounted) return;
-                await Navigator.pushReplacement(
+                await Navigator.push(
                   context,
                   MaterialPageRoute(
                     builder: (context) => StationDetailScreen(station: station),
                   ),
                 );
+
+                // Reset scan tracking after successful navigation
+                _lastScannedCode = null;
+                _lastScanTime = null;
               } else {
                 if (!mounted) return;
                 ScaffoldMessenger.of(context).showSnackBar(
@@ -138,6 +267,7 @@ class _ScannerScreenState extends State<ScannerScreen>
                     duration: Duration(seconds: 2),
                   ),
                 );
+                // Only allow retry after 2 seconds for invalid codes
               }
             },
           ),
