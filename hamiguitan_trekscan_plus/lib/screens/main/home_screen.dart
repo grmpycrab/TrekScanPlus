@@ -228,7 +228,12 @@ class _HomeScreenState extends State<HomeScreen> {
               Stack(
                 children: [
                   IconButton(
-                    icon: const Icon(Icons.notifications_outlined, size: 28),
+                    icon: Image.asset(
+                      'assets/icons/bell.png',
+                      width: 28,
+                      height: 28,
+                      color: Colors.black,
+                    ),
                     onPressed: () {
                       Navigator.push(
                         context,

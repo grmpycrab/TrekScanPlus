@@ -3,6 +3,8 @@ import 'package:flutter/services.dart';
 import 'dart:convert';
 import '../../models/badge.dart';
 import '../settings/badge_display.dart';
+import '../settings/about_screen.dart';
+import '../settings/help_and_support_screen.dart';
 import '../../components/badge_filter.dart';
 
 class SettingsScreen extends StatefulWidget {
@@ -225,11 +227,27 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     icon: Icons.help_outline,
                     title: 'Help & Support',
                     subtitle: 'Help center & legal',
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const HelpAndSupportScreen(),
+                        ),
+                      );
+                    },
                   ),
                   _buildSettingItem(
                     icon: Icons.info_outline,
                     title: 'About',
                     subtitle: 'App information & version',
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const AboutScreen(),
+                        ),
+                      );
+                    },
                   ),
                 ],
               ),
