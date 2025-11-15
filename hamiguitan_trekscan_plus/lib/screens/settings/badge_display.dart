@@ -4,12 +4,14 @@ import '../../models/badge.dart';
 class BadgeCard extends StatelessWidget {
   final UserBadge badge;
   final bool isAcquired;
+  final DateTime? acquiredDate;
   final VoidCallback? onTap;
 
   const BadgeCard({
     super.key,
     required this.badge,
     this.isAcquired = false,
+    this.acquiredDate,
     this.onTap,
   });
 

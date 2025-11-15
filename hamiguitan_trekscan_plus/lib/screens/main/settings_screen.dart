@@ -6,6 +6,7 @@ import '../settings/badge_display.dart';
 import '../settings/about_screen.dart';
 import '../settings/help_and_support_screen.dart';
 import '../../components/badge_filter.dart';
+import '../../services/achievement_service.dart';
 
 class SettingsScreen extends StatefulWidget {
   final bool showBadgesOnly;
@@ -21,12 +22,33 @@ class _SettingsScreenState extends State<SettingsScreen> {
   Set<String> _selectedRarities = {};
   Set<String> _selectedCategories = {};
   Set<String> _selectedDifficulties = {};
+  late AchievementService _achievementService;
+  Map<String, DateTime> _acquiredBadges = {};
 
   @override
   void initState() {
     super.initState();
-    if (widget.showBadgesOnly) {
-      _badgesFuture = _loadAllBadges();
+    _achievementService = AchievementService();
+    _badgesFuture = _loadBadgesAndAchievements();
+  }
+
+  Future<List<UserBadge>> _loadBadgesAndAchievements() async {
+    // Initialize achievement service if not already done
+    await _achievementService.init();
+
+    // Load acquired achievements
+    _updateAcquiredBadges();
+
+    // Load badges
+    return _loadAllBadges();
+  }
+
+  void _updateAcquiredBadges() {
+    final unlockedAchievements = _achievementService.getUnlockedAchievements();
+    _acquiredBadges = {};
+    for (final achievement in unlockedAchievements) {
+      _acquiredBadges[achievement.id] =
+          achievement.unlockedAt ?? DateTime.now();
     }
   }
 
@@ -148,20 +170,23 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       itemCount: filteredBadges.length,
                       itemBuilder: (context, index) {
                         final badge = filteredBadges[index];
+                        final isAcquired = _acquiredBadges.containsKey(
+                          badge.id,
+                        );
+                        final acquiredDate = _acquiredBadges[badge.id];
+
                         return BadgeCard(
                           badge: badge,
-                          isAcquired:
-                              false, // TODO: Load from user's acquired badges list
+                          isAcquired: isAcquired,
+                          acquiredDate: acquiredDate,
                           onTap: () {
                             Navigator.push(
                               context,
                               MaterialPageRoute(
                                 builder: (context) => BadgeDetailScreen(
                                   badge: badge,
-                                  isAcquired:
-                                      false, // TODO: Load from user's acquired badges list
-                                  acquiredDate:
-                                      null, // TODO: Load from user's badge acquisition data
+                                  isAcquired: isAcquired,
+                                  acquiredDate: acquiredDate,
                                 ),
                               ),
                             );
