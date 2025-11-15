@@ -2,7 +2,8 @@ import 'package:geolocator/geolocator.dart';
 import 'dart:math' as math;
 
 class GeofencingService {
-  static const double GEOFENCE_RADIUS_METERS = 100; // 100 meters default radius
+  static const double GEOFENCE_RADIUS_METERS =
+      500; // 500 meters for testing (can be reduced to 100 later)
 
   /// Request location permissions from user
   static Future<bool> requestLocationPermission() async {
@@ -32,20 +33,29 @@ class GeofencingService {
   /// Get current user location
   static Future<Position?> getCurrentLocation() async {
     try {
+      print('Getting current location...');
+
       // Check permission first
       final hasPermission = await requestLocationPermission();
-      if (!hasPermission) return null;
+      if (!hasPermission) {
+        print('Location permission denied');
+        return null;
+      }
+      print('Location permission granted');
 
       // Check if services are enabled
       final serviceEnabled = await isLocationServiceEnabled();
       if (!serviceEnabled) {
+        print('Location services are disabled');
         throw Exception('Location services are disabled.');
       }
+      print('Location services enabled');
 
       final position = await Geolocator.getCurrentPosition(
         desiredAccuracy: LocationAccuracy.best,
         timeLimit: const Duration(seconds: 10),
       );
+      print('Got position: (${position.latitude}, ${position.longitude})');
       return position;
     } catch (e) {
       print('Error getting current location: $e');
@@ -92,15 +102,24 @@ class GeofencingService {
     required double radiusMeters,
   }) async {
     try {
+      print(
+        'Checking geofence for station at ($stationLat, $stationLng) with radius $radiusMeters m',
+      );
+
       final userPosition = await getCurrentLocation();
 
       if (userPosition == null) {
+        print('Failed to get user location');
         return GeofenceCheckResult(
           isWithinGeofence: false,
           distanceMeters: null,
           errorMessage: 'Unable to get current location',
         );
       }
+
+      print(
+        'User location: (${userPosition.latitude}, ${userPosition.longitude})',
+      );
 
       final distance = calculateDistance(
         userLat: userPosition.latitude,
@@ -111,6 +130,8 @@ class GeofencingService {
 
       final isWithin = distance <= radiusMeters;
 
+      print('Distance to station: $distance m, Within geofence: $isWithin');
+
       return GeofenceCheckResult(
         isWithinGeofence: isWithin,
         distanceMeters: distance,
@@ -118,6 +139,7 @@ class GeofencingService {
         userLng: userPosition.longitude,
       );
     } catch (e) {
+      print('Geofence check failed: $e');
       return GeofenceCheckResult(
         isWithinGeofence: false,
         distanceMeters: null,
@@ -137,17 +159,32 @@ class GeofencingService {
   /// Parse coordinates from string format "N:06°44'10.65'' E:126°08'29.99''"
   static Map<String, double>? parseCoordinates(String coordinates) {
     try {
-      final parts = coordinates.split(' ');
-      if (parts.length < 2) return null;
+      print('Parsing coordinates: $coordinates');
 
-      final latStr = parts[0];
-      final lngStr = parts[1];
+      // Handle invalid coordinates
+      if (coordinates.contains('--') || coordinates.isEmpty) {
+        print('Invalid coordinates format');
+        return null;
+      }
+
+      final parts = coordinates.split(' ');
+      if (parts.length < 2) {
+        print('Not enough parts in coordinates');
+        return null;
+      }
+
+      final latStr = parts[0].trim();
+      final lngStr = parts[1].trim();
 
       final lat = _parseCoordinate(latStr);
       final lng = _parseCoordinate(lngStr);
 
-      if (lat == null || lng == null) return null;
+      if (lat == null || lng == null) {
+        print('Failed to parse latitude ($lat) or longitude ($lng)');
+        return null;
+      }
 
+      print('Successfully parsed coordinates - Lat: $lat, Lng: $lng');
       return {'latitude': lat, 'longitude': lng};
     } catch (e) {
       print('Error parsing coordinates: $e');
@@ -155,30 +192,59 @@ class GeofencingService {
     }
   }
 
-  /// Parse individual coordinate value
+  /// Parse individual coordinate value like "N:06°44'10.65''" or "E:126°08'29.99''"
   static double? _parseCoordinate(String coord) {
     try {
       // Format: "N:06°44'10.65''" or "E:126°08'29.99''"
-      String cleanCoord = coord
-          .replaceAll('N', '')
-          .replaceAll('E', '')
-          .replaceAll('S', '')
-          .replaceAll('W', '')
-          .replaceAll('°', '')
-          .replaceAll("'", '')
-          .replaceAll('"', '')
-          .replaceAll(':', '');
+      print('Parsing single coordinate: $coord');
 
-      final parts = cleanCoord.split(RegExp(r'[^\d.]'));
-      final validParts = parts.where((p) => p.isNotEmpty).toList();
+      // Extract the direction (N, S, E, W)
+      final direction = coord[0].toUpperCase();
 
-      if (validParts.length < 3) return null;
+      // Remove direction and special characters
+      // First, remove the direction letter and colon
+      String cleanCoord = coord.substring(1).replaceAll(':', '');
 
-      final degrees = double.parse(validParts[0]);
-      final minutes = double.parse(validParts[1]);
-      final seconds = double.parse(validParts[2]);
+      print('After direction removal: $cleanCoord');
 
-      return degrees + (minutes / 60) + (seconds / 3600);
+      // Replace all special characters with spaces
+      cleanCoord = cleanCoord
+          .replaceAll('°', ' ')
+          .replaceAll("'", ' ')
+          .replaceAll('"', ' ')
+          .replaceAll("''", ' ') // Handle double quotes
+          .trim();
+
+      print('After special char removal: $cleanCoord');
+
+      // Split by spaces and filter empty strings
+      final parts = cleanCoord
+          .split(RegExp(r'\s+'))
+          .where((p) => p.isNotEmpty)
+          .toList();
+
+      print('Parsed parts: $parts (count: ${parts.length})');
+
+      if (parts.length < 3) {
+        print('Invalid coordinate parts: $parts');
+        return null;
+      }
+
+      final degrees = double.tryParse(parts[0]) ?? 0.0;
+      final minutes = double.tryParse(parts[1]) ?? 0.0;
+      final seconds = double.tryParse(parts[2]) ?? 0.0;
+
+      print('Degrees: $degrees, Minutes: $minutes, Seconds: $seconds');
+
+      double result = degrees + (minutes / 60) + (seconds / 3600);
+
+      // Apply sign based on direction
+      if (direction == 'S' || direction == 'W') {
+        result = -result;
+      }
+
+      print('Final coordinate value: $result');
+      return result;
     } catch (e) {
       print('Error parsing single coordinate: $e');
       return null;

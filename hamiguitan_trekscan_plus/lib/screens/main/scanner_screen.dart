@@ -159,18 +159,32 @@ class _ScannerScreenState extends State<ScannerScreen>
     // Mark notification as shown to prevent duplicate notifications
     achievementService.markNotificationAsShown(achievement.id);
 
-    // Show the achievement dialog
-    showDialog(
-      context: context,
-      builder: (context) => AchievementUnlockNotification(
-        achievement: achievement,
-        onDismiss: () {
-          if (mounted) {
-            Navigator.pop(context);
-          }
-        },
+    // Show achievement as overlay on the scanner screen
+    _showAchievementOverlay(achievement);
+  }
+
+  void _showAchievementOverlay(dynamic achievement) {
+    if (!mounted) return;
+
+    final overlay = Overlay.of(context);
+    late OverlayEntry overlayEntry;
+
+    overlayEntry = OverlayEntry(
+      builder: (context) => Positioned(
+        top: MediaQuery.of(context).padding.top + 10,
+        left: 10,
+        right: 10,
+        child: AchievementUnlockOverlay(
+          achievement: achievement,
+          displayDuration: const Duration(seconds: 5),
+          onDismiss: () {
+            overlayEntry.remove();
+          },
+        ),
       ),
     );
+
+    overlay.insert(overlayEntry);
   }
 
   @override

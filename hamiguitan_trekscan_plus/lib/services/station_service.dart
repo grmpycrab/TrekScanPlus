@@ -38,8 +38,11 @@ class StationService {
         _stations = jsonList.map((json) {
           var station = StationData.fromJson(json);
 
-          // Parse coordinates if not already set
+          // Check if lat/lng are provided in JSON, otherwise try to parse from coordinates
           if (station.latitude == null || station.longitude == null) {
+            print(
+              'Station ${station.id} missing lat/lng, attempting to parse from coordinates: ${station.coordinates}',
+            );
             final coords = GeofencingService.parseCoordinates(
               station.coordinates,
             );
@@ -66,7 +69,16 @@ class StationService {
                 isCheckpoint: station.isCheckpoint,
                 isVisited: station.isVisited,
               );
+              print(
+                'Successfully parsed coordinates for ${station.id}: (${station.latitude}, ${station.longitude})',
+              );
+            } else {
+              print('Failed to parse coordinates for ${station.id}');
             }
+          } else {
+            print(
+              'Station ${station.id} has lat/lng from JSON: (${station.latitude}, ${station.longitude})',
+            );
           }
           return station;
         }).toList();
