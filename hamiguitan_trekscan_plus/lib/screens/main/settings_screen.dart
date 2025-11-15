@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'dart:convert';
 import '../../models/badge.dart';
 import '../settings/badge_display.dart';
+import '../../components/badge_filter.dart';
 
 class SettingsScreen extends StatefulWidget {
   final bool showBadgesOnly;
@@ -15,6 +16,9 @@ class SettingsScreen extends StatefulWidget {
 
 class _SettingsScreenState extends State<SettingsScreen> {
   late Future<List<UserBadge>> _badgesFuture;
+  Set<String> _selectedRarities = {};
+  Set<String> _selectedCategories = {};
+  Set<String> _selectedDifficulties = {};
 
   @override
   void initState() {
@@ -36,6 +40,40 @@ class _SettingsScreenState extends State<SettingsScreen> {
       print('Failed to load badges: $e');
       return [];
     }
+  }
+
+  List<UserBadge> _filterBadges(List<UserBadge> badges) {
+    return badges.where((badge) {
+      bool matchesRarity =
+          _selectedRarities.isEmpty || _selectedRarities.contains(badge.rarity);
+      bool matchesCategory =
+          _selectedCategories.isEmpty ||
+          _selectedCategories.contains(badge.category);
+      bool matchesDifficulty =
+          _selectedDifficulties.isEmpty ||
+          _selectedDifficulties.contains(badge.difficulty);
+
+      return matchesRarity && matchesCategory && matchesDifficulty;
+    }).toList();
+  }
+
+  void _showFilterBottomSheet() {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (context) => BadgeFilterBottomSheet(
+        selectedRarities: _selectedRarities,
+        selectedCategories: _selectedCategories,
+        selectedDifficulties: _selectedDifficulties,
+        onFiltersChanged: (rarities, categories, difficulties) {
+          setState(() {
+            _selectedRarities = rarities;
+            _selectedCategories = categories;
+            _selectedDifficulties = difficulties;
+          });
+        },
+      ),
+    );
   }
 
   @override
@@ -61,8 +99,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       );
                     }
 
-                    final badges = snapshot.data ?? [];
-                    if (badges.isEmpty) {
+                    final allBadges = snapshot.data ?? [];
+                    final filteredBadges = _filterBadges(allBadges);
+
+                    if (allBadges.isEmpty) {
                       return Center(
                         child: Text(
                           'No badges available',
@@ -71,18 +111,41 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       );
                     }
 
+                    if (filteredBadges.isEmpty) {
+                      return Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              Icons.filter_none,
+                              size: 48,
+                              color: Colors.grey[400],
+                            ),
+                            const SizedBox(height: 12),
+                            Text(
+                              'No badges match your filters',
+                              style: TextStyle(
+                                color: Colors.grey[600],
+                                fontSize: 16,
+                              ),
+                            ),
+                          ],
+                        ),
+                      );
+                    }
+
                     return GridView.builder(
                       padding: const EdgeInsets.all(16),
                       gridDelegate:
                           const SliverGridDelegateWithFixedCrossAxisCount(
-                            crossAxisCount: 2,
-                            childAspectRatio: 0.85,
-                            mainAxisSpacing: 16,
-                            crossAxisSpacing: 16,
+                            crossAxisCount: 3,
+                            childAspectRatio: 0.9,
+                            mainAxisSpacing: 12,
+                            crossAxisSpacing: 12,
                           ),
-                      itemCount: badges.length,
+                      itemCount: filteredBadges.length,
                       itemBuilder: (context, index) {
-                        final badge = badges[index];
+                        final badge = filteredBadges[index];
                         return BadgeCard(
                           badge: badge,
                           isAcquired:
@@ -201,7 +264,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
               ),
             ),
           ),
-          const SizedBox(width: 8),
+          if (widget.showBadgesOnly)
+            IconButton(
+              icon: const Icon(Icons.filter_list, color: Colors.white),
+              onPressed: _showFilterBottomSheet,
+            ),
+          if (!widget.showBadgesOnly) const SizedBox(width: 56),
         ],
       ),
     );

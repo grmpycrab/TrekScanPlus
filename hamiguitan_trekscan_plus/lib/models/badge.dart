@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 /// A badge that can be earned by users.
 ///
-/// Includes metadata like category, rarity, and requirements.
+/// Includes metadata like category, rarity, difficulty, and requirements.
 class UserBadge {
   final String id;
   final String name;
@@ -11,6 +11,7 @@ class UserBadge {
   final String icon;
   final Map<String, dynamic> requirement;
   final String rarity;
+  final String difficulty;
   final bool earned;
 
   const UserBadge({
@@ -21,6 +22,7 @@ class UserBadge {
     required this.icon,
     required this.requirement,
     required this.rarity,
+    required this.difficulty,
     this.earned = false,
   });
 
@@ -33,6 +35,7 @@ class UserBadge {
       icon: json['icon'] as String,
       requirement: json['requirement'] as Map<String, dynamic>,
       rarity: json['rarity'] as String,
+      difficulty: json['difficulty'] as String? ?? 'medium',
       earned: false, // Default to false, will be set by app logic
     );
   }
@@ -45,6 +48,7 @@ class UserBadge {
     String? icon,
     Map<String, dynamic>? requirement,
     String? rarity,
+    String? difficulty,
     bool? earned,
   }) {
     return UserBadge(
@@ -55,6 +59,7 @@ class UserBadge {
       icon: icon ?? this.icon,
       requirement: requirement ?? this.requirement,
       rarity: rarity ?? this.rarity,
+      difficulty: difficulty ?? this.difficulty,
       earned: earned ?? this.earned,
     );
   }

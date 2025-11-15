@@ -10,7 +10,8 @@
                 "type": "reach_station",
                 "value": 1
             },
-            "rarity": "common"
+            "rarity": "common",
+            "difficulty": "easy"
         },
         {
             "id": "station2_mossy",
@@ -22,7 +23,8 @@
                 "type": "reach_station",
                 "value": 2
             },
-            "rarity": "common"
+            "rarity": "common",
+            "difficulty": "easy"
         },
         {
             "id": "station3_explorer",
@@ -34,7 +36,8 @@
                 "type": "reach_station",
                 "value": 3
             },
-            "rarity": "uncommon"
+            "rarity": "uncommon",
+            "difficulty": "medium"
         },
         {
             "id": "station4_ridge",
@@ -46,19 +49,21 @@
                 "type": "reach_station",
                 "value": 4
             },
-            "rarity": "uncommon"
+            "rarity": "uncommon",
+            "difficulty": "medium"
         },
         {
             "id": "station5_cloudforest",
             "name": "Cloud Forest Adventurer",
-            "description": "You’ve entered the cloud forest—where the air thins and your resolve strengthens. Few climb this far. You are becoming one of them.",
+            "description": "You've entered the cloud forest—where the air thins and your resolve strengthens. Few climb this far. You are becoming one of them.",
             "category": "trail_completion",
             "icon": "forest",
             "requirement": {
                 "type": "reach_station",
                 "value": 5
             },
-            "rarity": "uncommon"
+            "rarity": "uncommon",
+            "difficulty": "medium"
         },
         {
             "id": "station6_pygmy",
@@ -70,7 +75,8 @@
                 "type": "reach_station",
                 "value": 6
             },
-            "rarity": "rare"
+            "rarity": "rare",
+            "difficulty": "hard"
         },
         {
             "id": "station7_hidden_sea",
@@ -82,7 +88,8 @@
                 "type": "reach_location",
                 "value": "tinagong_dagat"
             },
-            "rarity": "rare"
+            "rarity": "rare",
+            "difficulty": "hard"
         },
         {
             "id": "station8_ascent",
@@ -94,19 +101,21 @@
                 "type": "reach_station",
                 "value": 8
             },
-            "rarity": "rare"
+            "rarity": "rare",
+            "difficulty": "hard"
         },
         {
             "id": "summit_conqueror",
             "name": "Hamiguitan Peak Conqueror",
-            "description": "At the summit, the world appears smaller, and your courage feels greater. You’ve reached the peak—not just of the mountain, but of your own limits.",
+            "description": "At the summit, the world appears smaller, and your courage feels greater. You've reached the peak—not just of the mountain, but of your own limits.",
             "category": "trail_completion",
             "icon": "mountain",
             "requirement": {
                 "type": "reach_station",
                 "value": "summit"
             },
-            "rarity": "epic"
+            "rarity": "epic",
+            "difficulty": "hard"
         },
         {
             "id": "trail_finisher",
@@ -118,7 +127,8 @@
                 "type": "trail_completed",
                 "value": true
             },
-            "rarity": "epic"
+            "rarity": "epic",
+            "difficulty": "hard"
         },
         {
             "id": "first_trek",
@@ -130,7 +140,8 @@
                 "type": "trails_completed",
                 "value": 1
             },
-            "rarity": "common"
+            "rarity": "common",
+            "difficulty": "easy"
         },
         {
             "id": "two_day_survivor",
@@ -142,31 +153,34 @@
                 "type": "trail_duration_hours",
                 "value": 24
             },
-            "rarity": "rare"
+            "rarity": "rare",
+            "difficulty": "hard"
         },
         {
             "id": "heritage_info1",
             "name": "Heritage Info Explorer",
-            "description": "Curiosity is the spark of discovery. By scanning your first QR sign, you opened your mind to Hamiguitan’s stories and secrets.",
+            "description": "Curiosity is the spark of discovery. By scanning your first QR sign, you opened your mind to Hamiguitan's stories and secrets.",
             "category": "biodiversity",
             "icon": "camera",
             "requirement": {
                 "type": "qr_scanned",
                 "value": 1
             },
-            "rarity": "common"
+            "rarity": "common",
+            "difficulty": "easy"
         },
         {
             "id": "bonsai_info",
             "name": "Bonsai Forest Learner",
-            "description": "Knowledge deepens experience. You've learned about the ancient bonsai forest—one of nature’s quiet wonders.",
+            "description": "Knowledge deepens experience. You've learned about the ancient bonsai forest—one of nature's quiet wonders.",
             "category": "biodiversity",
             "icon": "eco",
             "requirement": {
                 "type": "qr_scanned",
                 "value": "bonsai_forest"
             },
-            "rarity": "uncommon"
+            "rarity": "uncommon",
+            "difficulty": "easy"
         },
         {
             "id": "wildlife_qr3",
@@ -178,7 +192,8 @@
                 "type": "qr_scanned_count",
                 "value": 3
             },
-            "rarity": "uncommon"
+            "rarity": "uncommon",
+            "difficulty": "medium"
         },
         {
             "id": "zero_waste",
@@ -190,7 +205,8 @@
                 "type": "no_violation",
                 "value": true
             },
-            "rarity": "rare"
+            "rarity": "rare",
+            "difficulty": "medium"
         },
         {
             "id": "lnt_advocate",
@@ -202,31 +218,34 @@
                 "type": "gps_track_compliant",
                 "value": true
             },
-            "rarity": "rare"
+            "rarity": "rare",
+            "difficulty": "hard"
         },
         {
             "id": "stations_reached_5",
             "name": "Five Stations Completed",
-            "description": "Reaching five stations is no accident—it’s the result of steady steps, quiet strength, and an unshaken spirit.",
+            "description": "Reaching five stations is no accident—it's the result of steady steps, quiet strength, and an unshaken spirit.",
             "category": "distance_elevation",
             "icon": "route",
             "requirement": {
                 "type": "stations_reached",
                 "value": 5
             },
-            "rarity": "uncommon"
+            "rarity": "uncommon",
+            "difficulty": "medium"
         },
         {
             "id": "distance10k",
             "name": "10km Milestone",
-            "description": "Ten kilometers is not just distance—it’s persistence measured in footsteps, sweat, and determination.",
+            "description": "Ten kilometers is not just distance—it's persistence measured in footsteps, sweat, and determination.",
             "category": "distance_elevation",
             "icon": "public",
             "requirement": {
                 "type": "total_distance_km",
                 "value": 10
             },
-            "rarity": "rare"
+            "rarity": "rare",
+            "difficulty": "hard"
         },
         {
             "id": "elevation500",
@@ -238,7 +257,8 @@
                 "type": "total_elevation_m",
                 "value": 500
             },
-            "rarity": "uncommon"
+            "rarity": "uncommon",
+            "difficulty": "medium"
         }
     ],
     "categories": [
