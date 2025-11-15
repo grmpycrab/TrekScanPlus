@@ -46,7 +46,7 @@ class BadgeCard extends StatelessWidget {
                   child: Icon(
                     badge.getIconData(),
                     color: badge.getColor(),
-                    size: 32,
+                    size: 28,
                   ),
                 ),
                 const SizedBox(height: 12),
