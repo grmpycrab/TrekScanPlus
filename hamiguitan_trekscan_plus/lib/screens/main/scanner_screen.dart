@@ -4,6 +4,8 @@ import 'package:permission_handler/permission_handler.dart';
 import '../../theme/color.dart';
 import '../../services/station_service.dart';
 import '../../services/geofencing_service.dart';
+import '../../services/achievement_service.dart';
+import '../../components/achievement_notification.dart';
 import 'station_detail_screen.dart';
 
 class ScannerScreen extends StatefulWidget {
@@ -19,6 +21,7 @@ class _ScannerScreenState extends State<ScannerScreen>
   bool isFlashOn = false;
   bool hasPermission = false;
   late StationService stationService;
+  late AchievementService achievementService;
   bool _isLoading = true;
   String? _lastScannedCode;
   DateTime? _lastScanTime;
@@ -39,7 +42,11 @@ class _ScannerScreenState extends State<ScannerScreen>
     if (hasPermission) {
       controller = MobileScannerController();
       stationService = await StationService.init();
+      achievementService = AchievementService();
+
       await stationService.loadStations(); // Load station data
+      await achievementService.init(); // Initialize achievements
+
       if (mounted) {
         setState(() {
           _isLoading = false;
@@ -148,6 +155,24 @@ class _ScannerScreenState extends State<ScannerScreen>
     );
   }
 
+  void _showAchievementNotification(dynamic achievement) {
+    // Mark notification as shown to prevent duplicate notifications
+    achievementService.markNotificationAsShown(achievement.id);
+
+    // Show the achievement dialog
+    showDialog(
+      context: context,
+      builder: (context) => AchievementUnlockNotification(
+        achievement: achievement,
+        onDismiss: () {
+          if (mounted) {
+            Navigator.pop(context);
+          }
+        },
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     if (!hasPermission || _isLoading) {
@@ -247,7 +272,21 @@ class _ScannerScreenState extends State<ScannerScreen>
                 // Mark station as visited and save
                 await stationService.updateStationVisited(code, true);
 
+                // Check and unlock achievements
+                final visitedStations = stationService.getVisitedStations();
+                final newlyUnlocked = await achievementService
+                    .checkAndUnlockAchievements(
+                      visitedStations.length,
+                      visitedStations.map((s) => s.id).toList(),
+                    );
+
                 if (!mounted) return;
+
+                // Show achievement notification if newly unlocked
+                if (newlyUnlocked != null) {
+                  _showAchievementNotification(newlyUnlocked);
+                }
+
                 await Navigator.push(
                   context,
                   MaterialPageRoute(
