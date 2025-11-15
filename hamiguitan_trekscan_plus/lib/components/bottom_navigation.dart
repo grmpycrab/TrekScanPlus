@@ -33,7 +33,7 @@ class BottomNavigation extends StatelessWidget {
               _buildNavItem(0, 'assets/icons/home_icon.png', 'Home'),
               _buildNavItem(1, 'assets/icons/station.png', 'Stations'),
               _buildNavItem(2, 'assets/icons/qr-code.png', 'Scanner'),
-              _buildNavItem(3, 'assets/icons/bookmark.png', 'Book'),
+              _buildNavItem(3, 'assets/icons/appointment.png', 'Book'),
               _buildNavItem(4, 'assets/icons/setting.png', 'Settings'),
             ],
           ),
