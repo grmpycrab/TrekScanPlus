@@ -6,6 +6,9 @@ class UserModel {
   final String gender;
   final String? profileImage;
   final List<String> badges;
+  final int followingCount;
+  final int followersCount;
+  final int postsCount;
 
   UserModel({
     required this.firstName,
@@ -15,6 +18,9 @@ class UserModel {
     required this.gender,
     this.profileImage,
     this.badges = const [],
+    this.followingCount = 0,
+    this.followersCount = 0,
+    this.postsCount = 0,
   });
 
   UserModel copyWith({
@@ -25,6 +31,9 @@ class UserModel {
     String? gender,
     String? profileImage,
     List<String>? badges,
+    int? followingCount,
+    int? followersCount,
+    int? postsCount,
   }) {
     return UserModel(
       firstName: firstName ?? this.firstName,
@@ -34,6 +43,9 @@ class UserModel {
       gender: gender ?? this.gender,
       profileImage: profileImage ?? this.profileImage,
       badges: badges ?? this.badges,
+      followingCount: followingCount ?? this.followingCount,
+      followersCount: followersCount ?? this.followersCount,
+      postsCount: postsCount ?? this.postsCount,
     );
   }
 }

@@ -2,8 +2,9 @@ import 'package:flutter/material.dart';
 import '../../models/user_model.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../services/firebase_auth_service.dart';
-import '../auth/login_screen.dart';
+import '../../services/user_service.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import '../main/settings_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -38,6 +39,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         profileImage: _firebaseUser!.photoURL,
       );
       _loadBadges();
+      _loadUserStats();
     } else {
       _user = UserModel(
         firstName: 'John',
@@ -71,6 +73,30 @@ class _ProfileScreenState extends State<ProfileScreen> {
     }
   }
 
+  Future<void> _loadUserStats() async {
+    try {
+      final uid = _firebaseUser?.uid;
+      if (uid == null) return;
+      final doc = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(uid)
+          .get();
+      if (!doc.exists) return;
+      final data = doc.data();
+      if (data == null) return;
+      setState(() {
+        _user = _user.copyWith(
+          followingCount: data['followingCount'] as int? ?? 0,
+          followersCount: data['followersCount'] as int? ?? 0,
+          postsCount: data['postsCount'] as int? ?? 0,
+        );
+      });
+    } catch (e) {
+      // ignore: avoid_print
+      print('Failed to load user stats: $e');
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -79,104 +105,48 @@ class _ProfileScreenState extends State<ProfileScreen> {
         child: SingleChildScrollView(
           child: Column(
             children: [
-              Container(
-                height: 160,
-                decoration: const BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: [Color(0xFF101042), Color(0xFF09291A)],
-                  ),
+              // Header with back button and title
+              Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16.0,
+                  vertical: 16.0,
                 ),
-                child: Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      IconButton(
-                        icon: const Icon(Icons.arrow_back, color: Colors.white),
-                        onPressed: () => Navigator.of(context).pop(),
+                child: Row(
+                  children: [
+                    IconButton(
+                      icon: const Icon(
+                        Icons.arrow_back,
+                        color: Colors.black,
+                        size: 24,
                       ),
-                    ],
-                  ),
+                      onPressed: () => Navigator.of(context).pop(),
+                    ),
+                    const Expanded(
+                      child: Center(
+                        child: Text(
+                          'Profile',
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 48), // To balance the layout
+                  ],
                 ),
               ),
-              Transform.translate(
-                offset: const Offset(0, -80),
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 24.0),
-                  child: Column(
-                    children: [
-                      _buildTopProfile(),
-                      const SizedBox(height: 32),
-                      _buildInputFields(),
-                    ],
-                  ),
-                ),
-              ),
+              const SizedBox(height: 16),
+              // Profile info section
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 24.0),
                 child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    ElevatedButton(
-                      onPressed: () {},
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF1A1C1E),
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        minimumSize: const Size(double.infinity, 50),
-                      ),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: const [
-                          Text(
-                            'Change Password',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 16,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                          SizedBox(width: 8),
-                          Icon(Icons.lock, size: 18),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    TextButton(
-                      onPressed: () async {
-                        // Log out the current user and return to the login screen.
-                        await FirebaseAuthService.instance.signOut();
-                        if (mounted) {
-                          Navigator.pushAndRemoveUntil(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => const LoginScreen(),
-                            ),
-                            (route) => false,
-                          );
-                        }
-                      },
-                      style: TextButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                        minimumSize: const Size(double.infinity, 50),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                      ),
-                      child: const Text(
-                        'Logout',
-                        style: TextStyle(
-                          color: Colors.red,
-                          fontSize: 16,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                    ),
+                    _buildProfileSection(),
+                    const SizedBox(height: 24),
+                    _buildStatsSection(),
                     const SizedBox(height: 32),
+                    if (_user.badges.isNotEmpty) _buildBadgesSection(),
                   ],
                 ),
               ),
@@ -187,189 +157,166 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  Widget _buildTopProfile() {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 24.0),
-      child: Column(
-        children: [
-          Stack(
-            children: [
-              Container(
-                width: 120,
-                height: 120,
-                decoration: BoxDecoration(
-                  color: Colors.grey[200],
-                  shape: BoxShape.circle,
-                  border: Border.all(color: Colors.grey.shade300, width: 1),
-                ),
-                child: ClipOval(
-                  child: _user.profileImage != null
-                      ? Image.network(_user.profileImage!, fit: BoxFit.cover)
-                      : CircleAvatar(
-                          radius: 60,
-                          backgroundColor: Colors.grey[100],
-                          child: Icon(
-                            Icons.person_outline_rounded,
-                            size: 60,
-                            color: Colors.grey[400],
-                          ),
-                        ),
-                ),
-              ),
-              Positioned(
-                right: 0,
-                bottom: 0,
-                child: Container(
-                  width: 32,
-                  height: 32,
-                  decoration: BoxDecoration(
-                    color: Colors.black,
-                    shape: BoxShape.circle,
-                    border: Border.all(color: Colors.white, width: 2),
+  Widget _buildProfileSection() {
+    return Column(
+      children: [
+        Container(
+          width: 80,
+          height: 80,
+          decoration: BoxDecoration(
+            color: Colors.grey[200],
+            shape: BoxShape.circle,
+            border: Border.all(color: Colors.grey.shade300, width: 1),
+          ),
+          child: ClipOval(
+            child: _user.profileImage != null
+                ? Image.network(_user.profileImage!, fit: BoxFit.cover)
+                : CircleAvatar(
+                    radius: 40,
+                    backgroundColor: Colors.grey[100],
+                    child: Icon(
+                      Icons.person_outline_rounded,
+                      size: 40,
+                      color: Colors.grey[400],
+                    ),
                   ),
-                  child: const Icon(Icons.edit, color: Colors.white, size: 16),
-                ),
-              ),
-            ],
           ),
-          const SizedBox(height: 16),
-          Text(
-            "${_user.firstName} ${_user.lastName}",
-            style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            _user.email,
-            style: TextStyle(fontSize: 16, color: Colors.grey[600]),
-          ),
-          const SizedBox(height: 8),
-          // Badges row (replace hashtags with badges acquired by user)
-          if (_user.badges.isNotEmpty)
-            Padding(
-              padding: const EdgeInsets.only(top: 8.0),
-              child: Wrap(
-                spacing: 8,
-                runSpacing: 8,
-                children: _user.badges.map((b) {
-                  return Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 10,
-                      vertical: 6,
-                    ),
-                    decoration: BoxDecoration(
-                      color: Colors.grey[100],
-                      borderRadius: BorderRadius.circular(20),
-                      border: Border.all(color: Colors.grey.shade300),
-                    ),
-                    child: Text(
-                      b,
-                      style: const TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                  );
-                }).toList(),
-              ),
-            ),
-        ],
-      ),
+        ),
+        const SizedBox(height: 12),
+        Text(
+          "${_user.firstName} ${_user.lastName}",
+          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          _user.email,
+          style: TextStyle(fontSize: 14, color: Colors.grey[600]),
+        ),
+      ],
     );
   }
 
-  Widget _buildInputFields() {
-    return Container(
-      width: double.infinity,
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(14),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.08),
-            blurRadius: 12,
-            spreadRadius: 0,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(20.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+  Widget _buildStatsSection() {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceAround,
+      children: [
+        Column(
           children: [
-            const Text(
-              "Personal Information",
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+            Text(
+              _user.followingCount.toString().padLeft(2, '0'),
+              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
-            const SizedBox(height: 24),
-            _buildInputField("First Name", _user.firstName),
-            const SizedBox(height: 16),
-            _buildInputField("Last Name", _user.lastName),
-            const SizedBox(height: 16),
-            _buildInputField("Email", _user.email),
-            const SizedBox(height: 16),
-            _buildInputField("Birth", _user.birthDate, isSelectable: true),
-            const SizedBox(height: 16),
-            _buildInputField("Gender", _user.gender, isSelectable: true),
+            const SizedBox(height: 4),
+            Text(
+              'Following',
+              style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+            ),
           ],
         ),
-      ),
+        Column(
+          children: [
+            Text(
+              _user.followersCount.toString().padLeft(2, '0'),
+              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              'Followers',
+              style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+            ),
+          ],
+        ),
+        Column(
+          children: [
+            Text(
+              _user.postsCount.toString().padLeft(2, '0'),
+              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              'Posts',
+              style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+            ),
+          ],
+        ),
+      ],
     );
   }
 
-  Widget _buildInputField(
-    String label,
-    String value, {
-    bool isSelectable = false,
-  }) {
+  Widget _buildBadgesSection() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          label,
-          style: TextStyle(
-            color: Colors.grey[600],
-            fontSize: 14,
-            fontWeight: FontWeight.w500,
-          ),
-        ),
-        const SizedBox(height: 8),
-        Container(
-          width: double.infinity,
-          decoration: BoxDecoration(
-            color: Colors.grey[100],
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: Colors.grey[300]!, width: 1),
-          ),
-          child: Row(
-            children: [
-              Expanded(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 20,
-                    vertical: 16,
-                  ),
-                  child: Text(
-                    value,
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w500,
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            const Text(
+              'Badges Earned',
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+            ),
+            if (_user.badges.isNotEmpty)
+              GestureDetector(
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) =>
+                          const SettingsScreen(showBadgesOnly: true),
                     ),
+                  );
+                },
+                child: Text(
+                  'See More',
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w500,
+                    color: Colors.blue[600],
                   ),
                 ),
               ),
-              if (isSelectable)
-                Padding(
-                  padding: const EdgeInsets.only(right: 20),
-                  child: Icon(
-                    Icons.chevron_right,
-                    color: Colors.grey[400],
-                    size: 20,
-                  ),
-                ),
-            ],
-          ),
+          ],
         ),
+        const SizedBox(height: 12),
+        if (_user.badges.isEmpty)
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 16.0),
+            child: Text(
+              'No badges earned yet',
+              style: TextStyle(fontSize: 14, color: Colors.grey[600]),
+            ),
+          )
+        else
+          SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Row(
+              children: _user.badges
+                  .take(5) // Show only first 5 badges in horizontal view
+                  .map((badge) {
+                    return Padding(
+                      padding: const EdgeInsets.only(right: 8.0),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 8,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.grey[100],
+                          borderRadius: BorderRadius.circular(20),
+                          border: Border.all(color: Colors.grey.shade300),
+                        ),
+                        child: Text(
+                          badge,
+                          style: const TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ),
+                    );
+                  })
+                  .toList(),
+            ),
+          ),
       ],
     );
   }
