@@ -5,6 +5,8 @@ class StationData {
   final String difficulty;
   final int elevation;
   final String coordinates;
+  final double? latitude;
+  final double? longitude;
   final List<String> images;
   final Map<String, dynamic> metadata;
   final DateTime? lastScanned;
@@ -26,6 +28,8 @@ class StationData {
     required this.elevation,
     required this.coordinates,
     required this.images,
+    this.latitude,
+    this.longitude,
     this.metadata = const {},
     this.lastScanned,
     this.steps,
@@ -61,6 +65,8 @@ class StationData {
       warnings: Map<String, String>.from(json['warnings'] ?? {}),
       isCheckpoint: json['isCheckpoint'] ?? false,
       isVisited: json['isVisited'] ?? false,
+      latitude: (json['latitude'] as num?)?.toDouble(),
+      longitude: (json['longitude'] as num?)?.toDouble(),
     );
   }
 
@@ -72,6 +78,8 @@ class StationData {
       'difficulty': difficulty,
       'elevation': elevation,
       'coordinates': coordinates,
+      'latitude': latitude,
+      'longitude': longitude,
       'images': images,
       'metadata': metadata,
       'lastScanned': lastScanned?.toIso8601String(),

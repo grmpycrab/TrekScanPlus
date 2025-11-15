@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../../models/station_data.dart';
+import '../../services/station_service.dart';
 import '../../theme/color.dart';
 
 class StationDetailScreen extends StatefulWidget {
@@ -14,6 +15,29 @@ class StationDetailScreen extends StatefulWidget {
 
 class _StationDetailScreenState extends State<StationDetailScreen> {
   StationData get station => widget.station;
+  StationData? nextStationData;
+  late StationService _stationService;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadNextStationData();
+  }
+
+  Future<void> _loadNextStationData() async {
+    if (station.nextStationId != null) {
+      _stationService = await StationService.init();
+      await _stationService.loadStations();
+      final nextStation = _stationService.getStationById(
+        station.nextStationId!,
+      );
+      if (mounted) {
+        setState(() {
+          nextStationData = nextStation;
+        });
+      }
+    }
+  }
 
   Color _getDifficultyColor(String difficulty) {
     switch (difficulty.toLowerCase()) {
@@ -138,11 +162,12 @@ class _StationDetailScreenState extends State<StationDetailScreen> {
       leading: IconButton(
         icon: const Icon(Icons.arrow_back, color: Colors.black),
         onPressed: () {
-          Navigator.pop(context);
+          // Pop with the station data so parent can update
+          Navigator.pop(context, widget.station);
         },
       ),
       title: Text(
-        "STATION ${station.id}",
+        " ${station.name}",
         style: const TextStyle(
           fontSize: 16,
           fontWeight: FontWeight.w600,
@@ -756,66 +781,149 @@ class _StationDetailScreenState extends State<StationDetailScreen> {
               ],
             ),
             const SizedBox(height: 16),
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Icon(Icons.flag_outlined, size: 20, color: AppColors.primary),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        station.nextStationName ?? 'Unknown Station',
-                        style: const TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                      if (station.distanceToNextKm != null) ...[
-                        const SizedBox(height: 4),
+            if (nextStationData != null) ...[
+              // Display actual next station data
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Icon(Icons.flag_outlined, size: 20, color: AppColors.primary),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
                         Text(
-                          '${station.distanceToNextKm} km ahead',
-                          style: TextStyle(
-                            color: AppColors.textSecondary,
-                            height: 1.5,
+                          nextStationData!.name,
+                          style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 4,
+                          ),
+                          decoration: BoxDecoration(
+                            color: _getDifficultyColor(
+                              nextStationData!.difficulty,
+                            ).withOpacity(0.2),
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                          child: Text(
+                            nextStationData!.difficulty.toUpperCase(),
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                              color: _getDifficultyColor(
+                                nextStationData!.difficulty,
+                              ),
+                            ),
                           ),
                         ),
                       ],
-                    ],
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 12),
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-              decoration: BoxDecoration(
-                color: AppColors.primary.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(
-                    Icons.directions_walk,
-                    size: 20,
-                    color: AppColors.primary,
-                  ),
-                  const SizedBox(width: 8),
-                  Text(
-                    station.steps != null
-                        ? '${station.steps} steps to next station'
-                        : 'Distance in steps not available',
-                    style: TextStyle(
-                      color: AppColors.primary,
-                      fontWeight: FontWeight.w500,
                     ),
                   ),
                 ],
               ),
-            ),
+              const SizedBox(height: 12),
+              // Display elevation and distance info for next station
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.grey[100],
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Icon(Icons.height, size: 18, color: AppColors.primary),
+                        const SizedBox(width: 8),
+                        Text(
+                          'Elevation: ${nextStationData!.elevation}m',
+                          style: const TextStyle(
+                            fontWeight: FontWeight.w500,
+                            fontSize: 14,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    Row(
+                      children: [
+                        Icon(Icons.route, size: 18, color: AppColors.primary),
+                        const SizedBox(width: 8),
+                        Text(
+                          'Distance: ${station.distanceToNextKm ?? 0} km',
+                          style: const TextStyle(
+                            fontWeight: FontWeight.w500,
+                            fontSize: 14,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 12),
+              // Steps info
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 12,
+                ),
+                decoration: BoxDecoration(
+                  color: AppColors.primary.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      Icons.directions_walk,
+                      size: 20,
+                      color: AppColors.primary,
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      station.steps != null
+                          ? '${station.steps} steps to next station'
+                          : 'Distance in steps not available',
+                      style: TextStyle(
+                        color: AppColors.primary,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ] else ...[
+              // Loading or no next station
+              if (station.nextStationId != null)
+                const Center(child: CircularProgressIndicator())
+              else
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: Colors.grey[100],
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: const Text(
+                    'This is the final station!',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontStyle: FontStyle.italic,
+                      color: Colors.grey,
+                    ),
+                  ),
+                ),
+            ],
           ],
         ),
       ),

@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/station_data.dart';
+import 'geofencing_service.dart';
 
 class StationService {
   static const String VISITED_STATIONS_KEY = 'visited_stations';
@@ -34,7 +35,41 @@ class StationService {
             prefs.getStringList(VISITED_STATIONS_KEY)?.toSet() ?? {};
         print('Visited station IDs: $visitedStationIds');
 
-        _stations = jsonList.map((json) => StationData.fromJson(json)).toList();
+        _stations = jsonList.map((json) {
+          var station = StationData.fromJson(json);
+
+          // Parse coordinates if not already set
+          if (station.latitude == null || station.longitude == null) {
+            final coords = GeofencingService.parseCoordinates(
+              station.coordinates,
+            );
+            if (coords != null) {
+              station = StationData(
+                id: station.id,
+                name: station.name,
+                description: station.description,
+                difficulty: station.difficulty,
+                elevation: station.elevation,
+                coordinates: station.coordinates,
+                images: station.images,
+                latitude: coords['latitude'],
+                longitude: coords['longitude'],
+                metadata: station.metadata,
+                lastScanned: station.lastScanned,
+                steps: station.steps,
+                nextStationId: station.nextStationId,
+                nextStationName: station.nextStationName,
+                distanceToNextKm: station.distanceToNextKm,
+                flora: station.flora,
+                fauna: station.fauna,
+                warnings: station.warnings,
+                isCheckpoint: station.isCheckpoint,
+                isVisited: station.isVisited,
+              );
+            }
+          }
+          return station;
+        }).toList();
         print('Number of stations loaded into memory: ${_stations.length}');
 
         // Update visited status

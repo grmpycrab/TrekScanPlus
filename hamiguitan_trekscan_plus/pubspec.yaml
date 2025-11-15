@@ -21,6 +21,7 @@ dependencies:
   firebase_storage: ^11.3.0
   intl: ^0.20.2
   connectivity_plus: ^7.0.0
+  geolocator: ^9.0.2
 
 dev_dependencies:
   flutter_test:
