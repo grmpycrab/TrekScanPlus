@@ -24,12 +24,16 @@ class AchievementService {
   }
 
   /// Initialize the service - load achievements from JSON and local cache
-  Future<void> init() async {
+  /// Pass userId to scope local storage to current user
+  Future<void> init({String? userId}) async {
     if (_isInitialized) return;
 
     try {
-      // Initialize local service
-      _localService = await LocalAchievementService.init();
+      // Use current user ID if not provided
+      final currentUserId = userId ?? _auth.currentUser?.uid;
+
+      // Initialize local service with user ID
+      _localService = await LocalAchievementService.init(userId: currentUserId);
 
       // Load achievements from JSON file
       await _loadAchievementsFromJson();
@@ -41,11 +45,20 @@ class AchievementService {
       await _syncPendingToFirebase();
 
       _isInitialized = true;
-      print('AchievementService initialized successfully');
+      print(
+        'AchievementService initialized successfully for user: $currentUserId',
+      );
     } catch (e) {
       print('Error initializing AchievementService: $e');
       rethrow;
     }
+  }
+
+  /// Reset initialization so next init() call will reinitialize
+  /// Call this when user changes
+  void resetInitialization() {
+    _isInitialized = false;
+    _allAchievements = [];
   }
 
   /// Load achievements from badge.json file

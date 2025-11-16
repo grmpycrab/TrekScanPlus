@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
 import 'login_screen.dart';
-import '../main/main_screen.dart';
+import 'additional_information.dart';
 import '../../theme/color.dart';
 import '../../services/firebase_auth_service.dart';
-import '../../services/user_service.dart';
 import '../../components/error_feedback.dart';
 
 class SignUpScreen extends StatefulWidget {
@@ -61,13 +60,20 @@ class _SignUpScreenState extends State<SignUpScreen> {
         password: _passwordController.text.trim(),
       );
 
+      print(
+        '✅ Sign up successful, navigating to Additional Information Screen',
+      );
+
       if (mounted) {
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (context) => const MainScreen()),
+          MaterialPageRoute(
+            builder: (context) => const AdditionalInformationScreen(),
+          ),
         );
       }
     } catch (e) {
+      print('❌ Sign up error: $e');
       final errorMessage = ErrorHandler.getErrorMessage(e.toString());
       setState(() {
         _errorMessage = errorMessage;
@@ -257,7 +263,8 @@ class _SignUpScreenState extends State<SignUpScreen> {
                               Navigator.pushReplacement(
                                 context,
                                 MaterialPageRoute(
-                                  builder: (context) => const MainScreen(),
+                                  builder: (context) =>
+                                      const AdditionalInformationScreen(),
                                 ),
                               );
                             } else if (mounted) {

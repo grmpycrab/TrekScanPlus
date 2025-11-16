@@ -9,12 +9,30 @@ class StationService {
 
   final SharedPreferences prefs;
   List<StationData> _stations = [];
+  String? _currentUserId;
 
-  StationService._(this.prefs);
+  StationService._(this.prefs, {String? userId}) : _currentUserId = userId;
 
-  static Future<StationService> init() async {
+  /// Get the key for visited stations scoped to current user
+  String get _userVisitedStationsKey {
+    if (_currentUserId == null) return VISITED_STATIONS_KEY;
+    return '${VISITED_STATIONS_KEY}_$_currentUserId';
+  }
+
+  /// Get the key for QR codes scoped to current user
+  String _getUserQRKey(String stationId) {
+    if (_currentUserId == null) return 'qr_key_$stationId';
+    return 'qr_key_${_currentUserId}_$stationId';
+  }
+
+  static Future<StationService> init({String? userId}) async {
     final prefs = await SharedPreferences.getInstance();
-    return StationService._(prefs);
+    return StationService._(prefs, userId: userId);
+  }
+
+  /// Update the current user ID (call this when user changes)
+  void setCurrentUser(String? userId) {
+    _currentUserId = userId;
   }
 
   Future<List<StationData>> loadStations() async {
@@ -30,9 +48,9 @@ class StationService {
         List<dynamic> jsonList = json.decode(jsonString);
         print('Number of stations in JSON: ${jsonList.length}');
 
-        // Get visited station IDs from SharedPreferences
+        // Get visited station IDs from SharedPreferences (user-scoped)
         Set<String> visitedStationIds =
-            prefs.getStringList(VISITED_STATIONS_KEY)?.toSet() ?? {};
+            prefs.getStringList(_userVisitedStationsKey)?.toSet() ?? {};
         print('Visited station IDs: $visitedStationIds');
 
         _stations = jsonList.map((json) {
@@ -119,15 +137,15 @@ class StationService {
         visitedStationIds.add(station.id);
         // If this is a QR code different from station.id, store it too
         if (stationId != station.id) {
-          await prefs.setString('qr_key_${station.id}', stationId);
+          await prefs.setString(_getUserQRKey(station.id), stationId);
         }
       } else {
         visitedStationIds.remove(station.id);
-        await prefs.remove('qr_key_${station.id}');
+        await prefs.remove(_getUserQRKey(station.id));
       }
 
       await prefs.setStringList(
-        VISITED_STATIONS_KEY,
+        _userVisitedStationsKey,
         visitedStationIds.toList(),
       );
     } catch (e) {
@@ -140,7 +158,17 @@ class StationService {
     for (var station in _stations) {
       station.updateVisited(false);
     }
-    await prefs.remove(VISITED_STATIONS_KEY);
+    await prefs.remove(_userVisitedStationsKey);
+    // Also clear QR codes for current user
+    if (_currentUserId != null) {
+      final keysToRemove = prefs
+          .getKeys()
+          .where((key) => key.startsWith('qr_key_${_currentUserId}_'))
+          .toList();
+      for (final key in keysToRemove) {
+        await prefs.remove(key);
+      }
+    }
   }
 
   StationData? getStationById(String id) {
@@ -187,6 +215,6 @@ class StationService {
   }
 
   Future<String?> getQRKeyForStation(String stationId) async {
-    return prefs.getString('qr_key_$stationId');
+    return prefs.getString(_getUserQRKey(stationId));
   }
 }

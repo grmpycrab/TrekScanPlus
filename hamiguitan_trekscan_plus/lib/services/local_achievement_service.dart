@@ -11,12 +11,37 @@ class LocalAchievementService {
       'achievement_pending_notifications';
 
   final SharedPreferences prefs;
+  String? _currentUserId;
 
-  LocalAchievementService._(this.prefs);
+  LocalAchievementService._(this.prefs, {String? userId})
+    : _currentUserId = userId;
 
-  static Future<LocalAchievementService> init() async {
+  /// Get key for achievements scoped to current user
+  String get _userAchievementsKey {
+    if (_currentUserId == null) return ACHIEVEMENTS_KEY;
+    return '${ACHIEVEMENTS_KEY}_$_currentUserId';
+  }
+
+  /// Get key for sync queue scoped to current user
+  String get _userSyncQueueKey {
+    if (_currentUserId == null) return SYNC_QUEUE_KEY;
+    return '${SYNC_QUEUE_KEY}_$_currentUserId';
+  }
+
+  /// Get key for pending notifications scoped to current user
+  String get _userPendingNotificationsKey {
+    if (_currentUserId == null) return PENDING_NOTIFICATIONS_KEY;
+    return '${PENDING_NOTIFICATIONS_KEY}_$_currentUserId';
+  }
+
+  static Future<LocalAchievementService> init({String? userId}) async {
     final prefs = await SharedPreferences.getInstance();
-    return LocalAchievementService._(prefs);
+    return LocalAchievementService._(prefs, userId: userId);
+  }
+
+  /// Update the current user ID (call this when user changes)
+  void setCurrentUser(String? userId) {
+    _currentUserId = userId;
   }
 
   /// Save achievement locally with unlock status
@@ -32,7 +57,7 @@ class LocalAchievementService {
       }
 
       final jsonList = achievements.map((a) => a.toJson()).toList();
-      await prefs.setString(ACHIEVEMENTS_KEY, jsonEncode(jsonList));
+      await prefs.setString(_userAchievementsKey, jsonEncode(jsonList));
     } catch (e) {
       print('Error saving achievement locally: $e');
       rethrow;
@@ -43,7 +68,7 @@ class LocalAchievementService {
   Future<void> saveAchievements(List<Achievement> achievements) async {
     try {
       final jsonList = achievements.map((a) => a.toJson()).toList();
-      await prefs.setString(ACHIEVEMENTS_KEY, jsonEncode(jsonList));
+      await prefs.setString(_userAchievementsKey, jsonEncode(jsonList));
     } catch (e) {
       print('Error saving achievements locally: $e');
       rethrow;
@@ -53,7 +78,7 @@ class LocalAchievementService {
   /// Get all locally stored achievements
   Future<List<Achievement>> getAchievements() async {
     try {
-      final jsonString = prefs.getString(ACHIEVEMENTS_KEY);
+      final jsonString = prefs.getString(_userAchievementsKey);
       if (jsonString == null) return [];
 
       final jsonList = jsonDecode(jsonString) as List<dynamic>;
@@ -100,7 +125,7 @@ class LocalAchievementService {
       final queue = await getSyncQueue();
       if (!queue.contains(achievementId)) {
         queue.add(achievementId);
-        await prefs.setStringList(SYNC_QUEUE_KEY, queue);
+        await prefs.setStringList(_userSyncQueueKey, queue);
       }
     } catch (e) {
       print('Error adding to sync queue: $e');
@@ -110,7 +135,7 @@ class LocalAchievementService {
 
   /// Get achievements pending sync to Firebase
   Future<List<String>> getSyncQueue() async {
-    return prefs.getStringList(SYNC_QUEUE_KEY) ?? [];
+    return prefs.getStringList(_userSyncQueueKey) ?? [];
   }
 
   /// Remove achievement from sync queue after successful Firebase sync
@@ -118,7 +143,7 @@ class LocalAchievementService {
     try {
       final queue = await getSyncQueue();
       queue.remove(achievementId);
-      await prefs.setStringList(SYNC_QUEUE_KEY, queue);
+      await prefs.setStringList(_userSyncQueueKey, queue);
     } catch (e) {
       print('Error removing from sync queue: $e');
       rethrow;
@@ -131,7 +156,7 @@ class LocalAchievementService {
       final notifications = await getPendingNotifications();
       if (!notifications.contains(achievementId)) {
         notifications.add(achievementId);
-        await prefs.setStringList(PENDING_NOTIFICATIONS_KEY, notifications);
+        await prefs.setStringList(_userPendingNotificationsKey, notifications);
       }
     } catch (e) {
       print('Error adding to pending notifications: $e');
@@ -141,7 +166,7 @@ class LocalAchievementService {
 
   /// Get achievements with pending notifications
   Future<List<String>> getPendingNotifications() async {
-    return prefs.getStringList(PENDING_NOTIFICATIONS_KEY) ?? [];
+    return prefs.getStringList(_userPendingNotificationsKey) ?? [];
   }
 
   /// Remove achievement from pending notifications after showing to user
@@ -149,7 +174,7 @@ class LocalAchievementService {
     try {
       final notifications = await getPendingNotifications();
       notifications.remove(achievementId);
-      await prefs.setStringList(PENDING_NOTIFICATIONS_KEY, notifications);
+      await prefs.setStringList(_userPendingNotificationsKey, notifications);
 
       // Also mark notification as shown in the achievement
       final achievement = await getAchievementById(achievementId);
@@ -175,12 +200,12 @@ class LocalAchievementService {
     return achievements.where((a) => a.isUnlocked).length;
   }
 
-  /// Clear all local achievements (use with caution)
+  /// Clear all local achievements for current user
   Future<void> clearAll() async {
     try {
-      await prefs.remove(ACHIEVEMENTS_KEY);
-      await prefs.remove(SYNC_QUEUE_KEY);
-      await prefs.remove(PENDING_NOTIFICATIONS_KEY);
+      await prefs.remove(_userAchievementsKey);
+      await prefs.remove(_userSyncQueueKey);
+      await prefs.remove(_userPendingNotificationsKey);
     } catch (e) {
       print('Error clearing achievements: $e');
       rethrow;

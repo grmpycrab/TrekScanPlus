@@ -118,6 +118,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
             onPressed: () async {
               Navigator.pop(context);
               try {
+                // Clear local data before signing out
+                _achievementService.resetInitialization();
+
                 await FirebaseAuthService.instance.signOut();
                 if (mounted) {
                   Navigator.pushAndRemoveUntil(
