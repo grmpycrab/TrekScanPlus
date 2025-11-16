@@ -5,8 +5,11 @@ import '../../models/badge.dart';
 import '../settings/badge_display.dart';
 import '../settings/about_screen.dart';
 import '../settings/help_and_support_screen.dart';
+import '../settings/account_settings.dart';
 import '../../components/badge_filter.dart';
 import '../../services/achievement_service.dart';
+import '../../services/firebase_auth_service.dart';
+import '../auth/login_screen.dart';
 
 class SettingsScreen extends StatefulWidget {
   final bool showBadgesOnly;
@@ -96,6 +99,46 @@ class _SettingsScreenState extends State<SettingsScreen> {
             _selectedDifficulties = difficulties;
           });
         },
+      ),
+    );
+  }
+
+  void _handleLogout() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Confirm Logout'),
+        content: const Text('Are you sure you want to logout?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () async {
+              Navigator.pop(context);
+              try {
+                await FirebaseAuthService.instance.signOut();
+                if (mounted) {
+                  Navigator.pushAndRemoveUntil(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const LoginScreen(),
+                    ),
+                    (route) => false,
+                  );
+                }
+              } catch (e) {
+                if (mounted) {
+                  ScaffoldMessenger.of(
+                    context,
+                  ).showSnackBar(SnackBar(content: Text('Logout failed: $e')));
+                }
+              }
+            },
+            child: const Text('Logout', style: TextStyle(color: Colors.red)),
+          ),
+        ],
       ),
     );
   }
@@ -218,6 +261,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     icon: Icons.person_outline,
                     title: 'Account',
                     subtitle: 'Personal information',
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const AccountSettingsScreen(),
+                        ),
+                      );
+                    },
                   ),
                   _buildSettingItem(
                     icon: Icons.emoji_events_outlined,
@@ -273,6 +324,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         ),
                       );
                     },
+                  ),
+                  const SizedBox(height: 16),
+                  _buildSettingItem(
+                    icon: Icons.logout,
+                    title: 'Logout',
+                    subtitle: 'Sign out from your account',
+                    onTap: _handleLogout,
                   ),
                 ],
               ),

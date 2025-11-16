@@ -78,4 +78,109 @@ class UserService {
   Future<void> deleteUser(String uid) async {
     await _usersCollection.doc(uid).delete();
   }
+
+  /// Update user personal information
+  Future<void> updateUserInfo({
+    required String uid,
+    String? firstName,
+    String? lastName,
+    String? phoneNumber,
+    String? birthDate,
+    String? gender,
+  }) async {
+    try {
+      final data = <String, dynamic>{};
+      if (firstName != null) data['firstName'] = firstName;
+      if (lastName != null) data['lastName'] = lastName;
+      if (phoneNumber != null) data['phoneNumber'] = phoneNumber;
+      if (birthDate != null) data['birthDate'] = birthDate;
+      if (gender != null) data['gender'] = gender;
+
+      await _usersCollection.doc(uid).set(data, SetOptions(merge: true));
+      if (kDebugMode) {
+        print('User info updated for $uid');
+      }
+    } catch (e, st) {
+      if (kDebugMode) {
+        print('Error updating user info: $e');
+        print(st);
+      }
+      rethrow;
+    }
+  }
+
+  /// Update user name with cooldown check
+  /// Returns true if name was updated, false if still in cooldown period
+  Future<bool> updateUserName({
+    required String uid,
+    required String firstName,
+    required String lastName,
+  }) async {
+    try {
+      final userDoc = await _usersCollection.doc(uid).get();
+      final userData = userDoc.data() ?? {};
+
+      // Check if there's a last name change timestamp
+      final lastNameChangeTimestamp =
+          userData['lastNameChangeAt'] as Timestamp?;
+
+      if (lastNameChangeTimestamp != null) {
+        final lastChangeDate = lastNameChangeTimestamp.toDate();
+        final now = DateTime.now();
+        final daysSinceLastChange = now.difference(lastChangeDate).inDays;
+
+        // If less than 60 days have passed, deny the change
+        if (daysSinceLastChange < 60) {
+          return false;
+        }
+      }
+
+      // Update name and set the new cooldown timestamp
+      await _usersCollection.doc(uid).set({
+        'firstName': firstName,
+        'lastName': lastName,
+        'lastNameChangeAt': FieldValue.serverTimestamp(),
+      }, SetOptions(merge: true));
+
+      if (kDebugMode) {
+        print('User name updated for $uid');
+      }
+      return true;
+    } catch (e, st) {
+      if (kDebugMode) {
+        print('Error updating user name: $e');
+        print(st);
+      }
+      rethrow;
+    }
+  }
+
+  /// Get time remaining until user can change name again (in days)
+  /// Returns 0 if user can change now, or number of days remaining
+  Future<int> getNameChangeCooldownDaysRemaining(String uid) async {
+    try {
+      final userDoc = await _usersCollection.doc(uid).get();
+      final userData = userDoc.data() ?? {};
+
+      final lastNameChangeTimestamp =
+          userData['lastNameChangeAt'] as Timestamp?;
+
+      if (lastNameChangeTimestamp == null) {
+        return 0; // Never changed name, can change now
+      }
+
+      final lastChangeDate = lastNameChangeTimestamp.toDate();
+      final now = DateTime.now();
+      final daysSinceLastChange = now.difference(lastChangeDate).inDays;
+      final daysRemaining = 60 - daysSinceLastChange;
+
+      return daysRemaining > 0 ? daysRemaining : 0;
+    } catch (e, st) {
+      if (kDebugMode) {
+        print('Error checking name change cooldown: $e');
+        print(st);
+      }
+      return 0;
+    }
+  }
 }
