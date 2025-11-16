@@ -21,6 +21,7 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
   late TextEditingController _birthDateController;
   String? _selectedGender;
   bool _isLoading = false;
+  bool _isInitializing = true;
   String? _successMessage;
   String? _errorMessage;
   int _nameChangeCooldownDays = 0;
@@ -29,18 +30,46 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
   @override
   void initState() {
     super.initState();
-    _firstNameController = TextEditingController(
-      text: widget.initialUserData?.firstName ?? '',
-    );
-    _lastNameController = TextEditingController(
-      text: widget.initialUserData?.lastName ?? '',
-    );
+    _firstNameController = TextEditingController();
+    _lastNameController = TextEditingController();
     _phoneController = TextEditingController();
-    _birthDateController = TextEditingController(
-      text: widget.initialUserData?.birthDate ?? '',
-    );
-    _selectedGender = widget.initialUserData?.gender;
-    _checkNameChangeCooldown();
+    _birthDateController = TextEditingController();
+    _loadUserData();
+  }
+
+  Future<void> _loadUserData() async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user != null) {
+      try {
+        final userData = await _userService.getUserOnce(user.uid);
+        if (userData != null && mounted) {
+          setState(() {
+            _firstNameController.text = userData['firstName'] ?? '';
+            _lastNameController.text = userData['lastName'] ?? '';
+            _phoneController.text = userData['phoneNumber'] ?? '';
+            _birthDateController.text = userData['birthDate'] ?? '';
+            _selectedGender = userData['gender'];
+          });
+        }
+        await _checkNameChangeCooldown();
+      } catch (e) {
+        if (kDebugMode) {
+          print('Error loading user data: $e');
+        }
+      } finally {
+        if (mounted) {
+          setState(() {
+            _isInitializing = false;
+          });
+        }
+      }
+    } else {
+      if (mounted) {
+        setState(() {
+          _isInitializing = false;
+        });
+      }
+    }
   }
 
   @override
@@ -113,10 +142,14 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
         return;
       }
 
+      // Get current data to check if name changed
+      final currentData = await _userService.getUserOnce(user.uid);
+      final currentFirstName = currentData?['firstName'] ?? '';
+      final currentLastName = currentData?['lastName'] ?? '';
+
       // Check if name has changed
       final nameChanged =
-          firstName != widget.initialUserData?.firstName ||
-          lastName != widget.initialUserData?.lastName;
+          firstName != currentFirstName || lastName != currentLastName;
 
       if (nameChanged) {
         // Check cooldown for name change
@@ -141,17 +174,17 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
           });
           return;
         }
-      } else {
-        // Update other information
-        await _userService.updateUserInfo(
-          uid: user.uid,
-          firstName: firstName,
-          lastName: lastName,
-          phoneNumber: phoneNumber.isNotEmpty ? phoneNumber : null,
-          birthDate: birthDate.isNotEmpty ? birthDate : null,
-          gender: gender,
-        );
       }
+
+      // Always update all other information (phone, birthDate, gender)
+      await _userService.updateUserInfo(
+        uid: user.uid,
+        firstName: firstName,
+        lastName: lastName,
+        phoneNumber: phoneNumber.isNotEmpty ? phoneNumber : null,
+        birthDate: birthDate.isNotEmpty ? birthDate : null,
+        gender: gender,
+      );
 
       setState(() {
         _successMessage = 'Profile updated successfully!';
@@ -209,6 +242,21 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    if (_isInitializing) {
+      return Scaffold(
+        backgroundColor: Colors.grey[100],
+        appBar: AppBar(
+          backgroundColor: const Color(0xFF252B30),
+          title: const Text(
+            'Account Settings',
+            style: TextStyle(color: Colors.white),
+          ),
+          elevation: 0,
+        ),
+        body: const Center(child: CircularProgressIndicator()),
+      );
+    }
+
     return Scaffold(
       backgroundColor: Colors.grey[100],
       appBar: AppBar(

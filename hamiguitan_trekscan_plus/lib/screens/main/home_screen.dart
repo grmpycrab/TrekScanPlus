@@ -6,6 +6,7 @@ import '../../components/connectivity_banner.dart';
 import '../../models/calendar_model.dart';
 import '../../theme/color.dart';
 import '../../services/firebase_auth_service.dart';
+import '../../services/user_service.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 // booking service/model not required here; we query Firestore directly for calendar aggregation
 import 'package:firebase_auth/firebase_auth.dart';
@@ -26,6 +27,7 @@ class _HomeScreenState extends State<HomeScreen> {
   User? _firebaseUser;
   StreamSubscription<User?>? _authSubscription;
   StreamSubscription<QuerySnapshot>? _bookingsSubscription;
+  final UserService _userService = UserService.instance;
 
   @override
   void initState() {
@@ -176,46 +178,112 @@ class _HomeScreenState extends State<HomeScreen> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          GestureDetector(
-            onTap: () {
-              Navigator.of(context).push(
-                MaterialPageRoute(builder: (context) => const ProfileScreen()),
-              );
-            },
-            child: Row(
-              children: [
-                CircleAvatar(
-                  backgroundColor: AppColors.primary,
-                  backgroundImage: _firebaseUser?.photoURL != null
-                      ? NetworkImage(_firebaseUser!.photoURL!)
-                      : null,
-                  child: _firebaseUser?.photoURL == null
-                      ? const Icon(Icons.person, color: AppColors.iconPrimary)
-                      : null,
-                ),
-                const SizedBox(width: 12),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      'Welcome,',
-                      style: TextStyle(
-                        color: AppColors.textSecondary,
-                        fontSize: 14,
-                      ),
+          Expanded(
+            child: GestureDetector(
+              onTap: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (context) => const ProfileScreen(),
+                  ),
+                );
+              },
+              child: _firebaseUser != null
+                  ? StreamBuilder<DocumentSnapshot<Map<String, dynamic>>>(
+                      stream: _userService.streamUser(_firebaseUser!.uid),
+                      builder: (context, snapshot) {
+                        String firstName = '';
+                        String lastName = '';
+
+                        if (snapshot.hasData && snapshot.data != null) {
+                          final userData = snapshot.data!.data() ?? {};
+                          firstName = userData['firstName'] ?? '';
+                          lastName = userData['lastName'] ?? '';
+                        }
+
+                        // Fallback to Firebase displayName if no Firestore data
+                        if (firstName.isEmpty && lastName.isEmpty) {
+                          firstName =
+                              _firebaseUser!.displayName ??
+                              _firebaseUser!.email?.split('@').first ??
+                              'Traveler';
+                        }
+
+                        return Row(
+                          children: [
+                            CircleAvatar(
+                              backgroundColor: AppColors.primary,
+                              backgroundImage: _firebaseUser?.photoURL != null
+                                  ? NetworkImage(_firebaseUser!.photoURL!)
+                                  : null,
+                              child: _firebaseUser?.photoURL == null
+                                  ? const Icon(
+                                      Icons.person,
+                                      color: AppColors.iconPrimary,
+                                    )
+                                  : null,
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  const Text(
+                                    'Welcome,',
+                                    style: TextStyle(
+                                      color: AppColors.textSecondary,
+                                      fontSize: 14,
+                                    ),
+                                  ),
+                                  Text(
+                                    firstName.isNotEmpty
+                                        ? '$firstName ${lastName.isNotEmpty ? lastName : ''}'
+                                              .trim()
+                                        : 'Traveler!',
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.w600,
+                                      fontSize: 16,
+                                    ),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        );
+                      },
+                    )
+                  : Row(
+                      children: [
+                        CircleAvatar(
+                          backgroundColor: AppColors.primary,
+                          child: const Icon(
+                            Icons.person,
+                            color: AppColors.iconPrimary,
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: const [
+                            Text(
+                              'Welcome,',
+                              style: TextStyle(
+                                color: AppColors.textSecondary,
+                                fontSize: 14,
+                              ),
+                            ),
+                            Text(
+                              'Traveler!',
+                              style: TextStyle(
+                                fontWeight: FontWeight.w600,
+                                fontSize: 16,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
                     ),
-                    Text(
-                      _firebaseUser?.displayName ??
-                          _firebaseUser?.email?.split('@').first ??
-                          'Grmpycrab!',
-                      style: const TextStyle(
-                        fontWeight: FontWeight.w600,
-                        fontSize: 16,
-                      ),
-                    ),
-                  ],
-                ),
-              ],
             ),
           ),
           Row(

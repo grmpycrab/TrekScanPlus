@@ -3,6 +3,7 @@ import 'signup_screen.dart';
 import '../main/main_screen.dart';
 import '../../theme/color.dart';
 import '../../services/firebase_auth_service.dart';
+import '../../components/error_feedback.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -44,9 +45,19 @@ class _LoginScreenState extends State<LoginScreen> {
         );
       }
     } catch (e) {
+      final errorMessage = ErrorHandler.getErrorMessage(e.toString());
       setState(() {
-        _errorMessage = _getErrorMessage(e.toString());
+        _errorMessage = errorMessage;
       });
+
+      // Also show as snackbar for better visibility
+      if (mounted) {
+        ErrorHandler.showErrorSnackBar(
+          context,
+          errorMessage,
+          type: ErrorHandler.getErrorType(e.toString()),
+        );
+      }
     } finally {
       if (mounted) {
         setState(() {
@@ -54,19 +65,6 @@ class _LoginScreenState extends State<LoginScreen> {
         });
       }
     }
-  }
-
-  String _getErrorMessage(String error) {
-    if (error.contains('invalid-credential')) {
-      return 'Invalid email or password';
-    } else if (error.contains('user-not-found')) {
-      return 'User not found';
-    } else if (error.contains('wrong-password')) {
-      return 'Wrong password';
-    } else if (error.contains('too-many-requests')) {
-      return 'Too many login attempts. Please try again later';
-    }
-    return 'Login failed. Please try again';
   }
 
   @override
@@ -88,17 +86,14 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
               const SizedBox(height: 32),
               if (_errorMessage != null)
-                Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: Colors.red.shade50,
-                    border: Border.all(color: Colors.red.shade200),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Text(
-                    _errorMessage!,
-                    style: TextStyle(color: Colors.red.shade700, fontSize: 14),
-                  ),
+                ErrorFeedback(
+                  message: _errorMessage!,
+                  type: ErrorType.error,
+                  onDismiss: () {
+                    setState(() {
+                      _errorMessage = null;
+                    });
+                  },
                 ),
               const SizedBox(height: 16),
               TextFormField(

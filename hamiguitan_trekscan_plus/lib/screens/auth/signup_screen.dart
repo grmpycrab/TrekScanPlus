@@ -3,6 +3,8 @@ import 'login_screen.dart';
 import '../main/main_screen.dart';
 import '../../theme/color.dart';
 import '../../services/firebase_auth_service.dart';
+import '../../services/user_service.dart';
+import '../../components/error_feedback.dart';
 
 class SignUpScreen extends StatefulWidget {
   const SignUpScreen({super.key});
@@ -31,16 +33,20 @@ class _SignUpScreenState extends State<SignUpScreen> {
 
   Future<void> _handleSignUp() async {
     if (!_agreeToTerms) {
-      setState(() {
-        _errorMessage = 'Please agree to the terms and conditions';
-      });
+      ErrorHandler.showErrorSnackBar(
+        context,
+        'Please agree to the terms and conditions',
+        type: ErrorType.warning,
+      );
       return;
     }
 
     if (_passwordController.text != _confirmPasswordController.text) {
-      setState(() {
-        _errorMessage = 'Passwords do not match';
-      });
+      ErrorHandler.showErrorSnackBar(
+        context,
+        'Passwords do not match',
+        type: ErrorType.warning,
+      );
       return;
     }
 
@@ -62,9 +68,18 @@ class _SignUpScreenState extends State<SignUpScreen> {
         );
       }
     } catch (e) {
+      final errorMessage = ErrorHandler.getErrorMessage(e.toString());
       setState(() {
-        _errorMessage = _getErrorMessage(e.toString());
+        _errorMessage = errorMessage;
       });
+
+      if (mounted) {
+        ErrorHandler.showErrorSnackBar(
+          context,
+          errorMessage,
+          type: ErrorHandler.getErrorType(e.toString()),
+        );
+      }
     } finally {
       if (mounted) {
         setState(() {
@@ -72,17 +87,6 @@ class _SignUpScreenState extends State<SignUpScreen> {
         });
       }
     }
-  }
-
-  String _getErrorMessage(String error) {
-    if (error.contains('email-already-in-use')) {
-      return 'Email already in use';
-    } else if (error.contains('weak-password')) {
-      return 'Password is too weak';
-    } else if (error.contains('invalid-email')) {
-      return 'Invalid email address';
-    }
-    return 'Sign up failed. Please try again';
   }
 
   @override
@@ -105,20 +109,14 @@ class _SignUpScreenState extends State<SignUpScreen> {
                 ),
                 const SizedBox(height: 32),
                 if (_errorMessage != null)
-                  Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: Colors.red.shade50,
-                      border: Border.all(color: Colors.red.shade200),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Text(
-                      _errorMessage!,
-                      style: TextStyle(
-                        color: Colors.red.shade700,
-                        fontSize: 14,
-                      ),
-                    ),
+                  ErrorFeedback(
+                    message: _errorMessage!,
+                    type: ErrorType.error,
+                    onDismiss: () {
+                      setState(() {
+                        _errorMessage = null;
+                      });
+                    },
                   ),
                 const SizedBox(height: 16),
                 TextFormField(
