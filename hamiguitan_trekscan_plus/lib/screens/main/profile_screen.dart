@@ -3,6 +3,7 @@ import '../../models/user_model.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../services/firebase_auth_service.dart';
 import '../../services/achievement_service.dart';
+import '../../services/user_service.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
 class ProfileScreen extends StatefulWidget {
@@ -16,6 +17,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   late UserModel _user;
   User? _firebaseUser;
   late AchievementService achievementService;
+  final UserService _userService = UserService.instance;
 
   @override
   void initState() {
@@ -39,8 +41,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
         gender: 'Not specified',
         profileImage: _firebaseUser!.photoURL,
       );
-      _loadBadges();
-      _loadUserStats();
     } else {
       _user = UserModel(
         firstName: 'John',
@@ -52,113 +52,116 @@ class _ProfileScreenState extends State<ProfileScreen> {
     }
   }
 
-  Future<void> _loadBadges() async {
-    try {
-      final uid = _firebaseUser?.uid;
-      if (uid == null) return;
-      final doc = await FirebaseFirestore.instance
-          .collection('users')
-          .doc(uid)
-          .get();
-      if (!doc.exists) return;
-      final data = doc.data();
-      if (data == null) return;
-      final raw = data['badges'] as List<dynamic>?;
-      final badges = raw?.whereType<String>().toList() ?? [];
-      setState(() {
-        _user = _user.copyWith(badges: badges);
-      });
-    } catch (e) {
-      // ignore: avoid_print
-      print('Failed to load badges: $e');
-    }
-  }
-
-  Future<void> _loadUserStats() async {
-    try {
-      final uid = _firebaseUser?.uid;
-      if (uid == null) return;
-      final doc = await FirebaseFirestore.instance
-          .collection('users')
-          .doc(uid)
-          .get();
-      if (!doc.exists) return;
-      final data = doc.data();
-      if (data == null) return;
-      setState(() {
-        _user = _user.copyWith(
-          followingCount: data['followingCount'] as int? ?? 0,
-          followersCount: data['followersCount'] as int? ?? 0,
-          postsCount: data['postsCount'] as int? ?? 0,
-        );
-      });
-    } catch (e) {
-      // ignore: avoid_print
-      print('Failed to load user stats: $e');
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.white,
-      body: SafeArea(
-        child: SingleChildScrollView(
-          child: Column(
-            children: [
-              // Header with back button and title
-              Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16.0,
-                  vertical: 16.0,
+    if (_firebaseUser == null) {
+      return Scaffold(
+        backgroundColor: Colors.white,
+        body: SafeArea(
+          child: Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Text('User not authenticated'),
+                const SizedBox(height: 16),
+                ElevatedButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: const Text('Go Back'),
                 ),
-                child: Row(
-                  children: [
-                    IconButton(
-                      icon: const Icon(
-                        Icons.arrow_back,
-                        color: Colors.black,
-                        size: 24,
-                      ),
-                      onPressed: () => Navigator.of(context).pop(),
-                    ),
-                    const Expanded(
-                      child: Center(
-                        child: Text(
-                          'Profile',
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 48), // To balance the layout
-                  ],
-                ),
-              ),
-              const SizedBox(height: 16),
-              // Profile info section
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 24.0),
-                child: Column(
-                  children: [
-                    _buildProfileSection(),
-                    const SizedBox(height: 24),
-                    _buildStatsSection(),
-                    const SizedBox(height: 32),
-                    if (_user.badges.isNotEmpty) _buildBadgesSection(),
-                  ],
-                ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
+      );
+    }
+
+    return Scaffold(
+      backgroundColor: Colors.white,
+      body: StreamBuilder<DocumentSnapshot<Map<String, dynamic>>>(
+        stream: _userService.streamUser(_firebaseUser!.uid),
+        builder: (context, snapshot) {
+          UserModel displayUser = _user;
+
+          if (snapshot.hasData && snapshot.data != null) {
+            final userData = snapshot.data!.data() ?? {};
+            displayUser = UserModel(
+              firstName: userData['firstName'] ?? _user.firstName,
+              lastName: userData['lastName'] ?? _user.lastName,
+              email: userData['email'] ?? _user.email,
+              birthDate: userData['birthDate'] ?? _user.birthDate,
+              gender: userData['gender'] ?? _user.gender,
+              profileImage: userData['photoURL'] ?? _firebaseUser!.photoURL,
+              badges:
+                  (userData['badges'] as List<dynamic>?)
+                      ?.whereType<String>()
+                      .toList() ??
+                  _user.badges,
+              followingCount: userData['followingCount'] as int? ?? 0,
+              followersCount: userData['followersCount'] as int? ?? 0,
+              postsCount: userData['postsCount'] as int? ?? 0,
+            );
+          }
+
+          return SafeArea(
+            child: SingleChildScrollView(
+              child: Column(
+                children: [
+                  // Header with back button and title
+                  Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16.0,
+                      vertical: 16.0,
+                    ),
+                    child: Row(
+                      children: [
+                        IconButton(
+                          icon: const Icon(
+                            Icons.arrow_back,
+                            color: Colors.black,
+                            size: 24,
+                          ),
+                          onPressed: () => Navigator.of(context).pop(),
+                        ),
+                        const Expanded(
+                          child: Center(
+                            child: Text(
+                              'Profile',
+                              style: TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 48),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  // Profile info section
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 24.0),
+                    child: Column(
+                      children: [
+                        _buildProfileSection(displayUser),
+                        const SizedBox(height: 24),
+                        _buildStatsSection(displayUser),
+                        const SizedBox(height: 32),
+                        if (displayUser.badges.isNotEmpty)
+                          _buildBadgesSection(displayUser),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          );
+        },
       ),
     );
   }
 
-  Widget _buildProfileSection() {
+  Widget _buildProfileSection(UserModel user) {
     return Column(
       children: [
         Container(
@@ -170,8 +173,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
             border: Border.all(color: Colors.grey.shade300, width: 1),
           ),
           child: ClipOval(
-            child: _user.profileImage != null
-                ? Image.network(_user.profileImage!, fit: BoxFit.cover)
+            child: user.profileImage != null
+                ? Image.network(user.profileImage!, fit: BoxFit.cover)
                 : CircleAvatar(
                     radius: 40,
                     backgroundColor: Colors.grey[100],
@@ -185,26 +188,26 @@ class _ProfileScreenState extends State<ProfileScreen> {
         ),
         const SizedBox(height: 12),
         Text(
-          "${_user.firstName} ${_user.lastName}",
+          "${user.firstName} ${user.lastName}",
           style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
         ),
         const SizedBox(height: 4),
         Text(
-          _user.email,
+          user.email,
           style: TextStyle(fontSize: 14, color: Colors.grey[600]),
         ),
       ],
     );
   }
 
-  Widget _buildStatsSection() {
+  Widget _buildStatsSection(UserModel user) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceAround,
       children: [
         Column(
           children: [
             Text(
-              _user.followingCount.toString().padLeft(2, '0'),
+              user.followingCount.toString().padLeft(2, '0'),
               style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 4),
@@ -217,7 +220,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         Column(
           children: [
             Text(
-              _user.followersCount.toString().padLeft(2, '0'),
+              user.followersCount.toString().padLeft(2, '0'),
               style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 4),
@@ -230,7 +233,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         Column(
           children: [
             Text(
-              _user.postsCount.toString().padLeft(2, '0'),
+              user.postsCount.toString().padLeft(2, '0'),
               style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 4),
@@ -244,7 +247,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  Widget _buildBadgesSection() {
+  Widget _buildBadgesSection(UserModel user) {
     final unlockedAchievements = achievementService.getUnlockedAchievements();
     final totalAchievements = achievementService.getTotalCount();
 
