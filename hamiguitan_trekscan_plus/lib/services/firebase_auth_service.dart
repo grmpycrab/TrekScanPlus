@@ -17,10 +17,7 @@ class FirebaseAuthService {
   Stream<User?> get authStateChanges => _firebaseAuth.authStateChanges();
 
   /// Sign up with email and password
-  Future<UserCredential?> signUp({
-    required String email,
-    required String password,
-  }) async {
+  Future<void> signUp({required String email, required String password}) async {
     try {
       final userCredential = await _firebaseAuth.createUserWithEmailAndPassword(
         email: email,
@@ -28,15 +25,63 @@ class FirebaseAuthService {
       );
       // Ensure the user document exists in Firestore for newly created users
       if (userCredential.user != null) {
-        await UserService.instance.createOrUpdateUserFromFirebase(
-          userCredential.user!,
-        );
+        try {
+          await UserService.instance.createOrUpdateUserFromFirebase(
+            userCredential.user!,
+          );
+        } catch (e) {
+          // Log Firestore error but don't block user signup
+          if (kDebugMode) {
+            print(
+              '⚠️ Warning: Failed to create user document in Firestore: $e',
+            );
+            print(
+              'User was created in Firebase Auth, but Firestore sync failed.',
+            );
+            print(
+              'User can proceed - data will sync when network is available.',
+            );
+          }
+        }
       }
-      return userCredential;
     } on FirebaseAuthException catch (e) {
       if (kDebugMode) {
         print('Sign up error: ${e.code} - ${e.message}');
       }
+      rethrow;
+    } catch (e, st) {
+      // Sometimes a Pigeon type-cast error happens even though the user was created
+      // Check if we have a current user before throwing
+      if (kDebugMode) {
+        print('⚠️ Sign up Pigeon cast error: $e');
+        print(st);
+      }
+
+      final fallbackUser = _firebaseAuth.currentUser;
+      if (fallbackUser != null) {
+        if (kDebugMode) {
+          print(
+            '✅ User was created despite Pigeon error. Continuing with user: ${fallbackUser.email}',
+          );
+        }
+        // Ensure Firestore has a user document for this account
+        try {
+          await UserService.instance.createOrUpdateUserFromFirebase(
+            fallbackUser,
+          );
+        } catch (e) {
+          // Log Firestore error but don't block signup
+          if (kDebugMode) {
+            print(
+              '⚠️ Warning: Failed to create user document in Firestore: $e',
+            );
+          }
+        }
+        // User created successfully despite the error, so continue
+        return;
+      }
+
+      // If no current user, rethrow
       rethrow;
     }
   }
@@ -53,9 +98,21 @@ class FirebaseAuthService {
       );
       // Update/create the Firestore user document when logging in
       if (userCredential.user != null) {
-        await UserService.instance.createOrUpdateUserFromFirebase(
-          userCredential.user!,
-        );
+        try {
+          await UserService.instance.createOrUpdateUserFromFirebase(
+            userCredential.user!,
+          );
+        } catch (e) {
+          // Log Firestore error but don't block login
+          if (kDebugMode) {
+            print(
+              '⚠️ Warning: Failed to update user document in Firestore: $e',
+            );
+            print(
+              'User can proceed - data will sync when network is available.',
+            );
+          }
+        }
       }
       return userCredential;
     } on FirebaseAuthException catch (e) {
@@ -70,6 +127,9 @@ class FirebaseAuthService {
   Future<void> signOut() async {
     try {
       await _firebaseAuth.signOut();
+      if (kDebugMode) {
+        print('✅ User signed out successfully');
+      }
     } on FirebaseAuthException catch (e) {
       if (kDebugMode) {
         print('Sign out error: ${e.code} - ${e.message}');
@@ -155,9 +215,24 @@ class FirebaseAuthService {
 
         // Ensure Firestore has a user document for this account
         if (userCredential.user != null) {
-          await UserService.instance.createOrUpdateUserFromFirebase(
-            userCredential.user!,
-          );
+          try {
+            await UserService.instance.createOrUpdateUserFromFirebase(
+              userCredential.user!,
+            );
+          } catch (e) {
+            // Log Firestore error but don't block sign-in
+            if (kDebugMode) {
+              print(
+                '⚠️ Warning: Failed to create user document in Firestore: $e',
+              );
+              print(
+                'User was created in Firebase Auth, but Firestore sync failed.',
+              );
+              print(
+                'User can proceed - data will sync when network is available.',
+              );
+            }
+          }
         }
 
         if (kDebugMode) {
@@ -181,9 +256,18 @@ class FirebaseAuthService {
             print('Returning fallback currentUser: ${fallbackUser.email}');
           }
           // Ensure Firestore has a user document for this account and then return it.
-          await UserService.instance.createOrUpdateUserFromFirebase(
-            fallbackUser,
-          );
+          try {
+            await UserService.instance.createOrUpdateUserFromFirebase(
+              fallbackUser,
+            );
+          } catch (e) {
+            // Log Firestore error but don't block sign-in
+            if (kDebugMode) {
+              print(
+                '⚠️ Warning: Failed to create user document in Firestore: $e',
+              );
+            }
+          }
           return fallbackUser;
         }
 
