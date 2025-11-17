@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../components/bottom_navigation.dart';
+import '../../services/achievement_service.dart';
 import 'home_screen.dart';
 import 'station_screen.dart';
 import 'scanner_screen.dart';
@@ -15,6 +16,7 @@ class MainScreen extends StatefulWidget {
 
 class _MainScreenState extends State<MainScreen> {
   int _currentIndex = 0;
+  final AchievementService _achievementService = AchievementService();
 
   final List<Widget> _screens = [
     const HomeScreen(),
@@ -23,6 +25,21 @@ class _MainScreenState extends State<MainScreen> {
     const BookAClimbScreen(),
     const SettingsScreen(),
   ];
+
+  @override
+  void initState() {
+    super.initState();
+    _initializeAchievements();
+  }
+
+  Future<void> _initializeAchievements() async {
+    try {
+      await _achievementService.init();
+      print('AchievementService initialized in MainScreen');
+    } catch (e) {
+      print('Error initializing AchievementService: $e');
+    }
+  }
 
   @override
   Widget build(BuildContext context) {

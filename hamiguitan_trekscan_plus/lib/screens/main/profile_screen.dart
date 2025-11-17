@@ -19,10 +19,21 @@ class _ProfileScreenState extends State<ProfileScreen> {
   late AchievementService achievementService;
   final UserService _userService = UserService.instance;
 
+  Future<void> _initializeAchievements() async {
+    try {
+      await achievementService.init();
+      setState(() {});
+      print('AchievementService initialized in ProfileScreen');
+    } catch (e) {
+      print('Error initializing AchievementService in ProfileScreen: $e');
+    }
+  }
+
   @override
   void initState() {
     super.initState();
     achievementService = AchievementService();
+    _initializeAchievements();
     _firebaseUser = FirebaseAuthService.instance.currentUser;
 
     if (_firebaseUser != null) {
@@ -201,6 +212,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   Widget _buildStatsSection(UserModel user) {
+    final unlockedCount = achievementService.getUnlockedCount();
+    final totalCount = achievementService.getTotalCount();
+
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceAround,
       children: [
@@ -243,6 +257,19 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ),
           ],
         ),
+        Column(
+          children: [
+            Text(
+              '$unlockedCount/$totalCount',
+              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              'Achievements',
+              style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+            ),
+          ],
+        ),
       ],
     );
   }
@@ -250,6 +277,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Widget _buildBadgesSection(UserModel user) {
     final unlockedAchievements = achievementService.getUnlockedAchievements();
     final totalAchievements = achievementService.getTotalCount();
+
+    print('DEBUG: ProfileScreen _buildBadgesSection');
+    print('  Total achievements: $totalAchievements');
+    print('  Unlocked achievements: ${unlockedAchievements.length}');
+    print('  All achievements:');
+    for (var ach in achievementService.getAllAchievements()) {
+      print(
+        '    - ${ach.id}: isUnlocked=${ach.isUnlocked}, unlockedAt=${ach.unlockedAt}',
+      );
+    }
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
