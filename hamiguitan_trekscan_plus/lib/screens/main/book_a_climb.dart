@@ -76,6 +76,7 @@ class _BookAClimbScreenState extends State<BookAClimbScreen> {
                         documents: b.attachments
                             .map((a) => a.fileName)
                             .toList(),
+                        adminNotes: b.adminNotes,
                       ),
                       'booking': b,
                     },
@@ -298,6 +299,7 @@ class _BookAClimbScreenState extends State<BookAClimbScreen> {
               climb: climb,
               booking: bookingModel,
               onCancel: (c) => _confirmCancelModel(c),
+              onEditBooking: (b) => _showEditBookingSheet(b),
             );
           }
           // Fallback
@@ -338,6 +340,7 @@ class _BookAClimbScreenState extends State<BookAClimbScreen> {
                   type: b.trekType,
                   status: b.status,
                   documents: b.attachments.map((a) => a.fileName).toList(),
+                  adminNotes: b.adminNotes,
                 ),
                 'booking': b,
               },
@@ -372,6 +375,7 @@ class _BookAClimbScreenState extends State<BookAClimbScreen> {
                             documents: b.attachments
                                 .map((a) => a.fileName)
                                 .toList(),
+                            adminNotes: b.adminNotes,
                           ),
                           'booking': b,
                         },
@@ -412,8 +416,10 @@ class _BookAClimbScreenState extends State<BookAClimbScreen> {
             onPressed: () => Navigator.pop(context),
             child: const Text('No'),
           ),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.redAccent),
+          TextButton(
+            style: TextButton.styleFrom(
+              foregroundColor: Colors.redAccent,
+            ),
             onPressed: () async {
               // If booking has an id, persist cancellation to Firestore.
               if (booking.id != null) {
@@ -446,6 +452,400 @@ class _BookAClimbScreenState extends State<BookAClimbScreen> {
           ),
         ],
       ),
+    );
+  }
+
+  void _showEditBookingSheet(BookingModel booking) {
+    if (booking.id == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Cannot edit a pending local booking yet.')),
+      );
+      return;
+    }
+
+    final formKey = GlobalKey<FormState>();
+    final affiliationController =
+        TextEditingController(text: booking.affiliation);
+    final portersController =
+        TextEditingController(text: booking.numberOfPorters.toString());
+    final notesController = TextEditingController(text: booking.notes ?? '');
+    bool isSaving = false;
+
+    // Track existing attachments (can be marked for deletion)
+    List<Attachment> existingAttachments = List.from(booking.attachments);
+    Set<String> attachmentsToDelete = {};
+    
+    // Track new files to upload
+    List<PlatformFile> newFiles = [];
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setModalState) {
+            Future<void> handlePickFiles() async {
+              FilePickerResult? result = await FilePicker.platform.pickFiles(
+                allowMultiple: true,
+                type: FileType.custom,
+                allowedExtensions: ['docx', 'pdf', 'jpg', 'jpeg', 'png'],
+              );
+              if (result != null) {
+                setModalState(() {
+                  newFiles.addAll(result.files);
+                });
+              }
+            }
+
+            Future<void> handleSave() async {
+              if (!formKey.currentState!.validate()) return;
+
+              final porters = int.tryParse(portersController.text.trim());
+              if (porters == null || porters < 0) {
+                ScaffoldMessenger.of(this.context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Enter a valid number of porters.'),
+                  ),
+                );
+                return;
+              }
+
+              setModalState(() => isSaving = true);
+
+              try {
+                // Update booking details
+                await BookingService.instance.updateBooking(
+                  booking.id!,
+                  affiliation: affiliationController.text.trim(),
+                  numberOfPorters: porters,
+                  notes: notesController.text.trim().isEmpty
+                      ? null
+                      : notesController.text.trim(),
+                );
+
+                // Delete removed attachments
+                for (final attachment in existingAttachments) {
+                  if (attachmentsToDelete.contains(attachment.fileName)) {
+                    try {
+                      await BookingService.instance.deleteAttachment(
+                        booking.id!,
+                        attachment,
+                      );
+                    } catch (e) {
+                      print('Error deleting attachment ${attachment.fileName}: $e');
+                      // Continue with other deletions
+                    }
+                  }
+                }
+
+                // Upload new files
+                for (final file in newFiles) {
+                  try {
+                    await BookingService.instance.uploadAttachment(
+                      booking.id!,
+                      file,
+                    );
+                  } catch (e) {
+                    print('Error uploading file ${file.name}: $e');
+                    // Continue with other uploads
+                  }
+                }
+
+                if (mounted) {
+                  Navigator.of(context).pop();
+                  ScaffoldMessenger.of(this.context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Booking details updated.'),
+                    ),
+                  );
+                }
+              } catch (e) {
+                if (mounted) {
+                  setModalState(() => isSaving = false);
+                }
+                if (mounted) {
+                  ScaffoldMessenger.of(this.context).showSnackBar(
+                    SnackBar(
+                      content: Text('Failed to update booking: $e'),
+                    ),
+                  );
+                }
+              }
+            }
+
+            return Padding(
+              padding: EdgeInsets.only(
+                bottom: MediaQuery.of(context).viewInsets.bottom,
+              ),
+              child: Container(
+                constraints: BoxConstraints(
+                  maxHeight: MediaQuery.of(context).size.height * 0.9,
+                ),
+                decoration: const BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+                ),
+                padding: const EdgeInsets.all(20),
+                child: Form(
+                  key: formKey,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          const Text(
+                            'Edit Booking Details',
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          IconButton(
+                            onPressed: () => Navigator.of(context).pop(),
+                            icon: const Icon(Icons.close),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 12),
+                      Flexible(
+                        child: SingleChildScrollView(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              TextFormField(
+                                controller: affiliationController,
+                                decoration: const InputDecoration(
+                                  labelText: 'Affiliation',
+                                  border: OutlineInputBorder(),
+                                ),
+                                validator: (value) {
+                                  if (value == null || value.trim().isEmpty) {
+                                    return 'Affiliation is required';
+                                  }
+                                  return null;
+                                },
+                              ),
+                              const SizedBox(height: 12),
+                              TextFormField(
+                                controller: portersController,
+                                decoration: const InputDecoration(
+                                  labelText: 'Number of Porters',
+                                  border: OutlineInputBorder(),
+                                ),
+                                keyboardType: TextInputType.number,
+                                validator: (value) {
+                                  if (value == null || value.trim().isEmpty) {
+                                    return 'Number of porters is required';
+                                  }
+                                  final porters = int.tryParse(value);
+                                  if (porters == null || porters < 0) {
+                                    return 'Enter a valid whole number';
+                                  }
+                                  return null;
+                                },
+                              ),
+                              const SizedBox(height: 12),
+                              TextFormField(
+                                controller: notesController,
+                                decoration: const InputDecoration(
+                                  labelText: 'Additional Notes (optional)',
+                                  border: OutlineInputBorder(),
+                                ),
+                                maxLines: 4,
+                              ),
+                              const SizedBox(height: 16),
+                              // Documents section
+                              const Text(
+                                'Documents',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              const SizedBox(height: 8),
+                              // Existing attachments
+                              if (existingAttachments.isNotEmpty) ...[
+                                const Text(
+                                  'Current Files:',
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w600,
+                                    color: Colors.black54,
+                                  ),
+                                ),
+                                const SizedBox(height: 8),
+                                ...existingAttachments.map((attachment) {
+                                  final isMarkedForDelete =
+                                      attachmentsToDelete.contains(attachment.fileName);
+                                  return Container(
+                                    margin: const EdgeInsets.only(bottom: 8),
+                                    padding: const EdgeInsets.all(12),
+                                    decoration: BoxDecoration(
+                                      color: isMarkedForDelete
+                                          ? Colors.red[50]
+                                          : Colors.grey[50],
+                                      borderRadius: BorderRadius.circular(8),
+                                      border: Border.all(
+                                        color: isMarkedForDelete
+                                            ? Colors.red[300]!
+                                            : Colors.grey[300]!,
+                                      ),
+                                    ),
+                                    child: Row(
+                                      children: [
+                                        Icon(
+                                          Icons.insert_drive_file,
+                                          size: 20,
+                                          color: isMarkedForDelete
+                                              ? Colors.red[700]
+                                              : Colors.blueGrey[700],
+                                        ),
+                                        const SizedBox(width: 8),
+                                        Expanded(
+                                          child: Text(
+                                            attachment.fileName,
+                                            style: TextStyle(
+                                              fontSize: 13,
+                                              decoration: isMarkedForDelete
+                                                  ? TextDecoration.lineThrough
+                                                  : null,
+                                              color: isMarkedForDelete
+                                                  ? Colors.grey
+                                                  : Colors.black87,
+                                            ),
+                                          ),
+                                        ),
+                                        IconButton(
+                                          icon: Icon(
+                                            isMarkedForDelete
+                                                ? Icons.undo
+                                                : Icons.delete_outline,
+                                            ),
+                                          color: isMarkedForDelete
+                                              ? Colors.blue
+                                              : Colors.red,
+                                          onPressed: () {
+                                            setModalState(() {
+                                              if (isMarkedForDelete) {
+                                                attachmentsToDelete
+                                                    .remove(attachment.fileName);
+                                              } else {
+                                                attachmentsToDelete
+                                                    .add(attachment.fileName);
+                                              }
+                                            });
+                                          },
+                                        ),
+                                      ],
+                                    ),
+                                  );
+                                }),
+                                const SizedBox(height: 12),
+                              ],
+                              // New files section
+                              if (newFiles.isNotEmpty) ...[
+                                const Text(
+                                  'New Files to Upload:',
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w600,
+                                    color: Colors.black54,
+                                  ),
+                                ),
+                                const SizedBox(height: 8),
+                                ...newFiles.map((file) {
+                                  return Container(
+                                    margin: const EdgeInsets.only(bottom: 8),
+                                    padding: const EdgeInsets.all(12),
+                                    decoration: BoxDecoration(
+                                      color: Colors.green[50],
+                                      borderRadius: BorderRadius.circular(8),
+                                      border: Border.all(
+                                        color: Colors.green[300]!,
+                                      ),
+                                    ),
+                                    child: Row(
+                                      children: [
+                                        Icon(
+                                          Icons.upload_file,
+                                          size: 20,
+                                          color: Colors.green[700],
+                                        ),
+                                        const SizedBox(width: 8),
+                                        Expanded(
+                                          child: Text(
+                                            file.name,
+                                            style: const TextStyle(
+                                              fontSize: 13,
+                                              color: Colors.black87,
+                                            ),
+                                          ),
+                                        ),
+                                        IconButton(
+                                          icon: const Icon(Icons.close),
+                                          color: Colors.red,
+                                          onPressed: () {
+                                            setModalState(() {
+                                              newFiles.remove(file);
+                                            });
+                                          },
+                                        ),
+                                      ],
+                                    ),
+                                  );
+                                }),
+                                const SizedBox(height: 12),
+                              ],
+                              // Upload button
+                              SizedBox(
+                                width: double.infinity,
+                                child: ElevatedButton.icon(
+                                  onPressed: handlePickFiles,
+                                  icon: const Icon(Icons.upload_file),
+                                  label: const Text('Add New Files'),
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: Colors.blueGrey[700],
+                                    padding: const EdgeInsets.symmetric(vertical: 12),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      SizedBox(
+                        width: double.infinity,
+                        child: ElevatedButton(
+                          onPressed: isSaving ? null : handleSave,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.blueGrey[700],
+                            padding: const EdgeInsets.symmetric(vertical: 14),
+                          ),
+                          child: isSaving
+                              ? const SizedBox(
+                                  width: 20,
+                                  height: 20,
+                                  child: CircularProgressIndicator(strokeWidth: 2),
+                                )
+                              : const Text(
+                                  'Save Changes',
+                                  style: TextStyle(color: Colors.white),
+                                ),
+                        ),
+                      ),
+                      const SizedBox(height: 10),
+                    ],
+                  ),
+                ),
+              ),
+            );
+          },
+        );
+      },
     );
   }
 

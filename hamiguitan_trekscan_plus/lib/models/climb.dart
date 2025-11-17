@@ -8,6 +8,7 @@ class Climb {
   String type;
   String status;
   List<String> documents;
+  String? adminNotes;
 
   Climb({
     this.id,
@@ -19,6 +20,7 @@ class Climb {
     this.type = 'General',
     this.status = 'Pending',
     List<String>? documents,
+    this.adminNotes,
   }) : documents = documents ?? [];
 
   factory Climb.fromMap(Map<String, dynamic> m) {
@@ -59,6 +61,7 @@ class Climb {
       dateApproved: dateApproved,
       type: m['type'] ?? 'General',
       status: m['status'] ?? 'Pending',
+      adminNotes: m['adminNotes'] as String?,
     );
   }
 
@@ -80,6 +83,10 @@ class Climb {
     }
     if (dateApproved != null) {
       map['dateApproved'] = dateApproved!.toIso8601String();
+    }
+    final notes = adminNotes;
+    if (notes != null) {
+      map['adminNotes'] = notes;
     }
     return map;
   }

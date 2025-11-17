@@ -44,6 +44,7 @@ class BookingModel {
   final int numberOfPorters;
   final String trekType; // recreational | research
   final String? notes;
+  final String? adminNotes;
   List<Attachment> attachments;
   String status;
   final Timestamp createdAt;
@@ -57,6 +58,7 @@ class BookingModel {
     required this.numberOfPorters,
     required this.trekType,
     this.notes,
+    this.adminNotes,
     this.attachments = const [],
     this.status = 'pending',
     Timestamp? createdAt,
@@ -71,6 +73,7 @@ class BookingModel {
     'numberOfPorters': numberOfPorters,
     'trekType': trekType,
     'notes': notes,
+    'adminNotes': adminNotes,
     'attachments': attachments.map((a) => a.toMap()).toList(),
     'status': status,
     'createdAt': createdAt,
@@ -87,6 +90,7 @@ class BookingModel {
       numberOfPorters: (data['numberOfPorters'] as num?)?.toInt() ?? 0,
       trekType: data['trekType'] as String? ?? 'recreational',
       notes: data['notes'] as String?,
+      adminNotes: data['adminNotes'] as String?,
       attachments:
           (data['attachments'] as List<dynamic>?)
               ?.map((e) => Attachment.fromMap(Map<String, dynamic>.from(e)))

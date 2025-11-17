@@ -2,17 +2,20 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../models/climb.dart';
 import '../models/booking_model.dart';
+import '../theme/color.dart';
 
 class BookingDetailsModal extends StatelessWidget {
   final Climb climb;
   final BookingModel? booking;
   final VoidCallback onClose;
+  final VoidCallback? onEdit;
 
   const BookingDetailsModal({
     super.key,
     required this.climb,
     this.booking,
     required this.onClose,
+    this.onEdit,
   });
 
   String _formatDate(DateTime? date) {
@@ -29,7 +32,7 @@ class BookingDetailsModal extends StatelessWidget {
       child: Container(
         color: Colors.black.withOpacity(0.5),
         child: GestureDetector(
-          onTap: () {}, // Prevent closing when tapping inside modal
+          onTap: () {},
           child: Center(
             child: Material(
               borderRadius: BorderRadius.circular(20),
@@ -56,7 +59,7 @@ class BookingDetailsModal extends StatelessWidget {
                     Container(
                       padding: const EdgeInsets.all(20),
                       decoration: BoxDecoration(
-                        color: Colors.blueGrey[700],
+                        color: AppColors.primary,
                         borderRadius: const BorderRadius.vertical(
                           top: Radius.circular(20),
                         ),
@@ -132,7 +135,9 @@ class BookingDetailsModal extends StatelessWidget {
                             const SizedBox(height: 8),
                             _buildDetailRow(
                               'Number of Porters:',
-                              '${booking?.numberOfPorters ?? 'N/A'}',
+                              booking != null
+                                  ? '${booking!.numberOfPorters}'
+                                  : 'N/A',
                             ),
                             const SizedBox(height: 8),
                             _buildDetailRow(
@@ -215,19 +220,33 @@ class BookingDetailsModal extends StatelessWidget {
                         ),
                       ),
                     ),
-                    // Close button at bottom
+                    // Actions row
                     Padding(
                       padding: const EdgeInsets.all(20),
-                      child: SizedBox(
-                        width: double.infinity,
-                        child: FilledButton(
-                          style: FilledButton.styleFrom(
-                            backgroundColor: Colors.blueGrey[700],
-                            padding: const EdgeInsets.symmetric(vertical: 12),
+                      child: Row(
+                        children: [
+                          if (onEdit != null) ...[
+                            Expanded(
+                              child: OutlinedButton.icon(
+                                onPressed: onEdit,
+                                icon: const Icon(Icons.edit),
+                                label: const Text('Edit Details'),
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                          ],
+                          Expanded(
+                            child: FilledButton(
+                              style: FilledButton.styleFrom(
+                                backgroundColor: AppColors.primary,
+                                padding:
+                                    const EdgeInsets.symmetric(vertical: 12),
+                              ),
+                              onPressed: onClose,
+                              child: const Text('Close'),
+                            ),
                           ),
-                          onPressed: onClose,
-                          child: const Text('Close'),
-                        ),
+                        ],
                       ),
                     ),
                   ],
@@ -407,14 +426,13 @@ class BookingDetailsModal extends StatelessWidget {
   }
 
   bool _hasAdminNotes() {
-    // This would check for admin notes in the booking model
-    // For now, we check if there's an admin notes field (you may need to add this to BookingModel)
-    return false; // Placeholder - update when admin notes field is added to BookingModel
+    final text = booking?.adminNotes ?? climb.adminNotes;
+    return text != null && text.trim().isNotEmpty;
   }
 
   String _getAdminNotes() {
-    // Return admin notes from booking model when available
-    return 'No admin notes available';
+    return (booking?.adminNotes ?? climb.adminNotes)?.trim() ??
+        'No admin notes available';
   }
 
   Color _getStatusColor(String status) {

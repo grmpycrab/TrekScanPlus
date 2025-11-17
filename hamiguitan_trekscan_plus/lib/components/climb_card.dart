@@ -3,7 +3,7 @@ import 'package:intl/intl.dart';
 import '../models/climb.dart';
 import '../models/booking_model.dart';
 import 'booking_details_modal.dart';
-
+import '../theme/color.dart';
 typedef ClimbCallback = void Function(Climb);
 
 class ClimbCard extends StatelessWidget {
@@ -11,6 +11,7 @@ class ClimbCard extends StatelessWidget {
   final VoidCallback? onTap;
   final ClimbCallback? onCancel;
   final BookingModel? booking;
+  final void Function(BookingModel booking)? onEditBooking;
 
   const ClimbCard({
     super.key,
@@ -18,6 +19,7 @@ class ClimbCard extends StatelessWidget {
     this.onTap,
     this.onCancel,
     this.booking,
+    this.onEditBooking,
   });
 
   String _formatDate(DateTime? date) {
@@ -143,7 +145,7 @@ class ClimbCard extends StatelessWidget {
                     icon: const Icon(Icons.info_outline, size: 18),
                     label: const Text('View Details'),
                     style: FilledButton.styleFrom(
-                      backgroundColor: Colors.blueGrey[700],
+                      backgroundColor: AppColors.primary,
                       padding: const EdgeInsets.symmetric(vertical: 8),
                     ),
                   ),
@@ -165,7 +167,7 @@ class ClimbCard extends StatelessWidget {
           style: const TextStyle(
             fontSize: 14,
             fontWeight: FontWeight.w600,
-            color: Colors.black54,
+            color: AppColors.textSecondary,
           ),
         ),
         Text(
@@ -179,26 +181,26 @@ class ClimbCard extends StatelessWidget {
   Color _getStatusColor(String status) {
     switch (status) {
       case 'Approved':
-        return Colors.green[100]!;
+        return AppColors.difficultyEasy;
       case 'Cancelled':
-        return Colors.grey[200]!;
+        return AppColors.difficultyModerate;
       case 'Expired':
-        return Colors.red[100]!;
+        return AppColors.difficultyHard;
       default:
-        return Colors.orange[100]!;
+        return AppColors.difficultyModerate;
     }
   }
 
   Color _getStatusTextColor(String status) {
     switch (status) {
       case 'Approved':
-        return Colors.green[800]!;
+        return AppColors.textLight;
       case 'Cancelled':
-        return Colors.grey[700]!;
+        return AppColors.textLight;
       case 'Expired':
-        return Colors.red[800]!;
+        return AppColors.textLight;
       default:
-        return Colors.orange[800]!;
+        return AppColors.textLight;
     }
   }
 
@@ -206,11 +208,17 @@ class ClimbCard extends StatelessWidget {
     showDialog(
       context: context,
       barrierDismissible: true,
-      barrierColor: Colors.transparent,
+      barrierColor: AppColors.shadowOverlay,
       builder: (context) => BookingDetailsModal(
         climb: climb,
         booking: booking,
         onClose: () => Navigator.pop(context),
+        onEdit: booking != null && onEditBooking != null
+            ? () {
+                Navigator.pop(context);
+                onEditBooking!(booking!);
+              }
+            : null,
       ),
     );
   }
