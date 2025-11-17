@@ -23,6 +23,28 @@ class BookingService {
     return docRef.id;
   }
 
+  /// Update editable booking fields (typically user-provided info)
+  Future<void> updateBooking(
+    String bookingId, {
+    String? affiliation,
+    int? numberOfPorters,
+    String? notes,
+  }) async {
+    final updateData = <String, dynamic>{
+      'updatedAt': FieldValue.serverTimestamp(),
+    };
+    if (affiliation != null) {
+      updateData['affiliation'] = affiliation;
+    }
+    if (numberOfPorters != null) {
+      updateData['numberOfPorters'] = numberOfPorters;
+    }
+    // Allow clearing notes by sending null
+    updateData['notes'] = notes;
+
+    await _firestore.collection('bookings').doc(bookingId).update(updateData);
+  }
+
   /// Upload a PlatformFile to storage under bookings/{bookingId}/attachments/
   /// Returns Attachment metadata on success.
   Future<Attachment> uploadAttachment(
@@ -164,5 +186,26 @@ class BookingService {
       'status': 'cancelled',
       'updatedAt': FieldValue.serverTimestamp(),
     });
+  }
+
+  /// Delete an attachment from both Storage and Firestore
+  Future<void> deleteAttachment(
+    String bookingId,
+    Attachment attachment,
+  ) async {
+    try {
+      // Delete from Storage
+      final storageRef = _storage.ref(attachment.storagePath);
+      await storageRef.delete();
+
+      // Remove from Firestore
+      await _firestore.collection('bookings').doc(bookingId).update({
+        'attachments': FieldValue.arrayRemove([attachment.toMap()]),
+        'updatedAt': FieldValue.serverTimestamp(),
+      });
+    } catch (e) {
+      print('ERROR deleting attachment: $e');
+      rethrow;
+    }
   }
 }

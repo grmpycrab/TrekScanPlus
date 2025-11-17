@@ -58,22 +58,28 @@ class _BookAClimbScreenState extends State<BookAClimbScreen> {
           .streamBookingsForUser(user.uid)
           .listen((bookings) {
             setState(() {
-              // Map BookingModel -> Climb for display (include the booking id)
+              // Map BookingModel -> {climb, booking} for display
               _bookings = bookings
                   .map(
-                    (b) => Climb(
-                      id: b.id,
-                      name:
-                          FirebaseAuth.instance.currentUser?.displayName ??
-                          'You',
-                      date: b.trekDate.toDate(),
-                      dateBooked: b.createdAt.toDate(),
-                      targetDate: b.trekDate.toDate(),
-                      dateApproved: b.updatedAt?.toDate(),
-                      type: b.trekType,
-                      status: b.status,
-                      documents: b.attachments.map((a) => a.fileName).toList(),
-                    ),
+                    (b) => {
+                      'climb': Climb(
+                        id: b.id,
+                        name:
+                            FirebaseAuth.instance.currentUser?.displayName ??
+                            'You',
+                        date: b.trekDate.toDate(),
+                        dateBooked: b.createdAt.toDate(),
+                        targetDate: b.trekDate.toDate(),
+                        dateApproved: b.updatedAt?.toDate(),
+                        type: b.trekType,
+                        status: b.status,
+                        documents: b.attachments
+                            .map((a) => a.fileName)
+                            .toList(),
+                        adminNotes: b.adminNotes,
+                      ),
+                      'booking': b,
+                    },
                   )
                   .toList();
             });
@@ -222,20 +228,32 @@ class _BookAClimbScreenState extends State<BookAClimbScreen> {
     );
   }
 
-  List<Climb> _filterBookings(String type) {
-    // Normalize to Climb instances in case some entries are Map<String,String>
-    final climbs = _asClimbs();
+  List<dynamic> _filterBookings(String type) {
+    // Filter from _bookings which contains maps with climb and booking
     final today = DateTime.now();
     final todayDate = DateTime(today.year, today.month, today.day);
+
     if (type == 'upcoming') {
-      return climbs.where((b) => !b.date.isBefore(todayDate)).toList();
+      return _bookings.where((item) {
+        if (item is Map<String, dynamic> && item.containsKey('climb')) {
+          final climb = item['climb'] as Climb;
+          return !climb.date.isBefore(todayDate);
+        }
+        return false;
+      }).toList();
     } else if (type == 'previous') {
-      return climbs.where((b) => b.date.isBefore(todayDate)).toList();
+      return _bookings.where((item) {
+        if (item is Map<String, dynamic> && item.containsKey('climb')) {
+          final climb = item['climb'] as Climb;
+          return climb.date.isBefore(todayDate);
+        }
+        return false;
+      }).toList();
     }
-    return climbs;
+    return _bookings;
   }
 
-  Widget _buildBookingsList(List<Climb> bookings) {
+  Widget _buildBookingsList(List<dynamic> bookings) {
     // Wrap lists in a RefreshIndicator so user can pull-to-refresh bookings
     if (bookings.isEmpty) {
       return RefreshIndicator(
@@ -273,9 +291,20 @@ class _BookAClimbScreenState extends State<BookAClimbScreen> {
         padding: const EdgeInsets.all(16),
         itemCount: bookings.length,
         itemBuilder: (context, index) {
-          final booking = bookings[index];
+          final item = bookings[index];
+          if (item is Map<String, dynamic>) {
+            final climb = item['climb'] as Climb;
+            final bookingModel = item['booking'] as BookingModel;
+            return ClimbCard(
+              climb: climb,
+              booking: bookingModel,
+              onCancel: (c) => _confirmCancelModel(c),
+              onEditBooking: (b) => _showEditBookingSheet(b),
+            );
+          }
+          // Fallback
           return ClimbCard(
-            climb: booking,
+            climb: Climb(name: '', date: DateTime(1970)),
             onCancel: (c) => _confirmCancelModel(c),
           );
         },
@@ -300,17 +329,21 @@ class _BookAClimbScreenState extends State<BookAClimbScreen> {
       setState(() {
         _bookings = bookings
             .map(
-              (b) => Climb(
-                id: b.id,
-                name: FirebaseAuth.instance.currentUser?.displayName ?? 'You',
-                date: b.trekDate.toDate(),
-                dateBooked: b.createdAt.toDate(),
-                targetDate: b.trekDate.toDate(),
-                dateApproved: b.updatedAt?.toDate(),
-                type: b.trekType,
-                status: b.status,
-                documents: b.attachments.map((a) => a.fileName).toList(),
-              ),
+              (b) => {
+                'climb': Climb(
+                  id: b.id,
+                  name: FirebaseAuth.instance.currentUser?.displayName ?? 'You',
+                  date: b.trekDate.toDate(),
+                  dateBooked: b.createdAt.toDate(),
+                  targetDate: b.trekDate.toDate(),
+                  dateApproved: b.updatedAt?.toDate(),
+                  type: b.trekType,
+                  status: b.status,
+                  documents: b.attachments.map((a) => a.fileName).toList(),
+                  adminNotes: b.adminNotes,
+                ),
+                'booking': b,
+              },
             )
             .toList();
       });
@@ -324,21 +357,28 @@ class _BookAClimbScreenState extends State<BookAClimbScreen> {
                 setState(() {
                   _bookings = bookings
                       .map(
-                        (b) => Climb(
-                          id: b.id,
-                          name:
-                              FirebaseAuth.instance.currentUser?.displayName ??
-                              'You',
-                          date: b.trekDate.toDate(),
-                          dateBooked: b.createdAt.toDate(),
-                          targetDate: b.trekDate.toDate(),
-                          dateApproved: b.updatedAt?.toDate(),
-                          type: b.trekType,
-                          status: b.status,
-                          documents: b.attachments
-                              .map((a) => a.fileName)
-                              .toList(),
-                        ),
+                        (b) => {
+                          'climb': Climb(
+                            id: b.id,
+                            name:
+                                FirebaseAuth
+                                    .instance
+                                    .currentUser
+                                    ?.displayName ??
+                                'You',
+                            date: b.trekDate.toDate(),
+                            dateBooked: b.createdAt.toDate(),
+                            targetDate: b.trekDate.toDate(),
+                            dateApproved: b.updatedAt?.toDate(),
+                            type: b.trekType,
+                            status: b.status,
+                            documents: b.attachments
+                                .map((a) => a.fileName)
+                                .toList(),
+                            adminNotes: b.adminNotes,
+                          ),
+                          'booking': b,
+                        },
                       )
                       .toList();
                 });
@@ -352,36 +392,15 @@ class _BookAClimbScreenState extends State<BookAClimbScreen> {
 
   // Convert internal _bookings (dynamic) to a list of Climb objects.
   List<Climb> _asClimbs() {
-    // Convert and *mutate* the internal _bookings list so that returned Climb
-    // instances stay in sync with the source and can be updated (e.g. cancel).
     final List<Climb> list = [];
-    for (var i = 0; i < _bookings.length; i++) {
-      final e = _bookings[i];
-      if (e is Climb) {
+    for (var e in _bookings) {
+      if (e is Map<String, dynamic> && e.containsKey('climb')) {
+        list.add(e['climb'] as Climb);
+      } else if (e is Climb) {
         list.add(e);
-        continue;
+      } else {
+        list.add(Climb(name: '', date: DateTime(1970)));
       }
-      if (e is Map) {
-        try {
-          final map = Map<String, String>.from(
-            e.map((k, v) => MapEntry(k.toString(), v.toString())),
-          );
-          final converted = Climb.fromMap(map);
-          // replace the map entry with the Climb instance so later updates
-          // (like setting status) affect the stored object
-          _bookings[i] = converted;
-          list.add(converted);
-          continue;
-        } catch (_) {
-          final fallback = Climb(name: '', date: DateTime(1970));
-          _bookings[i] = fallback;
-          list.add(fallback);
-          continue;
-        }
-      }
-      final fallback = Climb(name: '', date: DateTime(1970));
-      _bookings[i] = fallback;
-      list.add(fallback);
     }
     return list;
   }
@@ -397,8 +416,10 @@ class _BookAClimbScreenState extends State<BookAClimbScreen> {
             onPressed: () => Navigator.pop(context),
             child: const Text('No'),
           ),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.redAccent),
+          TextButton(
+            style: TextButton.styleFrom(
+              foregroundColor: Colors.redAccent,
+            ),
             onPressed: () async {
               // If booking has an id, persist cancellation to Firestore.
               if (booking.id != null) {
@@ -431,6 +452,400 @@ class _BookAClimbScreenState extends State<BookAClimbScreen> {
           ),
         ],
       ),
+    );
+  }
+
+  void _showEditBookingSheet(BookingModel booking) {
+    if (booking.id == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Cannot edit a pending local booking yet.')),
+      );
+      return;
+    }
+
+    final formKey = GlobalKey<FormState>();
+    final affiliationController =
+        TextEditingController(text: booking.affiliation);
+    final portersController =
+        TextEditingController(text: booking.numberOfPorters.toString());
+    final notesController = TextEditingController(text: booking.notes ?? '');
+    bool isSaving = false;
+
+    // Track existing attachments (can be marked for deletion)
+    List<Attachment> existingAttachments = List.from(booking.attachments);
+    Set<String> attachmentsToDelete = {};
+    
+    // Track new files to upload
+    List<PlatformFile> newFiles = [];
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setModalState) {
+            Future<void> handlePickFiles() async {
+              FilePickerResult? result = await FilePicker.platform.pickFiles(
+                allowMultiple: true,
+                type: FileType.custom,
+                allowedExtensions: ['docx', 'pdf', 'jpg', 'jpeg', 'png'],
+              );
+              if (result != null) {
+                setModalState(() {
+                  newFiles.addAll(result.files);
+                });
+              }
+            }
+
+            Future<void> handleSave() async {
+              if (!formKey.currentState!.validate()) return;
+
+              final porters = int.tryParse(portersController.text.trim());
+              if (porters == null || porters < 0) {
+                ScaffoldMessenger.of(this.context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Enter a valid number of porters.'),
+                  ),
+                );
+                return;
+              }
+
+              setModalState(() => isSaving = true);
+
+              try {
+                // Update booking details
+                await BookingService.instance.updateBooking(
+                  booking.id!,
+                  affiliation: affiliationController.text.trim(),
+                  numberOfPorters: porters,
+                  notes: notesController.text.trim().isEmpty
+                      ? null
+                      : notesController.text.trim(),
+                );
+
+                // Delete removed attachments
+                for (final attachment in existingAttachments) {
+                  if (attachmentsToDelete.contains(attachment.fileName)) {
+                    try {
+                      await BookingService.instance.deleteAttachment(
+                        booking.id!,
+                        attachment,
+                      );
+                    } catch (e) {
+                      print('Error deleting attachment ${attachment.fileName}: $e');
+                      // Continue with other deletions
+                    }
+                  }
+                }
+
+                // Upload new files
+                for (final file in newFiles) {
+                  try {
+                    await BookingService.instance.uploadAttachment(
+                      booking.id!,
+                      file,
+                    );
+                  } catch (e) {
+                    print('Error uploading file ${file.name}: $e');
+                    // Continue with other uploads
+                  }
+                }
+
+                if (mounted) {
+                  Navigator.of(context).pop();
+                  ScaffoldMessenger.of(this.context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Booking details updated.'),
+                    ),
+                  );
+                }
+              } catch (e) {
+                if (mounted) {
+                  setModalState(() => isSaving = false);
+                }
+                if (mounted) {
+                  ScaffoldMessenger.of(this.context).showSnackBar(
+                    SnackBar(
+                      content: Text('Failed to update booking: $e'),
+                    ),
+                  );
+                }
+              }
+            }
+
+            return Padding(
+              padding: EdgeInsets.only(
+                bottom: MediaQuery.of(context).viewInsets.bottom,
+              ),
+              child: Container(
+                constraints: BoxConstraints(
+                  maxHeight: MediaQuery.of(context).size.height * 0.9,
+                ),
+                decoration: const BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+                ),
+                padding: const EdgeInsets.all(20),
+                child: Form(
+                  key: formKey,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          const Text(
+                            'Edit Booking Details',
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          IconButton(
+                            onPressed: () => Navigator.of(context).pop(),
+                            icon: const Icon(Icons.close),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 12),
+                      Flexible(
+                        child: SingleChildScrollView(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              TextFormField(
+                                controller: affiliationController,
+                                decoration: const InputDecoration(
+                                  labelText: 'Affiliation',
+                                  border: OutlineInputBorder(),
+                                ),
+                                validator: (value) {
+                                  if (value == null || value.trim().isEmpty) {
+                                    return 'Affiliation is required';
+                                  }
+                                  return null;
+                                },
+                              ),
+                              const SizedBox(height: 12),
+                              TextFormField(
+                                controller: portersController,
+                                decoration: const InputDecoration(
+                                  labelText: 'Number of Porters',
+                                  border: OutlineInputBorder(),
+                                ),
+                                keyboardType: TextInputType.number,
+                                validator: (value) {
+                                  if (value == null || value.trim().isEmpty) {
+                                    return 'Number of porters is required';
+                                  }
+                                  final porters = int.tryParse(value);
+                                  if (porters == null || porters < 0) {
+                                    return 'Enter a valid whole number';
+                                  }
+                                  return null;
+                                },
+                              ),
+                              const SizedBox(height: 12),
+                              TextFormField(
+                                controller: notesController,
+                                decoration: const InputDecoration(
+                                  labelText: 'Additional Notes (optional)',
+                                  border: OutlineInputBorder(),
+                                ),
+                                maxLines: 4,
+                              ),
+                              const SizedBox(height: 16),
+                              // Documents section
+                              const Text(
+                                'Documents',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              const SizedBox(height: 8),
+                              // Existing attachments
+                              if (existingAttachments.isNotEmpty) ...[
+                                const Text(
+                                  'Current Files:',
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w600,
+                                    color: Colors.black54,
+                                  ),
+                                ),
+                                const SizedBox(height: 8),
+                                ...existingAttachments.map((attachment) {
+                                  final isMarkedForDelete =
+                                      attachmentsToDelete.contains(attachment.fileName);
+                                  return Container(
+                                    margin: const EdgeInsets.only(bottom: 8),
+                                    padding: const EdgeInsets.all(12),
+                                    decoration: BoxDecoration(
+                                      color: isMarkedForDelete
+                                          ? Colors.red[50]
+                                          : Colors.grey[50],
+                                      borderRadius: BorderRadius.circular(8),
+                                      border: Border.all(
+                                        color: isMarkedForDelete
+                                            ? Colors.red[300]!
+                                            : Colors.grey[300]!,
+                                      ),
+                                    ),
+                                    child: Row(
+                                      children: [
+                                        Icon(
+                                          Icons.insert_drive_file,
+                                          size: 20,
+                                          color: isMarkedForDelete
+                                              ? Colors.red[700]
+                                              : Colors.blueGrey[700],
+                                        ),
+                                        const SizedBox(width: 8),
+                                        Expanded(
+                                          child: Text(
+                                            attachment.fileName,
+                                            style: TextStyle(
+                                              fontSize: 13,
+                                              decoration: isMarkedForDelete
+                                                  ? TextDecoration.lineThrough
+                                                  : null,
+                                              color: isMarkedForDelete
+                                                  ? Colors.grey
+                                                  : Colors.black87,
+                                            ),
+                                          ),
+                                        ),
+                                        IconButton(
+                                          icon: Icon(
+                                            isMarkedForDelete
+                                                ? Icons.undo
+                                                : Icons.delete_outline,
+                                            ),
+                                          color: isMarkedForDelete
+                                              ? Colors.blue
+                                              : Colors.red,
+                                          onPressed: () {
+                                            setModalState(() {
+                                              if (isMarkedForDelete) {
+                                                attachmentsToDelete
+                                                    .remove(attachment.fileName);
+                                              } else {
+                                                attachmentsToDelete
+                                                    .add(attachment.fileName);
+                                              }
+                                            });
+                                          },
+                                        ),
+                                      ],
+                                    ),
+                                  );
+                                }),
+                                const SizedBox(height: 12),
+                              ],
+                              // New files section
+                              if (newFiles.isNotEmpty) ...[
+                                const Text(
+                                  'New Files to Upload:',
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w600,
+                                    color: Colors.black54,
+                                  ),
+                                ),
+                                const SizedBox(height: 8),
+                                ...newFiles.map((file) {
+                                  return Container(
+                                    margin: const EdgeInsets.only(bottom: 8),
+                                    padding: const EdgeInsets.all(12),
+                                    decoration: BoxDecoration(
+                                      color: Colors.green[50],
+                                      borderRadius: BorderRadius.circular(8),
+                                      border: Border.all(
+                                        color: Colors.green[300]!,
+                                      ),
+                                    ),
+                                    child: Row(
+                                      children: [
+                                        Icon(
+                                          Icons.upload_file,
+                                          size: 20,
+                                          color: Colors.green[700],
+                                        ),
+                                        const SizedBox(width: 8),
+                                        Expanded(
+                                          child: Text(
+                                            file.name,
+                                            style: const TextStyle(
+                                              fontSize: 13,
+                                              color: Colors.black87,
+                                            ),
+                                          ),
+                                        ),
+                                        IconButton(
+                                          icon: const Icon(Icons.close),
+                                          color: Colors.red,
+                                          onPressed: () {
+                                            setModalState(() {
+                                              newFiles.remove(file);
+                                            });
+                                          },
+                                        ),
+                                      ],
+                                    ),
+                                  );
+                                }),
+                                const SizedBox(height: 12),
+                              ],
+                              // Upload button
+                              SizedBox(
+                                width: double.infinity,
+                                child: ElevatedButton.icon(
+                                  onPressed: handlePickFiles,
+                                  icon: const Icon(Icons.upload_file),
+                                  label: const Text('Add New Files'),
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: Colors.blueGrey[700],
+                                    padding: const EdgeInsets.symmetric(vertical: 12),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      SizedBox(
+                        width: double.infinity,
+                        child: ElevatedButton(
+                          onPressed: isSaving ? null : handleSave,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.blueGrey[700],
+                            padding: const EdgeInsets.symmetric(vertical: 14),
+                          ),
+                          child: isSaving
+                              ? const SizedBox(
+                                  width: 20,
+                                  height: 20,
+                                  child: CircularProgressIndicator(strokeWidth: 2),
+                                )
+                              : const Text(
+                                  'Save Changes',
+                                  style: TextStyle(color: Colors.white),
+                                ),
+                        ),
+                      ),
+                      const SizedBox(height: 10),
+                    ],
+                  ),
+                ),
+              ),
+            );
+          },
+        );
+      },
     );
   }
 
