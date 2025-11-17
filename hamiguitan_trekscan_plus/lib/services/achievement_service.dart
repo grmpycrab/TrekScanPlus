@@ -26,24 +26,39 @@ class AchievementService {
   /// Initialize the service - load achievements from JSON and local cache
   /// Pass userId to scope local storage to current user
   Future<void> init({String? userId}) async {
-    if (_isInitialized) return;
+    if (_isInitialized) {
+      print('AchievementService already initialized, skipping init()');
+      return;
+    }
 
     try {
       // Use current user ID if not provided
       final currentUserId = userId ?? _auth.currentUser?.uid;
+      print(
+        'DEBUG: AchievementService.init() starting for userId: $currentUserId',
+      );
 
       // Initialize local service with user ID
       _localService = await LocalAchievementService.init(userId: currentUserId);
 
       // Load achievements from JSON file
       await _loadAchievementsFromJson();
+      print(
+        'DEBUG: After loading JSON, total achievements: ${_allAchievements.length}',
+      );
 
       // Merge with local achievements (keeping unlock status)
       await _mergeWithLocalAchievements();
+      print(
+        'DEBUG: After merging local, unlocked: ${_allAchievements.where((a) => a.isUnlocked).length}',
+      );
 
       // Then, if user is authenticated, load achievements from Firebase and merge
       if (currentUserId != null) {
         await _mergeWithFirebaseAchievements(currentUserId);
+        print(
+          'DEBUG: After merging Firebase, unlocked: ${_allAchievements.where((a) => a.isUnlocked).length}',
+        );
       }
 
       // Sync any pending achievements to Firebase if online
