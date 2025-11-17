@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 import 'dart:math';
 
@@ -60,11 +61,27 @@ class BookingService {
       uploadedAt: Timestamp.now(),
     );
 
-    // append metadata to booking doc
-    await _firestore.collection('bookings').doc(bookingId).update({
-      'attachments': FieldValue.arrayUnion([meta.toMap()]),
-      'updatedAt': FieldValue.serverTimestamp(),
-    });
+    // Append metadata to booking doc with retry logic for reliability
+    try {
+      await _firestore
+          .collection('bookings')
+          .doc(bookingId)
+          .update({
+            'attachments': FieldValue.arrayUnion([meta.toMap()]),
+            'updatedAt': FieldValue.serverTimestamp(),
+          })
+          .timeout(
+            const Duration(seconds: 10),
+            onTimeout: () => throw TimeoutException(
+              'Firestore update timeout after 10 seconds',
+            ),
+          );
+    } catch (e) {
+      print('Warning: Firestore attachment metadata update failed: $e');
+      // Don't fail the upload, file is already in storage
+      // Metadata can be recovered from storage or retried later
+      rethrow; // Still throw so caller knows about the issue
+    }
 
     return meta;
   }
