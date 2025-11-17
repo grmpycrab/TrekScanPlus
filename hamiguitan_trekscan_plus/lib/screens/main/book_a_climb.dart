@@ -153,7 +153,8 @@ class _BookAClimbScreenState extends State<BookAClimbScreen> {
         uploadedCount++;
         onProgress?.call(uploadedCount, files.length, f.name, 1.0);
       } catch (e) {
-        print('Error uploading ${f.name}: $e');
+        print('ERROR uploading ${f.name}: $e');
+        print('ERROR Stack trace: ${StackTrace.current}');
         // Continue with next file rather than failing entire booking
         continue;
       }

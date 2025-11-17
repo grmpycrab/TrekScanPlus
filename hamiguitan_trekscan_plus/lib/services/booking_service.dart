@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 import 'dart:math';
 
@@ -35,10 +36,18 @@ class BookingService {
     final ref = _storage.ref(path);
 
     UploadTask uploadTask;
+
+    // Create metadata to avoid null pointer exceptions
+    final metadata = SettableMetadata(
+      contentType: file.extension != null
+          ? _getMimeType(file.extension!)
+          : 'application/octet-stream',
+    );
+
     if (file.path != null) {
-      uploadTask = ref.putFile(File(file.path!));
+      uploadTask = ref.putFile(File(file.path!), metadata);
     } else if (file.bytes != null) {
-      uploadTask = ref.putData(file.bytes!);
+      uploadTask = ref.putData(file.bytes!, metadata);
     } else {
       throw ArgumentError('File has neither path nor bytes');
     }
@@ -49,24 +58,81 @@ class BookingService {
       });
     }
 
-    final snapshot = await uploadTask.whenComplete(() {});
-    final url = await snapshot.ref.getDownloadURL();
-    final meta = Attachment(
-      storagePath: snapshot.ref.fullPath,
-      downloadURL: url,
-      fileName: file.name,
-      mimeType: snapshot.metadata?.contentType,
-      size: snapshot.totalBytes,
-      uploadedAt: Timestamp.now(),
-    );
+    try {
+      final snapshot = await uploadTask;
+      final url = await ref.getDownloadURL();
+      final meta = Attachment(
+        storagePath: snapshot.ref.fullPath,
+        downloadURL: url,
+        fileName: file.name,
+        mimeType: snapshot.metadata?.contentType,
+        size: snapshot.totalBytes,
+        uploadedAt: Timestamp.now(),
+      );
 
-    // append metadata to booking doc
-    await _firestore.collection('bookings').doc(bookingId).update({
-      'attachments': FieldValue.arrayUnion([meta.toMap()]),
-      'updatedAt': FieldValue.serverTimestamp(),
-    });
+      // Append metadata to booking doc with retry logic for reliability
+      try {
+        print(
+          'DEBUG: Updating booking $bookingId with attachment ${meta.fileName}',
+        );
+        print('DEBUG: Attachment metadata: ${meta.toMap()}');
 
-    return meta;
+        await _firestore
+            .collection('bookings')
+            .doc(bookingId)
+            .update({
+              'attachments': FieldValue.arrayUnion([meta.toMap()]),
+              'updatedAt': FieldValue.serverTimestamp(),
+            })
+            .timeout(
+              const Duration(seconds: 10),
+              onTimeout: () => throw TimeoutException(
+                'Firestore update timeout after 10 seconds',
+              ),
+            );
+
+        print('DEBUG: Successfully updated Firestore with attachment');
+      } catch (e) {
+        print('ERROR: Firestore attachment metadata update failed: $e');
+        print('ERROR: Stack trace: ${e.toString()}');
+        // Still rethrow so caller knows about the issue
+        rethrow;
+      }
+
+      return meta;
+    } on FirebaseException catch (e) {
+      print('ERROR uploading file: ${e.code} - ${e.message}');
+      print('ERROR: Firebase exception details: ${e.toString()}');
+      rethrow;
+    } catch (e) {
+      print('ERROR uploading file: $e');
+      print('ERROR: Stack trace: ${e.toString()}');
+      rethrow;
+    }
+  }
+
+  /// Helper to determine MIME type from file extension
+  String _getMimeType(String extension) {
+    final ext = extension.toLowerCase();
+    switch (ext) {
+      case 'pdf':
+        return 'application/pdf';
+      case 'docx':
+        return 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
+      case 'doc':
+        return 'application/msword';
+      case 'jpg':
+      case 'jpeg':
+        return 'image/jpeg';
+      case 'png':
+        return 'image/png';
+      case 'gif':
+        return 'image/gif';
+      case 'webp':
+        return 'image/webp';
+      default:
+        return 'application/octet-stream';
+    }
   }
 
   Future<void> createBookingWithAttachments(
