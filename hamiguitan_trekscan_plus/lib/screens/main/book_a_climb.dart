@@ -58,22 +58,27 @@ class _BookAClimbScreenState extends State<BookAClimbScreen> {
           .streamBookingsForUser(user.uid)
           .listen((bookings) {
             setState(() {
-              // Map BookingModel -> Climb for display (include the booking id)
+              // Map BookingModel -> {climb, booking} for display
               _bookings = bookings
                   .map(
-                    (b) => Climb(
-                      id: b.id,
-                      name:
-                          FirebaseAuth.instance.currentUser?.displayName ??
-                          'You',
-                      date: b.trekDate.toDate(),
-                      dateBooked: b.createdAt.toDate(),
-                      targetDate: b.trekDate.toDate(),
-                      dateApproved: b.updatedAt?.toDate(),
-                      type: b.trekType,
-                      status: b.status,
-                      documents: b.attachments.map((a) => a.fileName).toList(),
-                    ),
+                    (b) => {
+                      'climb': Climb(
+                        id: b.id,
+                        name:
+                            FirebaseAuth.instance.currentUser?.displayName ??
+                            'You',
+                        date: b.trekDate.toDate(),
+                        dateBooked: b.createdAt.toDate(),
+                        targetDate: b.trekDate.toDate(),
+                        dateApproved: b.updatedAt?.toDate(),
+                        type: b.trekType,
+                        status: b.status,
+                        documents: b.attachments
+                            .map((a) => a.fileName)
+                            .toList(),
+                      ),
+                      'booking': b,
+                    },
                   )
                   .toList();
             });
@@ -222,20 +227,32 @@ class _BookAClimbScreenState extends State<BookAClimbScreen> {
     );
   }
 
-  List<Climb> _filterBookings(String type) {
-    // Normalize to Climb instances in case some entries are Map<String,String>
-    final climbs = _asClimbs();
+  List<dynamic> _filterBookings(String type) {
+    // Filter from _bookings which contains maps with climb and booking
     final today = DateTime.now();
     final todayDate = DateTime(today.year, today.month, today.day);
+
     if (type == 'upcoming') {
-      return climbs.where((b) => !b.date.isBefore(todayDate)).toList();
+      return _bookings.where((item) {
+        if (item is Map<String, dynamic> && item.containsKey('climb')) {
+          final climb = item['climb'] as Climb;
+          return !climb.date.isBefore(todayDate);
+        }
+        return false;
+      }).toList();
     } else if (type == 'previous') {
-      return climbs.where((b) => b.date.isBefore(todayDate)).toList();
+      return _bookings.where((item) {
+        if (item is Map<String, dynamic> && item.containsKey('climb')) {
+          final climb = item['climb'] as Climb;
+          return climb.date.isBefore(todayDate);
+        }
+        return false;
+      }).toList();
     }
-    return climbs;
+    return _bookings;
   }
 
-  Widget _buildBookingsList(List<Climb> bookings) {
+  Widget _buildBookingsList(List<dynamic> bookings) {
     // Wrap lists in a RefreshIndicator so user can pull-to-refresh bookings
     if (bookings.isEmpty) {
       return RefreshIndicator(
@@ -273,9 +290,19 @@ class _BookAClimbScreenState extends State<BookAClimbScreen> {
         padding: const EdgeInsets.all(16),
         itemCount: bookings.length,
         itemBuilder: (context, index) {
-          final booking = bookings[index];
+          final item = bookings[index];
+          if (item is Map<String, dynamic>) {
+            final climb = item['climb'] as Climb;
+            final bookingModel = item['booking'] as BookingModel;
+            return ClimbCard(
+              climb: climb,
+              booking: bookingModel,
+              onCancel: (c) => _confirmCancelModel(c),
+            );
+          }
+          // Fallback
           return ClimbCard(
-            climb: booking,
+            climb: Climb(name: '', date: DateTime(1970)),
             onCancel: (c) => _confirmCancelModel(c),
           );
         },
@@ -300,17 +327,20 @@ class _BookAClimbScreenState extends State<BookAClimbScreen> {
       setState(() {
         _bookings = bookings
             .map(
-              (b) => Climb(
-                id: b.id,
-                name: FirebaseAuth.instance.currentUser?.displayName ?? 'You',
-                date: b.trekDate.toDate(),
-                dateBooked: b.createdAt.toDate(),
-                targetDate: b.trekDate.toDate(),
-                dateApproved: b.updatedAt?.toDate(),
-                type: b.trekType,
-                status: b.status,
-                documents: b.attachments.map((a) => a.fileName).toList(),
-              ),
+              (b) => {
+                'climb': Climb(
+                  id: b.id,
+                  name: FirebaseAuth.instance.currentUser?.displayName ?? 'You',
+                  date: b.trekDate.toDate(),
+                  dateBooked: b.createdAt.toDate(),
+                  targetDate: b.trekDate.toDate(),
+                  dateApproved: b.updatedAt?.toDate(),
+                  type: b.trekType,
+                  status: b.status,
+                  documents: b.attachments.map((a) => a.fileName).toList(),
+                ),
+                'booking': b,
+              },
             )
             .toList();
       });
@@ -324,21 +354,27 @@ class _BookAClimbScreenState extends State<BookAClimbScreen> {
                 setState(() {
                   _bookings = bookings
                       .map(
-                        (b) => Climb(
-                          id: b.id,
-                          name:
-                              FirebaseAuth.instance.currentUser?.displayName ??
-                              'You',
-                          date: b.trekDate.toDate(),
-                          dateBooked: b.createdAt.toDate(),
-                          targetDate: b.trekDate.toDate(),
-                          dateApproved: b.updatedAt?.toDate(),
-                          type: b.trekType,
-                          status: b.status,
-                          documents: b.attachments
-                              .map((a) => a.fileName)
-                              .toList(),
-                        ),
+                        (b) => {
+                          'climb': Climb(
+                            id: b.id,
+                            name:
+                                FirebaseAuth
+                                    .instance
+                                    .currentUser
+                                    ?.displayName ??
+                                'You',
+                            date: b.trekDate.toDate(),
+                            dateBooked: b.createdAt.toDate(),
+                            targetDate: b.trekDate.toDate(),
+                            dateApproved: b.updatedAt?.toDate(),
+                            type: b.trekType,
+                            status: b.status,
+                            documents: b.attachments
+                                .map((a) => a.fileName)
+                                .toList(),
+                          ),
+                          'booking': b,
+                        },
                       )
                       .toList();
                 });
@@ -352,36 +388,15 @@ class _BookAClimbScreenState extends State<BookAClimbScreen> {
 
   // Convert internal _bookings (dynamic) to a list of Climb objects.
   List<Climb> _asClimbs() {
-    // Convert and *mutate* the internal _bookings list so that returned Climb
-    // instances stay in sync with the source and can be updated (e.g. cancel).
     final List<Climb> list = [];
-    for (var i = 0; i < _bookings.length; i++) {
-      final e = _bookings[i];
-      if (e is Climb) {
+    for (var e in _bookings) {
+      if (e is Map<String, dynamic> && e.containsKey('climb')) {
+        list.add(e['climb'] as Climb);
+      } else if (e is Climb) {
         list.add(e);
-        continue;
+      } else {
+        list.add(Climb(name: '', date: DateTime(1970)));
       }
-      if (e is Map) {
-        try {
-          final map = Map<String, String>.from(
-            e.map((k, v) => MapEntry(k.toString(), v.toString())),
-          );
-          final converted = Climb.fromMap(map);
-          // replace the map entry with the Climb instance so later updates
-          // (like setting status) affect the stored object
-          _bookings[i] = converted;
-          list.add(converted);
-          continue;
-        } catch (_) {
-          final fallback = Climb(name: '', date: DateTime(1970));
-          _bookings[i] = fallback;
-          list.add(fallback);
-          continue;
-        }
-      }
-      final fallback = Climb(name: '', date: DateTime(1970));
-      _bookings[i] = fallback;
-      list.add(fallback);
     }
     return list;
   }

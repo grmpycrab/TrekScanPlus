@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../models/climb.dart';
+import '../models/booking_model.dart';
+import 'booking_details_modal.dart';
 
 typedef ClimbCallback = void Function(Climb);
 
@@ -8,8 +10,15 @@ class ClimbCard extends StatelessWidget {
   final Climb climb;
   final VoidCallback? onTap;
   final ClimbCallback? onCancel;
+  final BookingModel? booking;
 
-  const ClimbCard({super.key, required this.climb, this.onTap, this.onCancel});
+  const ClimbCard({
+    super.key,
+    required this.climb,
+    this.onTap,
+    this.onCancel,
+    this.booking,
+  });
 
   String _formatDate(DateTime? date) {
     if (date == null) {
@@ -130,7 +139,7 @@ class ClimbCard extends StatelessWidget {
                   const SizedBox(width: 12),
                 Expanded(
                   child: FilledButton.icon(
-                    onPressed: onTap,
+                    onPressed: () => _showBookingDetails(context),
                     icon: const Icon(Icons.info_outline, size: 18),
                     label: const Text('View Details'),
                     style: FilledButton.styleFrom(
@@ -191,5 +200,18 @@ class ClimbCard extends StatelessWidget {
       default:
         return Colors.orange[800]!;
     }
+  }
+
+  void _showBookingDetails(BuildContext context) {
+    showDialog(
+      context: context,
+      barrierDismissible: true,
+      barrierColor: Colors.transparent,
+      builder: (context) => BookingDetailsModal(
+        climb: climb,
+        booking: booking,
+        onClose: () => Navigator.pop(context),
+      ),
+    );
   }
 }
