@@ -67,6 +67,9 @@ class _BookAClimbScreenState extends State<BookAClimbScreen> {
                           FirebaseAuth.instance.currentUser?.displayName ??
                           'You',
                       date: b.trekDate.toDate(),
+                      dateBooked: b.createdAt.toDate(),
+                      targetDate: b.trekDate.toDate(),
+                      dateApproved: b.updatedAt?.toDate(),
                       type: b.trekType,
                       status: b.status,
                       documents: b.attachments.map((a) => a.fileName).toList(),
@@ -301,6 +304,9 @@ class _BookAClimbScreenState extends State<BookAClimbScreen> {
                 id: b.id,
                 name: FirebaseAuth.instance.currentUser?.displayName ?? 'You',
                 date: b.trekDate.toDate(),
+                dateBooked: b.createdAt.toDate(),
+                targetDate: b.trekDate.toDate(),
+                dateApproved: b.updatedAt?.toDate(),
                 type: b.trekType,
                 status: b.status,
                 documents: b.attachments.map((a) => a.fileName).toList(),
@@ -324,6 +330,9 @@ class _BookAClimbScreenState extends State<BookAClimbScreen> {
                               FirebaseAuth.instance.currentUser?.displayName ??
                               'You',
                           date: b.trekDate.toDate(),
+                          dateBooked: b.createdAt.toDate(),
+                          targetDate: b.trekDate.toDate(),
+                          dateApproved: b.updatedAt?.toDate(),
                           type: b.trekType,
                           status: b.status,
                           documents: b.attachments

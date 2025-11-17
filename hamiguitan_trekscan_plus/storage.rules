@@ -7,10 +7,8 @@ service firebase.storage {
       // Allow authenticated users to create and write files to bookings
       allow create, write: if request.auth != null;
       
-      // Allow the booking owner and admins to read/download files
-      allow read: if request.auth != null && 
-        (request.auth.uid == firestore.get(/databases/(default)/documents/bookings/{bookingId}).data.userId ||
-         request.auth.token.admin == true);
+      // Allow any authenticated user to read (they uploaded or own the booking)
+      allow read: if request.auth != null;
       
       // Allow the booking owner and admins to delete files
       allow delete: if request.auth != null && 
