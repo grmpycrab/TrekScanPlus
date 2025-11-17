@@ -41,7 +41,12 @@ class AchievementService {
       // Merge with local achievements (keeping unlock status)
       await _mergeWithLocalAchievements();
 
-      // Sync pending achievements to Firebase if online
+      // Then, if user is authenticated, load achievements from Firebase and merge
+      if (currentUserId != null) {
+        await _mergeWithFirebaseAchievements(currentUserId);
+      }
+
+      // Sync any pending achievements to Firebase if online
       await _syncPendingToFirebase();
 
       _isInitialized = true;
@@ -108,6 +113,54 @@ class AchievementService {
       await _localService.saveAchievements(_allAchievements);
     } catch (e) {
       print('Error merging with local achievements: $e');
+    }
+  }
+
+  /// Merge achievements from Firebase into the list
+  /// Updates local unlock status from Firebase data
+  Future<void> _mergeWithFirebaseAchievements(String userId) async {
+    try {
+      print('Loading achievements from Firebase for user: $userId');
+      final firebaseAchievements = await fetchFromFirebase();
+
+      if (firebaseAchievements.isEmpty) {
+        print('No achievements found in Firebase');
+        return;
+      }
+
+      print('Found ${firebaseAchievements.length} achievements in Firebase');
+
+      for (int i = 0; i < _allAchievements.length; i++) {
+        final achievement = _allAchievements[i];
+        Achievement? firebaseAchievement;
+
+        try {
+          firebaseAchievement = firebaseAchievements.firstWhere(
+            (a) => a.id == achievement.id,
+          );
+        } catch (e) {
+          firebaseAchievement = null;
+        }
+
+        if (firebaseAchievement != null && firebaseAchievement.isUnlocked) {
+          // Update with Firebase data (which is the source of truth)
+          _allAchievements[i] = achievement.copyWith(
+            isUnlocked: true,
+            unlockedAt: firebaseAchievement.unlockedAt,
+            isNotificationShown:
+                true, // Don't show notification for existing achievements
+          );
+
+          // Also save to local storage to keep them in sync
+          await _localService.saveAchievement(_allAchievements[i]);
+        }
+      }
+
+      print(
+        'Successfully merged ${firebaseAchievements.length} Firebase achievements',
+      );
+    } catch (e) {
+      print('Error merging with Firebase achievements: $e');
     }
   }
 
