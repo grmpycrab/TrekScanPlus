@@ -100,6 +100,35 @@ service cloud.firestore {
         allow read: if request.auth != null;
         allow write: if request.auth != null;
         allow delete: if request.auth != null && request.auth.uid == resource.data.userId;
+        
+        // Allow updating like and reply counts from any authenticated user
+        allow update: if request.auth != null && 
+          request.writeFields.hasOnly(['likesCount', 'repliesCount']);
+
+        // Likes on comments
+        match /likes/{likeId} {
+          allow read: if request.auth != null;
+          allow write: if request.auth != null;
+          allow delete: if request.auth != null;
+        }
+
+        // Replies to comments
+        match /replies/{replyId} {
+          allow read: if request.auth != null;
+          allow write: if request.auth != null;
+          allow delete: if request.auth != null && request.auth.uid == resource.data.userId;
+          
+          // Allow updating like counts from any authenticated user
+          allow update: if request.auth != null && 
+            request.writeFields.hasOnly(['likesCount']);
+
+          // Likes on replies
+          match /likes/{likeId} {
+            allow read: if request.auth != null;
+            allow write: if request.auth != null;
+            allow delete: if request.auth != null;
+          }
+        }
       }
     }
 

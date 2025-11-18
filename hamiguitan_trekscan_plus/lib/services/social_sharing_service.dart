@@ -270,6 +270,268 @@ class SocialSharingService {
         .map((snap) => snap.docs.map((doc) => Comment.fromDoc(doc)).toList());
   }
 
+  /// Add a reply to a comment
+  Future<String> addReply(String postId, String commentId, String text) async {
+    final user = _auth.currentUser;
+    if (user == null) throw Exception('User not authenticated');
+
+    final reply = Reply(
+      postId: postId,
+      commentId: commentId,
+      userId: user.uid,
+      userName: user.displayName ?? user.email?.split('@').first ?? 'User',
+      userPhotoUrl: user.photoURL,
+      text: text,
+    );
+
+    final replyRef = await _firestore
+        .collection('posts')
+        .doc(postId)
+        .collection('comments')
+        .doc(commentId)
+        .collection('replies')
+        .add(reply.toMap());
+
+    // Update reply count on comment
+    await _firestore
+        .collection('posts')
+        .doc(postId)
+        .collection('comments')
+        .doc(commentId)
+        .update({'repliesCount': FieldValue.increment(1)});
+
+    return replyRef.id;
+  }
+
+  /// Stream replies for a comment
+  Stream<List<Reply>> streamReplies(String postId, String commentId) {
+    return _firestore
+        .collection('posts')
+        .doc(postId)
+        .collection('comments')
+        .doc(commentId)
+        .collection('replies')
+        .orderBy('createdAt', descending: false)
+        .snapshots()
+        .map((snap) => snap.docs.map((doc) => Reply.fromDoc(doc)).toList());
+  }
+
+  /// Toggle like on a comment
+  Future<void> toggleCommentLike(String postId, String commentId) async {
+    final user = _auth.currentUser;
+    if (user == null) throw Exception('User not authenticated');
+
+    final commentRef = _firestore
+        .collection('posts')
+        .doc(postId)
+        .collection('comments')
+        .doc(commentId);
+    final likeRef = commentRef.collection('likes').doc(user.uid);
+
+    final likeDoc = await likeRef.get();
+
+    if (likeDoc.exists) {
+      // Unlike
+      await likeRef.delete();
+      await commentRef.update({'likesCount': FieldValue.increment(-1)});
+    } else {
+      // Like
+      await likeRef.set({
+        'userId': user.uid,
+        'createdAt': FieldValue.serverTimestamp(),
+      });
+      await commentRef.update({'likesCount': FieldValue.increment(1)});
+    }
+  }
+
+  /// Check if current user liked a comment
+  Future<bool> isCommentLiked(String postId, String commentId) async {
+    final user = _auth.currentUser;
+    if (user == null) return false;
+
+    final likeDoc = await _firestore
+        .collection('posts')
+        .doc(postId)
+        .collection('comments')
+        .doc(commentId)
+        .collection('likes')
+        .doc(user.uid)
+        .get();
+
+    return likeDoc.exists;
+  }
+
+  /// Toggle like on a reply
+  Future<void> toggleReplyLike(
+    String postId,
+    String commentId,
+    String replyId,
+  ) async {
+    final user = _auth.currentUser;
+    if (user == null) throw Exception('User not authenticated');
+
+    final replyRef = _firestore
+        .collection('posts')
+        .doc(postId)
+        .collection('comments')
+        .doc(commentId)
+        .collection('replies')
+        .doc(replyId);
+    final likeRef = replyRef.collection('likes').doc(user.uid);
+
+    final likeDoc = await likeRef.get();
+
+    if (likeDoc.exists) {
+      // Unlike
+      await likeRef.delete();
+      await replyRef.update({'likesCount': FieldValue.increment(-1)});
+    } else {
+      // Like
+      await likeRef.set({
+        'userId': user.uid,
+        'createdAt': FieldValue.serverTimestamp(),
+      });
+      await replyRef.update({'likesCount': FieldValue.increment(1)});
+    }
+  }
+
+  /// Check if current user liked a reply
+  Future<bool> isReplyLiked(
+    String postId,
+    String commentId,
+    String replyId,
+  ) async {
+    final user = _auth.currentUser;
+    if (user == null) return false;
+
+    final likeDoc = await _firestore
+        .collection('posts')
+        .doc(postId)
+        .collection('comments')
+        .doc(commentId)
+        .collection('replies')
+        .doc(replyId)
+        .collection('likes')
+        .doc(user.uid)
+        .get();
+
+    return likeDoc.exists;
+  }
+
+  /// Delete a comment
+  Future<void> deleteComment(String postId, String commentId) async {
+    final user = _auth.currentUser;
+    if (user == null) throw Exception('User not authenticated');
+
+    // Verify ownership
+    final commentDoc = await _firestore
+        .collection('posts')
+        .doc(postId)
+        .collection('comments')
+        .doc(commentId)
+        .get();
+
+    if (commentDoc.data()?['userId'] != user.uid) {
+      throw Exception('Not authorized to delete this comment');
+    }
+
+    // Delete all replies
+    final repliesQuery = await _firestore
+        .collection('posts')
+        .doc(postId)
+        .collection('comments')
+        .doc(commentId)
+        .collection('replies')
+        .get();
+
+    for (final replyDoc in repliesQuery.docs) {
+      await replyDoc.reference.delete();
+    }
+
+    // Delete likes on comment
+    final likesQuery = await _firestore
+        .collection('posts')
+        .doc(postId)
+        .collection('comments')
+        .doc(commentId)
+        .collection('likes')
+        .get();
+
+    for (final likeDoc in likesQuery.docs) {
+      await likeDoc.reference.delete();
+    }
+
+    // Delete comment
+    await _firestore
+        .collection('posts')
+        .doc(postId)
+        .collection('comments')
+        .doc(commentId)
+        .delete();
+
+    // Decrement post comment count
+    await _firestore.collection('posts').doc(postId).update({
+      'commentsCount': FieldValue.increment(-1),
+    });
+  }
+
+  /// Delete a reply
+  Future<void> deleteReply(
+    String postId,
+    String commentId,
+    String replyId,
+  ) async {
+    final user = _auth.currentUser;
+    if (user == null) throw Exception('User not authenticated');
+
+    // Verify ownership
+    final replyDoc = await _firestore
+        .collection('posts')
+        .doc(postId)
+        .collection('comments')
+        .doc(commentId)
+        .collection('replies')
+        .doc(replyId)
+        .get();
+
+    if (replyDoc.data()?['userId'] != user.uid) {
+      throw Exception('Not authorized to delete this reply');
+    }
+
+    // Delete likes on reply
+    final likesQuery = await _firestore
+        .collection('posts')
+        .doc(postId)
+        .collection('comments')
+        .doc(commentId)
+        .collection('replies')
+        .doc(replyId)
+        .collection('likes')
+        .get();
+
+    for (final likeDoc in likesQuery.docs) {
+      await likeDoc.reference.delete();
+    }
+
+    // Delete reply
+    await _firestore
+        .collection('posts')
+        .doc(postId)
+        .collection('comments')
+        .doc(commentId)
+        .collection('replies')
+        .doc(replyId)
+        .delete();
+
+    // Decrement comment reply count
+    await _firestore
+        .collection('posts')
+        .doc(postId)
+        .collection('comments')
+        .doc(commentId)
+        .update({'repliesCount': FieldValue.increment(-1)});
+  }
+
   /// Share a post (increment share count)
   Future<void> sharePost(String postId) async {
     await _firestore.collection('posts').doc(postId).update({
