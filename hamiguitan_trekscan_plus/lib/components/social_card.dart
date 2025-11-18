@@ -130,7 +130,6 @@ class _SocialCardState extends State<SocialCard> {
       builder: (context) =>
           CommentsSheet(postId: widget.post.id!, post: widget.post),
     );
-    widget.onCommentTap?.call();
   }
 
   void _showOptionsMenu() {

@@ -5,6 +5,7 @@ import '../../components/event_calendar.dart';
 import '../../components/connectivity_banner.dart';
 import '../../components/social_card.dart';
 import '../../components/create_post.dart';
+import '../../components/comments_sheet.dart';
 import '../../models/calendar_model.dart';
 import '../../models/social_model.dart';
 import '../../theme/color.dart';
@@ -647,7 +648,7 @@ class _HomeScreenState extends State<HomeScreen> {
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (context) => _CommentsSheet(postId: post.id!),
+      builder: (context) => CommentsSheet(postId: post.id!, post: post),
     );
   }
 
@@ -689,125 +690,5 @@ class _HomeScreenState extends State<HomeScreen> {
         }
       }
     }
-  }
-}
-
-class _CommentsSheet extends StatefulWidget {
-  final String postId;
-
-  const _CommentsSheet({required this.postId});
-
-  @override
-  State<_CommentsSheet> createState() => _CommentsSheetState();
-}
-
-class _CommentsSheetState extends State<_CommentsSheet> {
-  final commentController = TextEditingController();
-
-  @override
-  void dispose() {
-    commentController.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      height: MediaQuery.of(context).size.height * 0.7,
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              const Text(
-                'Comments',
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-              ),
-              IconButton(
-                icon: const Icon(Icons.close),
-                onPressed: () => Navigator.pop(context),
-              ),
-            ],
-          ),
-          const Divider(),
-          Expanded(
-            child: StreamBuilder<List<Comment>>(
-              stream: SocialSharingService.instance.streamComments(
-                widget.postId,
-              ),
-              builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  return const Center(child: CircularProgressIndicator());
-                }
-
-                final comments = snapshot.data ?? [];
-
-                if (comments.isEmpty) {
-                  return const Center(
-                    child: Text('No comments yet. Be the first to comment!'),
-                  );
-                }
-
-                return ListView.builder(
-                  itemCount: comments.length,
-                  itemBuilder: (context, index) {
-                    final comment = comments[index];
-                    return ListTile(
-                      leading: CircleAvatar(
-                        backgroundImage: comment.userPhotoUrl != null
-                            ? NetworkImage(comment.userPhotoUrl!)
-                            : null,
-                        child: comment.userPhotoUrl == null
-                            ? const Icon(Icons.person)
-                            : null,
-                      ),
-                      title: Text(comment.userName),
-                      subtitle: Text(comment.text),
-                    );
-                  },
-                );
-              },
-            ),
-          ),
-          const Divider(),
-          Row(
-            children: [
-              Expanded(
-                child: TextField(
-                  controller: commentController,
-                  decoration: const InputDecoration(
-                    hintText: 'Write a comment...',
-                    border: OutlineInputBorder(),
-                  ),
-                ),
-              ),
-              IconButton(
-                icon: const Icon(Icons.send),
-                onPressed: () async {
-                  if (commentController.text.trim().isEmpty) return;
-
-                  try {
-                    await SocialSharingService.instance.addComment(
-                      widget.postId,
-                      commentController.text.trim(),
-                    );
-                    commentController.clear();
-                  } catch (e) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('Failed to add comment: $e')),
-                    );
-                  }
-                },
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
   }
 }

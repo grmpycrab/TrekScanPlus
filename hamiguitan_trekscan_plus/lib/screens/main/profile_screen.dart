@@ -4,7 +4,10 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../services/firebase_auth_service.dart';
 import '../../services/achievement_service.dart';
 import '../../services/user_service.dart';
+import '../../services/social_sharing_service.dart';
+import '../../models/social_model.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import '../../components/social_card.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -18,6 +21,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   User? _firebaseUser;
   late AchievementService achievementService;
   final UserService _userService = UserService.instance;
+  final SocialSharingService _socialService = SocialSharingService.instance;
 
   Future<void> _initializeAchievements() async {
     try {
@@ -163,6 +167,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       ],
                     ),
                   ),
+                  const SizedBox(height: 32),
+                  // User's posts section
+                  _buildUserPostsSection(),
                 ],
               ),
             ),
