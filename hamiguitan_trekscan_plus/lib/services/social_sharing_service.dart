@@ -193,8 +193,12 @@ class SocialSharingService {
 
     final postRef = _firestore.collection('posts').doc(postId);
     final likeRef = postRef.collection('likes').doc(user.uid);
-
     final likeDoc = await likeRef.get();
+
+    // Get post owner
+    final postDoc = await postRef.get();
+    final postData = postDoc.data();
+    final postOwnerId = postData?['userId'] as String?;
 
     if (likeDoc.exists) {
       // Unlike
@@ -213,6 +217,15 @@ class SocialSharingService {
         'likesCount': FieldValue.increment(1),
         'updatedAt': FieldValue.serverTimestamp(),
       });
+
+      // Send notification to post owner (only if it's not their own post)
+      if (postOwnerId != null && postOwnerId != user.uid) {
+        await _sendLikeNotification(
+          postOwnerId,
+          user.displayName ?? 'Someone',
+          postId,
+        );
+      }
     }
   }
 
@@ -251,10 +264,24 @@ class SocialSharingService {
         .add(comment.toMap());
 
     // Update comment count
-    await _firestore.collection('posts').doc(postId).update({
+    final postRef = _firestore.collection('posts').doc(postId);
+    await postRef.update({
       'commentsCount': FieldValue.increment(1),
       'updatedAt': FieldValue.serverTimestamp(),
     });
+
+    // Send notification to post owner (only if it's not their own comment)
+    final postDoc = await postRef.get();
+    final postData = postDoc.data();
+    final postOwnerId = postData?['userId'] as String?;
+
+    if (postOwnerId != null && postOwnerId != user.uid) {
+      await _sendCommentNotification(
+        postOwnerId,
+        user.displayName ?? 'Someone',
+        postId,
+      );
+    }
 
     return commentRef.id;
   }
@@ -612,5 +639,116 @@ class SocialSharingService {
     } catch (e) {
       debugPrint('Error updating post count: $e');
     }
+  }
+
+  /// Send notification when someone likes a post
+  Future<void> _sendLikeNotification(
+    String postOwnerId,
+    String likerName,
+    String postId,
+  ) async {
+    try {
+      print(
+        '📤 Sending like notification to $postOwnerId from $likerName on post $postId',
+      );
+      final notificationRef = _firestore
+          .collection('users')
+          .doc(postOwnerId)
+          .collection('notifications');
+
+      // Try to find existing like notification for this post
+      try {
+        final existingNotifications = await notificationRef
+            .where('postId', isEqualTo: postId)
+            .where('type', isEqualTo: 'like')
+            .orderBy('timestamp', descending: true)
+            .limit(1)
+            .get();
+
+        if (existingNotifications.docs.isNotEmpty) {
+          // Update existing notification to stack likes
+          final notifDoc = existingNotifications.docs.first;
+          final notifData = notifDoc.data();
+          final likers = List<String>.from(notifData['likers'] as List? ?? []);
+
+          // Add new liker if not already in list
+          if (!likers.contains(likerName)) {
+            likers.add(likerName);
+          }
+
+          final message = _buildLikeMessage(likers);
+          await notifDoc.reference.update({
+            'message': message,
+            'likers': likers,
+            'timestamp': FieldValue.serverTimestamp(),
+            'isRead': false,
+          });
+          print(
+            '✅ Updated like notification for post $postId with likers: $likers',
+          );
+          return;
+        }
+      } catch (e) {
+        print('⚠️  Error checking existing notifications: $e');
+        // Continue to create new notification
+      }
+
+      // Create new notification
+      final notifMap = {
+        'title': 'New Like',
+        'message': '$likerName liked your post',
+        'type': 'like',
+        'timestamp': FieldValue.serverTimestamp(),
+        'isRead': false,
+        'postId': postId,
+        'likers': [likerName],
+      };
+
+      await notificationRef.add(notifMap);
+      print('✅ Created new like notification for post $postId from $likerName');
+    } catch (e) {
+      print('❌ Error sending like notification: $e');
+      rethrow;
+    }
+  }
+
+  /// Send notification when someone comments on a post
+  Future<void> _sendCommentNotification(
+    String postOwnerId,
+    String commenterName,
+    String postId,
+  ) async {
+    try {
+      final notifMap = {
+        'title': 'New Comment',
+        'message': '$commenterName commented on your post',
+        'type': 'comment',
+        'timestamp': FieldValue.serverTimestamp(),
+        'isRead': false,
+        'postId': postId,
+      };
+
+      await _firestore
+          .collection('users')
+          .doc(postOwnerId)
+          .collection('notifications')
+          .add(notifMap);
+
+      debugPrint('Created comment notification for post $postId');
+    } catch (e) {
+      debugPrint('Error sending comment notification: $e');
+      rethrow;
+    }
+  }
+
+  /// Build stacked like message (e.g., "John, Jane, and 3 others liked your post")
+  String _buildLikeMessage(List<String> likers) {
+    if (likers.isEmpty) return 'Someone liked your post';
+    if (likers.length == 1) return '${likers[0]} liked your post';
+    if (likers.length == 2)
+      return '${likers[0]} and ${likers[1]} liked your post';
+
+    final others = likers.length - 2;
+    return '${likers[0]}, ${likers[1]}, and $others others liked your post';
   }
 }

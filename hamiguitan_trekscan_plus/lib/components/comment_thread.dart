@@ -9,12 +9,14 @@ class CommentThread extends StatefulWidget {
   final String postId;
   final Comment comment;
   final VoidCallback? onDelete;
+  final Function(String commentId, String userName)? onReplyTap;
 
   const CommentThread({
     super.key,
     required this.postId,
     required this.comment,
     this.onDelete,
+    this.onReplyTap,
   });
 
   @override
@@ -23,11 +25,9 @@ class CommentThread extends StatefulWidget {
 
 class _CommentThreadState extends State<CommentThread> {
   final _replyController = TextEditingController();
-  bool _showReplyInput = false;
   bool _showReplies = false;
   bool _isLiked = false;
   int _likesCount = 0;
-  bool _isSubmittingReply = false;
 
   @override
   void initState() {
@@ -76,40 +76,6 @@ class _CommentThreadState extends State<CommentThread> {
         ScaffoldMessenger.of(
           context,
         ).showSnackBar(SnackBar(content: Text('Failed to like comment: $e')));
-      }
-    }
-  }
-
-  Future<void> _submitReply() async {
-    if (_replyController.text.trim().isEmpty || widget.comment.id == null) {
-      return;
-    }
-
-    setState(() => _isSubmittingReply = true);
-
-    try {
-      await SocialSharingService.instance.addReply(
-        widget.postId,
-        widget.comment.id!,
-        _replyController.text.trim(),
-      );
-      _replyController.clear();
-      setState(() => _showReplyInput = false);
-
-      if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text('Reply added!')));
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Failed to add reply: $e')));
-      }
-    } finally {
-      if (mounted) {
-        setState(() => _isSubmittingReply = false);
       }
     }
   }
@@ -289,7 +255,10 @@ class _CommentThreadState extends State<CommentThread> {
                         const SizedBox(width: 16),
                         GestureDetector(
                           onTap: () {
-                            setState(() => _showReplyInput = !_showReplyInput);
+                            widget.onReplyTap?.call(
+                              widget.comment.id ?? '',
+                              widget.comment.userName,
+                            );
                           },
                           child: Text(
                             'Reply',
@@ -326,68 +295,6 @@ class _CommentThreadState extends State<CommentThread> {
             ],
           ),
         ),
-        // Reply input
-        if (_showReplyInput)
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            child: Row(
-              children: [
-                const SizedBox(width: 28), // Align with avatar
-                Expanded(
-                  child: TextField(
-                    controller: _replyController,
-                    enabled: !_isSubmittingReply,
-                    maxLines: 1,
-                    decoration: InputDecoration(
-                      hintText: 'Write a reply...',
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(16),
-                        borderSide: BorderSide(color: Colors.grey[300]!),
-                      ),
-                      enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(16),
-                        borderSide: BorderSide(color: Colors.grey[300]!),
-                      ),
-                      focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(16),
-                        borderSide: const BorderSide(
-                          color: AppColors.primary,
-                          width: 1.5,
-                        ),
-                      ),
-                      contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 8,
-                      ),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 8),
-                GestureDetector(
-                  onTap: _isSubmittingReply ? null : _submitReply,
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: AppColors.primary,
-                      shape: BoxShape.circle,
-                    ),
-                    padding: const EdgeInsets.all(8),
-                    child: _isSubmittingReply
-                        ? const SizedBox(
-                            height: 16,
-                            width: 16,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              valueColor: AlwaysStoppedAnimation<Color>(
-                                Colors.white,
-                              ),
-                            ),
-                          )
-                        : const Icon(Icons.send, color: Colors.white, size: 16),
-                  ),
-                ),
-              ],
-            ),
-          ),
         // Replies
         if (_showReplies && widget.comment.id != null)
           Padding(
