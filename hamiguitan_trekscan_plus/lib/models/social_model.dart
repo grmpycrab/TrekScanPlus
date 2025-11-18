@@ -1,10 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
-enum PostPrivacy {
-  public,
-  followers,
-  private,
-}
+enum PostPrivacy { public, followers, private }
 
 class SocialPost {
   String? id;
@@ -67,7 +63,8 @@ class SocialPost {
       userPhotoUrl: data['userPhotoUrl'] as String?,
       userRole: data['userRole'] as String?,
       caption: data['caption'] as String? ?? '',
-      imageUrls: (data['imageUrls'] as List<dynamic>?)
+      imageUrls:
+          (data['imageUrls'] as List<dynamic>?)
               ?.map((e) => e.toString())
               .toList() ??
           [],
@@ -92,6 +89,8 @@ class Comment {
   final String userName;
   final String? userPhotoUrl;
   final String text;
+  final int likesCount;
+  final int repliesCount;
   final Timestamp createdAt;
 
   Comment({
@@ -101,6 +100,8 @@ class Comment {
     required this.userName,
     this.userPhotoUrl,
     required this.text,
+    this.likesCount = 0,
+    this.repliesCount = 0,
     Timestamp? createdAt,
   }) : createdAt = createdAt ?? Timestamp.now();
 
@@ -112,6 +113,8 @@ class Comment {
       'userName': userName,
       'userPhotoUrl': userPhotoUrl,
       'text': text,
+      'likesCount': likesCount,
+      'repliesCount': repliesCount,
       'createdAt': createdAt,
     };
   }
@@ -125,8 +128,62 @@ class Comment {
       userName: data['userName'] as String? ?? 'Unknown',
       userPhotoUrl: data['userPhotoUrl'] as String?,
       text: data['text'] as String? ?? '',
+      likesCount: (data['likesCount'] as num?)?.toInt() ?? 0,
+      repliesCount: (data['repliesCount'] as num?)?.toInt() ?? 0,
       createdAt: data['createdAt'] as Timestamp? ?? Timestamp.now(),
     );
   }
 }
 
+class Reply {
+  String? id;
+  final String postId;
+  final String commentId;
+  final String userId;
+  final String userName;
+  final String? userPhotoUrl;
+  final String text;
+  final int likesCount;
+  final Timestamp createdAt;
+
+  Reply({
+    this.id,
+    required this.postId,
+    required this.commentId,
+    required this.userId,
+    required this.userName,
+    this.userPhotoUrl,
+    required this.text,
+    this.likesCount = 0,
+    Timestamp? createdAt,
+  }) : createdAt = createdAt ?? Timestamp.now();
+
+  Map<String, dynamic> toMap() {
+    return {
+      if (id != null) 'id': id,
+      'postId': postId,
+      'commentId': commentId,
+      'userId': userId,
+      'userName': userName,
+      'userPhotoUrl': userPhotoUrl,
+      'text': text,
+      'likesCount': likesCount,
+      'createdAt': createdAt,
+    };
+  }
+
+  factory Reply.fromDoc(DocumentSnapshot doc) {
+    final data = doc.data() as Map<String, dynamic>;
+    return Reply(
+      id: doc.id,
+      postId: data['postId'] as String,
+      commentId: data['commentId'] as String,
+      userId: data['userId'] as String,
+      userName: data['userName'] as String? ?? 'Unknown',
+      userPhotoUrl: data['userPhotoUrl'] as String?,
+      text: data['text'] as String? ?? '',
+      likesCount: (data['likesCount'] as num?)?.toInt() ?? 0,
+      createdAt: data['createdAt'] as Timestamp? ?? Timestamp.now(),
+    );
+  }
+}
