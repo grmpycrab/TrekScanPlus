@@ -615,4 +615,132 @@ class _ProfileScreenState extends State<ProfileScreen> {
       ),
     );
   }
+
+  Widget _buildUserPostsSection() {
+    if (_firebaseUser == null) {
+      return const SizedBox.shrink();
+    }
+
+    return Column(
+      children: [
+        // Posts header
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16.0),
+          child: Row(
+            children: [
+              const Text(
+                'Posts',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(width: 8),
+              StreamBuilder<List<SocialPost>>(
+                stream: _socialService.streamUserPosts(_firebaseUser!.uid),
+                builder: (context, snapshot) {
+                  final count = snapshot.data?.length ?? 0;
+                  return Text(
+                    '($count)',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.grey[600],
+                    ),
+                  );
+                },
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 16),
+        // Posts list
+        StreamBuilder<List<SocialPost>>(
+          stream: _socialService.streamUserPosts(_firebaseUser!.uid),
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return const Padding(
+                padding: EdgeInsets.all(16.0),
+                child: CircularProgressIndicator(),
+              );
+            }
+
+            if (snapshot.hasError) {
+              return Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Text(
+                  'Error loading posts',
+                  style: TextStyle(color: Colors.red[600]),
+                ),
+              );
+            }
+
+            final posts = snapshot.data ?? [];
+
+            if (posts.isEmpty) {
+              return Padding(
+                padding: const EdgeInsets.all(32.0),
+                child: Column(
+                  children: [
+                    Icon(
+                      Icons.image_not_supported_outlined,
+                      size: 48,
+                      color: Colors.grey[400],
+                    ),
+                    const SizedBox(height: 12),
+                    Text(
+                      'No posts yet',
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: Colors.grey[600],
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      'Share your first post to get started!',
+                      style: TextStyle(fontSize: 12, color: Colors.grey[500]),
+                    ),
+                  ],
+                ),
+              );
+            }
+
+            return Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16.0),
+              child: ListView.builder(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                itemCount: posts.length,
+                itemBuilder: (context, index) {
+                  final post = posts[index];
+                  return SocialCard(
+                    post: post,
+                    onDelete: () {
+                      _handleDeletePost(post.id!);
+                    },
+                  );
+                },
+              ),
+            );
+          },
+        ),
+        const SizedBox(height: 24),
+      ],
+    );
+  }
+
+  Future<void> _handleDeletePost(String postId) async {
+    try {
+      await _socialService.deletePost(postId);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Post deleted successfully')),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Failed to delete post: $e')));
+      }
+    }
+  }
 }

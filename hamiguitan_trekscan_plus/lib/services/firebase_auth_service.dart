@@ -96,6 +96,11 @@ class FirebaseAuthService {
         email: email,
         password: password,
       );
+
+      if (kDebugMode) {
+        print('✅ Email login successful: ${userCredential.user?.email}');
+      }
+
       // Update/create the Firestore user document when logging in
       if (userCredential.user != null) {
         try {
@@ -103,7 +108,7 @@ class FirebaseAuthService {
             userCredential.user!,
           );
         } catch (e) {
-          // Log Firestore error but don't block login
+          // Log Firestore error but don't block login - user is authenticated
           if (kDebugMode) {
             print(
               '⚠️ Warning: Failed to update user document in Firestore: $e',
@@ -112,12 +117,19 @@ class FirebaseAuthService {
               'User can proceed - data will sync when network is available.',
             );
           }
+          // Don't rethrow - user is successfully authenticated in Firebase Auth
         }
       }
       return userCredential;
     } on FirebaseAuthException catch (e) {
       if (kDebugMode) {
         print('Login error: ${e.code} - ${e.message}');
+      }
+      rethrow;
+    } catch (e, st) {
+      if (kDebugMode) {
+        print('Unexpected error during login: $e');
+        print(st);
       }
       rethrow;
     }
