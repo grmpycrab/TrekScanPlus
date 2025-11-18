@@ -1,6 +1,8 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
+import 'package:flutter/foundation.dart';
+import 'package:image/image.dart' as img;
 import 'dart:io';
 import '../models/social_model.dart';
 
@@ -11,6 +13,11 @@ class SocialSharingService {
   final _firestore = FirebaseFirestore.instance;
   final _storage = FirebaseStorage.instance;
   final _auth = FirebaseAuth.instance;
+
+  /// Generate a new post ID (without creating the post yet)
+  String generatePostId() {
+    return _firestore.collection('posts').doc().id;
+  }
 
   /// Create a new post
   Future<String> createPost({
@@ -34,19 +41,92 @@ class SocialSharingService {
     return docRef.id;
   }
 
+  /// Compress image to reduce file size (85% quality)
+  Future<File> _compressImage(File imageFile) async {
+    try {
+      final bytes = await imageFile.readAsBytes();
+      final image = img.decodeImage(bytes);
+      if (image == null) return imageFile;
+
+      // Compress with 85% quality
+      final compressedBytes = img.encodeJpg(image, quality: 85);
+      final tempDir = Directory.systemTemp;
+      final compressedFile = File(
+        '${tempDir.path}/compressed_${DateTime.now().millisecondsSinceEpoch}.jpg',
+      );
+      await compressedFile.writeAsBytes(compressedBytes);
+
+      final originalSize = bytes.length;
+      final compressedSize = compressedBytes.length;
+      final reduction = ((originalSize - compressedSize) / originalSize * 100)
+          .toStringAsFixed(1);
+      debugPrint(
+        'Compression: $originalSize → $compressedSize bytes ($reduction% reduction)',
+      );
+
+      return compressedFile;
+    } catch (e) {
+      debugPrint('Compression failed, using original: $e');
+      return imageFile;
+    }
+  }
+
   /// Upload image to storage and return URL
   Future<String> uploadImage(File imageFile, String postId) async {
     final user = _auth.currentUser;
     if (user == null) throw Exception('User not authenticated');
 
-    final timestamp = DateTime.now().millisecondsSinceEpoch;
-    final fileName =
-        '${user.uid}_${timestamp}_${imageFile.path.split('/').last}';
-    final path = 'posts/$postId/$fileName';
+    try {
+      // Compress image first
+      debugPrint('Compressing image...');
+      final compressedFile = await _compressImage(imageFile);
+      debugPrint('Compressed file size: ${compressedFile.lengthSync()} bytes');
 
-    final ref = _storage.ref(path);
-    await ref.putFile(imageFile);
-    return await ref.getDownloadURL();
+      final timestamp = DateTime.now().millisecondsSinceEpoch;
+      final fileName =
+          '${user.uid}_${timestamp}_${imageFile.path.split('/').last}';
+      final path = 'posts/$postId/$fileName';
+
+      final ref = _storage.ref(path);
+      debugPrint('Starting upload to: $path');
+
+      // Set metadata for the file upload
+      final metadata = SettableMetadata(
+        contentType: 'image/jpeg',
+        cacheControl: 'max-age=31536000', // 1 year
+      );
+
+      final uploadTask = ref.putFile(compressedFile, metadata);
+
+      // Listen to upload progress
+      uploadTask.snapshotEvents.listen((TaskSnapshot snapshot) {
+        final progress = (snapshot.bytesTransferred / snapshot.totalBytes * 100)
+            .toStringAsFixed(0);
+        debugPrint('Upload progress: $progress%');
+      });
+
+      // Add timeout of 180 seconds (increased for slower connections)
+      final snapshot = await uploadTask.timeout(
+        const Duration(seconds: 180),
+        onTimeout: () => throw Exception('Upload timeout after 180 seconds'),
+      );
+
+      debugPrint('Upload complete. Snapshot path: ${snapshot.ref.fullPath}');
+      final downloadUrl = await ref.getDownloadURL();
+      debugPrint('Download URL: $downloadUrl');
+
+      // Clean up compressed temp file
+      try {
+        await compressedFile.delete();
+      } catch (e) {
+        debugPrint('Failed to delete temp file: $e');
+      }
+
+      return downloadUrl;
+    } catch (e) {
+      debugPrint('Error uploading image: $e');
+      rethrow;
+    }
   }
 
   /// Stream all public posts

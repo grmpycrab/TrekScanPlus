@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 import '../models/social_model.dart';
 import '../services/social_sharing_service.dart';
 import '../theme/color.dart';
+import 'comments_sheet.dart';
 
 class SocialCard extends StatefulWidget {
   final SocialPost post;
@@ -118,6 +119,18 @@ class _SocialCardState extends State<SocialCard> {
         ).showSnackBar(SnackBar(content: Text('Failed to bookmark: $e')));
       }
     }
+  }
+
+  void _handleComment() {
+    if (widget.post.id == null) return;
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      builder: (context) =>
+          CommentsSheet(postId: widget.post.id!, post: widget.post),
+    );
+    widget.onCommentTap?.call();
   }
 
   void _showOptionsMenu() {
@@ -366,18 +379,25 @@ class _SocialCardState extends State<SocialCard> {
               ),
               const SizedBox(width: 16),
               // Comment
-              Icon(
-                Icons.chat_bubble_outline,
-                color: Colors.grey[600],
-                size: 22,
-              ),
-              const SizedBox(width: 4),
-              Text(
-                '$_commentsCount',
-                style: TextStyle(
-                  color: Colors.grey[800],
-                  fontWeight: FontWeight.w600,
-                  fontSize: 15,
+              GestureDetector(
+                onTap: _handleComment,
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.chat_bubble_outline,
+                      color: Colors.grey[600],
+                      size: 22,
+                    ),
+                    const SizedBox(width: 4),
+                    Text(
+                      '$_commentsCount',
+                      style: TextStyle(
+                        color: Colors.grey[800],
+                        fontWeight: FontWeight.w600,
+                        fontSize: 15,
+                      ),
+                    ),
+                  ],
                 ),
               ),
               const SizedBox(width: 16),

@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'dart:io';
 import '../models/social_model.dart';
 import '../services/social_sharing_service.dart';
@@ -69,23 +68,30 @@ class _CreatePostSheetState extends State<CreatePostSheet> {
     try {
       final socialService = SocialSharingService.instance;
 
-      // Create post first to get ID
-      final postId = await socialService.createPost(
+      // Generate post ID first
+      final postId = socialService.generatePostId();
+      debugPrint('Generated post ID: $postId');
+
+      // Upload images FIRST in parallel using the generated post ID
+      debugPrint('Starting image upload for ${_selectedImages.length} images');
+      final uploadFutures = _selectedImages.map((imageFile) {
+        debugPrint('Uploading image: ${imageFile.path}');
+        return socialService.uploadImage(imageFile, postId);
+      });
+      final imageUrls = await Future.wait(uploadFutures);
+      debugPrint('Image upload complete. URLs: $imageUrls');
+
+      if (imageUrls.isEmpty) {
+        throw Exception('No images were uploaded');
+      }
+
+      // Now create post with image URLs
+      final createdPostId = await socialService.createPost(
         caption: _captionController.text.trim(),
-        imageUrls: [], // Will be updated after upload
+        imageUrls: imageUrls,
         privacy: _privacy,
       );
-
-      // Upload images in parallel for faster processing
-      final uploadFutures = _selectedImages.map(
-        (imageFile) => socialService.uploadImage(imageFile, postId),
-      );
-      final imageUrls = await Future.wait(uploadFutures);
-
-      // Update post with image URLs
-      await FirebaseFirestore.instance.collection('posts').doc(postId).update({
-        'imageUrls': imageUrls,
-      });
+      debugPrint('Post created with ID: $createdPostId');
 
       if (mounted) {
         Navigator.pop(context);
@@ -95,6 +101,7 @@ class _CreatePostSheetState extends State<CreatePostSheet> {
         widget.onPostCreated?.call();
       }
     } catch (e) {
+      debugPrint('Error creating post: $e');
       if (mounted) {
         setState(() => _isUploading = false);
         ScaffoldMessenger.of(
