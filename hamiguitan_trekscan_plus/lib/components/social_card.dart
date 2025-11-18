@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:intl/intl.dart';
 import '../models/social_model.dart';
 import '../services/social_sharing_service.dart';
+import '../services/user_service.dart';
 import '../theme/color.dart';
 import 'comments_sheet.dart';
 
@@ -24,8 +25,10 @@ class SocialCard extends StatefulWidget {
 
 class _SocialCardState extends State<SocialCard> {
   final SocialSharingService _socialService = SocialSharingService.instance;
+  final UserService _userService = UserService.instance;
   bool _isLiked = false;
   bool _isBookmarked = false;
+  bool _isFollowing = false;
   int _likesCount = 0;
   int _commentsCount = 0;
   int _sharesCount = 0;
@@ -39,6 +42,7 @@ class _SocialCardState extends State<SocialCard> {
     _isBookmarked = widget.post.isBookmarked;
     _checkLikedStatus();
     _checkBookmarkedStatus();
+    _checkFollowStatus();
   }
 
   Future<void> _checkLikedStatus() async {
@@ -55,6 +59,49 @@ class _SocialCardState extends State<SocialCard> {
       final bookmarked = await _socialService.isBookmarked(widget.post.id!);
       if (mounted) {
         setState(() => _isBookmarked = bookmarked);
+      }
+    }
+  }
+
+  Future<void> _checkFollowStatus() async {
+    final currentUser = FirebaseAuth.instance.currentUser;
+    if (currentUser == null || currentUser.uid == widget.post.userId) {
+      // Don't show follow button for own post or if not logged in
+      return;
+    }
+
+    try {
+      final isFollowing = await _userService.isFollowing(
+        currentUser.uid,
+        widget.post.userId,
+      );
+      if (mounted) {
+        setState(() => _isFollowing = isFollowing);
+      }
+    } catch (e) {
+      debugPrint('Error checking follow status: $e');
+    }
+  }
+
+  Future<void> _handleFollow() async {
+    final currentUser = FirebaseAuth.instance.currentUser;
+    if (currentUser == null) return;
+
+    setState(() => _isFollowing = !_isFollowing);
+
+    try {
+      if (_isFollowing) {
+        await _userService.toggleFollow(widget.post.userId, currentUser.uid);
+      } else {
+        await _userService.unfollow(widget.post.userId, currentUser.uid);
+      }
+    } catch (e) {
+      // Revert on error
+      setState(() => _isFollowing = !_isFollowing);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to update follow status: $e')),
+        );
       }
     }
   }
@@ -130,7 +177,6 @@ class _SocialCardState extends State<SocialCard> {
       builder: (context) =>
           CommentsSheet(postId: widget.post.id!, post: widget.post),
     );
-    widget.onCommentTap?.call();
   }
 
   void _showOptionsMenu() {
@@ -201,6 +247,9 @@ class _SocialCardState extends State<SocialCard> {
   }
 
   Widget _buildHeader() {
+    final currentUser = FirebaseAuth.instance.currentUser;
+    final isOwnPost = currentUser?.uid == widget.post.userId;
+
     return Padding(
       padding: const EdgeInsets.all(12),
       child: Row(
@@ -235,6 +284,34 @@ class _SocialCardState extends State<SocialCard> {
               ],
             ),
           ),
+          // Follow button (only show if not own post)
+          if (!isOwnPost)
+            GestureDetector(
+              onTap: _handleFollow,
+              child: Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 6,
+                ),
+                decoration: BoxDecoration(
+                  color: _isFollowing ? Colors.grey[200] : AppColors.primary,
+                  borderRadius: BorderRadius.circular(20),
+                  border: _isFollowing
+                      ? Border.all(color: Colors.grey[400]!)
+                      : null,
+                ),
+                child: Text(
+                  _isFollowing ? 'Followed' : 'Follow',
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    color: _isFollowing ? Colors.black : Colors.white,
+                  ),
+                ),
+              ),
+            )
+          else
+            const SizedBox(width: 12),
           IconButton(
             icon: const Icon(Icons.more_vert, size: 20),
             onPressed: _showOptionsMenu,

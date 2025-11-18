@@ -6,6 +6,11 @@ service cloud.firestore {
     match /users/{userId} {
       allow read: if request.auth != null && (request.auth.uid == userId || request.auth.token.admin == true);
       allow write: if request.auth != null && request.auth.uid == userId; // users can update their own profile
+      
+      // Allow ANY authenticated user to update followers/following/postsCount (for follow/unfollow functionality)
+      allow update: if request.auth != null && 
+        request.writeFields.hasAny(['followers', 'followersCount', 'following', 'followingCount', 'postsCount']);
+
 
       // Achievements subcollection: users can read/write their own
       match /achievements/{achievementId} {
@@ -68,14 +73,17 @@ service cloud.firestore {
       // Anyone authenticated can read public posts
       allow read: if request.auth != null && resource.data.privacy == 'public';
 
-      // Owners can read/write their own posts
+      // Owners can read/write their own posts (including private)
       allow read, write: if request.auth != null && request.auth.uid == resource.data.userId;
 
       // Create: authenticated users can create posts
       allow create: if request.auth != null && request.resource.data.userId == request.auth.uid;
 
-      // Update: only owner can update
-      allow update: if request.auth != null && request.auth.uid == resource.data.userId;
+      // Update: owner can update, OR any authenticated user can update comment/like counts
+      allow update: if request.auth != null && (
+        request.auth.uid == resource.data.userId ||
+        request.writeFields.hasOnly(['likesCount', 'commentsCount', 'sharesCount', 'updatedAt'])
+      );
 
       // Delete: only owner can delete
       allow delete: if request.auth != null && request.auth.uid == resource.data.userId;

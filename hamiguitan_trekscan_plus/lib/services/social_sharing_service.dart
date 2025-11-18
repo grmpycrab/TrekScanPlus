@@ -38,6 +38,17 @@ class SocialSharingService {
     );
 
     final docRef = await _firestore.collection('posts').add(post.toMap());
+
+    // Update user's post count
+    try {
+      await _firestore.collection('users').doc(user.uid).update({
+        'postsCount': FieldValue.increment(1),
+      });
+      debugPrint('Post count incremented for ${user.uid}');
+    } catch (e) {
+      debugPrint('Error updating post count: $e');
+    }
+
     return docRef.id;
   }
 
@@ -311,7 +322,8 @@ class SocialSharingService {
     if (user == null) throw Exception('User not authenticated');
 
     final postDoc = await _firestore.collection('posts').doc(postId).get();
-    if (postDoc.data()?['userId'] != user.uid) {
+    final postUserId = postDoc.data()?['userId'];
+    if (postUserId != user.uid) {
       throw Exception('Not authorized to delete this post');
     }
 
@@ -328,5 +340,15 @@ class SocialSharingService {
 
     // Delete post document (subcollections will be deleted via Firestore rules or Cloud Function)
     await _firestore.collection('posts').doc(postId).delete();
+
+    // Decrement user's post count
+    try {
+      await _firestore.collection('users').doc(postUserId).update({
+        'postsCount': FieldValue.increment(-1),
+      });
+      debugPrint('Post count decremented for $postUserId');
+    } catch (e) {
+      debugPrint('Error updating post count: $e');
+    }
   }
 }

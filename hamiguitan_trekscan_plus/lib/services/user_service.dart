@@ -34,6 +34,12 @@ class UserService {
 
       if (!doc.exists) {
         data['createdAt'] = FieldValue.serverTimestamp();
+        // Initialize social fields for new users
+        data['postsCount'] = 0;
+        data['followersCount'] = 0;
+        data['followingCount'] = 0;
+        data['followers'] = [];
+        data['following'] = [];
         await docRef.set(data, SetOptions(merge: true));
         if (kDebugMode) {
           print('User document created for ${user.uid}');
@@ -181,6 +187,113 @@ class UserService {
         print(st);
       }
       return 0;
+    }
+  }
+
+  /// Toggle follow status between two users
+  Future<void> toggleFollow(String followingUid, String followerUid) async {
+    try {
+      // Add to following list
+      await _usersCollection.doc(followerUid).update({
+        'following': FieldValue.arrayUnion([followingUid]),
+        'followingCount': FieldValue.increment(1),
+      });
+
+      // Add to followers list
+      await _usersCollection.doc(followingUid).update({
+        'followers': FieldValue.arrayUnion([followerUid]),
+        'followersCount': FieldValue.increment(1),
+      });
+
+      if (kDebugMode) {
+        print('$followerUid now following $followingUid');
+      }
+    } catch (e, st) {
+      if (kDebugMode) {
+        print('Error toggling follow: $e');
+        print(st);
+      }
+      rethrow;
+    }
+  }
+
+  /// Unfollow a user
+  Future<void> unfollow(String followingUid, String followerUid) async {
+    try {
+      // Remove from following list
+      await _usersCollection.doc(followerUid).update({
+        'following': FieldValue.arrayRemove([followingUid]),
+        'followingCount': FieldValue.increment(-1),
+      });
+
+      // Remove from followers list
+      await _usersCollection.doc(followingUid).update({
+        'followers': FieldValue.arrayRemove([followerUid]),
+        'followersCount': FieldValue.increment(-1),
+      });
+
+      if (kDebugMode) {
+        print('$followerUid unfollowed $followingUid');
+      }
+    } catch (e, st) {
+      if (kDebugMode) {
+        print('Error unfollowing: $e');
+        print(st);
+      }
+      rethrow;
+    }
+  }
+
+  /// Check if current user is following a user
+  Future<bool> isFollowing(String currentUid, String userUid) async {
+    try {
+      final userDoc = await _usersCollection.doc(currentUid).get();
+      final userData = userDoc.data() ?? {};
+      final following =
+          (userData['following'] as List<dynamic>?)?.cast<String>() ?? [];
+      return following.contains(userUid);
+    } catch (e, st) {
+      if (kDebugMode) {
+        print('Error checking follow status: $e');
+        print(st);
+      }
+      return false;
+    }
+  }
+
+  /// Update user's post count
+  Future<void> incrementPostCount(String uid) async {
+    try {
+      await _usersCollection.doc(uid).update({
+        'postsCount': FieldValue.increment(1),
+      });
+      if (kDebugMode) {
+        print('Post count incremented for $uid');
+      }
+    } catch (e, st) {
+      if (kDebugMode) {
+        print('Error incrementing post count: $e');
+        print(st);
+      }
+      rethrow;
+    }
+  }
+
+  /// Decrement user's post count (when post is deleted)
+  Future<void> decrementPostCount(String uid) async {
+    try {
+      await _usersCollection.doc(uid).update({
+        'postsCount': FieldValue.increment(-1),
+      });
+      if (kDebugMode) {
+        print('Post count decremented for $uid');
+      }
+    } catch (e, st) {
+      if (kDebugMode) {
+        print('Error decrementing post count: $e');
+        print(st);
+      }
+      rethrow;
     }
   }
 }
