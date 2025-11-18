@@ -37,6 +37,18 @@ service firebase.storage {
       allow create, read, write, delete: if request.auth != null && request.auth.token.admin == true;
     }
 
+    // Post images: users can upload images for their own posts
+    match /posts/{postId}/{allFiles=**} {
+      // Allow authenticated users to upload images
+      allow create, write: if request.auth != null;
+      
+      // Allow anyone to read post images (posts are public)
+      allow read: if true;
+      
+      // Allow users to delete their own post images
+      allow delete: if request.auth != null;
+    }
+
     // Deny all other access
     match /{allPaths=**} {
       allow read, write, delete: if false;

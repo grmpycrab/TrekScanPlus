@@ -3,12 +3,15 @@ import 'notification_screen.dart';
 import '../../components/do_and_dont.dart';
 import '../../components/event_calendar.dart';
 import '../../components/connectivity_banner.dart';
+import '../../components/social_card.dart';
+import '../../components/create_post.dart';
 import '../../models/calendar_model.dart';
+import '../../models/social_model.dart';
 import '../../theme/color.dart';
 import '../../services/firebase_auth_service.dart';
 import '../../services/user_service.dart';
+import '../../services/social_sharing_service.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-// booking service/model not required here; we query Firestore directly for calendar aggregation
 import 'package:firebase_auth/firebase_auth.dart';
 import 'dart:async';
 import 'profile_screen.dart';
@@ -150,8 +153,6 @@ class _HomeScreenState extends State<HomeScreen> {
                     children: [
                       _buildWelcomeBanner(),
                       const SizedBox(height: 20),
-                      _buildCalendar(),
-                      const SizedBox(height: 20),
                       DoAndDont(
                         selectedIndex: _selectedSegmentIndex,
                         onSegmentTapped: (index) {
@@ -160,6 +161,8 @@ class _HomeScreenState extends State<HomeScreen> {
                           });
                         },
                       ),
+                      const SizedBox(height: 20),
+                      _buildSocialFeed(),
                     ],
                   ),
                 ),
@@ -168,6 +171,13 @@ class _HomeScreenState extends State<HomeScreen> {
           ],
         ),
       ),
+      floatingActionButton: _firebaseUser != null
+          ? FloatingActionButton(
+              onPressed: _showCreatePostDialog,
+              backgroundColor: AppColors.primary,
+              child: const Icon(Icons.add, color: Colors.white),
+            )
+          : null,
     );
   }
 
@@ -289,9 +299,9 @@ class _HomeScreenState extends State<HomeScreen> {
           Row(
             children: [
               IconButton(
-                icon: const Icon(Icons.refresh, size: 24),
-                tooltip: 'Refresh calendar',
-                onPressed: () => _subscribeBookingsForMonth(DateTime.now()),
+                icon: const Icon(Icons.calendar_today, size: 24),
+                tooltip: 'View calendar',
+                onPressed: _showCalendarOverlay,
               ),
               Stack(
                 children: [
@@ -351,48 +361,68 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildCalendar() {
-    return Container(
-      margin: const EdgeInsets.only(top: 2, left: 16, right: 16),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.10), // Shadow color with opacity
-            blurRadius: 10, // How blurred/soft the shadow is
-            offset: const Offset(2, 2), // Horizontal and vertical offset
+  void _showCalendarOverlay() {
+    showDialog(
+      context: context,
+      barrierDismissible: true,
+      builder: (context) {
+        return Dialog(
+          insetPadding: const EdgeInsets.all(16),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
           ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text(
-            'Trek Schedule',
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Row(
+                  children: [
+                    const Expanded(
+                      child: Text(
+                        'Trek Schedule',
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.close),
+                      onPressed: () => Navigator.of(context).pop(),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                SizedBox(
+                  width: double.infinity,
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(maxHeight: 420),
+                    child: SingleChildScrollView(
+                      child: EventCalendar(
+                        trekDays: _trekDays,
+                        onMonthChanged: (d) => _subscribeBookingsForMonth(d),
+                        onDaySelected: (date) {
+                          if (_trekDays.any(
+                            (day) =>
+                                day.date.year == date.year &&
+                                day.date.month == date.month &&
+                                day.date.day == date.day &&
+                                day.isAvailable,
+                          )) {
+                            // Placeholder for navigation or booking logic
+                            print('Selected available date: $date');
+                          }
+                        },
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
-          const SizedBox(height: 16),
-          EventCalendar(
-            trekDays: _trekDays,
-            onMonthChanged: (d) => _subscribeBookingsForMonth(d),
-            onDaySelected: (date) {
-              // Handle day selection
-              if (_trekDays.any(
-                (day) =>
-                    day.date.year == date.year &&
-                    day.date.month == date.month &&
-                    day.date.day == date.day &&
-                    day.isAvailable,
-              )) {
-                // Navigate to booking screen or show booking dialog
-                print('Selected available date: $date');
-              }
-            },
-          ),
-        ],
-      ),
+        );
+      },
     );
   }
 
@@ -529,6 +559,254 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildSocialFeed() {
+    if (_firebaseUser == null) {
+      return const Padding(
+        padding: EdgeInsets.all(16),
+        child: Center(child: Text('Sign in to view posts')),
+      );
+    }
+
+    return StreamBuilder<List<SocialPost>>(
+      stream: SocialSharingService.instance.streamPublicPosts(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Padding(
+            padding: EdgeInsets.all(16),
+            child: Center(child: CircularProgressIndicator()),
+          );
+        }
+
+        if (snapshot.hasError) {
+          final error = snapshot.error;
+          if (error is FirebaseException && error.message != null) {
+            debugPrint('Firestore index error: ${error.message}');
+          }
+          return Text('Error loading posts');
+        }
+
+        final posts = snapshot.data ?? [];
+
+        if (posts.isEmpty) {
+          return const Padding(
+            padding: EdgeInsets.all(16),
+            child: Center(
+              child: Text(
+                'No posts yet. Be the first to share your experience!',
+              ),
+            ),
+          );
+        }
+
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Padding(
+              padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              child: Text(
+                'Community Feed',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
+            ),
+            ...posts.map(
+              (post) => Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: SocialCard(
+                  post: post,
+                  onCommentTap: () => _showCommentsDialog(post),
+                  onDelete: () => _handleDeletePost(post),
+                ),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _showCreatePostDialog() {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => CreatePostSheet(
+        onPostCreated: () {
+          // Optionally refresh the feed or show a notification
+          debugPrint('Post created successfully');
+        },
+      ),
+    );
+  }
+
+  void _showCommentsDialog(SocialPost post) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => _CommentsSheet(postId: post.id!),
+    );
+  }
+
+  Future<void> _handleDeletePost(SocialPost post) async {
+    if (post.id == null) return;
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Delete Post'),
+        content: const Text('Are you sure you want to delete this post?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: TextButton.styleFrom(foregroundColor: Colors.red),
+            child: const Text('Delete'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true) {
+      try {
+        await SocialSharingService.instance.deletePost(post.id!);
+        if (mounted) {
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(const SnackBar(content: Text('Post deleted')));
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text('Failed to delete post: $e')));
+        }
+      }
+    }
+  }
+}
+
+class _CommentsSheet extends StatefulWidget {
+  final String postId;
+
+  const _CommentsSheet({required this.postId});
+
+  @override
+  State<_CommentsSheet> createState() => _CommentsSheetState();
+}
+
+class _CommentsSheetState extends State<_CommentsSheet> {
+  final commentController = TextEditingController();
+
+  @override
+  void dispose() {
+    commentController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: MediaQuery.of(context).size.height * 0.7,
+      decoration: const BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text(
+                'Comments',
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+              ),
+              IconButton(
+                icon: const Icon(Icons.close),
+                onPressed: () => Navigator.pop(context),
+              ),
+            ],
+          ),
+          const Divider(),
+          Expanded(
+            child: StreamBuilder<List<Comment>>(
+              stream: SocialSharingService.instance.streamComments(
+                widget.postId,
+              ),
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const Center(child: CircularProgressIndicator());
+                }
+
+                final comments = snapshot.data ?? [];
+
+                if (comments.isEmpty) {
+                  return const Center(
+                    child: Text('No comments yet. Be the first to comment!'),
+                  );
+                }
+
+                return ListView.builder(
+                  itemCount: comments.length,
+                  itemBuilder: (context, index) {
+                    final comment = comments[index];
+                    return ListTile(
+                      leading: CircleAvatar(
+                        backgroundImage: comment.userPhotoUrl != null
+                            ? NetworkImage(comment.userPhotoUrl!)
+                            : null,
+                        child: comment.userPhotoUrl == null
+                            ? const Icon(Icons.person)
+                            : null,
+                      ),
+                      title: Text(comment.userName),
+                      subtitle: Text(comment.text),
+                    );
+                  },
+                );
+              },
+            ),
+          ),
+          const Divider(),
+          Row(
+            children: [
+              Expanded(
+                child: TextField(
+                  controller: commentController,
+                  decoration: const InputDecoration(
+                    hintText: 'Write a comment...',
+                    border: OutlineInputBorder(),
+                  ),
+                ),
+              ),
+              IconButton(
+                icon: const Icon(Icons.send),
+                onPressed: () async {
+                  if (commentController.text.trim().isEmpty) return;
+
+                  try {
+                    await SocialSharingService.instance.addComment(
+                      widget.postId,
+                      commentController.text.trim(),
+                    );
+                    commentController.clear();
+                  } catch (e) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text('Failed to add comment: $e')),
+                    );
+                  }
+                },
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }

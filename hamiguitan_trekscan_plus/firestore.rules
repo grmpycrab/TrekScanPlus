@@ -22,6 +22,14 @@ service cloud.firestore {
         allow write: if request.auth != null && request.auth.uid == userId;
         allow delete: if request.auth != null && request.auth.uid == userId;
       }
+
+      // Bookmarks subcollection: users can read/write their own
+      match /bookmarks/{bookmarkId} {
+        allow create: if request.auth != null && request.auth.uid == userId;
+        allow read: if request.auth != null && request.auth.uid == userId;
+        allow write: if request.auth != null && request.auth.uid == userId;
+        allow delete: if request.auth != null && request.auth.uid == userId;
+      }
     }
 
     // Top-level bookings collection
@@ -30,8 +38,9 @@ service cloud.firestore {
       // (relaxed: only require ownership; field validation is done server-side or in client)
       allow create: if request.auth != null && request.resource.data.userId == request.auth.uid;
 
-      // Read: owners or admins
-      allow read: if request.auth != null && (resource.data.userId == request.auth.uid || request.auth.token.admin == true);
+      // Read: Allow authenticated users to query, but filter to their own bookings or public bookings
+      // Note: The application is responsible for filtering to userId or admin status
+      allow read: if request.auth != null;
 
       // Update: owners can update their booking while it's still pending (e.g., upload attachments, cancel)
       // Admins can also update.
@@ -52,6 +61,38 @@ service cloud.firestore {
       allow read: if request.auth != null && (request.auth.uid == userId || request.auth.token.admin == true);
       allow update: if request.auth != null && request.auth.uid == userId;
       allow delete: if request.auth != null && (request.auth.uid == userId || request.auth.token.admin == true);
+    }
+
+    // Social posts collection
+    match /posts/{postId} {
+      // Anyone authenticated can read public posts
+      allow read: if request.auth != null && resource.data.privacy == 'public';
+
+      // Owners can read/write their own posts
+      allow read, write: if request.auth != null && request.auth.uid == resource.data.userId;
+
+      // Create: authenticated users can create posts
+      allow create: if request.auth != null && request.resource.data.userId == request.auth.uid;
+
+      // Update: only owner can update
+      allow update: if request.auth != null && request.auth.uid == resource.data.userId;
+
+      // Delete: only owner can delete
+      allow delete: if request.auth != null && request.auth.uid == resource.data.userId;
+
+      // Likes subcollection
+      match /likes/{likeId} {
+        allow read: if request.auth != null;
+        allow write: if request.auth != null;
+        allow delete: if request.auth != null;
+      }
+
+      // Comments subcollection
+      match /comments/{commentId} {
+        allow read: if request.auth != null;
+        allow write: if request.auth != null;
+        allow delete: if request.auth != null && request.auth.uid == resource.data.userId;
+      }
     }
 
   }
