@@ -38,8 +38,11 @@ class _LoginScreenState extends State<LoginScreen> {
         password: _passwordController.text.trim(),
       );
 
-      // Check if login was successful
-      if (userCredential?.user != null && mounted) {
+      // Check if login was successful (either userCredential returned or user is authenticated)
+      final user =
+          userCredential?.user ?? FirebaseAuthService.instance.currentUser;
+
+      if (user != null && mounted) {
         // Wait a moment for the auth state stream to update
         await Future.delayed(const Duration(milliseconds: 500));
 

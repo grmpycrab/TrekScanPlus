@@ -87,6 +87,7 @@ class FirebaseAuthService {
   }
 
   /// Log in with email and password
+  /// Resilient to Pigeon type-cast errors: if error occurs but user is authenticated, proceeds anyway
   Future<UserCredential?> logIn({
     required String email,
     required String password,
@@ -127,10 +128,38 @@ class FirebaseAuthService {
       }
       rethrow;
     } catch (e, st) {
+      // Sometimes a Pigeon type-cast error happens even though the user was authenticated
+      // Check if we have a current user before throwing
       if (kDebugMode) {
-        print('Unexpected error during login: $e');
+        print('⚠️ Login Pigeon cast error: $e');
         print(st);
       }
+
+      final fallbackUser = _firebaseAuth.currentUser;
+      if (fallbackUser != null) {
+        if (kDebugMode) {
+          print(
+            '✅ User was authenticated despite Pigeon error. Continuing with user: ${fallbackUser.email}',
+          );
+        }
+        // Ensure Firestore has a user document for this account
+        try {
+          await UserService.instance.createOrUpdateUserFromFirebase(
+            fallbackUser,
+          );
+        } catch (e) {
+          // Log Firestore error but don't block login - user is authenticated
+          if (kDebugMode) {
+            print(
+              '⚠️ Warning: Failed to create user document in Firestore: $e',
+            );
+          }
+        }
+        // User created successfully despite the error, so continue
+        return null; // Return null to signal we should proceed anyway
+      }
+
+      // If no current user, rethrow
       rethrow;
     }
   }
