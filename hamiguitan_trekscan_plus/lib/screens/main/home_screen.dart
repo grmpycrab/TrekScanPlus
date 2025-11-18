@@ -333,6 +333,17 @@ class _HomeScreenState extends State<HomeScreen> {
                           .limit(1)
                           .snapshots(),
                       builder: (context, snapshot) {
+                        print(
+                          '🔔 Home notification bell stream snapshot received',
+                        );
+                        print(
+                          '🔔 Has data: ${snapshot.hasData}, Docs: ${snapshot.data?.docs.length ?? 0}',
+                        );
+                        if (snapshot.hasError) {
+                          print(
+                            '❌ Home notification stream error: ${snapshot.error}',
+                          );
+                        }
                         final hasUnread =
                             snapshot.hasData && snapshot.data!.docs.isNotEmpty;
                         return hasUnread

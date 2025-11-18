@@ -33,18 +33,28 @@ class NotificationService {
 
   Stream<List<NotificationModel>> notificationsStream(String userId) {
     try {
+      print('🔔 Subscribing to notification stream for user: $userId');
       return _userNotificationsRef(userId)
           .orderBy('timestamp', descending: true)
           .snapshots()
-          .map(
-            (snapshot) => snapshot.docs
-                .map((d) => NotificationModel.fromMap(d.id, d.data()))
-                .toList(),
-          );
+          .map((snapshot) {
+            print(
+              '🔔 Notifications snapshot received: ${snapshot.docs.length} notifications for $userId',
+            );
+            for (final d in snapshot.docs) {
+              print('🔔 Notification data: ${d.data()}');
+            }
+            return snapshot.docs.map((d) {
+              return NotificationModel.fromMap(d.id, d.data());
+            }).toList();
+          })
+          .handleError((error) {
+            print('❌ Notification stream error for $userId: $error');
+            return [];
+          });
     } catch (e) {
       // If firestore isn't available, return empty stream
-      // ignore: avoid_print
-      print('notificationsStream error: $e');
+      print('❌ notificationsStream error: $e');
       return Stream.value([]);
     }
   }
@@ -66,12 +76,14 @@ class NotificationService {
 
   Future<void> markAsRead(String userId, String notificationId) async {
     try {
+      print('Marking notification $notificationId as read');
       await _userNotificationsRef(
         userId,
       ).doc(notificationId).update({'isRead': true});
+      print('Successfully marked notification as read');
     } catch (e) {
-      // ignore: avoid_print
       print('markAsRead error: $e');
+      rethrow;
     }
   }
 
