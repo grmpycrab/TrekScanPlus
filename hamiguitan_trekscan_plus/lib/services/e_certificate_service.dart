@@ -82,63 +82,72 @@ class ECertificateService {
 
     try {
       final stationCount = visitedStations.length;
+      print('🎯 ECertificate: Checking awards for $stationCount stations');
+      print('📍 Stations: ${visitedStations.map((s) => s.name).toList()}');
+      ECertificate? lastAwardedCert;
 
-      // Check for Peak Conqueror (all stations visited)
-      if (stationCount >= 14) {
-        // Check if already awarded
-        if (!_hasCertificate(CertificateType.peakConqueror)) {
-          final cert = await _createAndAwardCertificate(
-            CertificateType.peakConqueror,
-            visitedStations,
-            trekkerName: trekkerName,
-            trekStartDate: trekStartDate,
-            trekEndDate: trekEndDate,
-            totalDistance: totalDistance ?? 0.0,
-            totalTimeMinutes: totalTimeMinutes ?? 0,
-          );
-          print('✓ Peak Conqueror certificate awarded!');
-          return cert;
-        }
+      // Check for Peak Conqueror - Must have visited Station 14 (Peak)
+      final hasStation14 = visitedStations.any(
+        (s) => s.name.contains('Station 14') || s.name.contains('Peak'),
+      );
+      print(
+        '🏔️ Peak check: hasStation14=$hasStation14, alreadyHas=${_hasCertificate(CertificateType.peakConqueror)}',
+      );
+      if (hasStation14 && !_hasCertificate(CertificateType.peakConqueror)) {
+        final cert = await _createAndAwardCertificate(
+          CertificateType.peakConqueror,
+          visitedStations,
+          trekkerName: trekkerName,
+          trekStartDate: trekStartDate,
+          trekEndDate: trekEndDate,
+          totalDistance: totalDistance ?? 0.0,
+          totalTimeMinutes: totalTimeMinutes ?? 0,
+        );
+        print('✓ Peak Conqueror certificate awarded!');
+        lastAwardedCert = cert;
       }
 
-      // Check for Full Trek (all stations visited)
-      if (stationCount >= 14) {
-        if (!_hasCertificate(CertificateType.fullTrek)) {
-          final cert = await _createAndAwardCertificate(
-            CertificateType.fullTrek,
-            visitedStations,
-            trekkerName: trekkerName,
-            trekStartDate: trekStartDate,
-            trekEndDate: trekEndDate,
-            totalDistance: totalDistance ?? 0.0,
-            totalTimeMinutes: totalTimeMinutes ?? 0,
-          );
-          print('✓ Full Trek certificate awarded!');
-          return cert;
-        }
+      // Check for Full Trek - Must have visited 13+ stations
+      print(
+        '🌲 Full Trek check: stationCount=$stationCount (need >=13), alreadyHas=${_hasCertificate(CertificateType.fullTrek)}',
+      );
+      if (stationCount >= 13 && !_hasCertificate(CertificateType.fullTrek)) {
+        final cert = await _createAndAwardCertificate(
+          CertificateType.fullTrek,
+          visitedStations,
+          trekkerName: trekkerName,
+          trekStartDate: trekStartDate,
+          trekEndDate: trekEndDate,
+          totalDistance: totalDistance ?? 0.0,
+          totalTimeMinutes: totalTimeMinutes ?? 0,
+        );
+        print('✓ Full Trek certificate awarded!');
+        lastAwardedCert = cert;
       }
 
       // Check for Camp 3 (reached station 8 or higher)
       final reachedStation8 = visitedStations.any(
         (s) => s.name.contains('Camp 3') || s.name.contains('Station 8'),
       );
-      if (reachedStation8 || stationCount >= 8) {
-        if (!_hasCertificate(CertificateType.camp3)) {
-          final cert = await _createAndAwardCertificate(
-            CertificateType.camp3,
-            visitedStations,
-            trekkerName: trekkerName,
-            trekStartDate: trekStartDate,
-            trekEndDate: trekEndDate,
-            totalDistance: totalDistance ?? 0.0,
-            totalTimeMinutes: totalTimeMinutes ?? 0,
-          );
-          print('✓ Camp 3 certificate awarded!');
-          return cert;
-        }
+      print(
+        '⛺ Camp 3 check: reachedStation8=$reachedStation8, stationCount=$stationCount, alreadyHas=${_hasCertificate(CertificateType.camp3)}',
+      );
+      if ((reachedStation8 || stationCount >= 8) &&
+          !_hasCertificate(CertificateType.camp3)) {
+        final cert = await _createAndAwardCertificate(
+          CertificateType.camp3,
+          visitedStations,
+          trekkerName: trekkerName,
+          trekStartDate: trekStartDate,
+          trekEndDate: trekEndDate,
+          totalDistance: totalDistance ?? 0.0,
+          totalTimeMinutes: totalTimeMinutes ?? 0,
+        );
+        print('✓ Camp 3 certificate awarded!');
+        lastAwardedCert = cert;
       }
 
-      return null;
+      return lastAwardedCert;
     } catch (e) {
       print('Error checking and awarding certificate: $e');
       return null;
