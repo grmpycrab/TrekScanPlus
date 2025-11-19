@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/station_data.dart';
 import 'geofencing_service.dart';
+import 'firestore_station_service.dart';
 
 class StationService {
   static const String VISITED_STATIONS_KEY = 'visited_stations';
@@ -52,6 +53,16 @@ class StationService {
         Set<String> visitedStationIds =
             prefs.getStringList(_userVisitedStationsKey)?.toSet() ?? {};
         print('Visited station IDs: $visitedStationIds');
+
+        // Sync with Firebase if user is logged in
+        try {
+          final firebaseVisitedIds = await FirestoreStationService.instance
+              .getVisitedStationIds();
+          visitedStationIds.addAll(firebaseVisitedIds);
+          print('Synced ${firebaseVisitedIds.length} stations from Firebase');
+        } catch (e) {
+          print('Info: Firebase sync skipped (user may not be logged in): $e');
+        }
 
         _stations = jsonList.map((json) {
           var station = StationData.fromJson(json);
@@ -148,6 +159,20 @@ class StationService {
         _userVisitedStationsKey,
         visitedStationIds.toList(),
       );
+
+      // Sync with Firebase Firestore
+      try {
+        if (isVisited) {
+          await FirestoreStationService.instance.saveVisitedStation(station);
+        } else {
+          await FirestoreStationService.instance.removeVisitedStation(
+            station.id,
+          );
+        }
+      } catch (firestoreError) {
+        print('Warning: Failed to sync with Firestore: $firestoreError');
+        // Don't rethrow - local update was successful
+      }
     } catch (e) {
       print('Error updating station visited status: $e');
       rethrow;
@@ -168,6 +193,14 @@ class StationService {
       for (final key in keysToRemove) {
         await prefs.remove(key);
       }
+    }
+
+    // Reset in Firebase as well
+    try {
+      await FirestoreStationService.instance.resetAllVisitedStations();
+    } catch (e) {
+      print('Warning: Failed to reset visited stations in Firestore: $e');
+      // Don't rethrow - local reset was successful
     }
   }
 

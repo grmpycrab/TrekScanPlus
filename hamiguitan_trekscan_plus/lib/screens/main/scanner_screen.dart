@@ -25,6 +25,7 @@ class _ScannerScreenState extends State<ScannerScreen>
   bool _isLoading = true;
   String? _lastScannedCode;
   DateTime? _lastScanTime;
+  bool _geofencingEnabled = true; // Toggle for testing
 
   @override
   void initState() {
@@ -259,8 +260,10 @@ class _ScannerScreenState extends State<ScannerScreen>
               final station = stationService.getStationById(code);
 
               if (station != null) {
-                // Check geofence before allowing scan completion
-                if (station.latitude != null && station.longitude != null) {
+                // Check geofence before allowing scan completion (if enabled)
+                if (_geofencingEnabled &&
+                    station.latitude != null &&
+                    station.longitude != null) {
                   final geofenceResult = await GeofencingService.checkGeofence(
                     stationLat: station.latitude!,
                     stationLng: station.longitude!,
@@ -361,6 +364,35 @@ class _ScannerScreenState extends State<ScannerScreen>
                 const Spacer(),
                 Row(
                   children: [
+                    // Geofencing toggle (testing only)
+                    Tooltip(
+                      message: _geofencingEnabled
+                          ? 'Geofencing: ON'
+                          : 'Geofencing: OFF',
+                      child: IconButton(
+                        icon: Icon(
+                          _geofencingEnabled
+                              ? Icons.location_on
+                              : Icons.location_off,
+                          color: _geofencingEnabled
+                              ? AppColors.iconPrimary
+                              : Colors.orange,
+                        ),
+                        onPressed: () {
+                          setState(() {
+                            _geofencingEnabled = !_geofencingEnabled;
+                          });
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(
+                                'Geofencing ${_geofencingEnabled ? 'enabled' : 'disabled'}',
+                              ),
+                              duration: const Duration(seconds: 1),
+                            ),
+                          );
+                        },
+                      ),
+                    ),
                     IconButton(
                       icon: Image.asset(
                         'assets/icons/switch-camera.png',
