@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import '../../models/station_data.dart';
 import '../../services/station_service.dart';
 import '../../theme/color.dart';
+import '../../components/trail_map.dart';
 
 class StationDetailScreen extends StatefulWidget {
   final StationData station;
@@ -17,25 +18,34 @@ class _StationDetailScreenState extends State<StationDetailScreen> {
   StationData get station => widget.station;
   StationData? nextStationData;
   late StationService _stationService;
+  List<StationData> allStations = [];
 
   @override
   void initState() {
     super.initState();
-    _loadNextStationData();
+    _loadStationData();
   }
 
-  Future<void> _loadNextStationData() async {
-    if (station.nextStationId != null) {
+  Future<void> _loadStationData() async {
+    try {
       _stationService = await StationService.init();
       await _stationService.loadStations();
-      final nextStation = _stationService.getStationById(
-        station.nextStationId!,
-      );
+
       if (mounted) {
+        final allStationsLoaded = _stationService.getAllStations();
+        StationData? nextStation;
+
+        if (station.nextStationId != null) {
+          nextStation = _stationService.getStationById(station.nextStationId!);
+        }
+
         setState(() {
+          allStations = allStationsLoaded;
           nextStationData = nextStation;
         });
       }
+    } catch (e) {
+      debugPrint('Error loading station data: $e');
     }
   }
 
@@ -88,6 +98,10 @@ class _StationDetailScreenState extends State<StationDetailScreen> {
                               station.fauna.isNotEmpty) ...[
                             const SizedBox(height: 32),
                             _buildBiodiversity(),
+                          ],
+                          if (allStations.isNotEmpty) ...[
+                            const SizedBox(height: 32),
+                            _buildTrailMap(),
                           ],
                           if (station.nextStationId != null) ...[
                             const SizedBox(height: 32),
@@ -757,6 +771,36 @@ class _StationDetailScreenState extends State<StationDetailScreen> {
       return value.join(', ');
     }
     return value.toString();
+  }
+
+  Widget _buildTrailMap() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Icon(Icons.map, size: 24, color: AppColors.primary),
+            const SizedBox(width: 8),
+            const Text(
+              'Trail Map',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
+          ],
+        ),
+        const SizedBox(height: 12),
+        ClipRRect(
+          borderRadius: BorderRadius.circular(12),
+          child: SizedBox(
+            height: 320,
+            child: TrailMap(
+              currentStation: station,
+              allStations: allStations,
+              height: 320,
+            ),
+          ),
+        ),
+      ],
+    );
   }
 
   Widget _buildNextStation() {
