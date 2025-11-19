@@ -291,10 +291,21 @@ class _ScannerScreenState extends State<ScannerScreen>
 
                 // Check and unlock achievements
                 final visitedStations = stationService.getVisitedStations();
+                final allStations = stationService.getAllStations();
+
+                // Get the index of this station (0-based) for achievement matching
+                final stationIndex = allStations.indexWhere(
+                  (s) => s.id == station.id,
+                );
+
                 final newlyUnlocked = await achievementService
                     .checkAndUnlockAchievements(
                       visitedStations.length,
                       visitedStations.map((s) => s.id).toList(),
+                      currentStationId: station.id,
+                      currentStationIndex: stationIndex >= 0
+                          ? stationIndex + 1
+                          : null,
                     );
 
                 if (!mounted) return;

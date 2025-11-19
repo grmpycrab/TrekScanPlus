@@ -5,7 +5,9 @@ import '../../services/firebase_auth_service.dart';
 import '../../services/achievement_service.dart';
 import '../../services/user_service.dart';
 import '../../services/social_sharing_service.dart';
+import '../../services/e_certificate_service.dart';
 import '../../models/social_model.dart';
+import '../../models/e_certificate.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../../components/social_card.dart';
 
@@ -22,6 +24,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   late AchievementService achievementService;
   final UserService _userService = UserService.instance;
   final SocialSharingService _socialService = SocialSharingService.instance;
+  final ECertificateService _certificateService = ECertificateService.instance;
 
   Future<void> _initializeAchievements() async {
     try {
@@ -33,12 +36,25 @@ class _ProfileScreenState extends State<ProfileScreen> {
     }
   }
 
+  Future<void> _initializeCertificates() async {
+    try {
+      if (_firebaseUser != null) {
+        await _certificateService.init(userId: _firebaseUser!.uid);
+        setState(() {});
+        print('ECertificateService initialized in ProfileScreen');
+      }
+    } catch (e) {
+      print('Error initializing ECertificateService in ProfileScreen: $e');
+    }
+  }
+
   @override
   void initState() {
     super.initState();
     achievementService = AchievementService();
     _initializeAchievements();
     _firebaseUser = FirebaseAuthService.instance.currentUser;
+    _initializeCertificates();
 
     if (_firebaseUser != null) {
       final display = _firebaseUser!.displayName ?? '';
