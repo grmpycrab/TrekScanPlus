@@ -76,7 +76,13 @@ class ECertificateService {
     double? totalDistance,
     int? totalTimeMinutes,
   }) async {
+    print(
+      'DEBUG: checkAndAwardCertificate() called with ${visitedStations.length} stations',
+    );
     if (visitedStations.isEmpty || _currentUserId == null) {
+      print(
+        'DEBUG: Early return - isEmpty=${visitedStations.isEmpty}, _currentUserId=$_currentUserId',
+      );
       return null;
     }
 

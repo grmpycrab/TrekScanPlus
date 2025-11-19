@@ -6,6 +6,7 @@ import '../../services/achievement_service.dart';
 import '../../services/user_service.dart';
 import '../../services/social_sharing_service.dart';
 import '../../services/e_certificate_service.dart';
+import '../../services/station_service.dart';
 import '../../models/social_model.dart';
 import '../../models/e_certificate.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -38,13 +39,56 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   Future<void> _initializeCertificates() async {
     try {
+      print(
+        'DEBUG: _initializeCertificates() called, _firebaseUser=$_firebaseUser',
+      );
       if (_firebaseUser != null) {
+        print(
+          'DEBUG: Initializing certificate service for user: ${_firebaseUser!.uid}',
+        );
         await _certificateService.init(userId: _firebaseUser!.uid);
-        setState(() {});
+        print('DEBUG: Certificate service initialized');
+
+        // Get visited stations and check/award certificates
+        print('DEBUG: Initializing station service...');
+        final stationService = await StationService.init(
+          userId: _firebaseUser!.uid,
+        );
+        print('DEBUG: Station service initialized, loading stations...');
+        await stationService.loadStations();
+        print('DEBUG: Stations loaded, getting visited stations...');
+        final visitedStations = stationService.getVisitedStations();
+        print(
+          'DEBUG: Visited stations retrieved: ${visitedStations.length} stations',
+        );
+        print(
+          'DEBUG: Station names: ${visitedStations.map((s) => s.name).toList()}',
+        );
+
+        if (visitedStations.isNotEmpty) {
+          print(
+            '🎯 Profile Screen: Checking certificates for ${visitedStations.length} visited stations',
+          );
+          final result = await _certificateService.checkAndAwardCertificate(
+            visitedStations,
+          );
+          print('DEBUG: Certificate check result: $result');
+        } else {
+          print('DEBUG: No visited stations found');
+        }
+
+        if (mounted) {
+          setState(() {});
+        }
         print('ECertificateService initialized in ProfileScreen');
+      } else {
+        print(
+          'DEBUG: _firebaseUser is null, skipping certificate initialization',
+        );
       }
-    } catch (e) {
-      print('Error initializing ECertificateService in ProfileScreen: $e');
+    } catch (e, stackTrace) {
+      print('ERROR initializing ECertificateService in ProfileScreen: $e');
+      print('Stack trace: $stackTrace');
     }
   }
 
