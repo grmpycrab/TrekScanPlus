@@ -180,10 +180,13 @@ class AchievementService {
   }
 
   /// Check and unlock achievements based on criteria
+  /// Accepts the current station being visited for station-specific achievements
   Future<Achievement?> checkAndUnlockAchievements(
     int stationsVisited,
-    List<String> completedStationIds,
-  ) async {
+    List<String> completedStationIds, {
+    String? currentStationId,
+    int? currentStationIndex,
+  }) async {
     Achievement? newlyUnlocked;
 
     for (final achievement in _allAchievements) {
@@ -191,7 +194,12 @@ class AchievementService {
       if (achievement.isUnlocked) continue;
 
       // Check if achievement criteria is met
-      if (_checkAchievementCriteria(achievement, stationsVisited)) {
+      if (_checkAchievementCriteria(
+        achievement,
+        stationsVisited,
+        currentStationId: currentStationId,
+        currentStationIndex: currentStationIndex,
+      )) {
         // Unlock the achievement
         newlyUnlocked = achievement;
         await _unlockAchievementLocally(achievement);
@@ -203,7 +211,12 @@ class AchievementService {
   }
 
   /// Check if achievement criteria is met
-  bool _checkAchievementCriteria(Achievement achievement, int stationsVisited) {
+  bool _checkAchievementCriteria(
+    Achievement achievement,
+    int stationsVisited, {
+    String? currentStationId,
+    int? currentStationIndex,
+  }) {
     final requirement = achievement.requirement;
     final type = requirement['type'] as String?;
     final value = requirement['value'];
@@ -218,17 +231,28 @@ class AchievementService {
               ? value
               : int.tryParse(value.toString());
           if (stationValue == null) return false;
+
+          // Check if this is the station we're currently visiting
+          // This ensures Station 1 achievement unlocks at Station 1, Station 2 at Station 2, etc.
+          if (currentStationIndex != null) {
+            return currentStationIndex == stationValue;
+          }
+          // Fallback: unlock if reached that many stations
           return stationsVisited >= stationValue;
         case 'stations_reached':
-          // Unlock when user reaches specific number of stations
+          // Unlock when user reaches specific number of stations (cumulative)
           final stationCount = value is int
               ? value
               : int.tryParse(value.toString());
           if (stationCount == null) return false;
           return stationsVisited >= stationCount;
         case 'reach_location':
-          // Location-based achievements
-          return value is String; // Simplified for now
+          // Location-based achievements - match current location
+          if (currentStationId != null && value is String) {
+            return currentStationId.toLowerCase() ==
+                value.toString().toLowerCase();
+          }
+          return false;
         case 'trail_completed':
           // Trail completion achievements
           return value == true || value == 'true';

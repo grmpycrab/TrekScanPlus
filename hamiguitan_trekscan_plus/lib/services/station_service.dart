@@ -4,6 +4,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../models/station_data.dart';
 import 'geofencing_service.dart';
 import 'firestore_station_service.dart';
+import 'e_certificate_service.dart';
 
 class StationService {
   static const String VISITED_STATIONS_KEY = 'visited_stations';
@@ -172,6 +173,30 @@ class StationService {
       } catch (firestoreError) {
         print('Warning: Failed to sync with Firestore: $firestoreError');
         // Don't rethrow - local update was successful
+      }
+
+      // Check and award e-certificates when station is visited (Phase 1)
+      if (isVisited) {
+        try {
+          final certificateService = ECertificateService.instance;
+          final visitedStations = getVisitedStations();
+
+          final awardedCertificate = await certificateService
+              .checkAndAwardCertificate(visitedStations);
+
+          if (awardedCertificate != null) {
+            print(
+              'Certificate awarded: ${awardedCertificate.certificateType.name}',
+            );
+            // TODO: Trigger UI notification/dialog to show certificate earned
+            // This will be implemented in Phase 2 (UI phase)
+          }
+        } catch (certificateError) {
+          print(
+            'Warning: Failed to check certificate eligibility: $certificateError',
+          );
+          // Don't rethrow - this is non-critical
+        }
       }
     } catch (e) {
       print('Error updating station visited status: $e');

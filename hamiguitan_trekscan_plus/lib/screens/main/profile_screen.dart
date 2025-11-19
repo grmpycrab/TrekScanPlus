@@ -5,7 +5,10 @@ import '../../services/firebase_auth_service.dart';
 import '../../services/achievement_service.dart';
 import '../../services/user_service.dart';
 import '../../services/social_sharing_service.dart';
+import '../../services/e_certificate_service.dart';
+import '../../services/station_service.dart';
 import '../../models/social_model.dart';
+import '../../models/e_certificate.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../../components/social_card.dart';
 
@@ -22,6 +25,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   late AchievementService achievementService;
   final UserService _userService = UserService.instance;
   final SocialSharingService _socialService = SocialSharingService.instance;
+  final ECertificateService _certificateService = ECertificateService.instance;
 
   Future<void> _initializeAchievements() async {
     try {
@@ -33,12 +37,68 @@ class _ProfileScreenState extends State<ProfileScreen> {
     }
   }
 
+  Future<void> _initializeCertificates() async {
+    try {
+      print(
+        'DEBUG: _initializeCertificates() called, _firebaseUser=$_firebaseUser',
+      );
+      if (_firebaseUser != null) {
+        print(
+          'DEBUG: Initializing certificate service for user: ${_firebaseUser!.uid}',
+        );
+        await _certificateService.init(userId: _firebaseUser!.uid);
+        print('DEBUG: Certificate service initialized');
+
+        // Get visited stations and check/award certificates
+        print('DEBUG: Initializing station service...');
+        final stationService = await StationService.init(
+          userId: _firebaseUser!.uid,
+        );
+        print('DEBUG: Station service initialized, loading stations...');
+        await stationService.loadStations();
+        print('DEBUG: Stations loaded, getting visited stations...');
+        final visitedStations = stationService.getVisitedStations();
+        print(
+          'DEBUG: Visited stations retrieved: ${visitedStations.length} stations',
+        );
+        print(
+          'DEBUG: Station names: ${visitedStations.map((s) => s.name).toList()}',
+        );
+
+        if (visitedStations.isNotEmpty) {
+          print(
+            '🎯 Profile Screen: Checking certificates for ${visitedStations.length} visited stations',
+          );
+          final result = await _certificateService.checkAndAwardCertificate(
+            visitedStations,
+          );
+          print('DEBUG: Certificate check result: $result');
+        } else {
+          print('DEBUG: No visited stations found');
+        }
+
+        if (mounted) {
+          setState(() {});
+        }
+        print('ECertificateService initialized in ProfileScreen');
+      } else {
+        print(
+          'DEBUG: _firebaseUser is null, skipping certificate initialization',
+        );
+      }
+    } catch (e, stackTrace) {
+      print('ERROR initializing ECertificateService in ProfileScreen: $e');
+      print('Stack trace: $stackTrace');
+    }
+  }
+
   @override
   void initState() {
     super.initState();
     achievementService = AchievementService();
     _initializeAchievements();
     _firebaseUser = FirebaseAuthService.instance.currentUser;
+    _initializeCertificates();
 
     if (_firebaseUser != null) {
       final display = _firebaseUser!.displayName ?? '';
@@ -148,7 +208,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             ),
                           ),
                         ),
-                        const SizedBox(width: 48),
+                        // E-Certificates on the right
+                        _buildCertificatesBadge(),
                       ],
                     ),
                   ),
@@ -742,5 +803,389 @@ class _ProfileScreenState extends State<ProfileScreen> {
         ).showSnackBar(SnackBar(content: Text('Failed to delete post: $e')));
       }
     }
+  }
+
+  Widget _buildCertificatesBadge() {
+    final certificates = _certificateService.getAllCertificates();
+
+    if (certificates.isEmpty) {
+      return const SizedBox(width: 48);
+    }
+
+    return GestureDetector(
+      onTap: () => _showCertificatesModal(certificates),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [Colors.amber.shade400, Colors.amber.shade600],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          borderRadius: BorderRadius.circular(20),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.amber.withOpacity(0.3),
+              blurRadius: 8,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(Icons.emoji_events, color: Colors.white, size: 18),
+            const SizedBox(width: 6),
+            Text(
+              certificates.length.toString(),
+              style: const TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+                fontSize: 14,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showCertificatesModal(List<ECertificate> certificates) {
+    showModalBottomSheet(
+      context: context,
+      builder: (context) => Container(
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.only(
+            topLeft: Radius.circular(20),
+            topRight: Radius.circular(20),
+          ),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Handle bar
+            Padding(
+              padding: const EdgeInsets.only(top: 12, bottom: 16),
+              child: Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: Colors.grey[300],
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+            ),
+            // Title
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text(
+                    'My Certificates',
+                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.close),
+                    onPressed: () => Navigator.pop(context),
+                  ),
+                ],
+              ),
+            ),
+            // Certificates list
+            Expanded(
+              child: ListView.builder(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                itemCount: certificates.length,
+                itemBuilder: (context, index) {
+                  final cert = certificates[index];
+                  return _buildCertificateCard(cert, index);
+                },
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCertificateCard(ECertificate certificate, int index) {
+    final colors = _getCertificateColors(certificate.certificateType);
+
+    return GestureDetector(
+      onTap: () => _showCertificateDetail(certificate),
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 16),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [colors['light']!, colors['main']!],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: colors['main']!.withOpacity(0.2),
+              blurRadius: 12,
+              offset: const Offset(0, 6),
+            ),
+          ],
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Certificate type and date
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          certificate.getTitle(),
+                          style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          'Earned ${_formatCertificateDate(certificate.dateEarned)}',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Colors.white.withOpacity(0.9),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Icon(
+                    _getCertificateIcon(certificate.certificateType),
+                    color: Colors.white,
+                    size: 32,
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              // Stats
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  _buildCertificateStat(
+                    'Stations',
+                    certificate.stationsVisited.toString(),
+                  ),
+                  _buildCertificateStat(
+                    'Distance',
+                    '${certificate.totalDistance.toStringAsFixed(1)} km',
+                  ),
+                  _buildCertificateStat(
+                    'Time',
+                    '${certificate.totalTimeMinutes} min',
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCertificateStat(String label, String value) {
+    return Column(
+      children: [
+        Text(
+          value,
+          style: const TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
+          ),
+        ),
+        const SizedBox(height: 2),
+        Text(
+          label,
+          style: TextStyle(fontSize: 10, color: Colors.white.withOpacity(0.8)),
+        ),
+      ],
+    );
+  }
+
+  void _showCertificateDetail(ECertificate certificate) {
+    Navigator.pop(context); // Close the modal
+    showDialog(
+      context: context,
+      builder: (context) => Dialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Icon
+              Container(
+                width: 80,
+                height: 80,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  gradient: LinearGradient(
+                    colors: [
+                      _getCertificateColors(
+                        certificate.certificateType,
+                      )['light']!,
+                      _getCertificateColors(
+                        certificate.certificateType,
+                      )['main']!,
+                    ],
+                  ),
+                ),
+                child: Icon(
+                  _getCertificateIcon(certificate.certificateType),
+                  color: Colors.white,
+                  size: 40,
+                ),
+              ),
+              const SizedBox(height: 16),
+              // Title
+              Text(
+                certificate.getTitle(),
+                style: const TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 8),
+              // Description
+              Text(
+                certificate.getDescription(),
+                style: TextStyle(fontSize: 14, color: Colors.grey[600]),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 24),
+              // Details
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.grey[50],
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Column(
+                  children: [
+                    _buildDetailRow('Trekker Name', certificate.trekkerName),
+                    const SizedBox(height: 12),
+                    _buildDetailRow(
+                      'Date Earned',
+                      _formatCertificateDate(certificate.dateEarned),
+                    ),
+                    const SizedBox(height: 12),
+                    _buildDetailRow(
+                      'Stations Visited',
+                      certificate.stationsVisited.toString(),
+                    ),
+                    const SizedBox(height: 12),
+                    _buildDetailRow(
+                      'Total Distance',
+                      '${certificate.totalDistance.toStringAsFixed(1)} km',
+                    ),
+                    const SizedBox(height: 12),
+                    _buildDetailRow(
+                      'Total Time',
+                      '${certificate.totalTimeMinutes} minutes',
+                    ),
+                    const SizedBox(height: 12),
+                    _buildDetailRow(
+                      'Verification Code',
+                      certificate.verificationCode,
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 24),
+              // Close button
+              ElevatedButton(
+                onPressed: () => Navigator.pop(context),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.blue,
+                  minimumSize: const Size(double.infinity, 48),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                child: const Text(
+                  'Close',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDetailRow(String label, String value) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(
+          label,
+          style: TextStyle(
+            fontSize: 12,
+            color: Colors.grey[600],
+            fontWeight: FontWeight.w500,
+          ),
+        ),
+        Text(
+          value,
+          style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+          overflow: TextOverflow.ellipsis,
+        ),
+      ],
+    );
+  }
+
+  Map<String, Color> _getCertificateColors(CertificateType type) {
+    switch (type) {
+      case CertificateType.camp3:
+        return {
+          'main': const Color(0xFF8B4513),
+          'light': const Color(0xFFD2691E),
+        };
+      case CertificateType.fullTrek:
+        return {
+          'main': const Color(0xFF4169E1),
+          'light': const Color(0xFF6495ED),
+        };
+      case CertificateType.peakConqueror:
+        return {
+          'main': const Color(0xFFFFD700),
+          'light': const Color(0xFFFFA500),
+        };
+    }
+  }
+
+  IconData _getCertificateIcon(CertificateType type) {
+    switch (type) {
+      case CertificateType.camp3:
+        return Icons.location_on;
+      case CertificateType.fullTrek:
+        return Icons.terrain;
+      case CertificateType.peakConqueror:
+        return Icons.emoji_events;
+    }
+  }
+
+  String _formatCertificateDate(DateTime date) {
+    return '${date.month}/${date.day}/${date.year}';
   }
 }
