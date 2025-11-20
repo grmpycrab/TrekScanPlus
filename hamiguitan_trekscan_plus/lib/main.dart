@@ -9,6 +9,7 @@ import 'services/firebase_auth_service.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'services/station_service.dart';
 import 'services/connectivity_service.dart';
+import 'services/booking_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -28,8 +29,24 @@ void main() async {
   runApp(const MyApp());
 }
 
-class MyApp extends StatelessWidget {
+class MyApp extends StatefulWidget {
   const MyApp({super.key});
+
+  @override
+  State<MyApp> createState() => _MyAppState();
+}
+
+class _MyAppState extends State<MyApp> {
+  @override
+  void initState() {
+    super.initState();
+    // Listen to auth changes and start booking status listener when user logs in
+    FirebaseAuthService.instance.authStateChanges.listen((user) {
+      if (user != null) {
+        BookingService.instance.startBookingStatusListener(user.uid);
+      }
+    });
+  }
 
   @override
   Widget build(BuildContext context) {

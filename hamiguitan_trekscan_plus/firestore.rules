@@ -55,11 +55,14 @@ service cloud.firestore {
       // Note: The application is responsible for filtering to userId or admin status
       allow read: if request.auth != null;
 
-      // Update: owners can update their booking while it's still pending (e.g., upload attachments, cancel)
-      // Admins can also update.
+      // Update: owners can update their booking while it's pending or declined (to allow resubmission)
+      // Admins can update anytime
       allow update: if request.auth != null && (
-        // owner may update while booking is pending
-        (resource.data.userId == request.auth.uid && resource.data.status == 'pending')
+        // owner may update while booking is pending or declined/rejected
+        (resource.data.userId == request.auth.uid && 
+         (resource.data.status == 'pending' || 
+          resource.data.status == 'declined' || 
+          resource.data.status == 'rejected'))
         // admin override
         || request.auth.token.admin == true
       );

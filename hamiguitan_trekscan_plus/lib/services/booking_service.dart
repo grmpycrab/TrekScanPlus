@@ -6,6 +6,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:file_picker/file_picker.dart';
 import '../models/booking_model.dart';
+import '../models/notification_model.dart';
+import 'notification_services.dart';
 
 class BookingService {
   BookingService._();
@@ -13,6 +15,7 @@ class BookingService {
 
   final _firestore = FirebaseFirestore.instance;
   final _storage = FirebaseStorage.instance;
+  final _notificationService = NotificationService();
 
   /// Create a booking document and return its generated id
   Future<String> createBooking(BookingModel booking) async {
@@ -29,6 +32,7 @@ class BookingService {
     String? affiliation,
     int? numberOfPorters,
     String? notes,
+    bool resubmitDeclined = false,
   }) async {
     final updateData = <String, dynamic>{
       'updatedAt': FieldValue.serverTimestamp(),
@@ -41,6 +45,12 @@ class BookingService {
     }
     // Allow clearing notes by sending null
     updateData['notes'] = notes;
+
+    // If resubmitting a declined booking, reset status to pending and clear admin notes
+    if (resubmitDeclined) {
+      updateData['status'] = 'pending';
+      updateData['adminNotes'] = null;
+    }
 
     await _firestore.collection('bookings').doc(bookingId).update(updateData);
   }
@@ -181,6 +191,44 @@ class BookingService {
         .map((snap) => snap.docs.map((d) => BookingModel.fromDoc(d)).toList());
   }
 
+  /// Start listening to booking status changes for notifications
+  /// Call this when user logs in to monitor booking updates from admin
+  void startBookingStatusListener(String userId) {
+    final Map<String, String> _lastKnownStatus = {};
+
+    _firestore
+        .collection('bookings')
+        .where('userId', isEqualTo: userId)
+        .snapshots()
+        .listen((snapshot) {
+          for (final change in snapshot.docChanges) {
+            if (change.type == DocumentChangeType.modified) {
+              final booking = BookingModel.fromDoc(change.doc);
+              final bookingId = booking.id!;
+              final currentStatus = booking.status;
+              final previousStatus = _lastKnownStatus[bookingId];
+
+              // Only send notification if status actually changed
+              if (previousStatus != null && previousStatus != currentStatus) {
+                _sendBookingStatusNotification(
+                  userId: userId,
+                  status: currentStatus,
+                  adminNotes: booking.adminNotes,
+                );
+              }
+
+              _lastKnownStatus[bookingId] = currentStatus;
+            } else if (change.type == DocumentChangeType.added) {
+              // Track initial status for new bookings
+              final booking = BookingModel.fromDoc(change.doc);
+              if (booking.id != null) {
+                _lastKnownStatus[booking.id!] = booking.status;
+              }
+            }
+          }
+        });
+  }
+
   Future<void> cancelBooking(String bookingId) async {
     await _firestore.collection('bookings').doc(bookingId).update({
       'status': 'cancelled',
@@ -188,11 +236,107 @@ class BookingService {
     });
   }
 
+  /// Update booking status (for admin approval/decline) with notification
+  Future<void> updateBookingStatus(
+    String bookingId, {
+    required String status,
+    String? adminNotes,
+  }) async {
+    // Get booking to retrieve userId for notification
+    final bookingDoc = await _firestore
+        .collection('bookings')
+        .doc(bookingId)
+        .get();
+    if (!bookingDoc.exists) {
+      throw Exception('Booking not found');
+    }
+
+    final userId = bookingDoc.data()?['userId'] as String?;
+    if (userId == null) {
+      throw Exception('User ID not found in booking');
+    }
+
+    // Update booking status
+    final updateData = <String, dynamic>{
+      'status': status,
+      'updatedAt': FieldValue.serverTimestamp(),
+    };
+    if (adminNotes != null) {
+      updateData['adminNotes'] = adminNotes;
+    }
+
+    await _firestore.collection('bookings').doc(bookingId).update(updateData);
+
+    // Send notification based on status
+    await _sendBookingStatusNotification(
+      userId: userId,
+      status: status,
+      adminNotes: adminNotes,
+    );
+  }
+
+  /// Send notification when booking status changes
+  Future<void> _sendBookingStatusNotification({
+    required String userId,
+    required String status,
+    String? adminNotes,
+  }) async {
+    String title;
+    String message;
+    NotificationType type;
+
+    switch (status.toLowerCase()) {
+      case 'approved':
+        title = 'Booking Approved ✓';
+        message =
+            adminNotes ??
+            'Your trek booking has been approved! Get ready for your adventure.';
+        type = NotificationType.success;
+        break;
+      case 'declined':
+      case 'rejected':
+        title = 'Booking Declined';
+        message =
+            adminNotes ??
+            'Your trek booking has been declined. Please contact support for more information.';
+        type = NotificationType.alert;
+        break;
+      case 'pending':
+        title = 'Booking Under Review';
+        message = 'Your booking is being reviewed by our team.';
+        type = NotificationType.info;
+        break;
+      case 'cancelled':
+        title = 'Booking Cancelled';
+        message = 'Your trek booking has been cancelled.';
+        type = NotificationType.warning;
+        break;
+      default:
+        title = 'Booking Status Updated';
+        message =
+            adminNotes ?? 'Your booking status has been updated to: $status';
+        type = NotificationType.info;
+    }
+
+    final notification = NotificationModel(
+      id: '', // Will be generated by Firestore
+      title: title,
+      message: message,
+      type: type,
+      timestamp: DateTime.now(),
+      isRead: false,
+    );
+
+    try {
+      await _notificationService.sendNotificationForUser(userId, notification);
+    } catch (e) {
+      // Log error but don't fail the booking update
+      print('Failed to send booking notification: $e');
+    }
+  }
+
   /// Delete an attachment from both Storage and Firestore
-  Future<void> deleteAttachment(
-    String bookingId,
-    Attachment attachment,
-  ) async {
+  Future<void> deleteAttachment(String bookingId, Attachment attachment) async {
     try {
       // Delete from Storage
       final storageRef = _storage.ref(attachment.storagePath);
