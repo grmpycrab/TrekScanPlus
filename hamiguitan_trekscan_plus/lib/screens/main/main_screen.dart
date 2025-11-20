@@ -35,9 +35,8 @@ class _MainScreenState extends State<MainScreen> {
   Future<void> _initializeAchievements() async {
     try {
       await _achievementService.init();
-      print('AchievementService initialized in MainScreen');
     } catch (e) {
-      print('Error initializing AchievementService: $e');
+      // Silent fail - non-critical
     }
   }
 

@@ -28,12 +28,7 @@ class CertificateEmailService {
 
     try {
       final user = _auth.currentUser;
-      if (user == null || user.email == null) {
-        print('❌ No user email available');
-        return false;
-      }
-
-      print('📧 Preparing to send certificate email to: ${user.email}');
+      if (user == null || user.email == null) return false;
 
       // Generate PDF
       final pdfFile = await _pdfService.generateCertificatePdf(certificate);
@@ -45,10 +40,7 @@ class CertificateEmailService {
           dotenv.env['APP_EMAIL_FROM'] ?? 'noreply@hamiguitan-trek.com';
       final appName = dotenv.env['APP_NAME'] ?? 'Mt. Hamiguitan TrekScan';
 
-      if (smtpEmail.isEmpty || smtpPassword.isEmpty) {
-        print('❌ SMTP credentials not configured in .env file');
-        return false;
-      }
+      if (smtpEmail.isEmpty || smtpPassword.isEmpty) return false;
 
       final smtpServer = gmail(smtpEmail, smtpPassword);
 
@@ -62,43 +54,19 @@ class CertificateEmailService {
         ..attachments.add(FileAttachment(pdfFile));
 
       // Send email
-      final sendReport = await send(message, smtpServer);
-      print('✅ Email sent successfully: ${sendReport.toString()}');
-
+      await send(message, smtpServer);
       return true;
     } on MailerException catch (e) {
-      print('❌ Email sending failed: ${e.message}');
-
       // Check for authentication errors
       if (e.message.contains('Authentication Failed') ||
           e.message.contains('BadCredentials')) {
-        print('');
-        print('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-        print('⚠️  GMAIL APP PASSWORD REQUIRED');
-        print('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-        print('');
-        print('Gmail is blocking the login attempt. You need to:');
-        print('');
-        print('1. Enable 2-Factor Authentication on your Google Account');
-        print('   https://myaccount.google.com/security');
-        print('');
-        print('2. Generate an App Password (not your regular password)');
-        print('   https://myaccount.google.com/apppasswords');
-        print('');
-        print('3. Update your .env file with the App Password:');
-        print('   SMTP_EMAIL=$smtpEmail');
-        print('   SMTP_PASSWORD=xxxx xxxx xxxx xxxx (16 chars, no spaces)');
-        print('');
-        print('4. Restart the app to reload environment variables');
-        print('');
-        print('See ENV_SETUP.md for detailed instructions.');
-        print('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-        print('');
+        print(
+          '\n⚠️  Gmail App Password required. See ENV_SETUP.md for setup instructions.',
+        );
+        print('   Generate at: https://myaccount.google.com/apppasswords\n');
       }
-
       return false;
     } catch (e) {
-      print('❌ Error sending certificate email: $e');
       return false;
     }
   }
@@ -255,14 +223,7 @@ class CertificateEmailService {
 
     try {
       final user = _auth.currentUser;
-      if (user == null || user.email == null) {
-        print('❌ No user email available');
-        return false;
-      }
-
-      print(
-        '📧 Preparing to send ${certificates.length} certificates to: ${user.email}',
-      );
+      if (user == null || user.email == null) return false;
 
       // Generate all PDFs
       final List<File> pdfFiles = [];
@@ -302,12 +263,9 @@ class CertificateEmailService {
       }
 
       // Send
-      final sendReport = await send(message, smtpServer);
-      print('✅ Bulk email sent successfully: ${sendReport.toString()}');
-
+      await send(message, smtpServer);
       return true;
     } catch (e) {
-      print('❌ Error sending bulk certificate email: $e');
       return false;
     }
   }

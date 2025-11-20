@@ -81,11 +81,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
         if (mounted) {
           setState(() {});
         }
-        print('ECertificateService initialized in ProfileScreen');
-      } else {
-        print(
-          'DEBUG: _firebaseUser is null, skipping certificate initialization',
-        );
       }
     } catch (e, stackTrace) {
       print('ERROR initializing ECertificateService in ProfileScreen: $e');
