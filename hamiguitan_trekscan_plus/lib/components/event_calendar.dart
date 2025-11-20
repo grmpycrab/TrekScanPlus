@@ -168,15 +168,15 @@ class _EventCalendarState extends State<EventCalendar> {
       textColor = Colors.grey.shade300;
     } else if (actualTrekDay.isAvailable) {
       textColor = Colors.green;
-      backgroundColor = Colors.green.withOpacity(0.1);
+      backgroundColor = Colors.green.withValues(alpha: 0.1);
       borderColor = Colors.green;
     } else if (actualTrekDay.status == TrekDayStatus.critical) {
       textColor = Colors.orange;
-      backgroundColor = Colors.orange.withOpacity(0.1);
+      backgroundColor = Colors.orange.withValues(alpha: 0.1);
       borderColor = Colors.orange;
     } else if (actualTrekDay.status == TrekDayStatus.full) {
       textColor = Colors.red;
-      backgroundColor = Colors.red.withOpacity(0.1);
+      backgroundColor = Colors.red.withValues(alpha: 0.1);
       borderColor = Colors.red;
     } else {
       textColor = Colors.grey;

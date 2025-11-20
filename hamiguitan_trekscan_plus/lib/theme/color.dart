@@ -30,10 +30,10 @@ class AppColors {
   static const Color inputBorder = Color(0xFF252B30);
 
   // Shadow Colors
-  static Color shadowLight = Colors.black.withOpacity(0.05);
-  static Color shadowMedium = Colors.black.withOpacity(0.1);
-  static Color shadowDark = Colors.black.withOpacity(0.2);
-  static Color shadowOverlay = Colors.black.withOpacity(0.7);
+  static Color shadowLight = Colors.black.withValues(alpha: 0.05);
+  static Color shadowMedium = Colors.black.withValues(alpha: 0.1);
+  static Color shadowDark = Colors.black.withValues(alpha: 0.2);
+  static Color shadowOverlay = Colors.black.withValues(alpha: 0.7);
 
   // Notification Colors
   static const Color notificationDot = Colors.red;

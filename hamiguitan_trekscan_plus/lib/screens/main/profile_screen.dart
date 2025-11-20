@@ -413,10 +413,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   child: Container(
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: achievement.getColor().withOpacity(0.1),
+                      color: achievement.getColor().withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(12),
                       border: Border.all(
-                        color: achievement.getColor().withOpacity(0.3),
+                        color: achievement.getColor().withValues(alpha: 0.3),
                       ),
                     ),
                     child: Row(
@@ -426,7 +426,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           height: 48,
                           decoration: BoxDecoration(
                             shape: BoxShape.circle,
-                            color: achievement.getColor().withOpacity(0.2),
+                            color: achievement.getColor().withValues(
+                              alpha: 0.2,
+                            ),
                           ),
                           child: Icon(
                             achievement.getIconData(),
@@ -568,12 +570,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
                         color: isUnlocked
-                            ? achievement.getColor().withOpacity(0.1)
+                            ? achievement.getColor().withValues(alpha: 0.1)
                             : Colors.grey[100],
                         borderRadius: BorderRadius.circular(12),
                         border: Border.all(
                           color: isUnlocked
-                              ? achievement.getColor().withOpacity(0.3)
+                              ? achievement.getColor().withValues(alpha: 0.3)
                               : Colors.grey[300]!,
                         ),
                       ),
@@ -585,7 +587,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             decoration: BoxDecoration(
                               shape: BoxShape.circle,
                               color: isUnlocked
-                                  ? achievement.getColor().withOpacity(0.2)
+                                  ? achievement.getColor().withValues(
+                                      alpha: 0.2,
+                                    )
                                   : Colors.grey[300],
                             ),
                             child: isUnlocked
@@ -821,7 +825,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           borderRadius: BorderRadius.circular(20),
           boxShadow: [
             BoxShadow(
-              color: Colors.amber.withOpacity(0.3),
+              color: Colors.amber.withValues(alpha: 0.3),
               blurRadius: 8,
               offset: const Offset(0, 4),
             ),
@@ -922,7 +926,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
-              color: colors['main']!.withOpacity(0.2),
+              color: colors['main']!.withValues(alpha: 0.2),
               blurRadius: 12,
               offset: const Offset(0, 6),
             ),
@@ -954,7 +958,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           'Earned ${_formatCertificateDate(certificate.dateEarned)}',
                           style: TextStyle(
                             fontSize: 12,
-                            color: Colors.white.withOpacity(0.9),
+                            color: Colors.white.withValues(alpha: 0.9),
                           ),
                         ),
                       ],
@@ -1007,7 +1011,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
         const SizedBox(height: 2),
         Text(
           label,
-          style: TextStyle(fontSize: 10, color: Colors.white.withOpacity(0.8)),
+          style: TextStyle(
+            fontSize: 10,
+            color: Colors.white.withValues(alpha: 0.8),
+          ),
         ),
       ],
     );

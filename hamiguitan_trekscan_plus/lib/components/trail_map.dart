@@ -182,7 +182,7 @@ class _TrailMapState extends State<TrailMap> {
                       height: 6,
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
-                        color: Colors.white.withOpacity(0.9),
+                        color: Colors.white.withValues(alpha: 0.9),
                       ),
                     ),
                   ),
@@ -328,7 +328,7 @@ class _TrailMapState extends State<TrailMap> {
                               padding: const EdgeInsets.all(12),
                               decoration: BoxDecoration(
                                 color: isCurrentStation
-                                    ? Colors.red.withOpacity(0.1)
+                                    ? Colors.red.withValues(alpha: 0.1)
                                     : Colors.grey[100],
                                 border: Border.all(
                                   color: isCurrentStation

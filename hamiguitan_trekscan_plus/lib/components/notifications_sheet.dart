@@ -107,10 +107,10 @@ class _NotificationTile extends StatelessWidget {
 
   Color _getBackgroundColor() {
     return switch (notification.type) {
-      NotificationType.success => Colors.green.withOpacity(0.1),
-      NotificationType.warning => Colors.orange.withOpacity(0.1),
-      NotificationType.alert => Colors.red.withOpacity(0.1),
-      NotificationType.info => Colors.blue.withOpacity(0.1),
+      NotificationType.success => Colors.green.withValues(alpha: 0.1),
+      NotificationType.warning => Colors.orange.withValues(alpha: 0.1),
+      NotificationType.alert => Colors.red.withValues(alpha: 0.1),
+      NotificationType.info => Colors.blue.withValues(alpha: 0.1),
     };
   }
 

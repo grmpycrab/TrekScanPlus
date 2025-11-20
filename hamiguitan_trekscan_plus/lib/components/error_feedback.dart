@@ -28,7 +28,7 @@ class ErrorFeedback extends StatelessWidget {
         borderRadius: BorderRadius.circular(8),
         boxShadow: [
           BoxShadow(
-            color: colors['border']!.withOpacity(0.2),
+            color: colors['border']!.withValues(alpha: 0.2),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
