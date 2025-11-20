@@ -133,7 +133,7 @@ class _StationDetailScreenState extends State<StationDetailScreen> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
-        color: Colors.black.withOpacity(0.6),
+        color: Colors.black.withValues(alpha: 0.6),
         borderRadius: BorderRadius.circular(8),
       ),
       child: Row(
@@ -211,11 +211,11 @@ class _StationDetailScreenState extends State<StationDetailScreen> {
                   end: Alignment.bottomCenter,
                   stops: const [0.0, 0.3, 0.5, 0.7, 1.0],
                   colors: [
-                    Colors.black.withOpacity(0.3),
+                    Colors.black.withValues(alpha: 0.3),
                     Colors.transparent,
                     Colors.transparent,
-                    Colors.black.withOpacity(0.5),
-                    Colors.black.withOpacity(0.8),
+                    Colors.black.withValues(alpha: 0.5),
+                    Colors.black.withValues(alpha: 0.8),
                   ],
                 ),
               ),
@@ -231,9 +231,9 @@ class _StationDetailScreenState extends State<StationDetailScreen> {
                     begin: Alignment.bottomCenter,
                     end: Alignment.topCenter,
                     colors: [
-                      Colors.black.withOpacity(0.8),
-                      Colors.black.withOpacity(0.6),
-                      Colors.black.withOpacity(0.3),
+                      Colors.black.withValues(alpha: 0.8),
+                      Colors.black.withValues(alpha: 0.6),
+                      Colors.black.withValues(alpha: 0.3),
                       Colors.transparent,
                     ],
                   ),
@@ -334,7 +334,7 @@ class _StationDetailScreenState extends State<StationDetailScreen> {
                 borderRadius: BorderRadius.circular(16),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.05),
+                    color: Colors.black.withValues(alpha: 0.05),
                     blurRadius: 6,
                     offset: const Offset(0, 2),
                   ),
@@ -388,7 +388,7 @@ class _StationDetailScreenState extends State<StationDetailScreen> {
                 borderRadius: BorderRadius.circular(16),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.05),
+                    color: Colors.black.withValues(alpha: 0.05),
                     blurRadius: 6,
                     offset: const Offset(0, 2),
                   ),
@@ -559,10 +559,12 @@ class _StationDetailScreenState extends State<StationDetailScreen> {
                   margin: const EdgeInsets.only(bottom: 12.0),
                   padding: const EdgeInsets.all(12.0),
                   decoration: BoxDecoration(
-                    color: _getWarningColor(warning.key).withOpacity(0.1),
+                    color: _getWarningColor(warning.key).withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(8),
                     border: Border.all(
-                      color: _getWarningColor(warning.key).withOpacity(0.3),
+                      color: _getWarningColor(
+                        warning.key,
+                      ).withValues(alpha: 0.3),
                       width: 1,
                     ),
                   ),
@@ -666,7 +668,7 @@ class _StationDetailScreenState extends State<StationDetailScreen> {
                         height: 6,
                         margin: const EdgeInsets.only(top: 8),
                         decoration: BoxDecoration(
-                          color: AppColors.primary.withOpacity(0.5),
+                          color: AppColors.primary.withValues(alpha: 0.5),
                           shape: BoxShape.circle,
                         ),
                       ),
@@ -852,7 +854,7 @@ class _StationDetailScreenState extends State<StationDetailScreen> {
                           decoration: BoxDecoration(
                             color: _getDifficultyColor(
                               nextStationData!.difficulty,
-                            ).withOpacity(0.2),
+                            ).withValues(alpha: 0.2),
                             borderRadius: BorderRadius.circular(4),
                           ),
                           child: Text(
@@ -922,7 +924,7 @@ class _StationDetailScreenState extends State<StationDetailScreen> {
                   vertical: 12,
                 ),
                 decoration: BoxDecoration(
-                  color: AppColors.primary.withOpacity(0.1),
+                  color: AppColors.primary.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Row(

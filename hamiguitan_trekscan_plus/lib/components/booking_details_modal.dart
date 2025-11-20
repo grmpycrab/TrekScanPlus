@@ -30,7 +30,7 @@ class BookingDetailsModal extends StatelessWidget {
     return GestureDetector(
       onTap: onClose,
       child: Container(
-        color: Colors.black.withOpacity(0.5),
+        color: Colors.black.withValues(alpha: 0.5),
         child: GestureDetector(
           onTap: () {},
           child: Center(
@@ -46,7 +46,7 @@ class BookingDetailsModal extends StatelessWidget {
                   borderRadius: BorderRadius.circular(20),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.3),
+                      color: Colors.black.withValues(alpha: 0.3),
                       blurRadius: 10,
                       offset: const Offset(0, 5),
                     ),
@@ -239,8 +239,9 @@ class BookingDetailsModal extends StatelessWidget {
                             child: FilledButton(
                               style: FilledButton.styleFrom(
                                 backgroundColor: AppColors.primary,
-                                padding:
-                                    const EdgeInsets.symmetric(vertical: 12),
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 12,
+                                ),
                               ),
                               onPressed: onClose,
                               child: const Text('Close'),
@@ -269,7 +270,7 @@ class BookingDetailsModal extends StatelessWidget {
       decoration: BoxDecoration(
         color: statusColor,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: statusTextColor.withOpacity(0.3)),
+        border: Border.all(color: statusTextColor.withValues(alpha: 0.3)),
       ),
       child: Row(
         children: [

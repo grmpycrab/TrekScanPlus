@@ -80,14 +80,14 @@ class _AchievementUnlockNotificationState
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
                 colors: [
-                  widget.achievement.getColor().withOpacity(0.9),
+                  widget.achievement.getColor().withValues(alpha: 0.9),
                   widget.achievement.getColor(),
                 ],
               ),
               borderRadius: BorderRadius.circular(20),
               boxShadow: [
                 BoxShadow(
-                  color: widget.achievement.getColor().withOpacity(0.4),
+                  color: widget.achievement.getColor().withValues(alpha: 0.4),
                   blurRadius: 20,
                   spreadRadius: 5,
                 ),
@@ -104,7 +104,7 @@ class _AchievementUnlockNotificationState
                     height: 100,
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      color: Colors.white.withOpacity(0.2),
+                      color: Colors.white.withValues(alpha: 0.2),
                     ),
                     child: Icon(
                       widget.achievement.getIconData(),
@@ -143,7 +143,7 @@ class _AchievementUnlockNotificationState
                     widget.achievement.description,
                     textAlign: TextAlign.center,
                     style: TextStyle(
-                      color: Colors.white.withOpacity(0.9),
+                      color: Colors.white.withValues(alpha: 0.9),
                       fontSize: 14,
                       height: 1.5,
                     ),
@@ -157,9 +157,11 @@ class _AchievementUnlockNotificationState
                       vertical: 8,
                     ),
                     decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.2),
+                      color: Colors.white.withValues(alpha: 0.2),
                       borderRadius: BorderRadius.circular(20),
-                      border: Border.all(color: Colors.white.withOpacity(0.5)),
+                      border: Border.all(
+                        color: Colors.white.withValues(alpha: 0.5),
+                      ),
                     ),
                     child: Text(
                       widget.achievement.rarity.toUpperCase(),
@@ -180,10 +182,10 @@ class _AchievementUnlockNotificationState
                       width: double.infinity,
                       padding: const EdgeInsets.symmetric(vertical: 12),
                       decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.25),
+                        color: Colors.white.withValues(alpha: 0.25),
                         borderRadius: BorderRadius.circular(12),
                         border: Border.all(
-                          color: Colors.white.withOpacity(0.3),
+                          color: Colors.white.withValues(alpha: 0.3),
                         ),
                       ),
                       child: const Text(
@@ -288,13 +290,13 @@ class _AchievementUnlockOverlayState extends State<AchievementUnlockOverlay>
                   end: Alignment.bottomRight,
                   colors: [
                     widget.achievement.getColor(),
-                    widget.achievement.getColor().withOpacity(0.8),
+                    widget.achievement.getColor().withValues(alpha: 0.8),
                   ],
                 ),
                 borderRadius: BorderRadius.circular(16),
                 boxShadow: [
                   BoxShadow(
-                    color: widget.achievement.getColor().withOpacity(0.4),
+                    color: widget.achievement.getColor().withValues(alpha: 0.4),
                     blurRadius: 12,
                     spreadRadius: 2,
                   ),
@@ -309,7 +311,7 @@ class _AchievementUnlockOverlayState extends State<AchievementUnlockOverlay>
                       height: 60,
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
-                        color: Colors.white.withOpacity(0.2),
+                        color: Colors.white.withValues(alpha: 0.2),
                       ),
                       child: Icon(
                         widget.achievement.getIconData(),
@@ -351,7 +353,7 @@ class _AchievementUnlockOverlayState extends State<AchievementUnlockOverlay>
                       onTap: _slideOut,
                       child: Icon(
                         Icons.close,
-                        color: Colors.white.withOpacity(0.7),
+                        color: Colors.white.withValues(alpha: 0.7),
                         size: 24,
                       ),
                     ),

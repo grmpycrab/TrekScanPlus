@@ -33,32 +33,22 @@ class GeofencingService {
   /// Get current user location
   static Future<Position?> getCurrentLocation() async {
     try {
-      print('Getting current location...');
-
       // Check permission first
       final hasPermission = await requestLocationPermission();
-      if (!hasPermission) {
-        print('Location permission denied');
-        return null;
-      }
-      print('Location permission granted');
+      if (!hasPermission) return null;
 
       // Check if services are enabled
       final serviceEnabled = await isLocationServiceEnabled();
       if (!serviceEnabled) {
-        print('Location services are disabled');
         throw Exception('Location services are disabled.');
       }
-      print('Location services enabled');
 
       final position = await Geolocator.getCurrentPosition(
         desiredAccuracy: LocationAccuracy.best,
         timeLimit: const Duration(seconds: 10),
       );
-      print('Got position: (${position.latitude}, ${position.longitude})');
       return position;
     } catch (e) {
-      print('Error getting current location: $e');
       return null;
     }
   }
@@ -102,24 +92,15 @@ class GeofencingService {
     required double radiusMeters,
   }) async {
     try {
-      print(
-        'Checking geofence for station at ($stationLat, $stationLng) with radius $radiusMeters m',
-      );
-
       final userPosition = await getCurrentLocation();
 
       if (userPosition == null) {
-        print('Failed to get user location');
         return GeofenceCheckResult(
           isWithinGeofence: false,
           distanceMeters: null,
           errorMessage: 'Unable to get current location',
         );
       }
-
-      print(
-        'User location: (${userPosition.latitude}, ${userPosition.longitude})',
-      );
 
       final distance = calculateDistance(
         userLat: userPosition.latitude,
@@ -130,8 +111,6 @@ class GeofencingService {
 
       final isWithin = distance <= radiusMeters;
 
-      print('Distance to station: $distance m, Within geofence: $isWithin');
-
       return GeofenceCheckResult(
         isWithinGeofence: isWithin,
         distanceMeters: distance,
@@ -139,7 +118,6 @@ class GeofencingService {
         userLng: userPosition.longitude,
       );
     } catch (e) {
-      print('Geofence check failed: $e');
       return GeofenceCheckResult(
         isWithinGeofence: false,
         distanceMeters: null,
@@ -159,19 +137,11 @@ class GeofencingService {
   /// Parse coordinates from string format "N:06°44'10.65'' E:126°08'29.99''"
   static Map<String, double>? parseCoordinates(String coordinates) {
     try {
-      print('Parsing coordinates: $coordinates');
-
       // Handle invalid coordinates
-      if (coordinates.contains('--') || coordinates.isEmpty) {
-        print('Invalid coordinates format');
-        return null;
-      }
+      if (coordinates.contains('--') || coordinates.isEmpty) return null;
 
       final parts = coordinates.split(' ');
-      if (parts.length < 2) {
-        print('Not enough parts in coordinates');
-        return null;
-      }
+      if (parts.length < 2) return null;
 
       final latStr = parts[0].trim();
       final lngStr = parts[1].trim();
@@ -179,15 +149,10 @@ class GeofencingService {
       final lat = _parseCoordinate(latStr);
       final lng = _parseCoordinate(lngStr);
 
-      if (lat == null || lng == null) {
-        print('Failed to parse latitude ($lat) or longitude ($lng)');
-        return null;
-      }
+      if (lat == null || lng == null) return null;
 
-      print('Successfully parsed coordinates - Lat: $lat, Lng: $lng');
       return {'latitude': lat, 'longitude': lng};
     } catch (e) {
-      print('Error parsing coordinates: $e');
       return null;
     }
   }
@@ -196,26 +161,19 @@ class GeofencingService {
   static double? _parseCoordinate(String coord) {
     try {
       // Format: "N:06°44'10.65''" or "E:126°08'29.99''"
-      print('Parsing single coordinate: $coord');
-
       // Extract the direction (N, S, E, W)
       final direction = coord[0].toUpperCase();
 
       // Remove direction and special characters
-      // First, remove the direction letter and colon
       String cleanCoord = coord.substring(1).replaceAll(':', '');
-
-      print('After direction removal: $cleanCoord');
 
       // Replace all special characters with spaces
       cleanCoord = cleanCoord
           .replaceAll('°', ' ')
           .replaceAll("'", ' ')
           .replaceAll('"', ' ')
-          .replaceAll("''", ' ') // Handle double quotes
+          .replaceAll("''", ' ')
           .trim();
-
-      print('After special char removal: $cleanCoord');
 
       // Split by spaces and filter empty strings
       final parts = cleanCoord
@@ -223,18 +181,11 @@ class GeofencingService {
           .where((p) => p.isNotEmpty)
           .toList();
 
-      print('Parsed parts: $parts (count: ${parts.length})');
-
-      if (parts.length < 3) {
-        print('Invalid coordinate parts: $parts');
-        return null;
-      }
+      if (parts.length < 3) return null;
 
       final degrees = double.tryParse(parts[0]) ?? 0.0;
       final minutes = double.tryParse(parts[1]) ?? 0.0;
       final seconds = double.tryParse(parts[2]) ?? 0.0;
-
-      print('Degrees: $degrees, Minutes: $minutes, Seconds: $seconds');
 
       double result = degrees + (minutes / 60) + (seconds / 3600);
 
@@ -243,10 +194,8 @@ class GeofencingService {
         result = -result;
       }
 
-      print('Final coordinate value: $result');
       return result;
     } catch (e) {
-      print('Error parsing single coordinate: $e');
       return null;
     }
   }

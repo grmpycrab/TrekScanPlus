@@ -25,7 +25,7 @@ class BadgeCard extends StatelessWidget {
           borderRadius: BorderRadius.circular(12),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.08),
+              color: Colors.black.withValues(alpha: 0.08),
               blurRadius: 8,
               offset: const Offset(0, 2),
             ),
@@ -42,7 +42,7 @@ class BadgeCard extends StatelessWidget {
                   width: 60,
                   height: 60,
                   decoration: BoxDecoration(
-                    color: badge.getColor().withOpacity(0.2),
+                    color: badge.getColor().withValues(alpha: 0.2),
                     shape: BoxShape.circle,
                   ),
                   child: Icon(
@@ -84,7 +84,7 @@ class BadgeCard extends StatelessWidget {
             if (!isAcquired)
               Container(
                 decoration: BoxDecoration(
-                  color: Colors.black.withOpacity(0.4),
+                  color: Colors.black.withValues(alpha: 0.4),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Center(
@@ -177,7 +177,7 @@ class BadgeDetailScreen extends StatelessWidget {
           width: 120,
           height: 120,
           decoration: BoxDecoration(
-            color: badge.getColor().withOpacity(0.2),
+            color: badge.getColor().withValues(alpha: 0.2),
             shape: BoxShape.circle,
             border: Border.all(color: badge.getColor(), width: 3),
           ),
@@ -188,7 +188,7 @@ class BadgeDetailScreen extends StatelessWidget {
               if (!isAcquired)
                 Container(
                   decoration: BoxDecoration(
-                    color: Colors.black.withOpacity(0.5),
+                    color: Colors.black.withValues(alpha: 0.5),
                     shape: BoxShape.circle,
                   ),
                   child: const Icon(Icons.lock, color: Colors.white, size: 40),
@@ -206,7 +206,7 @@ class BadgeDetailScreen extends StatelessWidget {
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
           decoration: BoxDecoration(
-            color: badge.getColor().withOpacity(0.2),
+            color: badge.getColor().withValues(alpha: 0.2),
             borderRadius: BorderRadius.circular(20),
           ),
           child: Text(
@@ -223,8 +223,8 @@ class BadgeDetailScreen extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
           decoration: BoxDecoration(
             color: isAcquired
-                ? Colors.green.withOpacity(0.2)
-                : Colors.grey.withOpacity(0.2),
+                ? Colors.green.withValues(alpha: 0.2)
+                : Colors.grey.withValues(alpha: 0.2),
             borderRadius: BorderRadius.circular(20),
             border: Border.all(
               color: isAcquired ? Colors.green : Colors.grey,
@@ -263,7 +263,7 @@ class BadgeDetailScreen extends StatelessWidget {
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.08),
+            color: Colors.black.withValues(alpha: 0.08),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -326,7 +326,7 @@ class BadgeDetailScreen extends StatelessWidget {
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.08),
+            color: Colors.black.withValues(alpha: 0.08),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
