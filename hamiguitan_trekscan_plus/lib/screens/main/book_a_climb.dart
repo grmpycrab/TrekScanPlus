@@ -11,7 +11,9 @@ import '../../models/climb.dart';
 import '../../components/climb_card.dart';
 
 class BookAClimbScreen extends StatefulWidget {
-  const BookAClimbScreen({super.key});
+  final String? highlightBookingId;
+
+  const BookAClimbScreen({super.key, this.highlightBookingId});
 
   @override
   State<BookAClimbScreen> createState() => _BookAClimbScreenState();
@@ -19,7 +21,9 @@ class BookAClimbScreen extends StatefulWidget {
 
 class _BookAClimbScreenState extends State<BookAClimbScreen> {
   final _formKey = GlobalKey<FormState>();
+  final ScrollController _scrollController = ScrollController();
   String _climbType = 'General';
+  bool _hasScrolledToBooking = false;
 
   // Store picked PlatformFile objects so we can upload bytes/paths to Firebase
   List<PlatformFile> _pickedFiles = [];
@@ -83,6 +87,13 @@ class _BookAClimbScreenState extends State<BookAClimbScreen> {
                   )
                   .toList();
             });
+
+            // Auto-scroll to highlighted booking
+            if (widget.highlightBookingId != null &&
+                !_hasScrolledToBooking &&
+                bookings.isNotEmpty) {
+              _scrollToBooking(widget.highlightBookingId!);
+            }
           });
     });
   }
@@ -90,6 +101,33 @@ class _BookAClimbScreenState extends State<BookAClimbScreen> {
   String _formatSelectedDate() {
     if (_selectedDate == null) return 'Select date';
     return '${_selectedDate!.year}-${_selectedDate!.month.toString().padLeft(2, '0')}-${_selectedDate!.day.toString().padLeft(2, '0')}';
+  }
+
+  void _scrollToBooking(String bookingId) {
+    _hasScrolledToBooking = true;
+
+    // Find the index of the booking
+    final index = _bookings.indexWhere((item) {
+      if (item is Map<String, dynamic>) {
+        final booking = item['booking'] as BookingModel?;
+        return booking?.id == bookingId;
+      }
+      return false;
+    });
+
+    if (index != -1) {
+      // Delay to ensure ListView is built
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (_scrollController.hasClients) {
+          final position = index * 200.0; // Approximate card height
+          _scrollController.animateTo(
+            position,
+            duration: const Duration(milliseconds: 500),
+            curve: Curves.easeInOut,
+          );
+        }
+      });
+    }
   }
 
   Future<void> _pickFiles() async {
@@ -288,6 +326,7 @@ class _BookAClimbScreenState extends State<BookAClimbScreen> {
     return RefreshIndicator(
       onRefresh: _refreshBookings,
       child: ListView.builder(
+        controller: _scrollController,
         padding: const EdgeInsets.all(16),
         itemCount: bookings.length,
         itemBuilder: (context, index) {

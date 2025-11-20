@@ -82,10 +82,77 @@ class _NotificationsSheetState extends State<NotificationsSheet> {
                     return _NotificationTile(
                       notification: notification,
                       onTap: () async {
-                        await _notificationService.markAsRead(
-                          widget.userId,
-                          notification.id,
-                        );
+                        print('🔔 Notification tapped: ${notification.title}');
+                        print('🔔 ActionType: ${notification.actionType}');
+                        print('🔔 ActionData: ${notification.actionData}');
+
+                        // Handle navigation first BEFORE marking as read
+                        if (notification.actionType != null &&
+                            notification.actionData != null) {
+                          print('🔔 Starting navigation...');
+
+                          // Close the notifications sheet immediately
+                          print('🔔 Closing notification sheet...');
+                          Navigator.pop(context);
+
+                          // Mark as read asynchronously (don't wait)
+                          _notificationService.markAsRead(
+                            widget.userId,
+                            notification.id,
+                          );
+
+                          // Navigate based on type
+                          if (notification.actionType == 'post') {
+                            final postId = notification.actionData!;
+                            print('🔔 Navigating to post: $postId');
+                            Navigator.pushNamed(
+                              context,
+                              '/post-detail',
+                              arguments: postId,
+                            );
+                          } else if (notification.actionType == 'booking') {
+                            final bookingId = notification.actionData!;
+                            print('🔔 Navigating to booking: $bookingId');
+                            Navigator.pushNamed(
+                              context,
+                              '/book-climb',
+                              arguments: bookingId,
+                            );
+                          }
+                        } else {
+                          // Backward compatibility for old notifications
+                          print(
+                            '🔔 No actionType/actionData - checking for old format',
+                          );
+
+                          // Detect old booking notifications by title
+                          final bookingTitles = [
+                            'Booking Approved',
+                            'Booking Declined',
+                            'Booking Under Review',
+                            'Booking Cancelled',
+                          ];
+
+                          if (bookingTitles.any(
+                            (title) => notification.title.contains(title),
+                          )) {
+                            print(
+                              '🔔 Old booking notification - navigating to book-climb',
+                            );
+                            Navigator.pop(
+                              context,
+                            ); // Already closed above, but just in case
+                            Navigator.pushNamed(context, '/book-climb');
+                          } else {
+                            print('🔔 No navigation available');
+                          }
+
+                          // Mark as read
+                          await _notificationService.markAsRead(
+                            widget.userId,
+                            notification.id,
+                          );
+                        }
                       },
                     );
                   },
@@ -136,54 +203,65 @@ class _NotificationTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final timeAgo = _getTimeAgo(notification.timestamp);
 
-    return Container(
-      margin: const EdgeInsets.symmetric(vertical: 4),
-      decoration: BoxDecoration(
-        color: notification.isRead ? Colors.transparent : _getBackgroundColor(),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: notification.isRead ? Colors.grey[300]! : _getIconColor(),
-          width: notification.isRead ? 0.5 : 1.5,
-        ),
-      ),
-      child: ListTile(
-        onTap: onTap,
-        leading: Icon(_getIcon(), color: _getIconColor()),
-        title: Text(
-          notification.title,
-          style: TextStyle(
-            fontWeight: notification.isRead
-                ? FontWeight.normal
-                : FontWeight.bold,
+    return GestureDetector(
+      onTap: () {
+        print('🔴🔴🔴 GESTURE DETECTOR TAPPED!!! 🔴🔴🔴');
+        onTap();
+      },
+      child: Container(
+        margin: const EdgeInsets.symmetric(vertical: 4),
+        decoration: BoxDecoration(
+          color: notification.isRead
+              ? Colors.transparent
+              : _getBackgroundColor(),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: notification.isRead ? Colors.grey[300]! : _getIconColor(),
+            width: notification.isRead ? 0.5 : 1.5,
           ),
         ),
-        subtitle: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const SizedBox(height: 4),
-            Text(
-              notification.message,
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
+        child: ListTile(
+          onTap: () {
+            print('🔴 ListTile tapped!');
+            onTap();
+          },
+          leading: Icon(_getIcon(), color: _getIconColor()),
+          title: Text(
+            notification.title,
+            style: TextStyle(
+              fontWeight: notification.isRead
+                  ? FontWeight.normal
+                  : FontWeight.bold,
             ),
-            const SizedBox(height: 4),
-            Text(
-              timeAgo,
-              style: TextStyle(fontSize: 11, color: Colors.grey[600]),
-            ),
-          ],
-        ),
-        isThreeLine: true,
-        trailing: notification.isRead
-            ? null
-            : Container(
-                width: 8,
-                height: 8,
-                decoration: const BoxDecoration(
-                  color: AppColors.primary,
-                  shape: BoxShape.circle,
-                ),
+          ),
+          subtitle: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const SizedBox(height: 4),
+              Text(
+                notification.message,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
               ),
+              const SizedBox(height: 4),
+              Text(
+                timeAgo,
+                style: TextStyle(fontSize: 11, color: Colors.grey[600]),
+              ),
+            ],
+          ),
+          isThreeLine: true,
+          trailing: notification.isRead
+              ? null
+              : Container(
+                  width: 8,
+                  height: 8,
+                  decoration: const BoxDecoration(
+                    color: AppColors.primary,
+                    shape: BoxShape.circle,
+                  ),
+                ),
+        ),
       ),
     );
   }

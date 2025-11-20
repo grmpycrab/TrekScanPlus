@@ -5,6 +5,8 @@ import 'firebase_options.dart';
 import 'screens/auth/login_screen.dart';
 import 'screens/auth/signup_screen.dart';
 import 'screens/main/main_screen.dart';
+import 'screens/main/book_a_climb.dart';
+import 'screens/social/post_detail_screen.dart';
 import 'services/firebase_auth_service.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'services/station_service.dart';
@@ -73,6 +75,28 @@ class _MyAppState extends State<MyApp> {
             '/login': (context) => const LoginScreen(),
             '/signup': (context) => const SignUpScreen(),
             '/main': (context) => const MainScreen(),
+          },
+          onGenerateRoute: (settings) {
+            // Handle routes with arguments
+            if (settings.name == '/post-detail') {
+              final postId = settings.arguments as String?;
+              if (postId != null) {
+                return MaterialPageRoute(
+                  builder: (context) => PostDetailScreen(postId: postId),
+                );
+              }
+            }
+
+            // Handle book-climb route with optional bookingId argument
+            if (settings.name == '/book-climb') {
+              final bookingId = settings.arguments as String?;
+              return MaterialPageRoute(
+                builder: (context) =>
+                    BookAClimbScreen(highlightBookingId: bookingId),
+              );
+            }
+
+            return null;
           },
         );
       },

@@ -9,6 +9,8 @@ class NotificationModel {
   final NotificationType type;
   final DateTime timestamp;
   bool isRead;
+  final String? actionType; // e.g., 'post', 'booking', 'achievement'
+  final String? actionData; // e.g., postId, bookingId
 
   NotificationModel({
     required this.id,
@@ -17,9 +19,21 @@ class NotificationModel {
     required this.type,
     required this.timestamp,
     this.isRead = false,
+    this.actionType,
+    this.actionData,
   });
 
   factory NotificationModel.fromMap(String id, Map<String, dynamic> map) {
+    // Handle backward compatibility with old notification format
+    String? actionType = map['actionType'] as String?;
+    String? actionData = map['actionData'] as String?;
+
+    // Migrate old 'like' and 'comment' notifications to new format
+    if (actionType == null && map['postId'] != null) {
+      actionType = 'post';
+      actionData = map['postId'] as String;
+    }
+
     return NotificationModel(
       id: id,
       title: map['title'] ?? '',
@@ -27,6 +41,8 @@ class NotificationModel {
       type: _typeFromString(map['type'] as String? ?? 'info'),
       timestamp: (map['timestamp'] as Timestamp?)?.toDate() ?? DateTime.now(),
       isRead: map['isRead'] as bool? ?? false,
+      actionType: actionType,
+      actionData: actionData,
     );
   }
 
@@ -37,6 +53,8 @@ class NotificationModel {
       'type': _typeToString(type),
       'timestamp': Timestamp.fromDate(timestamp),
       'isRead': isRead,
+      if (actionType != null) 'actionType': actionType,
+      if (actionData != null) 'actionData': actionData,
     };
   }
 

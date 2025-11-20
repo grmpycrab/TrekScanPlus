@@ -212,6 +212,7 @@ class BookingService {
               if (previousStatus != null && previousStatus != currentStatus) {
                 _sendBookingStatusNotification(
                   userId: userId,
+                  bookingId: bookingId,
                   status: currentStatus,
                   adminNotes: booking.adminNotes,
                 );
@@ -270,6 +271,7 @@ class BookingService {
     // Send notification based on status
     await _sendBookingStatusNotification(
       userId: userId,
+      bookingId: bookingId,
       status: status,
       adminNotes: adminNotes,
     );
@@ -278,6 +280,7 @@ class BookingService {
   /// Send notification when booking status changes
   Future<void> _sendBookingStatusNotification({
     required String userId,
+    required String bookingId,
     required String status,
     String? adminNotes,
   }) async {
@@ -325,6 +328,8 @@ class BookingService {
       type: type,
       timestamp: DateTime.now(),
       isRead: false,
+      actionType: 'booking',
+      actionData: bookingId,
     );
 
     try {

@@ -659,8 +659,9 @@ class SocialSharingService {
       // Try to find existing like notification for this post
       try {
         final existingNotifications = await notificationRef
-            .where('postId', isEqualTo: postId)
-            .where('type', isEqualTo: 'like')
+            .where('actionData', isEqualTo: postId)
+            .where('actionType', isEqualTo: 'post')
+            .where('title', isEqualTo: 'New Like')
             .orderBy('timestamp', descending: true)
             .limit(1)
             .get();
@@ -697,10 +698,11 @@ class SocialSharingService {
       final notifMap = {
         'title': 'New Like',
         'message': '$likerName liked your post',
-        'type': 'like',
+        'type': 'info',
         'timestamp': FieldValue.serverTimestamp(),
         'isRead': false,
-        'postId': postId,
+        'actionType': 'post',
+        'actionData': postId,
         'likers': [likerName],
       };
 
@@ -722,10 +724,11 @@ class SocialSharingService {
       final notifMap = {
         'title': 'New Comment',
         'message': '$commenterName commented on your post',
-        'type': 'comment',
+        'type': 'info',
         'timestamp': FieldValue.serverTimestamp(),
         'isRead': false,
-        'postId': postId,
+        'actionType': 'post',
+        'actionData': postId,
       };
 
       await _firestore
