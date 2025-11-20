@@ -4,12 +4,15 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/e_certificate.dart';
 import '../models/station_data.dart';
+import 'certificate_email_service.dart';
 
 class ECertificateService {
   static final ECertificateService _instance = ECertificateService._internal();
 
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final FirebaseAuth _auth = FirebaseAuth.instance;
+  final CertificateEmailService _emailService =
+      CertificateEmailService.instance;
   late SharedPreferences _prefs;
 
   List<ECertificate> _userCertificates = [];
@@ -27,10 +30,7 @@ class ECertificateService {
 
   /// Initialize the service
   Future<void> init({String? userId, SharedPreferences? prefs}) async {
-    if (_isInitialized) {
-      print('ECertificateService already initialized, skipping init()');
-      return;
-    }
+    if (_isInitialized) return;
 
     try {
       // Use current user ID if not provided
@@ -44,7 +44,6 @@ class ECertificateService {
         _prefs = await SharedPreferences.getInstance();
       }
 
-      print('ECertificateService initialized for user: $currentUserId');
       _isInitialized = true;
 
       // Load existing certificates from local storage
@@ -76,28 +75,15 @@ class ECertificateService {
     double? totalDistance,
     int? totalTimeMinutes,
   }) async {
-    print(
-      'DEBUG: checkAndAwardCertificate() called with ${visitedStations.length} stations',
-    );
-    if (visitedStations.isEmpty || _currentUserId == null) {
-      print(
-        'DEBUG: Early return - isEmpty=${visitedStations.isEmpty}, _currentUserId=$_currentUserId',
-      );
-      return null;
-    }
+    if (visitedStations.isEmpty || _currentUserId == null) return null;
 
     try {
       final stationCount = visitedStations.length;
-      print('🎯 ECertificate: Checking awards for $stationCount stations');
-      print('📍 Stations: ${visitedStations.map((s) => s.name).toList()}');
       ECertificate? lastAwardedCert;
 
       // Check for Peak Conqueror - Must have visited Station 14 (Peak)
       final hasStation14 = visitedStations.any(
         (s) => s.name.contains('Station 14') || s.name.contains('Peak'),
-      );
-      print(
-        '🏔️ Peak check: hasStation14=$hasStation14, alreadyHas=${_hasCertificate(CertificateType.peakConqueror)}',
       );
       if (hasStation14 && !_hasCertificate(CertificateType.peakConqueror)) {
         final cert = await _createAndAwardCertificate(
@@ -109,14 +95,10 @@ class ECertificateService {
           totalDistance: totalDistance ?? 0.0,
           totalTimeMinutes: totalTimeMinutes ?? 0,
         );
-        print('✓ Peak Conqueror certificate awarded!');
         lastAwardedCert = cert;
       }
 
       // Check for Full Trek - Must have visited 13+ stations
-      print(
-        '🌲 Full Trek check: stationCount=$stationCount (need >=13), alreadyHas=${_hasCertificate(CertificateType.fullTrek)}',
-      );
       if (stationCount >= 13 && !_hasCertificate(CertificateType.fullTrek)) {
         final cert = await _createAndAwardCertificate(
           CertificateType.fullTrek,
@@ -127,16 +109,12 @@ class ECertificateService {
           totalDistance: totalDistance ?? 0.0,
           totalTimeMinutes: totalTimeMinutes ?? 0,
         );
-        print('✓ Full Trek certificate awarded!');
         lastAwardedCert = cert;
       }
 
       // Check for Camp 3 (reached station 8 or higher)
       final reachedStation8 = visitedStations.any(
         (s) => s.name.contains('Camp 3') || s.name.contains('Station 8'),
-      );
-      print(
-        '⛺ Camp 3 check: reachedStation8=$reachedStation8, stationCount=$stationCount, alreadyHas=${_hasCertificate(CertificateType.camp3)}',
       );
       if ((reachedStation8 || stationCount >= 8) &&
           !_hasCertificate(CertificateType.camp3)) {
@@ -149,7 +127,6 @@ class ECertificateService {
           totalDistance: totalDistance ?? 0.0,
           totalTimeMinutes: totalTimeMinutes ?? 0,
         );
-        print('✓ Camp 3 certificate awarded!');
         lastAwardedCert = cert;
       }
 
@@ -206,6 +183,10 @@ class ECertificateService {
       }
 
       _userCertificates.add(certificate);
+
+      // Send certificate via email (async, don't wait for it)
+      _sendCertificateEmailAsync(certificate);
+
       return certificate;
     } catch (e) {
       print('Error creating certificate: $e');
@@ -239,7 +220,6 @@ class ECertificateService {
     try {
       final key = _getCertificateStorageKey(certificate.certificateId);
       await _prefs.setString(key, jsonEncode(certificate.toJson()));
-      print('Certificate saved locally: ${certificate.certificateId}');
     } catch (e) {
       print('Error saving certificate locally: $e');
     }
@@ -248,10 +228,7 @@ class ECertificateService {
   /// Save certificate to Firebase
   Future<void> _saveCertificateToFirebase(ECertificate certificate) async {
     try {
-      if (_currentUserId == null) {
-        print('Warning: Cannot sync certificate to Firebase - no user ID');
-        return;
-      }
+      if (_currentUserId == null) return;
 
       await _firestore
           .collection('users')
@@ -262,8 +239,6 @@ class ECertificateService {
             ...certificate.toJson(),
             'lastUpdated': FieldValue.serverTimestamp(),
           }, SetOptions(merge: true));
-
-      print('Certificate synced to Firebase: ${certificate.certificateId}');
     } catch (e) {
       print('Error saving certificate to Firebase: $e');
       // Don't rethrow - certificate is still saved locally
@@ -290,10 +265,6 @@ class ECertificateService {
           }
         }
       }
-
-      print(
-        'Loaded ${_userCertificates.length} certificates from local storage',
-      );
     } catch (e) {
       print('Error loading certificates from local storage: $e');
     }
@@ -302,18 +273,13 @@ class ECertificateService {
   /// Load certificates from Firebase
   Future<void> _loadCertificatesFromFirebase(String userId) async {
     try {
-      print('Loading certificates from Firebase for user: $userId');
-
       final snapshot = await _firestore
           .collection('users')
           .doc(userId)
           .collection('certificates')
           .get();
 
-      if (snapshot.docs.isEmpty) {
-        print('No certificates found in Firebase');
-        return;
-      }
+      if (snapshot.docs.isEmpty) return;
 
       // Merge with local certificates
       for (final doc in snapshot.docs) {
@@ -332,8 +298,6 @@ class ECertificateService {
           _userCertificates.add(firestoreCert);
         }
       }
-
-      print('Merged ${snapshot.docs.length} certificates from Firebase');
     } catch (e) {
       print('Error loading certificates from Firebase: $e');
       // Don't rethrow - we still have local certificates
@@ -413,6 +377,38 @@ class ECertificateService {
     if (_userCertificates.isEmpty) return null;
     _userCertificates.sort((a, b) => b.dateEarned.compareTo(a.dateEarned));
     return _userCertificates.first;
+  }
+
+  /// Send certificate email asynchronously (fire and forget)
+  void _sendCertificateEmailAsync(ECertificate certificate) {
+    Future(() async {
+      try {
+        await _emailService.sendCertificateEmail(certificate);
+      } catch (e) {
+        // Silently fail - non-critical feature
+      }
+    });
+  }
+
+  /// Manually send certificate email (for retry or user request)
+  Future<bool> sendCertificateEmail(ECertificate certificate) async {
+    try {
+      return await _emailService.sendCertificateEmail(certificate);
+    } catch (e) {
+      print('Error sending certificate email: $e');
+      return false;
+    }
+  }
+
+  /// Send all earned certificates via email
+  Future<bool> sendAllCertificatesEmail() async {
+    try {
+      if (_userCertificates.isEmpty) return false;
+      return await _emailService.sendAllCertificatesEmail(_userCertificates);
+    } catch (e) {
+      print('Error sending all certificates: $e');
+      return false;
+    }
   }
 
   /// Get certificate storage key

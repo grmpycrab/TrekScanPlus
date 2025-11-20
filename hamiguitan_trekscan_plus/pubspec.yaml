@@ -25,6 +25,12 @@ dependencies:
   image: ^4.0.0
   flutter_map: ^6.1.0
   latlong2: ^0.9.0
+  pdf: ^3.10.4
+  printing: ^5.11.0
+  path_provider: ^2.1.1
+  share_plus: ^7.2.1
+  mailer: ^6.0.1
+  flutter_dotenv: ^5.1.0
 
 dev_dependencies:
   flutter_test:
@@ -39,3 +45,4 @@ flutter:
     - assets/icons/
     - assets/data/
     - assets/data/badge.json
+    - .env

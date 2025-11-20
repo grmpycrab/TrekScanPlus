@@ -7,6 +7,7 @@ import '../../services/user_service.dart';
 import '../../services/social_sharing_service.dart';
 import '../../services/e_certificate_service.dart';
 import '../../services/station_service.dart';
+import '../../services/certificate_pdf_service.dart';
 import '../../models/social_model.dart';
 import '../../models/e_certificate.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -1108,6 +1109,56 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 ),
               ),
               const SizedBox(height: 24),
+              // Action buttons row
+              Row(
+                children: [
+                  // Download PDF button
+                  Expanded(
+                    child: OutlinedButton.icon(
+                      onPressed: () => _downloadCertificatePdf(certificate),
+                      icon: const Icon(Icons.download, size: 18),
+                      label: const Text('Download'),
+                      style: OutlinedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  // Share button
+                  Expanded(
+                    child: OutlinedButton.icon(
+                      onPressed: () => _shareCertificate(certificate),
+                      icon: const Icon(Icons.share, size: 18),
+                      label: const Text('Share'),
+                      style: OutlinedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  // Email button
+                  Expanded(
+                    child: OutlinedButton.icon(
+                      onPressed: () => _emailCertificate(certificate),
+                      icon: const Icon(Icons.email, size: 18),
+                      label: const Text('Email'),
+                      style: OutlinedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
               // Close button
               ElevatedButton(
                 onPressed: () => Navigator.pop(context),
@@ -1187,5 +1238,128 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   String _formatCertificateDate(DateTime date) {
     return '${date.month}/${date.day}/${date.year}';
+  }
+
+  // PDF and Email Action Handlers
+  Future<void> _downloadCertificatePdf(ECertificate certificate) async {
+    try {
+      // Show loading indicator
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Generating PDF...'),
+          duration: Duration(seconds: 1),
+        ),
+      );
+
+      final pdfService = CertificatePdfService.instance;
+      final file = await pdfService.saveCertificateToDownloads(certificate);
+
+      if (!mounted) return;
+
+      if (file != null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Certificate saved to ${file.path}'),
+            backgroundColor: Colors.green,
+            duration: const Duration(seconds: 3),
+            action: SnackBarAction(
+              label: 'OK',
+              textColor: Colors.white,
+              onPressed: () {},
+            ),
+          ),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+              'Failed to save certificate. Please check storage permissions.',
+            ),
+            backgroundColor: Colors.red,
+            duration: Duration(seconds: 3),
+          ),
+        );
+      }
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error: ${e.toString()}'),
+          backgroundColor: Colors.red,
+          duration: const Duration(seconds: 3),
+        ),
+      );
+    }
+  }
+
+  Future<void> _shareCertificate(ECertificate certificate) async {
+    try {
+      // Show loading indicator
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Preparing to share...'),
+          duration: Duration(seconds: 1),
+        ),
+      );
+
+      final pdfService = CertificatePdfService.instance;
+      await pdfService.shareCertificate(certificate);
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error sharing certificate: ${e.toString()}'),
+          backgroundColor: Colors.red,
+          duration: const Duration(seconds: 3),
+        ),
+      );
+    }
+  }
+
+  Future<void> _emailCertificate(ECertificate certificate) async {
+    try {
+      // Show loading indicator
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Sending email...'),
+          duration: Duration(seconds: 2),
+        ),
+      );
+
+      final success = await _certificateService.sendCertificateEmail(
+        certificate,
+      );
+
+      if (!mounted) return;
+
+      if (success) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Certificate email sent successfully!'),
+            backgroundColor: Colors.green,
+            duration: Duration(seconds: 3),
+          ),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+              'Failed to send email. Please check your internet connection.',
+            ),
+            backgroundColor: Colors.orange,
+            duration: Duration(seconds: 3),
+          ),
+        );
+      }
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error: ${e.toString()}'),
+          backgroundColor: Colors.red,
+          duration: const Duration(seconds: 3),
+        ),
+      );
+    }
   }
 }
