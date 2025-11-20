@@ -11,7 +11,9 @@ import '../../models/climb.dart';
 import '../../components/climb_card.dart';
 
 class BookAClimbScreen extends StatefulWidget {
-  const BookAClimbScreen({super.key});
+  final String? highlightBookingId;
+
+  const BookAClimbScreen({super.key, this.highlightBookingId});
 
   @override
   State<BookAClimbScreen> createState() => _BookAClimbScreenState();
@@ -19,7 +21,9 @@ class BookAClimbScreen extends StatefulWidget {
 
 class _BookAClimbScreenState extends State<BookAClimbScreen> {
   final _formKey = GlobalKey<FormState>();
+  final ScrollController _scrollController = ScrollController();
   String _climbType = 'General';
+  bool _hasScrolledToBooking = false;
 
   // Store picked PlatformFile objects so we can upload bytes/paths to Firebase
   List<PlatformFile> _pickedFiles = [];
@@ -83,6 +87,13 @@ class _BookAClimbScreenState extends State<BookAClimbScreen> {
                   )
                   .toList();
             });
+
+            // Auto-scroll to highlighted booking
+            if (widget.highlightBookingId != null &&
+                !_hasScrolledToBooking &&
+                bookings.isNotEmpty) {
+              _scrollToBooking(widget.highlightBookingId!);
+            }
           });
     });
   }
@@ -90,6 +101,33 @@ class _BookAClimbScreenState extends State<BookAClimbScreen> {
   String _formatSelectedDate() {
     if (_selectedDate == null) return 'Select date';
     return '${_selectedDate!.year}-${_selectedDate!.month.toString().padLeft(2, '0')}-${_selectedDate!.day.toString().padLeft(2, '0')}';
+  }
+
+  void _scrollToBooking(String bookingId) {
+    _hasScrolledToBooking = true;
+
+    // Find the index of the booking
+    final index = _bookings.indexWhere((item) {
+      if (item is Map<String, dynamic>) {
+        final booking = item['booking'] as BookingModel?;
+        return booking?.id == bookingId;
+      }
+      return false;
+    });
+
+    if (index != -1) {
+      // Delay to ensure ListView is built
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (_scrollController.hasClients) {
+          final position = index * 200.0; // Approximate card height
+          _scrollController.animateTo(
+            position,
+            duration: const Duration(milliseconds: 500),
+            curve: Curves.easeInOut,
+          );
+        }
+      });
+    }
   }
 
   Future<void> _pickFiles() async {
@@ -288,6 +326,7 @@ class _BookAClimbScreenState extends State<BookAClimbScreen> {
     return RefreshIndicator(
       onRefresh: _refreshBookings,
       child: ListView.builder(
+        controller: _scrollController,
         padding: const EdgeInsets.all(16),
         itemCount: bookings.length,
         itemBuilder: (context, index) {
@@ -417,9 +456,7 @@ class _BookAClimbScreenState extends State<BookAClimbScreen> {
             child: const Text('No'),
           ),
           TextButton(
-            style: TextButton.styleFrom(
-              foregroundColor: Colors.redAccent,
-            ),
+            style: TextButton.styleFrom(foregroundColor: Colors.redAccent),
             onPressed: () async {
               // If booking has an id, persist cancellation to Firestore.
               if (booking.id != null) {
@@ -458,23 +495,32 @@ class _BookAClimbScreenState extends State<BookAClimbScreen> {
   void _showEditBookingSheet(BookingModel booking) {
     if (booking.id == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Cannot edit a pending local booking yet.')),
+        const SnackBar(
+          content: Text('Cannot edit a pending local booking yet.'),
+        ),
       );
       return;
     }
 
     final formKey = GlobalKey<FormState>();
-    final affiliationController =
-        TextEditingController(text: booking.affiliation);
-    final portersController =
-        TextEditingController(text: booking.numberOfPorters.toString());
+    final affiliationController = TextEditingController(
+      text: booking.affiliation,
+    );
+    final portersController = TextEditingController(
+      text: booking.numberOfPorters.toString(),
+    );
     final notesController = TextEditingController(text: booking.notes ?? '');
     bool isSaving = false;
+
+    // Check if this is a declined booking
+    final isDeclined =
+        booking.status.toLowerCase() == 'declined' ||
+        booking.status.toLowerCase() == 'rejected';
 
     // Track existing attachments (can be marked for deletion)
     List<Attachment> existingAttachments = List.from(booking.attachments);
     Set<String> attachmentsToDelete = {};
-    
+
     // Track new files to upload
     List<PlatformFile> newFiles = [];
 
@@ -522,6 +568,7 @@ class _BookAClimbScreenState extends State<BookAClimbScreen> {
                   notes: notesController.text.trim().isEmpty
                       ? null
                       : notesController.text.trim(),
+                  resubmitDeclined: isDeclined, // Reset to pending if declined
                 );
 
                 // Delete removed attachments
@@ -533,7 +580,9 @@ class _BookAClimbScreenState extends State<BookAClimbScreen> {
                         attachment,
                       );
                     } catch (e) {
-                      print('Error deleting attachment ${attachment.fileName}: $e');
+                      print(
+                        'Error deleting attachment ${attachment.fileName}: $e',
+                      );
                       // Continue with other deletions
                     }
                   }
@@ -555,8 +604,12 @@ class _BookAClimbScreenState extends State<BookAClimbScreen> {
                 if (mounted) {
                   Navigator.of(context).pop();
                   ScaffoldMessenger.of(this.context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Booking details updated.'),
+                    SnackBar(
+                      content: Text(
+                        isDeclined
+                            ? 'Booking updated and resubmitted for review!'
+                            : 'Booking details updated.',
+                      ),
                     ),
                   );
                 }
@@ -566,9 +619,7 @@ class _BookAClimbScreenState extends State<BookAClimbScreen> {
                 }
                 if (mounted) {
                   ScaffoldMessenger.of(this.context).showSnackBar(
-                    SnackBar(
-                      content: Text('Failed to update booking: $e'),
-                    ),
+                    SnackBar(content: Text('Failed to update booking: $e')),
                   );
                 }
               }
@@ -610,6 +661,60 @@ class _BookAClimbScreenState extends State<BookAClimbScreen> {
                         ],
                       ),
                       const SizedBox(height: 12),
+                      // Show warning for declined bookings
+                      if (isDeclined && booking.adminNotes != null) ...[
+                        Container(
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: Colors.red[50],
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(color: Colors.red[300]!),
+                          ),
+                          child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Icon(
+                                Icons.warning_amber,
+                                color: Colors.red[700],
+                                size: 20,
+                              ),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      'Booking Declined',
+                                      style: TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.red[900],
+                                      ),
+                                    ),
+                                    const SizedBox(height: 4),
+                                    Text(
+                                      'Admin notes: ${booking.adminNotes}',
+                                      style: TextStyle(
+                                        fontSize: 13,
+                                        color: Colors.red[800],
+                                      ),
+                                    ),
+                                    const SizedBox(height: 4),
+                                    Text(
+                                      'Update your booking and save to resubmit for review.',
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        fontStyle: FontStyle.italic,
+                                        color: Colors.red[700],
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                      ],
                       Flexible(
                         child: SingleChildScrollView(
                           child: Column(
@@ -678,8 +783,8 @@ class _BookAClimbScreenState extends State<BookAClimbScreen> {
                                 ),
                                 const SizedBox(height: 8),
                                 ...existingAttachments.map((attachment) {
-                                  final isMarkedForDelete =
-                                      attachmentsToDelete.contains(attachment.fileName);
+                                  final isMarkedForDelete = attachmentsToDelete
+                                      .contains(attachment.fileName);
                                   return Container(
                                     margin: const EdgeInsets.only(bottom: 8),
                                     padding: const EdgeInsets.all(12),
@@ -723,18 +828,20 @@ class _BookAClimbScreenState extends State<BookAClimbScreen> {
                                             isMarkedForDelete
                                                 ? Icons.undo
                                                 : Icons.delete_outline,
-                                            ),
+                                          ),
                                           color: isMarkedForDelete
                                               ? Colors.blue
                                               : Colors.red,
                                           onPressed: () {
                                             setModalState(() {
                                               if (isMarkedForDelete) {
-                                                attachmentsToDelete
-                                                    .remove(attachment.fileName);
+                                                attachmentsToDelete.remove(
+                                                  attachment.fileName,
+                                                );
                                               } else {
-                                                attachmentsToDelete
-                                                    .add(attachment.fileName);
+                                                attachmentsToDelete.add(
+                                                  attachment.fileName,
+                                                );
                                               }
                                             });
                                           },
@@ -808,7 +915,9 @@ class _BookAClimbScreenState extends State<BookAClimbScreen> {
                                   label: const Text('Add New Files'),
                                   style: ElevatedButton.styleFrom(
                                     backgroundColor: Colors.blueGrey[700],
-                                    padding: const EdgeInsets.symmetric(vertical: 12),
+                                    padding: const EdgeInsets.symmetric(
+                                      vertical: 12,
+                                    ),
                                   ),
                                 ),
                               ),
@@ -829,7 +938,9 @@ class _BookAClimbScreenState extends State<BookAClimbScreen> {
                               ? const SizedBox(
                                   width: 20,
                                   height: 20,
-                                  child: CircularProgressIndicator(strokeWidth: 2),
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                  ),
                                 )
                               : const Text(
                                   'Save Changes',

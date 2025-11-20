@@ -121,13 +121,68 @@ class _NotificationScreenState extends State<NotificationScreen> {
         color: Colors.transparent,
         child: InkWell(
           onTap: () async {
+            print('🔔 Notification tapped: ${notification.title}');
+            print('🔔 ActionType: ${notification.actionType}');
+            print('🔔 ActionData: ${notification.actionData}');
+
             if (_userId != null) {
               await _service.markAsRead(_userId!, notification.id);
             }
             setState(() {
               notification.isRead = true;
             });
-            // Handle notification tap (navigate or show details)
+
+            // Handle notification tap - navigate to content
+            if (notification.actionType != null &&
+                notification.actionData != null) {
+              print('🔔 Starting navigation...');
+
+              if (notification.actionType == 'post') {
+                final postId = notification.actionData!;
+                print('🔔 Navigating to post: $postId');
+                if (mounted) {
+                  Navigator.pushNamed(
+                    context,
+                    '/post-detail',
+                    arguments: postId,
+                  );
+                }
+              } else if (notification.actionType == 'booking') {
+                final bookingId = notification.actionData!;
+                print('🔔 Navigating to booking: $bookingId');
+                if (mounted) {
+                  Navigator.pushNamed(
+                    context,
+                    '/book-climb',
+                    arguments: bookingId,
+                  );
+                }
+              }
+            } else {
+              // Backward compatibility for old notifications
+              print('🔔 No actionType/actionData - checking for old format');
+
+              // Detect old booking notifications by title
+              final bookingTitles = [
+                'Booking Approved',
+                'Booking Declined',
+                'Booking Under Review',
+                'Booking Cancelled',
+              ];
+
+              if (bookingTitles.any(
+                (title) => notification.title.contains(title),
+              )) {
+                print(
+                  '🔔 Old booking notification detected - navigating to book-climb',
+                );
+                if (mounted) {
+                  Navigator.pushNamed(context, '/book-climb');
+                }
+              } else {
+                print('🔔 No navigation available for this notification');
+              }
+            }
           },
           borderRadius: BorderRadius.circular(12),
           child: Padding(

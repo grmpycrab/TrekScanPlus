@@ -4,6 +4,7 @@ import '../models/climb.dart';
 import '../models/booking_model.dart';
 import 'booking_details_modal.dart';
 import '../theme/color.dart';
+
 typedef ClimbCallback = void Function(Climb);
 
 class ClimbCard extends StatelessWidget {
@@ -125,7 +126,11 @@ class ClimbCard extends StatelessWidget {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
-                if (status != 'Cancelled' && status != 'Expired')
+                // Show Cancel button for pending/approved bookings
+                if (status != 'Cancelled' &&
+                    status != 'Expired' &&
+                    status != 'Declined' &&
+                    status != 'Rejected')
                   Expanded(
                     child: TextButton.icon(
                       onPressed: () => onCancel?.call(climb),
@@ -137,8 +142,36 @@ class ClimbCard extends StatelessWidget {
                       ),
                     ),
                   ),
-                if (status != 'Cancelled' && status != 'Expired')
+                if (status != 'Cancelled' &&
+                    status != 'Expired' &&
+                    status != 'Declined' &&
+                    status != 'Rejected')
                   const SizedBox(width: 12),
+                // Show Edit button for declined/rejected bookings
+                if ((status == 'Declined' || status == 'Rejected') &&
+                    booking != null &&
+                    onEditBooking != null)
+                  Expanded(
+                    child: FilledButton.icon(
+                      onPressed: () => onEditBooking!(booking!),
+                      icon: const Icon(Icons.edit, size: 18),
+                      label: const Text('Edit Request'),
+                      style: FilledButton.styleFrom(
+                        backgroundColor: const Color.fromARGB(
+                          255,
+                          98,
+                          188,
+                          248,
+                        ),
+                        padding: const EdgeInsets.symmetric(vertical: 8),
+                      ),
+                    ),
+                  ),
+                if ((status == 'Declined' || status == 'Rejected') &&
+                    booking != null &&
+                    onEditBooking != null)
+                  const SizedBox(width: 12),
+                // Always show View Details button
                 Expanded(
                   child: FilledButton.icon(
                     onPressed: () => _showBookingDetails(context),
@@ -182,10 +215,15 @@ class ClimbCard extends StatelessWidget {
     switch (status) {
       case 'Approved':
         return AppColors.difficultyEasy;
-      case 'Cancelled':
-        return AppColors.difficultyModerate;
-      case 'Expired':
+      case 'Declined':
+      case 'Rejected':
         return AppColors.difficultyHard;
+      case 'Cancelled':
+        return Colors.grey;
+      case 'Expired':
+        return const Color.fromARGB(255, 212, 137, 137);
+      case 'Pending':
+        return const Color.fromARGB(255, 247, 201, 104);
       default:
         return AppColors.difficultyModerate;
     }
@@ -194,6 +232,9 @@ class ClimbCard extends StatelessWidget {
   Color _getStatusTextColor(String status) {
     switch (status) {
       case 'Approved':
+        return AppColors.textLight;
+      case 'Declined':
+      case 'Rejected':
         return AppColors.textLight;
       case 'Cancelled':
         return AppColors.textLight;

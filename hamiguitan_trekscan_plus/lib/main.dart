@@ -5,10 +5,13 @@ import 'firebase_options.dart';
 import 'screens/auth/login_screen.dart';
 import 'screens/auth/signup_screen.dart';
 import 'screens/main/main_screen.dart';
+import 'screens/main/book_a_climb.dart';
+import 'screens/social/post_detail_screen.dart';
 import 'services/firebase_auth_service.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'services/station_service.dart';
 import 'services/connectivity_service.dart';
+import 'services/booking_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -28,8 +31,24 @@ void main() async {
   runApp(const MyApp());
 }
 
-class MyApp extends StatelessWidget {
+class MyApp extends StatefulWidget {
   const MyApp({super.key});
+
+  @override
+  State<MyApp> createState() => _MyAppState();
+}
+
+class _MyAppState extends State<MyApp> {
+  @override
+  void initState() {
+    super.initState();
+    // Listen to auth changes and start booking status listener when user logs in
+    FirebaseAuthService.instance.authStateChanges.listen((user) {
+      if (user != null) {
+        BookingService.instance.startBookingStatusListener(user.uid);
+      }
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -56,6 +75,28 @@ class MyApp extends StatelessWidget {
             '/login': (context) => const LoginScreen(),
             '/signup': (context) => const SignUpScreen(),
             '/main': (context) => const MainScreen(),
+          },
+          onGenerateRoute: (settings) {
+            // Handle routes with arguments
+            if (settings.name == '/post-detail') {
+              final postId = settings.arguments as String?;
+              if (postId != null) {
+                return MaterialPageRoute(
+                  builder: (context) => PostDetailScreen(postId: postId),
+                );
+              }
+            }
+
+            // Handle book-climb route with optional bookingId argument
+            if (settings.name == '/book-climb') {
+              final bookingId = settings.arguments as String?;
+              return MaterialPageRoute(
+                builder: (context) =>
+                    BookAClimbScreen(highlightBookingId: bookingId),
+              );
+            }
+
+            return null;
           },
         );
       },
