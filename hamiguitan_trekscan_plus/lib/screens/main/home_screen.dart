@@ -3,6 +3,7 @@ import 'notification_screen.dart';
 import '../../components/event_calendar.dart';
 import '../../components/connectivity_banner.dart';
 import '../../components/social_card.dart';
+import '../../components/app_dialogue_handler.dart';
 import '../../components/create_post.dart';
 import '../../components/comments_sheet.dart';
 import '../../components/do_and_dont.dart';
@@ -712,23 +713,13 @@ class _HomeScreenState extends State<HomeScreen> {
   Future<void> _handleDeletePost(SocialPost post) async {
     if (post.id == null) return;
 
-    final confirmed = await showDialog<bool>(
+    final confirmed = await AppDialogueHandler.showConfirmation(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Delete Post'),
-        content: const Text('Are you sure you want to delete this post?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(context, true),
-            style: TextButton.styleFrom(foregroundColor: Colors.red),
-            child: const Text('Delete'),
-          ),
-        ],
-      ),
+      title: 'Delete Post',
+      message: 'Are you sure you want to delete this post?',
+      confirmText: 'Delete',
+      cancelText: 'Cancel',
+      isDestructive: true,
     );
 
     if (confirmed == true) {
@@ -741,9 +732,11 @@ class _HomeScreenState extends State<HomeScreen> {
         }
       } catch (e) {
         if (mounted) {
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(SnackBar(content: Text('Failed to delete post: $e')));
+          await AppDialogueHandler.showError(
+            context: context,
+            title: 'Delete Failed',
+            message: 'Unable to delete post. Please try again.',
+          );
         }
       }
     }

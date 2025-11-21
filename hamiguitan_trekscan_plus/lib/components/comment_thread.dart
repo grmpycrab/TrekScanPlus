@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../models/social_model.dart';
 import '../services/social_sharing_service.dart';
+import 'app_dialogue_handler.dart';
 import '../services/firebase_auth_service.dart';
 import '../theme/color.dart';
 
@@ -83,22 +84,13 @@ class _CommentThreadState extends State<CommentThread> {
   Future<void> _deleteComment() async {
     if (widget.comment.id == null) return;
 
-    final confirmed = await showDialog<bool>(
+    final confirmed = await AppDialogueHandler.showConfirmation(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Delete Comment'),
-        content: const Text('Are you sure you want to delete this comment?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: const Text('Delete', style: TextStyle(color: Colors.red)),
-          ),
-        ],
-      ),
+      title: 'Delete Comment',
+      message: 'Are you sure you want to delete this comment?',
+      confirmText: 'Delete',
+      cancelText: 'Cancel',
+      isDestructive: true,
     );
 
     if (confirmed != true) return;
@@ -116,9 +108,11 @@ class _CommentThreadState extends State<CommentThread> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Failed to delete comment: $e')));
+        await AppDialogueHandler.showError(
+          context: context,
+          title: 'Delete Failed',
+          message: 'Unable to delete comment. Please try again.',
+        );
       }
     }
   }
@@ -127,30 +121,24 @@ class _CommentThreadState extends State<CommentThread> {
     final currentUser = FirebaseAuthService.instance.currentUser;
     final isOwner = currentUser?.uid == widget.comment.userId;
 
-    showModalBottomSheet(
+    AppDialogueHandler.showChoice<String>(
       context: context,
-      builder: (context) => SafeArea(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            if (isOwner)
-              ListTile(
-                leading: const Icon(Icons.delete, color: Colors.red),
-                title: const Text('Delete Comment'),
-                onTap: () {
-                  Navigator.pop(context);
-                  _deleteComment();
-                },
-              ),
-            ListTile(
-              leading: const Icon(Icons.close),
-              title: const Text('Cancel'),
-              onTap: () => Navigator.pop(context),
-            ),
-          ],
-        ),
-      ),
-    );
+      title: 'Comment Options',
+      options: [
+        if (isOwner)
+          const ChoiceOption(
+            label: 'Delete Comment',
+            value: 'delete',
+            icon: Icons.delete,
+            isDestructive: true,
+          ),
+      ],
+      showCancel: true,
+    ).then((action) {
+      if (action == 'delete') {
+        _deleteComment();
+      }
+    });
   }
 
   @override
@@ -164,86 +152,40 @@ class _CommentThreadState extends State<CommentThread> {
       children: [
         // Main comment
         Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               CircleAvatar(
-                radius: 18,
+                radius: 20,
                 backgroundImage: widget.comment.userPhotoUrl != null
                     ? NetworkImage(widget.comment.userPhotoUrl!)
                     : null,
                 child: widget.comment.userPhotoUrl == null
-                    ? const Icon(Icons.person, size: 18)
+                    ? const Icon(Icons.person, size: 20)
                     : null,
               ),
-              const SizedBox(width: 10),
+              const SizedBox(width: 12),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Name and time
+                    // Name, time and options
                     Row(
                       children: [
-                        Text(
-                          widget.comment.userName,
-                          style: const TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 13,
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        Text(
-                          timeAgo,
-                          style: TextStyle(
-                            fontSize: 11,
-                            color: Colors.grey[600],
-                          ),
-                        ),
-                        if (isOwner) ...[
-                          const SizedBox(width: 8),
-                          GestureDetector(
-                            onTap: _showOptionsMenu,
-                            child: Icon(
-                              Icons.more_horiz,
-                              size: 16,
-                              color: Colors.grey[600],
-                            ),
-                          ),
-                        ],
-                      ],
-                    ),
-                    const SizedBox(height: 4),
-                    // Comment text
-                    Container(
-                      padding: const EdgeInsets.all(10),
-                      decoration: BoxDecoration(
-                        color: Colors.grey[100],
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: Text(
-                        widget.comment.text,
-                        style: const TextStyle(fontSize: 13),
-                      ),
-                    ),
-                    const SizedBox(height: 6),
-                    // Like and reply buttons
-                    Row(
-                      children: [
-                        GestureDetector(
-                          onTap: _toggleLike,
+                        Expanded(
                           child: Row(
                             children: [
-                              Icon(
-                                _isLiked
-                                    ? Icons.favorite
-                                    : Icons.favorite_border,
-                                size: 14,
-                                color: _isLiked ? Colors.red : Colors.grey[600],
-                              ),
-                              const SizedBox(width: 4),
                               Text(
-                                _likesCount > 0 ? '$_likesCount' : '',
+                                widget.comment.userName,
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 14,
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              Text(
+                                timeAgo,
                                 style: TextStyle(
                                   fontSize: 12,
                                   color: Colors.grey[600],
@@ -252,37 +194,117 @@ class _CommentThreadState extends State<CommentThread> {
                             ],
                           ),
                         ),
-                        const SizedBox(width: 16),
-                        GestureDetector(
+                        if (isOwner)
+                          InkWell(
+                            onTap: _showOptionsMenu,
+                            borderRadius: BorderRadius.circular(20),
+                            child: Padding(
+                              padding: const EdgeInsets.all(6),
+                              child: Icon(
+                                Icons.more_horiz,
+                                size: 20,
+                                color: Colors.grey[700],
+                              ),
+                            ),
+                          ),
+                      ],
+                    ),
+                    const SizedBox(height: 6),
+                    // Comment text
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: Colors.grey[100],
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Text(
+                        widget.comment.text,
+                        style: const TextStyle(fontSize: 14, height: 1.4),
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    // Like and reply buttons
+                    Row(
+                      children: [
+                        InkWell(
+                          onTap: _toggleLike,
+                          borderRadius: BorderRadius.circular(20),
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 6,
+                            ),
+                            child: Row(
+                              children: [
+                                Icon(
+                                  _isLiked
+                                      ? Icons.favorite
+                                      : Icons.favorite_border,
+                                  size: 18,
+                                  color: _isLiked
+                                      ? Colors.red
+                                      : Colors.grey[600],
+                                ),
+                                if (_likesCount > 0) ...[
+                                  const SizedBox(width: 6),
+                                  Text(
+                                    '$_likesCount',
+                                    style: TextStyle(
+                                      fontSize: 13,
+                                      color: Colors.grey[700],
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
+                                ],
+                              ],
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        InkWell(
                           onTap: () {
                             widget.onReplyTap?.call(
                               widget.comment.id ?? '',
                               widget.comment.userName,
                             );
                           },
-                          child: Text(
-                            'Reply',
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: Colors.grey[600],
-                              fontWeight: FontWeight.w500,
+                          borderRadius: BorderRadius.circular(20),
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 6,
+                            ),
+                            child: Text(
+                              'Reply',
+                              style: TextStyle(
+                                fontSize: 13,
+                                color: Colors.grey[700],
+                                fontWeight: FontWeight.w600,
+                              ),
                             ),
                           ),
                         ),
                         if (widget.comment.repliesCount > 0) ...[
-                          const SizedBox(width: 16),
-                          GestureDetector(
+                          const SizedBox(width: 8),
+                          InkWell(
                             onTap: () {
                               setState(() => _showReplies = !_showReplies);
                             },
-                            child: Text(
-                              _showReplies
-                                  ? 'Hide ${widget.comment.repliesCount} replies'
-                                  : 'View ${widget.comment.repliesCount} ${widget.comment.repliesCount == 1 ? 'reply' : 'replies'}',
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: AppColors.primary,
-                                fontWeight: FontWeight.w500,
+                            borderRadius: BorderRadius.circular(20),
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 8,
+                                vertical: 6,
+                              ),
+                              child: Text(
+                                _showReplies
+                                    ? 'Hide ${widget.comment.repliesCount} replies'
+                                    : 'View ${widget.comment.repliesCount} ${widget.comment.repliesCount == 1 ? 'reply' : 'replies'}',
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  color: AppColors.primary,
+                                  fontWeight: FontWeight.w600,
+                                ),
                               ),
                             ),
                           ),
@@ -433,22 +455,13 @@ class _ReplyTileState extends State<ReplyTile> {
   Future<void> _deleteReply() async {
     if (widget.reply.id == null) return;
 
-    final confirmed = await showDialog<bool>(
+    final confirmed = await AppDialogueHandler.showConfirmation(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Delete Reply'),
-        content: const Text('Are you sure you want to delete this reply?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: const Text('Delete', style: TextStyle(color: Colors.red)),
-          ),
-        ],
-      ),
+      title: 'Delete Reply',
+      message: 'Are you sure you want to delete this reply?',
+      confirmText: 'Delete',
+      cancelText: 'Cancel',
+      isDestructive: true,
     );
 
     if (confirmed != true) return;
@@ -466,9 +479,11 @@ class _ReplyTileState extends State<ReplyTile> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Failed to delete reply: $e')));
+        await AppDialogueHandler.showError(
+          context: context,
+          title: 'Delete Failed',
+          message: 'Unable to delete reply. Please try again.',
+        );
       }
     }
   }
@@ -477,30 +492,24 @@ class _ReplyTileState extends State<ReplyTile> {
     final currentUser = FirebaseAuthService.instance.currentUser;
     final isOwner = currentUser?.uid == widget.reply.userId;
 
-    showModalBottomSheet(
+    AppDialogueHandler.showChoice<String>(
       context: context,
-      builder: (context) => SafeArea(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            if (isOwner)
-              ListTile(
-                leading: const Icon(Icons.delete, color: Colors.red),
-                title: const Text('Delete Reply'),
-                onTap: () {
-                  Navigator.pop(context);
-                  _deleteReply();
-                },
-              ),
-            ListTile(
-              leading: const Icon(Icons.close),
-              title: const Text('Cancel'),
-              onTap: () => Navigator.pop(context),
-            ),
-          ],
-        ),
-      ),
-    );
+      title: 'Reply Options',
+      options: [
+        if (isOwner)
+          const ChoiceOption(
+            label: 'Delete Reply',
+            value: 'delete',
+            icon: Icons.delete,
+            isDestructive: true,
+          ),
+      ],
+      showCancel: true,
+    ).then((action) {
+      if (action == 'delete') {
+        _deleteReply();
+      }
+    });
   }
 
   @override
@@ -510,82 +519,107 @@ class _ReplyTileState extends State<ReplyTile> {
     final isOwner = currentUser?.uid == widget.reply.userId;
 
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8),
+      padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 16),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           CircleAvatar(
-            radius: 16,
+            radius: 18,
             backgroundImage: widget.reply.userPhotoUrl != null
                 ? NetworkImage(widget.reply.userPhotoUrl!)
                 : null,
             child: widget.reply.userPhotoUrl == null
-                ? const Icon(Icons.person, size: 16)
+                ? const Icon(Icons.person, size: 18)
                 : null,
           ),
-          const SizedBox(width: 10),
+          const SizedBox(width: 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Name and time
+                // Name, time and options
                 Row(
                   children: [
-                    Text(
-                      widget.reply.userName,
-                      style: const TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 12,
+                    Expanded(
+                      child: Row(
+                        children: [
+                          Text(
+                            widget.reply.userName,
+                            style: const TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 13,
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            timeAgo,
+                            style: TextStyle(
+                              fontSize: 11,
+                              color: Colors.grey[600],
+                            ),
+                          ),
+                        ],
                       ),
                     ),
-                    const SizedBox(width: 8),
-                    Text(
-                      timeAgo,
-                      style: TextStyle(fontSize: 11, color: Colors.grey[600]),
-                    ),
-                    if (isOwner) ...[
-                      const SizedBox(width: 8),
-                      GestureDetector(
+                    if (isOwner)
+                      InkWell(
                         onTap: _showOptionsMenu,
-                        child: Icon(
-                          Icons.more_horiz,
-                          size: 16,
-                          color: Colors.grey[600],
+                        borderRadius: BorderRadius.circular(20),
+                        child: Padding(
+                          padding: const EdgeInsets.all(6),
+                          child: Icon(
+                            Icons.more_horiz,
+                            size: 18,
+                            color: Colors.grey[700],
+                          ),
                         ),
                       ),
-                    ],
                   ],
                 ),
-                const SizedBox(height: 4),
+                const SizedBox(height: 6),
                 // Reply text
                 Container(
-                  padding: const EdgeInsets.all(10),
+                  padding: const EdgeInsets.all(11),
                   decoration: BoxDecoration(
                     color: Colors.grey[100],
-                    borderRadius: BorderRadius.circular(10),
+                    borderRadius: BorderRadius.circular(12),
                   ),
                   child: Text(
                     widget.reply.text,
-                    style: const TextStyle(fontSize: 12),
+                    style: const TextStyle(fontSize: 13, height: 1.4),
                   ),
                 ),
-                const SizedBox(height: 6),
+                const SizedBox(height: 8),
                 // Like button
-                GestureDetector(
+                InkWell(
                   onTap: _toggleLike,
-                  child: Row(
-                    children: [
-                      Icon(
-                        _isLiked ? Icons.favorite : Icons.favorite_border,
-                        size: 13,
-                        color: _isLiked ? Colors.red : Colors.grey[600],
-                      ),
-                      const SizedBox(width: 4),
-                      Text(
-                        _likesCount > 0 ? '$_likesCount' : '',
-                        style: TextStyle(fontSize: 11, color: Colors.grey[600]),
-                      ),
-                    ],
+                  borderRadius: BorderRadius.circular(20),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 4,
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          _isLiked ? Icons.favorite : Icons.favorite_border,
+                          size: 16,
+                          color: _isLiked ? Colors.red : Colors.grey[600],
+                        ),
+                        if (_likesCount > 0) ...[
+                          const SizedBox(width: 6),
+                          Text(
+                            '$_likesCount',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: Colors.grey[700],
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
                   ),
                 ),
               ],

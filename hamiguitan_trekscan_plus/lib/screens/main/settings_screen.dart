@@ -10,6 +10,7 @@ import '../../components/badge_filter.dart';
 import '../../services/achievement_service.dart';
 import '../../services/firebase_auth_service.dart';
 import '../auth/login_screen.dart';
+import '../../components/app_dialogue_handler.dart';
 
 class SettingsScreen extends StatefulWidget {
   final bool showBadgesOnly;
@@ -103,47 +104,39 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
-  void _handleLogout() {
-    showDialog(
+  void _handleLogout() async {
+    final confirmed = await AppDialogueHandler.showConfirmation(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Confirm Logout'),
-        content: const Text('Are you sure you want to logout?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
-          ),
-          TextButton(
-            onPressed: () async {
-              Navigator.pop(context);
-              try {
-                // Clear local data before signing out
-                _achievementService.resetInitialization();
-
-                await FirebaseAuthService.instance.signOut();
-                if (mounted) {
-                  Navigator.pushAndRemoveUntil(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => const LoginScreen(),
-                    ),
-                    (route) => false,
-                  );
-                }
-              } catch (e) {
-                if (mounted) {
-                  ScaffoldMessenger.of(
-                    context,
-                  ).showSnackBar(SnackBar(content: Text('Logout failed: $e')));
-                }
-              }
-            },
-            child: const Text('Logout', style: TextStyle(color: Colors.red)),
-          ),
-        ],
-      ),
+      title: 'Confirm Logout',
+      message: 'Are you sure you want to logout?',
+      confirmText: 'Logout',
+      cancelText: 'Cancel',
+      isDestructive: true,
     );
+
+    if (confirmed == true) {
+      try {
+        // Clear local data before signing out
+        _achievementService.resetInitialization();
+
+        await FirebaseAuthService.instance.signOut();
+        if (mounted) {
+          Navigator.pushAndRemoveUntil(
+            context,
+            MaterialPageRoute(builder: (context) => const LoginScreen()),
+            (route) => false,
+          );
+        }
+      } catch (e) {
+        if (mounted) {
+          await AppDialogueHandler.showError(
+            context: context,
+            title: 'Logout Failed',
+            message: 'Unable to logout. Please try again.',
+          );
+        }
+      }
+    }
   }
 
   @override
