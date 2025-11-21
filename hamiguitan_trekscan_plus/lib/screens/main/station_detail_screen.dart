@@ -62,6 +62,15 @@ class _StationDetailScreenState extends State<StationDetailScreen> {
     }
   }
 
+  bool _isEndStation(String stationId) {
+    const endStationIds = [
+      'i73hl7b7g3', // Station 13: Hidden Garden
+      'r5kntj3sae', // Station 16: Twin Falls
+      'mr2l529okj', // Station 14: Peak
+    ];
+    return endStationIds.contains(stationId);
+  }
+
   @override
   Widget build(BuildContext context) {
     try {
@@ -103,7 +112,9 @@ class _StationDetailScreenState extends State<StationDetailScreen> {
                             const SizedBox(height: 32),
                             _buildTrailMap(),
                           ],
-                          if (station.nextStationId != null) ...[
+                          // Show next station or end station card
+                          if (station.nextStationId != null ||
+                              _isEndStation(station.id)) ...[
                             const SizedBox(height: 32),
                             _buildNextStation(),
                           ],
@@ -806,6 +817,54 @@ class _StationDetailScreenState extends State<StationDetailScreen> {
   }
 
   Widget _buildNextStation() {
+    // Don't show next station section for end stations
+    if (_isEndStation(station.id)) {
+      return Card(
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Icon(Icons.flag, size: 24, color: AppColors.primary),
+                  const SizedBox(width: 8),
+                  const Text(
+                    'End Station',
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: AppColors.primary.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Row(
+                  children: [
+                    Icon(Icons.celebration, color: AppColors.primary, size: 24),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        'This is the final station on this route!',
+                        style: TextStyle(
+                          fontWeight: FontWeight.w500,
+                          color: AppColors.primary,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(16.0),

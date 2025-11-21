@@ -70,8 +70,23 @@ class _ProfileScreenState extends State<ProfileScreen> {
           print(
             '🎯 Profile Screen: Checking certificates for ${visitedStations.length} visited stations',
           );
+
+          // Calculate trek statistics
+          final totalDistance = stationService.getTotalDistance();
+          final totalTimeMinutes = stationService.getTotalTimeMinutes();
+          final trekStartDate = stationService.getTrekStartDate();
+          final trekEndDate = stationService.getTrekEndDate();
+
+          print(
+            '📊 Trek stats: Distance=${totalDistance}km, Time=${totalTimeMinutes}min',
+          );
+
           final result = await _certificateService.checkAndAwardCertificate(
             visitedStations,
+            totalDistance: totalDistance,
+            totalTimeMinutes: totalTimeMinutes,
+            trekStartDate: trekStartDate,
+            trekEndDate: trekEndDate,
           );
           print('DEBUG: Certificate check result: $result');
         } else {
