@@ -6,6 +6,7 @@ import '../services/social_sharing_service.dart';
 import '../services/user_service.dart';
 import '../theme/color.dart';
 import 'comments_sheet.dart';
+import 'post_options_sheet.dart';
 
 class SocialCard extends StatefulWidget {
   final SocialPost post;
@@ -32,6 +33,7 @@ class _SocialCardState extends State<SocialCard> {
   int _likesCount = 0;
   int _commentsCount = 0;
   int _sharesCount = 0;
+  String _displayName = '';
 
   @override
   void initState() {
@@ -40,9 +42,34 @@ class _SocialCardState extends State<SocialCard> {
     _commentsCount = widget.post.commentsCount;
     _sharesCount = widget.post.sharesCount;
     _isBookmarked = widget.post.isBookmarked;
+    _displayName = widget.post.userName; // Default to userName
     _checkLikedStatus();
     _checkBookmarkedStatus();
     _checkFollowStatus();
+    _loadUserName();
+  }
+
+  Future<void> _loadUserName() async {
+    try {
+      final userData = await _userService.getUserOnce(widget.post.userId);
+      if (userData != null && mounted) {
+        final firstName = userData['firstName'] as String?;
+        final lastName = userData['lastName'] as String?;
+
+        if (firstName != null && lastName != null) {
+          setState(() {
+            _displayName = '$firstName $lastName';
+          });
+        } else if (firstName != null) {
+          setState(() {
+            _displayName = firstName;
+          });
+        }
+      }
+    } catch (e) {
+      debugPrint('Error loading user name: $e');
+      // Keep the default userName if fetching fails
+    }
   }
 
   Future<void> _checkLikedStatus() async {
@@ -179,47 +206,39 @@ class _SocialCardState extends State<SocialCard> {
     );
   }
 
-  void _showOptionsMenu() {
-    final user = FirebaseAuth.instance.currentUser;
-    final isOwner = user?.uid == widget.post.userId;
+  String _getTimeAgo() {
+    final postDate = widget.post.createdAt.toDate();
+    final now = DateTime.now();
+    final difference = now.difference(postDate);
 
-    showModalBottomSheet(
+    if (difference.inDays >= 7) {
+      return DateFormat('MMM dd, yyyy').format(postDate);
+    } else if (difference.inDays > 0) {
+      return '${difference.inDays}d';
+    } else if (difference.inHours > 0) {
+      return '${difference.inHours}h';
+    } else if (difference.inMinutes > 0) {
+      return '${difference.inMinutes}m ago';
+    } else {
+      return 'Just now';
+    }
+  }
+
+  IconData _getVisibilityIcon() {
+    // For now, default to public icon
+    // Can be enhanced when visibility field is added to SocialPost model
+    return Icons.public;
+  }
+
+  void _showOptionsMenu() {
+    PostOptionsSheet.show(
       context: context,
-      builder: (context) {
-        return SafeArea(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              if (isOwner)
-                ListTile(
-                  leading: const Icon(Icons.delete, color: Colors.red),
-                  title: const Text(
-                    'Delete Post',
-                    style: TextStyle(color: Colors.red),
-                  ),
-                  onTap: () {
-                    Navigator.pop(context);
-                    widget.onDelete?.call();
-                  },
-                ),
-              ListTile(
-                leading: const Icon(Icons.report),
-                title: const Text('Report Post'),
-                onTap: () {
-                  Navigator.pop(context);
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Report submitted')),
-                  );
-                },
-              ),
-              ListTile(
-                leading: const Icon(Icons.close),
-                title: const Text('Cancel'),
-                onTap: () => Navigator.pop(context),
-              ),
-            ],
-          ),
-        );
+      postUserId: widget.post.userId,
+      onDelete: widget.onDelete,
+      onReport: () {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('Report submitted')));
       },
     );
   }
@@ -251,17 +270,21 @@ class _SocialCardState extends State<SocialCard> {
     final isOwnPost = currentUser?.uid == widget.post.userId;
 
     return Padding(
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       child: Row(
         children: [
           CircleAvatar(
-            radius: 22,
+            radius: 20,
             backgroundColor: AppColors.primary,
             backgroundImage: widget.post.userPhotoUrl != null
                 ? NetworkImage(widget.post.userPhotoUrl!)
                 : null,
             child: widget.post.userPhotoUrl == null
-                ? const Icon(Icons.person, color: AppColors.iconPrimary)
+                ? const Icon(
+                    Icons.person,
+                    color: AppColors.iconPrimary,
+                    size: 20,
+                  )
                 : null,
           ),
           const SizedBox(width: 12),
@@ -270,17 +293,33 @@ class _SocialCardState extends State<SocialCard> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  widget.post.userName,
+                  _displayName,
                   style: const TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                    fontSize: 15,
                   ),
                 ),
-                if (widget.post.userRole != null)
-                  Text(
-                    widget.post.userRole!,
-                    style: TextStyle(fontSize: 13, color: Colors.grey[600]),
-                  ),
+                const SizedBox(height: 2),
+                Row(
+                  children: [
+                    Text(
+                      _getTimeAgo(),
+                      style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 6),
+                      child: Text(
+                        '•',
+                        style: TextStyle(fontSize: 12, color: Colors.grey[400]),
+                      ),
+                    ),
+                    Icon(
+                      _getVisibilityIcon(),
+                      size: 14,
+                      color: Colors.grey[600],
+                    ),
+                  ],
+                ),
               ],
             ),
           ),
@@ -290,33 +329,30 @@ class _SocialCardState extends State<SocialCard> {
               onTap: _handleFollow,
               child: Container(
                 padding: const EdgeInsets.symmetric(
-                  horizontal: 12,
+                  horizontal: 16,
                   vertical: 6,
                 ),
                 decoration: BoxDecoration(
-                  color: _isFollowing ? Colors.grey[200] : AppColors.primary,
+                  color: _isFollowing ? Colors.grey[100] : AppColors.primary,
                   borderRadius: BorderRadius.circular(20),
-                  border: _isFollowing
-                      ? Border.all(color: Colors.grey[400]!)
-                      : null,
                 ),
                 child: Text(
-                  _isFollowing ? 'Followed' : 'Follow',
+                  _isFollowing ? 'Following' : 'Follow',
                   style: TextStyle(
-                    fontSize: 12,
+                    fontSize: 13,
                     fontWeight: FontWeight.w600,
-                    color: _isFollowing ? Colors.black : Colors.white,
+                    color: _isFollowing ? Colors.grey[700] : Colors.white,
                   ),
                 ),
               ),
-            )
-          else
-            const SizedBox(width: 12),
+            ),
+          const SizedBox(width: 8),
           IconButton(
-            icon: const Icon(Icons.more_vert, size: 20),
+            icon: Icon(Icons.more_horiz, size: 22, color: Colors.grey[600]),
             onPressed: _showOptionsMenu,
             padding: EdgeInsets.zero,
             constraints: const BoxConstraints(),
+            visualDensity: VisualDensity.compact,
           ),
         ],
       ),
@@ -325,8 +361,11 @@ class _SocialCardState extends State<SocialCard> {
 
   Widget _buildCaption() {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-      child: Text(widget.post.caption, style: const TextStyle(fontSize: 14)),
+      padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+      child: Text(
+        widget.post.caption,
+        style: const TextStyle(fontSize: 14, height: 1.4),
+      ),
     );
   }
 
@@ -431,83 +470,94 @@ class _SocialCardState extends State<SocialCard> {
 
   Widget _buildFooter() {
     return Padding(
-      padding: const EdgeInsets.all(12),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      child: Row(
         children: [
-          Row(
-            children: [
-              // Like
-              IconButton(
-                icon: Icon(
-                  Icons.favorite,
-                  color: _isLiked ? Colors.red : Colors.grey[400],
-                ),
-                onPressed: _handleLike,
-                constraints: const BoxConstraints(),
+          // Like
+          IconButton(
+            icon: Icon(
+              _isLiked ? Icons.favorite : Icons.favorite_border,
+              color: _isLiked ? Colors.red : Colors.grey[600],
+              size: 24,
+            ),
+            onPressed: _handleLike,
+            constraints: const BoxConstraints(),
+            padding: const EdgeInsets.all(8),
+          ),
+          if (_likesCount > 0) ...[
+            const SizedBox(width: 4),
+            Text(
+              '$_likesCount',
+              style: TextStyle(
+                color: Colors.grey[700],
+                fontWeight: FontWeight.w500,
+                fontSize: 14,
               ),
-              Text(
-                '$_likesCount',
-                style: TextStyle(
-                  color: Colors.red,
-                  fontWeight: FontWeight.w600,
-                  fontSize: 15,
-                ),
-              ),
-              const SizedBox(width: 16),
-              // Comment
-              GestureDetector(
-                onTap: _handleComment,
-                child: Row(
-                  children: [
-                    Icon(
-                      Icons.chat_bubble_outline,
-                      color: Colors.grey[600],
-                      size: 22,
-                    ),
-                    const SizedBox(width: 4),
+            ),
+          ],
+          const SizedBox(width: 16),
+          // Comment
+          GestureDetector(
+            onTap: _handleComment,
+            child: Padding(
+              padding: const EdgeInsets.all(8),
+              child: Row(
+                children: [
+                  Icon(
+                    Icons.chat_bubble_outline_rounded,
+                    color: Colors.grey[600],
+                    size: 23,
+                  ),
+                  if (_commentsCount > 0) ...[
+                    const SizedBox(width: 6),
                     Text(
                       '$_commentsCount',
                       style: TextStyle(
-                        color: Colors.grey[800],
-                        fontWeight: FontWeight.w600,
-                        fontSize: 15,
+                        color: Colors.grey[700],
+                        fontWeight: FontWeight.w500,
+                        fontSize: 14,
                       ),
                     ),
                   ],
-                ),
+                ],
               ),
-              const SizedBox(width: 16),
-              // Share
-              GestureDetector(
-                onTap: _handleShare,
-                child: Icon(Icons.send, color: Colors.grey[600], size: 22),
-              ),
-              const SizedBox(width: 4),
-              Text(
-                '$_sharesCount',
-                style: TextStyle(
-                  color: Colors.grey[800],
-                  fontWeight: FontWeight.w600,
-                  fontSize: 15,
-                ),
-              ),
-              const Spacer(),
-              // Bookmark
-              IconButton(
-                icon: Icon(
-                  _isBookmarked ? Icons.bookmark : Icons.bookmark_border,
-                  color: _isBookmarked ? AppColors.primary : Colors.grey[400],
-                ),
-                onPressed: _handleBookmark,
-                constraints: const BoxConstraints(),
-              ),
-            ],
+            ),
           ),
-          const SizedBox(height: 4),
-          Text(
-            DateFormat('MMM dd, yyyy').format(widget.post.createdAt.toDate()),
-            style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+          const SizedBox(width: 16),
+          // Share
+          GestureDetector(
+            onTap: _handleShare,
+            child: Padding(
+              padding: const EdgeInsets.all(8),
+              child: Row(
+                children: [
+                  Icon(Icons.share_outlined, color: Colors.grey[600], size: 22),
+                  if (_sharesCount > 0) ...[
+                    const SizedBox(width: 6),
+                    Text(
+                      '$_sharesCount',
+                      style: TextStyle(
+                        color: Colors.grey[700],
+                        fontWeight: FontWeight.w500,
+                        fontSize: 14,
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+          ),
+          const Spacer(),
+          // Bookmark
+          IconButton(
+            icon: Icon(
+              _isBookmarked ? Icons.bookmark : Icons.bookmark_border,
+              color: _isBookmarked ? AppColors.primary : Colors.grey[600],
+              size: 24,
+            ),
+            onPressed: _handleBookmark,
+            constraints: const BoxConstraints(),
+            padding: const EdgeInsets.all(8),
           ),
         ],
       ),

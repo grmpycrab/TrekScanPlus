@@ -9,6 +9,7 @@ import '../../services/booking_service.dart';
 import '../../services/validators.dart';
 import '../../models/climb.dart';
 import '../../components/climb_card.dart';
+import '../../components/app_dialogue_handler.dart';
 
 class BookAClimbScreen extends StatefulWidget {
   final String? highlightBookingId;
@@ -444,52 +445,45 @@ class _BookAClimbScreenState extends State<BookAClimbScreen> {
     return list;
   }
 
-  void _confirmCancelModel(Climb booking) {
-    showDialog(
+  void _confirmCancelModel(Climb booking) async {
+    final confirmed = await AppDialogueHandler.showConfirmation(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Cancel booking?'),
-        content: const Text('Are you sure you want to cancel this booking?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('No'),
-          ),
-          TextButton(
-            style: TextButton.styleFrom(foregroundColor: Colors.redAccent),
-            onPressed: () async {
-              // If booking has an id, persist cancellation to Firestore.
-              if (booking.id != null) {
-                try {
-                  await BookingService.instance.cancelBooking(booking.id!);
-                  // Let the Firestore stream update the UI. Optionally
-                  // update local model immediately for snappy feedback.
-                  if (mounted) {
-                    setState(() {
-                      booking.status = 'Cancelled';
-                    });
-                  }
-                } catch (e) {
-                  // Show error to user
-                  if (mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('Failed to cancel booking: $e')),
-                    );
-                  }
-                }
-              } else {
-                // No id (likely local-only); just update locally
-                if (mounted) {
-                  setState(() => booking.status = 'Cancelled');
-                }
-              }
-              Navigator.pop(context);
-            },
-            child: const Text('Yes, cancel'),
-          ),
-        ],
-      ),
+      title: 'Cancel Booking',
+      message: 'Are you sure you want to cancel this booking?',
+      confirmText: 'Cancel Booking',
+      cancelText: 'No',
+      isDestructive: true,
     );
+
+    if (confirmed == true) {
+      // If booking has an id, persist cancellation to Firestore.
+      if (booking.id != null) {
+        try {
+          await BookingService.instance.cancelBooking(booking.id!);
+          // Let the Firestore stream update the UI. Optionally
+          // update local model immediately for snappy feedback.
+          if (mounted) {
+            setState(() {
+              booking.status = 'Cancelled';
+            });
+          }
+        } catch (e) {
+          debugPrint('Error cancelling booking: $e');
+          if (mounted) {
+            await AppDialogueHandler.showError(
+              context: context,
+              title: 'Cancellation Failed',
+              message: 'Unable to cancel booking. Please try again.',
+            );
+          }
+        }
+      } else {
+        // No id (likely local-only); just update locally
+        if (mounted) {
+          setState(() => booking.status = 'Cancelled');
+        }
+      }
+    }
   }
 
   void _showEditBookingSheet(BookingModel booking) {
