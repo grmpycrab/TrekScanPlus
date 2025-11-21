@@ -43,6 +43,8 @@ class BookingModel {
   final Timestamp trekDate;
   final int numberOfPorters;
   final String trekType; // recreational | research
+  final String
+  location; // inside_san_isidro | inside_davao_oriental | outside_davao_oriental
   final String? notes;
   final String? adminNotes;
   List<Attachment> attachments;
@@ -57,6 +59,7 @@ class BookingModel {
     required this.trekDate,
     required this.numberOfPorters,
     required this.trekType,
+    this.location = 'inside_san_isidro',
     this.notes,
     this.adminNotes,
     this.attachments = const [],
@@ -72,6 +75,7 @@ class BookingModel {
     'trekDate': trekDate,
     'numberOfPorters': numberOfPorters,
     'trekType': trekType,
+    'location': location,
     'notes': notes,
     'adminNotes': adminNotes,
     'attachments': attachments.map((a) => a.toMap()).toList(),
@@ -89,6 +93,7 @@ class BookingModel {
       trekDate: data['trekDate'] as Timestamp,
       numberOfPorters: (data['numberOfPorters'] as num?)?.toInt() ?? 0,
       trekType: data['trekType'] as String? ?? 'recreational',
+      location: data['location'] as String? ?? 'inside_san_isidro',
       notes: data['notes'] as String?,
       adminNotes: data['adminNotes'] as String?,
       attachments:

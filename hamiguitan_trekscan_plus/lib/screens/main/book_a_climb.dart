@@ -24,6 +24,7 @@ class _BookAClimbScreenState extends State<BookAClimbScreen> {
   final _formKey = GlobalKey<FormState>();
   final ScrollController _scrollController = ScrollController();
   String _climbType = 'General';
+  String _location = 'Inside San Isidro';
   bool _hasScrolledToBooking = false;
 
   // Store picked PlatformFile objects so we can upload bytes/paths to Firebase
@@ -173,6 +174,8 @@ class _BookAClimbScreenState extends State<BookAClimbScreen> {
       trekDate: Timestamp.fromDate(_selectedDate ?? now),
       numberOfPorters: int.tryParse(meta['porters'] ?? '') ?? 0,
       trekType: meta['trekType'] ?? _climbType.toLowerCase(),
+      location:
+          meta['location'] ?? _location.toLowerCase().replaceAll(' ', '_'),
       notes: meta['notes'],
     );
 
@@ -201,8 +204,8 @@ class _BookAClimbScreenState extends State<BookAClimbScreen> {
         uploadedCount++;
         onProgress?.call(uploadedCount, files.length, f.name, 1.0);
       } catch (e) {
-        print('ERROR uploading ${f.name}: $e');
-        print('ERROR Stack trace: ${StackTrace.current}');
+        debugPrint('Error uploading file ${f.name}: $e');
+        debugPrint(StackTrace.current.toString());
         // Continue with next file rather than failing entire booking
         continue;
       }
@@ -426,7 +429,7 @@ class _BookAClimbScreenState extends State<BookAClimbScreen> {
             });
       }
     } catch (e) {
-      print('Error refreshing bookings: $e');
+      debugPrint('Error refreshing bookings: $e');
     }
   }
 
@@ -504,6 +507,17 @@ class _BookAClimbScreenState extends State<BookAClimbScreen> {
       text: booking.numberOfPorters.toString(),
     );
     final notesController = TextEditingController(text: booking.notes ?? '');
+
+    // Convert database format to display format
+    String locationValue = booking.location;
+    if (locationValue == 'inside_san_isidro') {
+      locationValue = 'Inside San Isidro';
+    } else if (locationValue == 'inside_davao_oriental') {
+      locationValue = 'Inside Davao Oriental';
+    } else if (locationValue == 'outside_davao_oriental') {
+      locationValue = 'Outside Davao Oriental';
+    }
+
     bool isSaving = false;
 
     // Check if this is a declined booking
@@ -559,6 +573,7 @@ class _BookAClimbScreenState extends State<BookAClimbScreen> {
                   booking.id!,
                   affiliation: affiliationController.text.trim(),
                   numberOfPorters: porters,
+                  location: locationValue.toLowerCase().replaceAll(' ', '_'),
                   notes: notesController.text.trim().isEmpty
                       ? null
                       : notesController.text.trim(),
@@ -574,7 +589,7 @@ class _BookAClimbScreenState extends State<BookAClimbScreen> {
                         attachment,
                       );
                     } catch (e) {
-                      print(
+                      debugPrint(
                         'Error deleting attachment ${attachment.fileName}: $e',
                       );
                       // Continue with other deletions
@@ -590,7 +605,8 @@ class _BookAClimbScreenState extends State<BookAClimbScreen> {
                       file,
                     );
                   } catch (e) {
-                    print('Error uploading file ${file.name}: $e');
+                    debugPrint('Error uploading file ${file.name}: $e');
+                    debugPrint(StackTrace.current.toString());
                     // Continue with other uploads
                   }
                 }
@@ -745,6 +761,92 @@ class _BookAClimbScreenState extends State<BookAClimbScreen> {
                                   }
                                   return null;
                                 },
+                              ),
+                              const SizedBox(height: 12),
+                              Container(
+                                decoration: BoxDecoration(
+                                  color: Colors.white,
+                                  borderRadius: BorderRadius.circular(12),
+                                  border: Border.all(color: Colors.black26),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.black.withOpacity(0.05),
+                                      blurRadius: 4,
+                                      offset: const Offset(0, 2),
+                                    ),
+                                  ],
+                                ),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 12,
+                                  vertical: 4,
+                                ),
+                                child: DropdownButtonFormField<String>(
+                                  value: locationValue,
+                                  decoration: const InputDecoration(
+                                    labelText: 'Location',
+                                    border: InputBorder.none,
+                                    contentPadding: EdgeInsets.zero,
+                                  ),
+                                  icon: Icon(
+                                    Icons.arrow_drop_down,
+                                    color: Colors.blueGrey[700],
+                                  ),
+                                  style: const TextStyle(
+                                    fontSize: 15,
+                                    color: Colors.black87,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                  dropdownColor: Colors.white,
+                                  items: const [
+                                    DropdownMenuItem(
+                                      value: 'Inside San Isidro',
+                                      child: Row(
+                                        children: [
+                                          Icon(
+                                            Icons.location_city,
+                                            size: 20,
+                                            color: Colors.green,
+                                          ),
+                                          SizedBox(width: 12),
+                                          Text('Inside San Isidro'),
+                                        ],
+                                      ),
+                                    ),
+                                    DropdownMenuItem(
+                                      value: 'Inside Davao Oriental',
+                                      child: Row(
+                                        children: [
+                                          Icon(
+                                            Icons.map,
+                                            size: 20,
+                                            color: Colors.blue,
+                                          ),
+                                          SizedBox(width: 12),
+                                          Text('Inside Davao Oriental'),
+                                        ],
+                                      ),
+                                    ),
+                                    DropdownMenuItem(
+                                      value: 'Outside Davao Oriental',
+                                      child: Row(
+                                        children: [
+                                          Icon(
+                                            Icons.public,
+                                            size: 20,
+                                            color: Colors.orange,
+                                          ),
+                                          SizedBox(width: 12),
+                                          Text('Outside Davao Oriental'),
+                                        ],
+                                      ),
+                                    ),
+                                  ],
+                                  onChanged: (val) {
+                                    if (val != null) {
+                                      setModalState(() => locationValue = val);
+                                    }
+                                  },
+                                ),
                               ),
                               const SizedBox(height: 12),
                               TextFormField(
@@ -1053,7 +1155,7 @@ class _BookAClimbScreenState extends State<BookAClimbScreen> {
                           'Contact Number',
                           controller: _contactController,
                           keyboardType: TextInputType.phone,
-                          validator: (value) => Validators.validPhone(value),
+                          validator: Validators.validContactNumber,
                         ),
                         const SizedBox(height: 12),
                         const SizedBox(height: 12),
@@ -1066,6 +1168,7 @@ class _BookAClimbScreenState extends State<BookAClimbScreen> {
                           'Number of Porters',
                           controller: _portersController,
                           keyboardType: TextInputType.number,
+                          validator: Validators.validPorters,
                         ),
                         const SizedBox(height: 12),
                         // Date picker row
@@ -1165,6 +1268,7 @@ class _BookAClimbScreenState extends State<BookAClimbScreen> {
       controller: controller,
       keyboardType: keyboardType,
       validator: validator,
+      autovalidateMode: AutovalidateMode.onUserInteraction,
       decoration: InputDecoration(
         labelText: label,
         filled: true,
@@ -1184,6 +1288,19 @@ class _BookAClimbScreenState extends State<BookAClimbScreen> {
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),
           borderSide: const BorderSide(color: Colors.blueAccent),
+        ),
+        errorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(16),
+          borderSide: const BorderSide(color: Colors.red, width: 1.5),
+        ),
+        focusedErrorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(16),
+          borderSide: const BorderSide(color: Colors.red, width: 2),
+        ),
+        errorStyle: const TextStyle(
+          color: Colors.red,
+          fontSize: 12,
+          fontWeight: FontWeight.w500,
         ),
       ),
     );
@@ -1218,7 +1335,8 @@ class _BookAClimbScreenState extends State<BookAClimbScreen> {
                     _reviewRow('Contact Number', _contactController.text),
                     _reviewRow('Affiliation', _affiliationController.text),
                     _reviewRow('Number of Porters', _portersController.text),
-                    _reviewRow('Climb Type', _climbType),
+                    _reviewRow('Purpose of Trek', _climbType),
+                    _reviewRow('Location', _location),
                     _reviewRow(
                       'Trek Date',
                       _selectedDate != null ? _formatSelectedDate() : 'Not set',
@@ -1289,6 +1407,10 @@ class _BookAClimbScreenState extends State<BookAClimbScreen> {
                                 'affiliation': _affiliationController.text,
                                 'porters': _portersController.text,
                                 'trekType': _climbType.toLowerCase(),
+                                'location': _location.toLowerCase().replaceAll(
+                                  ' ',
+                                  '_',
+                                ),
                               },
                               onProgress: (uploaded, total, fileName, percent) {
                                 // Update the dialog-scoped progress variables
@@ -1321,16 +1443,23 @@ class _BookAClimbScreenState extends State<BookAClimbScreen> {
                               });
                             }
 
-                            // reset form state
-                            _contactController.clear();
-                            _affiliationController.clear();
-                            _portersController.clear();
-                            _pickedFiles = [];
-                            _climbType = 'General';
-                            _selectedDate = null;
+                            // close the dialog first (use rootNavigator to ensure dialog is dismissed)
+                            if (mounted) {
+                              Navigator.of(context, rootNavigator: true).pop();
+                            }
 
-                            // close the dialog (use rootNavigator to ensure dialog is dismissed)
-                            Navigator.of(context, rootNavigator: true).pop();
+                            // reset form state after dialog is closed
+                            if (mounted) {
+                              setState(() {
+                                _contactController.clear();
+                                _affiliationController.clear();
+                                _portersController.clear();
+                                _pickedFiles = [];
+                                _climbType = 'General';
+                                _location = 'Inside San Isidro';
+                                _selectedDate = null;
+                              });
+                            }
                           } catch (e) {
                             // show error on main scaffold
                             if (mounted) {
@@ -1378,24 +1507,147 @@ class _BookAClimbScreenState extends State<BookAClimbScreen> {
   }
 
   Widget _buildDropdown() {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.black26),
-      ),
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      child: DropdownButtonFormField<String>(
-        initialValue: _climbType,
-        decoration: const InputDecoration(border: InputBorder.none),
-        items: const [
-          DropdownMenuItem(value: 'General', child: Text('General')),
-          DropdownMenuItem(value: 'Research', child: Text('Research')),
-        ],
-        onChanged: (val) {
-          if (val != null) setState(() => _climbType = val);
-        },
-      ),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'Purpose of Trek',
+          style: TextStyle(
+            fontWeight: FontWeight.w600,
+            fontSize: 15,
+            color: Colors.black87,
+          ),
+        ),
+        const SizedBox(height: 8),
+        Container(
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: Colors.black26),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.05),
+                blurRadius: 4,
+                offset: const Offset(0, 2),
+              ),
+            ],
+          ),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+          child: DropdownButtonFormField<String>(
+            value: _climbType,
+            decoration: const InputDecoration(
+              border: InputBorder.none,
+              contentPadding: EdgeInsets.zero,
+            ),
+            icon: Icon(Icons.arrow_drop_down, color: Colors.blueGrey[700]),
+            style: const TextStyle(
+              fontSize: 15,
+              color: Colors.black87,
+              fontWeight: FontWeight.w500,
+            ),
+            dropdownColor: Colors.white,
+            items: const [
+              DropdownMenuItem(
+                value: 'General',
+                child: Row(
+                  children: [
+                    Icon(Icons.hiking, size: 20, color: Colors.blueGrey),
+                    SizedBox(width: 12),
+                    Text('General'),
+                  ],
+                ),
+              ),
+              DropdownMenuItem(
+                value: 'Research',
+                child: Row(
+                  children: [
+                    Icon(Icons.science, size: 20, color: Colors.blueGrey),
+                    SizedBox(width: 12),
+                    Text('Research'),
+                  ],
+                ),
+              ),
+            ],
+            onChanged: (val) {
+              if (val != null) setState(() => _climbType = val);
+            },
+          ),
+        ),
+        const SizedBox(height: 18),
+        const Text(
+          'Location',
+          style: TextStyle(
+            fontWeight: FontWeight.w600,
+            fontSize: 15,
+            color: Colors.black87,
+          ),
+        ),
+        const SizedBox(height: 8),
+        Container(
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: Colors.black26),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.05),
+                blurRadius: 4,
+                offset: const Offset(0, 2),
+              ),
+            ],
+          ),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+          child: DropdownButtonFormField<String>(
+            value: _location,
+            decoration: const InputDecoration(
+              border: InputBorder.none,
+              contentPadding: EdgeInsets.zero,
+            ),
+            icon: Icon(Icons.arrow_drop_down, color: Colors.blueGrey[700]),
+            style: const TextStyle(
+              fontSize: 15,
+              color: Colors.black87,
+              fontWeight: FontWeight.w500,
+            ),
+            dropdownColor: Colors.white,
+            items: const [
+              DropdownMenuItem(
+                value: 'Inside San Isidro',
+                child: Row(
+                  children: [
+                    Icon(Icons.location_city, size: 20, color: Colors.green),
+                    SizedBox(width: 12),
+                    Text('Inside San Isidro'),
+                  ],
+                ),
+              ),
+              DropdownMenuItem(
+                value: 'Inside Davao Oriental',
+                child: Row(
+                  children: [
+                    Icon(Icons.map, size: 20, color: Colors.blue),
+                    SizedBox(width: 12),
+                    Text('Inside Davao Oriental'),
+                  ],
+                ),
+              ),
+              DropdownMenuItem(
+                value: 'Outside Davao Oriental',
+                child: Row(
+                  children: [
+                    Icon(Icons.public, size: 20, color: Colors.orange),
+                    SizedBox(width: 12),
+                    Text('Outside Davao Oriental'),
+                  ],
+                ),
+              ),
+            ],
+            onChanged: (val) {
+              if (val != null) setState(() => _location = val);
+            },
+          ),
+        ),
+      ],
     );
   }
 
