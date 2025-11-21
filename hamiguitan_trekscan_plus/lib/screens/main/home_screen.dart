@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 import 'notification_screen.dart';
-import '../../components/do_and_dont.dart';
 import '../../components/event_calendar.dart';
 import '../../components/connectivity_banner.dart';
 import '../../components/social_card.dart';
 import '../../components/create_post.dart';
 import '../../components/comments_sheet.dart';
+import '../../components/do_and_dont.dart';
+import '../../components/trek_tips.dart';
 import '../../models/calendar_model.dart';
 import '../../models/social_model.dart';
 import '../../theme/color.dart';
@@ -26,7 +27,6 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   //int _selectedNavIndex = 0;
-  int _selectedSegmentIndex = 0;
   late List<TrekDay> _trekDays;
   User? _firebaseUser;
   StreamSubscription<User?>? _authSubscription;
@@ -153,15 +153,8 @@ class _HomeScreenState extends State<HomeScreen> {
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
                       _buildWelcomeBanner(),
-                      const SizedBox(height: 20),
-                      DoAndDont(
-                        selectedIndex: _selectedSegmentIndex,
-                        onSegmentTapped: (index) {
-                          setState(() {
-                            _selectedSegmentIndex = index;
-                          });
-                        },
-                      ),
+                      const SizedBox(height: 8),
+                      _buildInfoButtons(),
                       const SizedBox(height: 20),
                       _buildSocialFeed(),
                     ],
@@ -333,16 +326,8 @@ class _HomeScreenState extends State<HomeScreen> {
                           .limit(1)
                           .snapshots(),
                       builder: (context, snapshot) {
-                        print(
-                          '🔔 Home notification bell stream snapshot received',
-                        );
-                        print(
-                          '🔔 Has data: ${snapshot.hasData}, Docs: ${snapshot.data?.docs.length ?? 0}',
-                        );
-                        if (snapshot.hasError) {
-                          print(
-                            '❌ Home notification stream error: ${snapshot.error}',
-                          );
+                        if (_firebaseUser == null) {
+                          return const SizedBox.shrink();
                         }
                         final hasUnread =
                             snapshot.hasData && snapshot.data!.docs.isNotEmpty;
@@ -421,10 +406,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                 day.date.month == date.month &&
                                 day.date.day == date.day &&
                                 day.isAvailable,
-                          )) {
-                            // Placeholder for navigation or booking logic
-                            print('Selected available date: $date');
-                          }
+                          )) {}
                         },
                       ),
                     ),
@@ -572,6 +554,111 @@ class _HomeScreenState extends State<HomeScreen> {
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildInfoButtons() {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isSmallScreen = screenWidth < 360;
+
+    return Padding(
+      padding: EdgeInsets.symmetric(horizontal: isSmallScreen ? 12.0 : 16.0),
+      child: Row(
+        children: [
+          Expanded(
+            child: _buildInfoButton(
+              title: "Do's & Dont's",
+              icon: Icons.rule,
+              gradient: LinearGradient(
+                colors: [
+                  AppColors.primary,
+                  AppColors.primary.withValues(alpha: 0.8),
+                ],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              onTap: () => _showDosAndDontsOverlay(),
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: _buildInfoButton(
+              title: 'Tips & Tricks',
+              icon: Icons.lightbulb_outline,
+              gradient: LinearGradient(
+                colors: [const Color(0xFF06402B), const Color(0xFF053821)],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              onTap: () => _showTipsAndTricksOverlay(),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildInfoButton({
+    required String title,
+    required IconData icon,
+    required Gradient gradient,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+        decoration: BoxDecoration(
+          gradient: gradient,
+          borderRadius: BorderRadius.circular(12),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.15),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.2),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Icon(icon, color: Colors.white, size: 20),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                title,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 15,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showDosAndDontsOverlay() {
+    showDialog(
+      context: context,
+      barrierDismissible: true,
+      builder: (context) => const DoAndDontOverlay(),
+    );
+  }
+
+  void _showTipsAndTricksOverlay() {
+    showDialog(
+      context: context,
+      barrierDismissible: true,
+      builder: (context) => const TrekTipsOverlay(),
     );
   }
 
