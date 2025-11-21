@@ -363,58 +363,17 @@ class _HomeScreenState extends State<HomeScreen> {
       context: context,
       barrierDismissible: true,
       builder: (context) {
-        return Dialog(
-          insetPadding: const EdgeInsets.all(16),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-          ),
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Row(
-                  children: [
-                    const Expanded(
-                      child: Text(
-                        'Trek Schedule',
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
-                    IconButton(
-                      icon: const Icon(Icons.close),
-                      onPressed: () => Navigator.of(context).pop(),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 8),
-                SizedBox(
-                  width: double.infinity,
-                  child: ConstrainedBox(
-                    constraints: const BoxConstraints(maxHeight: 420),
-                    child: SingleChildScrollView(
-                      child: EventCalendar(
-                        trekDays: _trekDays,
-                        onMonthChanged: (d) => _subscribeBookingsForMonth(d),
-                        onDaySelected: (date) {
-                          if (_trekDays.any(
-                            (day) =>
-                                day.date.year == date.year &&
-                                day.date.month == date.month &&
-                                day.date.day == date.day &&
-                                day.isAvailable,
-                          )) {}
-                        },
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
+        return EventCalendar(
+          trekDays: _trekDays,
+          onDaySelected: (date) {
+            if (_trekDays.any(
+              (day) =>
+                  day.date.year == date.year &&
+                  day.date.month == date.month &&
+                  day.date.day == date.day &&
+                  day.isAvailable,
+            )) {}
+          },
         );
       },
     );
