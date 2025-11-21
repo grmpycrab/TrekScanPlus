@@ -26,48 +26,30 @@ class AchievementService {
   /// Initialize the service - load achievements from JSON and local cache
   /// Pass userId to scope local storage to current user
   Future<void> init({String? userId}) async {
-    if (_isInitialized) {
-      print('AchievementService already initialized, skipping init()');
-      return;
-    }
+    if (_isInitialized) return;
 
     try {
       // Use current user ID if not provided
       final currentUserId = userId ?? _auth.currentUser?.uid;
-      print(
-        'DEBUG: AchievementService.init() starting for userId: $currentUserId',
-      );
 
       // Initialize local service with user ID
       _localService = await LocalAchievementService.init(userId: currentUserId);
 
       // Load achievements from JSON file
       await _loadAchievementsFromJson();
-      print(
-        'DEBUG: After loading JSON, total achievements: ${_allAchievements.length}',
-      );
 
       // Merge with local achievements (keeping unlock status)
       await _mergeWithLocalAchievements();
-      print(
-        'DEBUG: After merging local, unlocked: ${_allAchievements.where((a) => a.isUnlocked).length}',
-      );
 
       // Then, if user is authenticated, load achievements from Firebase and merge
       if (currentUserId != null) {
         await _mergeWithFirebaseAchievements(currentUserId);
-        print(
-          'DEBUG: After merging Firebase, unlocked: ${_allAchievements.where((a) => a.isUnlocked).length}',
-        );
       }
 
       // Sync any pending achievements to Firebase if online
       await _syncPendingToFirebase();
 
       _isInitialized = true;
-      print(
-        'AchievementService initialized successfully for user: $currentUserId',
-      );
     } catch (e) {
       print('Error initializing AchievementService: $e');
       rethrow;
@@ -91,8 +73,6 @@ class AchievementService {
       _allAchievements = badgesList
           .map((badge) => Achievement.fromJson(badge as Map<String, dynamic>))
           .toList();
-
-      print('Loaded ${_allAchievements.length} achievements from JSON');
     } catch (e) {
       print('Error loading achievements from JSON: $e');
       _allAchievements = [];
@@ -135,15 +115,9 @@ class AchievementService {
   /// Updates local unlock status from Firebase data
   Future<void> _mergeWithFirebaseAchievements(String userId) async {
     try {
-      print('Loading achievements from Firebase for user: $userId');
       final firebaseAchievements = await fetchFromFirebase();
 
-      if (firebaseAchievements.isEmpty) {
-        print('No achievements found in Firebase');
-        return;
-      }
-
-      print('Found ${firebaseAchievements.length} achievements in Firebase');
+      if (firebaseAchievements.isEmpty) return;
 
       for (int i = 0; i < _allAchievements.length; i++) {
         final achievement = _allAchievements[i];
@@ -170,10 +144,6 @@ class AchievementService {
           await _localService.saveAchievement(_allAchievements[i]);
         }
       }
-
-      print(
-        'Successfully merged ${firebaseAchievements.length} Firebase achievements',
-      );
     } catch (e) {
       print('Error merging with Firebase achievements: $e');
     }
@@ -320,8 +290,6 @@ class AchievementService {
           unlockedAt: DateTime.now(),
         );
       }
-
-      print('Achievement unlocked locally: ${achievement.name}');
     } catch (e) {
       print('Error unlocking achievement locally: $e');
     }
@@ -331,22 +299,13 @@ class AchievementService {
   Future<void> _syncPendingToFirebase() async {
     try {
       final isConnected = await _isOnline();
-      if (!isConnected) {
-        print('Offline - skipping Firebase sync');
-        return;
-      }
+      if (!isConnected) return;
 
       final userId = _auth.currentUser?.uid;
-      if (userId == null) {
-        print('No authenticated user - skipping Firebase sync');
-        return;
-      }
+      if (userId == null) return;
 
       final syncQueue = await _localService.getSyncQueue();
-      if (syncQueue.isEmpty) {
-        print('No achievements to sync');
-        return;
-      }
+      if (syncQueue.isEmpty) return;
 
       for (final achievementId in syncQueue) {
         try {
@@ -378,11 +337,10 @@ class AchievementService {
 
             // Remove from sync queue
             await _localService.removeFromSyncQueue(achievementId);
-            print('Achievement synced to Firebase: ${achievement.name}');
           }
         } catch (e) {
-          print('Error syncing achievement $achievementId: $e');
           // Continue with next achievement if one fails
+          continue;
         }
       }
     } catch (e) {
@@ -487,7 +445,6 @@ class AchievementService {
         }
       }
       await _localService.clearAll();
-      print('All achievements reset');
     } catch (e) {
       print('Error resetting achievements: $e');
     }
