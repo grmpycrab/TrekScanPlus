@@ -31,6 +31,7 @@ class BookingService {
     String bookingId, {
     String? affiliation,
     int? numberOfPorters,
+    String? location,
     String? notes,
     bool resubmitDeclined = false,
   }) async {
@@ -42,6 +43,9 @@ class BookingService {
     }
     if (numberOfPorters != null) {
       updateData['numberOfPorters'] = numberOfPorters;
+    }
+    if (location != null) {
+      updateData['location'] = location;
     }
     // Allow clearing notes by sending null
     updateData['notes'] = notes;
