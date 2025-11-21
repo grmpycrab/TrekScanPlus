@@ -272,6 +272,183 @@ class StationService {
     return _stations.where((station) => !station.isVisited).toList();
   }
 
+  /// Calculate total distance based on visited stations
+  /// Camp 3 (Station 8) is a central hub with three routes:
+  /// Route A: Camp 3 → Pygmy Field → Lantawan 3 → Tinagong Dagat → Hidden Garden
+  /// Route B: Camp 3 → Black Mountain ↔ Twin Falls (bidirectional)
+  /// Route C: Camp 3 → Peak
+  double getTotalDistance() {
+    final visitedStations = getVisitedStations();
+    if (visitedStations.isEmpty) return 0.0;
+
+    final stationMap = {for (var s in _stations) s.id: s};
+    final visitedIds = visitedStations.map((s) => s.id).toSet();
+
+    // Calculate base distance: Station 1 → Camp 3 (sequential)
+    double baseDistance = 0.0;
+    const camp3Id = 'utvrrkfkh9'; // Station 8: Camp 3
+
+    var currentId = '56okrkt0pb'; // Station 1: UNESCO Marker
+    while (currentId != camp3Id) {
+      final current = stationMap[currentId];
+      if (current == null || current.nextStationId == null) break;
+
+      if (current.distanceToNextKm != null) {
+        baseDistance += current.distanceToNextKm!;
+      }
+      currentId = current.nextStationId!;
+    }
+
+    // Define the three routes from Camp 3
+    final routeA = [
+      '6mm4kle34g', // Station 9: Pygmy Field
+      'g5uabiveqd', // Station 10/11: Lantawan 3 / Mossy Forest
+      '79t42cmo77', // Station 12: Tinagong Dagat
+      'i73hl7b7g3', // Station 13: Hidden Garden
+    ];
+
+    final routeB = [
+      '44r5tebjrc', // Station 15: Black Mountain
+      'r5kntj3sae', // Station 16: Twin Falls
+    ];
+
+    final routeC = [
+      'mr2l529okj', // Station 14: Peak
+    ];
+
+    // Calculate distance for each route taken
+    double routeDistances = 0.0;
+
+    // Check Route A (sequential path from Camp 3)
+    if (routeA.any((id) => visitedIds.contains(id))) {
+      double routeADistance = 0.0;
+      var prevId = camp3Id;
+
+      for (final stationId in routeA) {
+        if (visitedIds.contains(stationId)) {
+          final prevStation = stationMap[prevId];
+          if (prevStation?.distanceToNextKm != null) {
+            routeADistance += prevStation!.distanceToNextKm!;
+          }
+          prevId = stationId;
+        } else {
+          break; // Stop if we hit an unvisited station
+        }
+      }
+      routeDistances = routeADistance > routeDistances
+          ? routeADistance
+          : routeDistances;
+    }
+
+    // Check Route B (Black Mountain ↔ Twin Falls)
+    if (routeB.any((id) => visitedIds.contains(id))) {
+      double routeBDistance = 0.0;
+
+      // Distance from Camp 3 to first visited station in Route B
+      if (visitedIds.contains('44r5tebjrc')) {
+        // Black Mountain
+        final peakStation =
+            stationMap['mr2l529okj']; // Peak has distance to Black Mountain
+        if (peakStation?.distanceToNextKm != null) {
+          routeBDistance +=
+              peakStation!.distanceToNextKm!; // 4.9 km to Black Mountain
+        }
+
+        // If Twin Falls is also visited, add distance between them
+        if (visitedIds.contains('r5kntj3sae')) {
+          final blackMtnStation = stationMap['44r5tebjrc'];
+          if (blackMtnStation?.distanceToNextKm != null) {
+            routeBDistance +=
+                blackMtnStation!.distanceToNextKm!; // 1.3 km to Twin Falls
+          }
+        }
+      } else if (visitedIds.contains('r5kntj3sae')) {
+        // Only Twin Falls visited
+        // Assume same path through Black Mountain
+        final peakStation = stationMap['mr2l529okj'];
+        final blackMtnStation = stationMap['44r5tebjrc'];
+        if (peakStation?.distanceToNextKm != null &&
+            blackMtnStation?.distanceToNextKm != null) {
+          routeBDistance +=
+              peakStation!.distanceToNextKm! +
+              blackMtnStation!.distanceToNextKm!;
+        }
+      }
+      routeDistances = routeBDistance > routeDistances
+          ? routeBDistance
+          : routeDistances;
+    }
+
+    // Check Route C (Peak)
+    if (routeC.any((id) => visitedIds.contains(id))) {
+      double routeCDistance = 0.0;
+      final hiddenGardenStation =
+          stationMap['i73hl7b7g3']; // Hidden Garden has distance to Peak
+      if (hiddenGardenStation?.distanceToNextKm != null) {
+        routeCDistance =
+            hiddenGardenStation!.distanceToNextKm!; // 4.9 km to Peak
+      }
+      routeDistances = routeCDistance > routeDistances
+          ? routeCDistance
+          : routeDistances;
+    }
+
+    // Return total: base distance + longest route taken from Camp 3
+    return baseDistance + routeDistances;
+  }
+
+  /// Calculate total time spent trekking in minutes
+  /// Based on the time between first and last scanned station
+  int getTotalTimeMinutes() {
+    final visitedStations = getVisitedStations();
+    if (visitedStations.isEmpty) return 0;
+
+    // Filter stations that have lastScanned timestamp
+    final stationsWithTime = visitedStations
+        .where((s) => s.lastScanned != null)
+        .toList();
+
+    if (stationsWithTime.isEmpty) return 0;
+
+    // Sort by scan time
+    stationsWithTime.sort((a, b) => a.lastScanned!.compareTo(b.lastScanned!));
+
+    final firstScan = stationsWithTime.first.lastScanned!;
+    final lastScan = stationsWithTime.last.lastScanned!;
+
+    return lastScan.difference(firstScan).inMinutes;
+  }
+
+  /// Get trek start date (first scanned station)
+  DateTime? getTrekStartDate() {
+    final visitedStations = getVisitedStations();
+    if (visitedStations.isEmpty) return null;
+
+    final stationsWithTime = visitedStations
+        .where((s) => s.lastScanned != null)
+        .toList();
+
+    if (stationsWithTime.isEmpty) return null;
+
+    stationsWithTime.sort((a, b) => a.lastScanned!.compareTo(b.lastScanned!));
+    return stationsWithTime.first.lastScanned;
+  }
+
+  /// Get trek end date (last scanned station)
+  DateTime? getTrekEndDate() {
+    final visitedStations = getVisitedStations();
+    if (visitedStations.isEmpty) return null;
+
+    final stationsWithTime = visitedStations
+        .where((s) => s.lastScanned != null)
+        .toList();
+
+    if (stationsWithTime.isEmpty) return null;
+
+    stationsWithTime.sort((a, b) => b.lastScanned!.compareTo(a.lastScanned!));
+    return stationsWithTime.first.lastScanned;
+  }
+
   Future<String?> getQRKeyForStation(String stationId) async {
     return prefs.getString(_getUserQRKey(stationId));
   }

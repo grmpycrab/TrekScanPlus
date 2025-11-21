@@ -26,6 +26,7 @@ class _ScannerScreenState extends State<ScannerScreen>
   String? _lastScannedCode;
   DateTime? _lastScanTime;
   bool _geofencingEnabled = true; // Toggle for testing
+  bool _isProcessingScan = false; // Prevent concurrent scan processing
 
   @override
   void initState() {
@@ -245,13 +246,24 @@ class _ScannerScreenState extends State<ScannerScreen>
               final code = capture.barcodes.first.rawValue;
               if (code == null) return;
 
-              // Debounce: Ignore if same code scanned within 2 seconds
+              // Prevent processing if already handling a scan
+              if (_isProcessingScan) {
+                return;
+              }
+
+              // Debounce: Ignore if same code scanned within 3 seconds
               final now = DateTime.now();
               if (_lastScannedCode == code &&
                   _lastScanTime != null &&
-                  now.difference(_lastScanTime!).inSeconds < 2) {
+                  now.difference(_lastScanTime!).inSeconds < 3) {
                 return;
               }
+
+              // Mark as processing to prevent concurrent scans
+              _isProcessingScan = true;
+
+              // STOP scanner immediately to prevent further detections
+              await controller?.stop();
 
               // Update last scanned info
               _lastScannedCode = code;
@@ -264,6 +276,31 @@ class _ScannerScreenState extends State<ScannerScreen>
                 if (_geofencingEnabled &&
                     station.latitude != null &&
                     station.longitude != null) {
+                  // Show loading indicator while checking location
+                  if (mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Row(
+                          children: [
+                            SizedBox(
+                              width: 20,
+                              height: 20,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                valueColor: AlwaysStoppedAnimation<Color>(
+                                  Colors.white,
+                                ),
+                              ),
+                            ),
+                            SizedBox(width: 12),
+                            Text('Verifying location...'),
+                          ],
+                        ),
+                        duration: Duration(seconds: 2),
+                      ),
+                    );
+                  }
+
                   final geofenceResult = await GeofencingService.checkGeofence(
                     stationLat: station.latitude!,
                     stationLng: station.longitude!,
@@ -282,6 +319,10 @@ class _ScannerScreenState extends State<ScannerScreen>
                     // Reset scan tracking to allow retry
                     _lastScannedCode = null;
                     _lastScanTime = null;
+                    _isProcessingScan = false;
+
+                    // Restart scanner for retry
+                    await controller?.start();
                     return;
                   }
                 }
@@ -325,6 +366,10 @@ class _ScannerScreenState extends State<ScannerScreen>
                 // Reset scan tracking after successful navigation
                 _lastScannedCode = null;
                 _lastScanTime = null;
+                _isProcessingScan = false;
+
+                // Restart scanner after returning from detail screen
+                await controller?.start();
               } else {
                 if (!mounted) return;
                 ScaffoldMessenger.of(context).showSnackBar(
@@ -334,7 +379,12 @@ class _ScannerScreenState extends State<ScannerScreen>
                     duration: Duration(seconds: 2),
                   ),
                 );
-                // Only allow retry after 2 seconds for invalid codes
+                // Reset processing flag for invalid codes
+                _isProcessingScan = false;
+
+                // Restart scanner for retry
+                await controller?.start();
+                // Only allow retry after 3 seconds for invalid codes
               }
             },
           ),
