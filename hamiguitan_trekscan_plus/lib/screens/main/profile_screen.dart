@@ -282,31 +282,43 @@ class _ProfileScreenState extends State<ProfileScreen> {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceAround,
       children: [
-        Column(
-          children: [
-            Text(
-              user.followingCount.toString().padLeft(2, '0'),
-              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              'Following',
-              style: TextStyle(fontSize: 12, color: Colors.grey[600]),
-            ),
-          ],
+        GestureDetector(
+          onTap: () => _showFollowingModal(),
+          child: Column(
+            children: [
+              Text(
+                user.followingCount.toString().padLeft(2, '0'),
+                style: const TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                'Following',
+                style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+              ),
+            ],
+          ),
         ),
-        Column(
-          children: [
-            Text(
-              user.followersCount.toString().padLeft(2, '0'),
-              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              'Followers',
-              style: TextStyle(fontSize: 12, color: Colors.grey[600]),
-            ),
-          ],
+        GestureDetector(
+          onTap: () => _showFollowersModal(),
+          child: Column(
+            children: [
+              Text(
+                user.followersCount.toString().padLeft(2, '0'),
+                style: const TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                'Followers',
+                style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+              ),
+            ],
+          ),
         ),
         Column(
           children: [
@@ -1363,5 +1375,364 @@ class _ProfileScreenState extends State<ProfileScreen> {
         ),
       );
     }
+  }
+
+  void _showFollowersModal() async {
+    if (_firebaseUser == null) return;
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => DraggableScrollableSheet(
+        initialChildSize: 0.7,
+        minChildSize: 0.5,
+        maxChildSize: 0.95,
+        builder: (context, scrollController) => Container(
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.only(
+              topLeft: Radius.circular(20),
+              topRight: Radius.circular(20),
+            ),
+          ),
+          child: Column(
+            children: [
+              // Handle bar
+              Container(
+                margin: const EdgeInsets.symmetric(vertical: 12),
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: Colors.grey[300],
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              // Header
+              Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 8,
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text(
+                      'Followers',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.close),
+                      onPressed: () => Navigator.pop(context),
+                    ),
+                  ],
+                ),
+              ),
+              const Divider(height: 1),
+              // Followers list
+              Expanded(
+                child: FutureBuilder<List<Map<String, dynamic>>>(
+                  future: _getFollowersList(),
+                  builder: (context, snapshot) {
+                    if (snapshot.connectionState == ConnectionState.waiting) {
+                      return const Center(child: CircularProgressIndicator());
+                    }
+
+                    if (snapshot.hasError) {
+                      return Center(child: Text('Error: ${snapshot.error}'));
+                    }
+
+                    final followers = snapshot.data ?? [];
+
+                    if (followers.isEmpty) {
+                      return Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              Icons.people_outline,
+                              size: 64,
+                              color: Colors.grey[400],
+                            ),
+                            const SizedBox(height: 16),
+                            Text(
+                              'No followers yet',
+                              style: TextStyle(
+                                fontSize: 16,
+                                color: Colors.grey[600],
+                              ),
+                            ),
+                          ],
+                        ),
+                      );
+                    }
+
+                    return ListView.builder(
+                      controller: scrollController,
+                      itemCount: followers.length,
+                      itemBuilder: (context, index) {
+                        final user = followers[index];
+                        return _buildUserListTile(user);
+                      },
+                    );
+                  },
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _showFollowingModal() async {
+    if (_firebaseUser == null) return;
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => DraggableScrollableSheet(
+        initialChildSize: 0.7,
+        minChildSize: 0.5,
+        maxChildSize: 0.95,
+        builder: (context, scrollController) => Container(
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.only(
+              topLeft: Radius.circular(20),
+              topRight: Radius.circular(20),
+            ),
+          ),
+          child: Column(
+            children: [
+              // Handle bar
+              Container(
+                margin: const EdgeInsets.symmetric(vertical: 12),
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: Colors.grey[300],
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              // Header
+              Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 8,
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text(
+                      'Following',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.close),
+                      onPressed: () => Navigator.pop(context),
+                    ),
+                  ],
+                ),
+              ),
+              const Divider(height: 1),
+              // Following list
+              Expanded(
+                child: FutureBuilder<List<Map<String, dynamic>>>(
+                  future: _getFollowingList(),
+                  builder: (context, snapshot) {
+                    if (snapshot.connectionState == ConnectionState.waiting) {
+                      return const Center(child: CircularProgressIndicator());
+                    }
+
+                    if (snapshot.hasError) {
+                      return Center(child: Text('Error: ${snapshot.error}'));
+                    }
+
+                    final following = snapshot.data ?? [];
+
+                    if (following.isEmpty) {
+                      return Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              Icons.person_add_outlined,
+                              size: 64,
+                              color: Colors.grey[400],
+                            ),
+                            const SizedBox(height: 16),
+                            Text(
+                              'Not following anyone yet',
+                              style: TextStyle(
+                                fontSize: 16,
+                                color: Colors.grey[600],
+                              ),
+                            ),
+                          ],
+                        ),
+                      );
+                    }
+
+                    return ListView.builder(
+                      controller: scrollController,
+                      itemCount: following.length,
+                      itemBuilder: (context, index) {
+                        final user = following[index];
+                        return _buildUserListTile(user);
+                      },
+                    );
+                  },
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Future<List<Map<String, dynamic>>> _getFollowersList() async {
+    if (_firebaseUser == null) return [];
+
+    try {
+      final userData = await _userService.getUserOnce(_firebaseUser!.uid);
+      final followerIds =
+          (userData?['followers'] as List<dynamic>?)?.cast<String>() ?? [];
+
+      final List<Map<String, dynamic>> followers = [];
+      for (final uid in followerIds) {
+        try {
+          final user = await _userService.getUserOnce(uid);
+          if (user != null) {
+            followers.add({...user, 'uid': uid});
+          }
+        } catch (e) {
+          // If we can't fetch user data due to permissions, skip this user
+          print('Skipping user $uid due to permission error: $e');
+          continue;
+        }
+      }
+
+      return followers;
+    } catch (e) {
+      print('Error fetching followers: $e');
+      return [];
+    }
+  }
+
+  Future<List<Map<String, dynamic>>> _getFollowingList() async {
+    if (_firebaseUser == null) return [];
+
+    try {
+      final userData = await _userService.getUserOnce(_firebaseUser!.uid);
+      final followingIds =
+          (userData?['following'] as List<dynamic>?)?.cast<String>() ?? [];
+
+      final List<Map<String, dynamic>> following = [];
+      for (final uid in followingIds) {
+        try {
+          final user = await _userService.getUserOnce(uid);
+          if (user != null) {
+            following.add({...user, 'uid': uid});
+          }
+        } catch (e) {
+          // If we can't fetch user data due to permissions, skip this user
+          print('Skipping user $uid due to permission error: $e');
+          continue;
+        }
+      }
+
+      return following;
+    } catch (e) {
+      print('Error fetching following: $e');
+      return [];
+    }
+  }
+
+  Widget _buildUserListTile(Map<String, dynamic> user) {
+    final firstName = user['firstName'] as String? ?? '';
+    final lastName = user['lastName'] as String? ?? '';
+    final email = user['email'] as String? ?? '';
+    final photoURL = user['photoURL'] as String?;
+    final uid = user['uid'] as String;
+
+    final displayName = firstName.isNotEmpty || lastName.isNotEmpty
+        ? '$firstName $lastName'.trim()
+        : email.split('@').first;
+
+    return ListTile(
+      leading: CircleAvatar(
+        radius: 24,
+        backgroundColor: Colors.blueGrey[100],
+        backgroundImage: photoURL != null ? NetworkImage(photoURL) : null,
+        child: photoURL == null
+            ? Text(
+                displayName.isNotEmpty ? displayName[0].toUpperCase() : '?',
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  color: Colors.blueGrey[700],
+                ),
+              )
+            : null,
+      ),
+      title: Text(
+        displayName,
+        style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 15),
+      ),
+      subtitle: Text(
+        email,
+        style: TextStyle(fontSize: 13, color: Colors.grey[600]),
+      ),
+      trailing: uid != _firebaseUser?.uid
+          ? FutureBuilder<bool>(
+              future: _userService.isFollowing(_firebaseUser!.uid, uid),
+              builder: (context, snapshot) {
+                final isFollowing = snapshot.data ?? false;
+
+                return OutlinedButton(
+                  onPressed: () async {
+                    if (isFollowing) {
+                      await _userService.unfollow(_firebaseUser!.uid, uid);
+                    } else {
+                      await _userService.toggleFollow(_firebaseUser!.uid, uid);
+                    }
+                    setState(() {}); // Refresh the modal
+                  },
+                  style: OutlinedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 20,
+                      vertical: 8,
+                    ),
+                    backgroundColor: isFollowing
+                        ? Colors.white
+                        : Colors.blueGrey[700],
+                    foregroundColor: isFollowing
+                        ? Colors.blueGrey[700]
+                        : Colors.white,
+                    side: BorderSide(color: Colors.blueGrey[700]!, width: 1.5),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
+                  child: Text(
+                    isFollowing ? 'Unfollow' : 'Follow',
+                    style: const TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                );
+              },
+            )
+          : null,
+    );
   }
 }
