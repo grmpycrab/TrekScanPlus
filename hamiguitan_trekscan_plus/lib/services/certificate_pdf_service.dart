@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
@@ -310,27 +311,37 @@ class CertificatePdfService {
   Future<File?> saveCertificateToDownloads(ECertificate certificate) async {
     try {
       final file = await generateCertificatePdf(certificate);
+      final fileName =
+          'Mt_Hamiguitan_Certificate_${certificate.trekkerName}_${certificate.certificateType.toString().split('.').last}.pdf';
 
-      // For Android, save to Downloads folder
+      // For Android, use app's external storage directory (accessible without special permissions)
       if (Platform.isAndroid) {
-        final downloadsDir = Directory('/storage/emulated/0/Download');
-        if (!await downloadsDir.exists()) {
-          await downloadsDir.create(recursive: true);
+        // Get the app's external storage directory (works without MANAGE_EXTERNAL_STORAGE)
+        final directory = await getExternalStorageDirectory();
+        if (directory != null) {
+          // Create a "Certificates" folder in app's directory
+          final certificatesDir = Directory('${directory.path}/Certificates');
+          if (!await certificatesDir.exists()) {
+            await certificatesDir.create(recursive: true);
+          }
+
+          final savedFile = File('${certificatesDir.path}/$fileName');
+          await file.copy(savedFile.path);
+
+          debugPrint('✅ Certificate saved: ${savedFile.path}');
+          return savedFile;
         }
-
-        final fileName =
-            'Mt_Hamiguitan_Certificate_${certificate.trekkerName}_${certificate.certificateType.toString().split('.').last}.pdf';
-        final savedFile = File('${downloadsDir.path}/$fileName');
-        await file.copy(savedFile.path);
-
-        print('✅ Certificate saved to Downloads: ${savedFile.path}');
-        return savedFile;
       }
 
-      // For iOS/other platforms, return temp file
-      return file;
+      // For iOS/other platforms, use documents directory
+      final directory = await getApplicationDocumentsDirectory();
+      final savedFile = File('${directory.path}/$fileName');
+      await file.copy(savedFile.path);
+
+      debugPrint('✅ Certificate saved: ${savedFile.path}');
+      return savedFile;
     } catch (e) {
-      print('❌ Error saving certificate: $e');
+      debugPrint('❌ Error saving certificate: $e');
       return null;
     }
   }

@@ -12,6 +12,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'services/station_service.dart';
 import 'services/connectivity_service.dart';
 import 'services/booking_service.dart';
+import 'services/permission_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -39,6 +40,8 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> {
+  bool _permissionsRequested = false;
+
   @override
   void initState() {
     super.initState();
@@ -46,8 +49,25 @@ class _MyAppState extends State<MyApp> {
     FirebaseAuthService.instance.authStateChanges.listen((user) {
       if (user != null) {
         BookingService.instance.startBookingStatusListener(user.uid);
+
+        // Request permissions once user is authenticated
+        if (!_permissionsRequested) {
+          _permissionsRequested = true;
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            _requestPermissions();
+          });
+        }
       }
     });
+  }
+
+  Future<void> _requestPermissions() async {
+    // Wait a bit for UI to settle after login
+    await Future.delayed(const Duration(milliseconds: 800));
+
+    if (mounted) {
+      await PermissionService.instance.requestInitialPermissions(context);
+    }
   }
 
   @override

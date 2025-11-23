@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:permission_handler/permission_handler.dart';
 import '../../theme/color.dart';
+import '../../services/permission_service.dart';
 
 class NotificationSettingsScreen extends StatefulWidget {
   const NotificationSettingsScreen({super.key});
@@ -22,11 +24,20 @@ class _NotificationSettingsScreenState
   bool _systemNotifications = true;
   bool _soundEnabled = true;
   bool _vibrationEnabled = true;
+  bool _systemPermissionGranted = false;
 
   @override
   void initState() {
     super.initState();
     _loadPreferences();
+    _checkSystemPermission();
+  }
+
+  Future<void> _checkSystemPermission() async {
+    final status = await Permission.notification.status;
+    setState(() {
+      _systemPermissionGranted = status.isGranted;
+    });
   }
 
   Future<void> _loadPreferences() async {
@@ -76,6 +87,10 @@ class _NotificationSettingsScreenState
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
+          // System permission warning (if not granted)
+          if (!_systemPermissionGranted) _buildPermissionWarning(),
+          if (!_systemPermissionGranted) const SizedBox(height: 16),
+
           // Master toggle
           _buildMasterToggle(),
           const SizedBox(height: 24),
@@ -261,9 +276,22 @@ class _NotificationSettingsScreenState
           ),
           Switch(
             value: _pushNotificationsEnabled,
-            onChanged: (value) {
-              setState(() => _pushNotificationsEnabled = value);
-              _savePreference('push_notifications_enabled', value);
+            onChanged: (value) async {
+              // If enabling notifications, check system permission first
+              if (value && !_systemPermissionGranted) {
+                final granted = await PermissionService.instance
+                    .requestNotificationPermission(context);
+                if (granted) {
+                  setState(() {
+                    _systemPermissionGranted = true;
+                    _pushNotificationsEnabled = value;
+                  });
+                  _savePreference('push_notifications_enabled', value);
+                }
+              } else {
+                setState(() => _pushNotificationsEnabled = value);
+                _savePreference('push_notifications_enabled', value);
+              }
             },
             activeColor: AppColors.white,
             activeTrackColor: AppColors.white.withValues(alpha: 0.5),
@@ -341,6 +369,65 @@ class _NotificationSettingsScreenState
           onChanged: enabled ? onChanged : null,
           activeColor: iconColor,
         ),
+      ),
+    );
+  }
+
+  Widget _buildPermissionWarning() {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.orange.shade50,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.orange.shade300),
+      ),
+      child: Row(
+        children: [
+          Icon(
+            Icons.warning_amber_rounded,
+            color: Colors.orange.shade700,
+            size: 28,
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'System Permission Required',
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: Colors.orange.shade900,
+                    fontSize: 14,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  'Enable notification permission in system settings to receive alerts.',
+                  style: TextStyle(color: Colors.orange.shade800, fontSize: 13),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 8),
+          TextButton(
+            onPressed: () async {
+              await openAppSettings();
+              // Recheck permission when returning
+              await Future.delayed(const Duration(milliseconds: 500));
+              await _checkSystemPermission();
+            },
+            style: TextButton.styleFrom(
+              backgroundColor: Colors.orange.shade700,
+              foregroundColor: Colors.white,
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+            ),
+            child: const Text('Open Settings', style: TextStyle(fontSize: 12)),
+          ),
+        ],
       ),
     );
   }
