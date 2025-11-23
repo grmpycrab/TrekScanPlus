@@ -28,13 +28,25 @@ class _ProfileScreenState extends State<ProfileScreen> {
   final UserService _userService = UserService.instance;
   final SocialSharingService _socialService = SocialSharingService.instance;
   final ECertificateService _certificateService = ECertificateService.instance;
+  bool _achievementsLoading = true;
 
   Future<void> _initializeAchievements() async {
     try {
       await achievementService.init();
-      setState(() {});
+      // Also force refresh from Firebase to get latest data
+      await achievementService.refreshFromFirebase();
+      if (mounted) {
+        setState(() {
+          _achievementsLoading = false;
+        });
+      }
     } catch (e) {
       debugPrint('Error initializing AchievementService: $e');
+      if (mounted) {
+        setState(() {
+          _achievementsLoading = false;
+        });
+      }
     }
   }
 
@@ -350,6 +362,27 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   Widget _buildBadgesSection(UserModel user) {
+    if (_achievementsLoading) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Achievements',
+            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: 12),
+          Center(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 24.0),
+              child: CircularProgressIndicator(
+                valueColor: AlwaysStoppedAnimation<Color>(Colors.blue.shade700),
+              ),
+            ),
+          ),
+        ],
+      );
+    }
+
     final unlockedAchievements = achievementService.getUnlockedAchievements();
     final totalAchievements = achievementService.getTotalCount();
 
