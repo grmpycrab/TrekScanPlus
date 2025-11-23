@@ -309,18 +309,27 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ],
           ),
         ),
-        Column(
-          children: [
-            Text(
-              user.postsCount.toString().padLeft(2, '0'),
-              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              'Posts',
-              style: TextStyle(fontSize: 12, color: Colors.grey[600]),
-            ),
-          ],
+        StreamBuilder<List<SocialPost>>(
+          stream: _socialService.streamUserPosts(_firebaseUser!.uid),
+          builder: (context, snapshot) {
+            final postsCount = snapshot.data?.length ?? 0;
+            return Column(
+              children: [
+                Text(
+                  postsCount.toString().padLeft(2, '0'),
+                  style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  'Posts',
+                  style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                ),
+              ],
+            );
+          },
         ),
         Column(
           children: [

@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
+import 'notification_services.dart';
 
 class UserService {
   UserService._internal();
@@ -193,20 +194,23 @@ class UserService {
   /// Toggle follow status between two users
   Future<void> toggleFollow(String followingUid, String followerUid) async {
     try {
-      // Add to following list
-      await _usersCollection.doc(followerUid).update({
-        'following': FieldValue.arrayUnion([followingUid]),
-        'followingCount': FieldValue.increment(1),
-      });
+      // Get follower's name for notification
+      final followerDoc = await _usersCollection.doc(followerUid).get();
+      final followerData = followerDoc.data() ?? {};
+      final followerName =
+          followerData['displayName'] as String? ??
+          followerData['email'] as String? ??
+          'Someone';
 
-      // Add to followers list
-      await _usersCollection.doc(followingUid).update({
-        'followers': FieldValue.arrayUnion([followerUid]),
-        'followersCount': FieldValue.increment(1),
-      });
+      // Send follow request notification
+      await NotificationService().sendFollowRequest(
+        followingUid,
+        followerUid,
+        followerName,
+      );
 
       if (kDebugMode) {
-        print('$followerUid now following $followingUid');
+        print('Follow request sent from $followerUid to $followingUid');
       }
     } catch (e, st) {
       if (kDebugMode) {
@@ -214,6 +218,58 @@ class UserService {
         print(st);
       }
       rethrow;
+    }
+  }
+
+  /// Accept a follow request
+  Future<void> acceptFollowRequest(
+    String currentUid,
+    String requesterUid,
+  ) async {
+    try {
+      // Get current counts
+      final currentUserDoc = await _usersCollection.doc(currentUid).get();
+      final requesterDoc = await _usersCollection.doc(requesterUid).get();
+
+      final currentFollowersCount =
+          (currentUserDoc.data()?['followersCount'] as num?)?.toInt() ?? 0;
+      final requesterFollowingCount =
+          (requesterDoc.data()?['followingCount'] as num?)?.toInt() ?? 0;
+
+      // Add to following list (requester)
+      final requesterUpdate = <String, dynamic>{
+        'following': FieldValue.arrayUnion([currentUid]),
+      };
+      requesterUpdate['followingCount'] = requesterFollowingCount + 1;
+      await _usersCollection.doc(requesterUid).update(requesterUpdate);
+
+      // Add to followers list (current user)
+      final currentUpdate = <String, dynamic>{
+        'followers': FieldValue.arrayUnion([requesterUid]),
+      };
+      currentUpdate['followersCount'] = currentFollowersCount + 1;
+      await _usersCollection.doc(currentUid).update(currentUpdate);
+
+      if (kDebugMode) {
+        print('$currentUid accepted follow request from $requesterUid');
+      }
+    } catch (e, st) {
+      if (kDebugMode) {
+        print('Error accepting follow request: $e');
+        print(st);
+      }
+      rethrow;
+    }
+  }
+
+  /// Reject a follow request (just remove the notification, no follow happens)
+  Future<void> rejectFollowRequest(
+    String currentUid,
+    String requesterUid,
+  ) async {
+    // No action needed on user documents, notification will be deleted
+    if (kDebugMode) {
+      print('$currentUid rejected follow request from $requesterUid');
     }
   }
 
