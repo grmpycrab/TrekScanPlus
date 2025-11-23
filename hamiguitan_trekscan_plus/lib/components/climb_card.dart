@@ -147,7 +147,7 @@ class ClimbCard extends StatelessWidget {
                     status != 'Declined' &&
                     status != 'Rejected')
                   const SizedBox(width: 12),
-                // Show Edit button for declined/rejected bookings (enabled)
+                // Show Edit button ONLY for declined/rejected bookings
                 if ((status == 'Declined' || status == 'Rejected') &&
                     booking != null &&
                     onEditBooking != null)
@@ -167,32 +167,7 @@ class ClimbCard extends StatelessWidget {
                       ),
                     ),
                   ),
-                // Show disabled Edit button for cancelled/approved bookings
-                if ((status == 'Cancelled' || status == 'Approved') &&
-                    booking != null &&
-                    onEditBooking != null)
-                  Expanded(
-                    child: FilledButton.icon(
-                      onPressed: null,
-                      icon: const Icon(Icons.edit, size: 18),
-                      label: const Text('Edit Request'),
-                      style: FilledButton.styleFrom(
-                        backgroundColor: const Color.fromARGB(
-                          255,
-                          98,
-                          188,
-                          248,
-                        ),
-                        disabledBackgroundColor: Colors.grey[300],
-                        disabledForegroundColor: Colors.grey[600],
-                        padding: const EdgeInsets.symmetric(vertical: 8),
-                      ),
-                    ),
-                  ),
-                if (((status == 'Declined' ||
-                        status == 'Rejected' ||
-                        status == 'Cancelled' ||
-                        status == 'Approved')) &&
+                if ((status == 'Declined' || status == 'Rejected') &&
                     booking != null &&
                     onEditBooking != null)
                   const SizedBox(width: 12),

@@ -146,6 +146,67 @@ class _BookAClimbScreenState extends State<BookAClimbScreen> {
     }
   }
 
+  /// Check if the selected date has available slots (max 30 slots per day)
+  /// Returns a map with 'available' (bool) and 'slotsUsed' (int)
+  Future<Map<String, dynamic>> _checkDateAvailability(
+    DateTime date,
+    int portersNeeded,
+  ) async {
+    try {
+      // Normalize date to start and end of day to catch all bookings for this date
+      final startOfDay = DateTime(date.year, date.month, date.day, 0, 0, 0);
+      final endOfDay = DateTime(date.year, date.month, date.day, 23, 59, 59);
+
+      final querySnapshot = await FirebaseFirestore.instance
+          .collection('bookings')
+          .where(
+            'trekDate',
+            isGreaterThanOrEqualTo: Timestamp.fromDate(startOfDay),
+          )
+          .where('trekDate', isLessThanOrEqualTo: Timestamp.fromDate(endOfDay))
+          .get();
+
+      // Calculate total slots used (only count approved bookings)
+      // Pending bookings don't count until admin approves them
+      int slotsUsed = 0;
+      for (final doc in querySnapshot.docs) {
+        final data = doc.data();
+        final status = (data['status'] as String?)?.toLowerCase() ?? '';
+
+        // Only count approved bookings - pending bookings don't reserve slots
+        if (status == 'approved') {
+          final porters = (data['numberOfPorters'] as num?)?.toInt() ?? 0;
+          slotsUsed += 1 + porters; // 1 person + porters
+        }
+      }
+
+      // Calculate slots needed for this booking
+      final slotsNeeded = 1 + portersNeeded;
+
+      // Check if there's enough space
+      const maxSlots = 30;
+      final available = (slotsUsed + slotsNeeded) <= maxSlots;
+
+      return {
+        'available': available,
+        'slotsUsed': slotsUsed,
+        'slotsNeeded': slotsNeeded,
+        'maxSlots': maxSlots,
+        'remaining': maxSlots - slotsUsed,
+      };
+    } catch (e) {
+      debugPrint('Error checking date availability: $e');
+      // If error, allow booking (fail open)
+      return {
+        'available': true,
+        'slotsUsed': 0,
+        'slotsNeeded': 1 + portersNeeded,
+        'maxSlots': 30,
+        'remaining': 30,
+      };
+    }
+  }
+
   /// Create booking and upload files sequentially using BookingService.
   /// Attachments will be stored in Firestore as the booking is created.
   /// Returns the created bookingId.
@@ -1391,8 +1452,62 @@ class _BookAClimbScreenState extends State<BookAClimbScreen> {
     );
   }
 
-  void _showReviewDialog() {
+  void _showReviewDialog() async {
     if (!_formKey.currentState!.validate()) return;
+
+    // Validate date is selected
+    if (_selectedDate == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please select a trek date.'),
+          backgroundColor: Colors.orange,
+        ),
+      );
+      return;
+    }
+
+    // Check if the selected date has available slots
+    final porters = int.tryParse(_portersController.text.trim()) ?? 0;
+    final availability = await _checkDateAvailability(_selectedDate!, porters);
+
+    if (!availability['available']) {
+      final slotsUsed = availability['slotsUsed'];
+      final slotsNeeded = availability['slotsNeeded'];
+      final maxSlots = availability['maxSlots'];
+      final remaining = availability['remaining'];
+
+      if (!mounted) return;
+
+      await AppDialogueHandler.showError(
+        context: context,
+        title: 'Date Fully Booked',
+        message:
+            'Sorry, ${_formatSelectedDate()} is fully booked.\n\n'
+            'Current status:\n'
+            '• Slots used: $slotsUsed/$maxSlots\n'
+            '• Slots remaining: $remaining\n'
+            '• Your booking needs: $slotsNeeded slots (1 person + $porters porter${porters != 1 ? 's' : ''})\n\n'
+            'Please select another date or reduce the number of porters.',
+      );
+      return;
+    }
+
+    // Show warning if date is near capacity
+    final remaining = availability['remaining'] as int;
+    if (remaining <= 5 && remaining > 0) {
+      final shouldContinue = await AppDialogueHandler.showConfirmation(
+        context: context,
+        title: 'Limited Slots Available',
+        message:
+            'Only $remaining slot${remaining != 1 ? 's' : ''} remaining for ${_formatSelectedDate()}.\n\n'
+            'Do you want to proceed with this booking?',
+        confirmText: 'Proceed',
+        cancelText: 'Choose Another Date',
+      );
+
+      if (shouldContinue != true) return;
+    }
+
     bool isSubmitting = false;
     showDialog(
       context: context,

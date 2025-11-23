@@ -93,9 +93,15 @@ class _HomeScreenState extends State<HomeScreen> {
         .snapshots()
         .listen((snap) {
           // Map date -> booked slots. Count each booking as 1 + numberOfPorters
+          // Only count approved bookings - pending bookings don't reserve slots
           final Map<String, int> slotsPerDay = {};
           for (final doc in snap.docs) {
             final data = doc.data();
+            final status = (data['status'] as String?)?.toLowerCase() ?? '';
+
+            // Only count approved bookings toward the slot limit
+            if (status != 'approved') continue;
+
             final Timestamp? t = data['trekDate'] as Timestamp?;
             if (t == null) continue;
             final d = t.toDate();
@@ -404,6 +410,11 @@ class _HomeScreenState extends State<HomeScreen> {
     final Map<String, int> slotsPerDay = {};
     for (final doc in snap.docs) {
       final data = doc.data();
+      final status = (data['status'] as String?)?.toLowerCase() ?? '';
+
+      // Only count approved bookings - pending bookings don't reserve slots
+      if (status != 'approved') continue;
+
       final Timestamp? t = data['trekDate'] as Timestamp?;
       if (t == null) continue;
       final d = t.toDate();

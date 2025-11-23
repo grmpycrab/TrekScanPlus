@@ -1,0 +1,20 @@
+{
+    "name": "trekscan-plus-scripts",
+    "version": "1.0.0",
+    "description": "Test scripts for TrekScan Plus booking system",
+    "private": true,
+    "scripts": {
+        "add-bookings": "node add_test_bookings.js",
+        "delete-bookings": "node delete_test_bookings.js"
+    },
+    "dependencies": {
+        "firebase-admin": "^12.0.0"
+    },
+    "keywords": [
+        "firebase",
+        "testing",
+        "booking"
+    ],
+    "author": "TrekScan Plus Team",
+    "license": "UNLICENSED"
+}
