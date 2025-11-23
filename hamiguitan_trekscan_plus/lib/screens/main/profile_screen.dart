@@ -8,6 +8,7 @@ import '../../services/social_sharing_service.dart';
 import '../../services/e_certificate_service.dart';
 import '../../services/station_service.dart';
 import '../../services/certificate_pdf_service.dart';
+import '../../services/permission_service.dart';
 import '../../models/social_model.dart';
 import '../../models/e_certificate.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -1245,6 +1246,24 @@ class _ProfileScreenState extends State<ProfileScreen> {
   // PDF and Email Action Handlers
   Future<void> _downloadCertificatePdf(ECertificate certificate) async {
     try {
+      // Request storage permission first
+      final permissionService = PermissionService.instance;
+      final hasPermission = await permissionService.requestStoragePermission(
+        context,
+      );
+
+      if (!hasPermission) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Storage permission is required to save certificate'),
+            backgroundColor: Colors.orange,
+            duration: Duration(seconds: 3),
+          ),
+        );
+        return;
+      }
+
       // Show loading indicator
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -1259,15 +1278,20 @@ class _ProfileScreenState extends State<ProfileScreen> {
       if (!mounted) return;
 
       if (file != null) {
+        // Get a user-friendly path message
+        final pathMessage = file.path.contains('Android/data')
+            ? 'Certificate saved! You can share it from your profile.'
+            : 'Certificate saved to ${file.path}';
+
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Certificate saved to ${file.path}'),
+            content: Text(pathMessage),
             backgroundColor: Colors.green,
-            duration: const Duration(seconds: 3),
+            duration: const Duration(seconds: 4),
             action: SnackBarAction(
-              label: 'OK',
+              label: 'Share',
               textColor: Colors.white,
-              onPressed: () {},
+              onPressed: () => _shareCertificate(certificate),
             ),
           ),
         );
