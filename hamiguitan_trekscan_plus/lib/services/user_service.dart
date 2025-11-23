@@ -218,22 +218,51 @@ class UserService {
   }
 
   /// Unfollow a user
-  Future<void> unfollow(String followingUid, String followerUid) async {
+  Future<void> unfollow(String currentUid, String userToUnfollowUid) async {
     try {
+      // First check if the user is actually following
+      final isCurrentlyFollowing = await isFollowing(
+        currentUid,
+        userToUnfollowUid,
+      );
+      if (!isCurrentlyFollowing) {
+        if (kDebugMode) {
+          print(
+            'User $currentUid is not following $userToUnfollowUid, skipping unfollow',
+          );
+        }
+        return; // Don't proceed if not following
+      }
+
+      // Get current counts to prevent negative values
+      final currentUserDoc = await _usersCollection.doc(currentUid).get();
+      final targetUserDoc = await _usersCollection.doc(userToUnfollowUid).get();
+
+      final currentFollowingCount =
+          (currentUserDoc.data()?['followingCount'] as num?)?.toInt() ?? 0;
+      final targetFollowersCount =
+          (targetUserDoc.data()?['followersCount'] as num?)?.toInt() ?? 0;
+
       // Remove from following list
-      await _usersCollection.doc(followerUid).update({
-        'following': FieldValue.arrayRemove([followingUid]),
-        'followingCount': FieldValue.increment(-1),
-      });
+      final currentUserUpdate = <String, dynamic>{
+        'following': FieldValue.arrayRemove([userToUnfollowUid]),
+      };
+      if (currentFollowingCount > 0) {
+        currentUserUpdate['followingCount'] = FieldValue.increment(-1);
+      }
+      await _usersCollection.doc(currentUid).update(currentUserUpdate);
 
       // Remove from followers list
-      await _usersCollection.doc(followingUid).update({
-        'followers': FieldValue.arrayRemove([followerUid]),
-        'followersCount': FieldValue.increment(-1),
-      });
+      final targetUserUpdate = <String, dynamic>{
+        'followers': FieldValue.arrayRemove([currentUid]),
+      };
+      if (targetFollowersCount > 0) {
+        targetUserUpdate['followersCount'] = FieldValue.increment(-1);
+      }
+      await _usersCollection.doc(userToUnfollowUid).update(targetUserUpdate);
 
       if (kDebugMode) {
-        print('$followerUid unfollowed $followingUid');
+        print('$currentUid unfollowed $userToUnfollowUid');
       }
     } catch (e, st) {
       if (kDebugMode) {
@@ -291,6 +320,51 @@ class UserService {
     } catch (e, st) {
       if (kDebugMode) {
         print('Error decrementing post count: $e');
+        print(st);
+      }
+      rethrow;
+    }
+  }
+
+  /// Fix negative counts for a user (repair data integrity)
+  Future<void> fixNegativeCounts(String uid) async {
+    try {
+      final userDoc = await _usersCollection.doc(uid).get();
+      final userData = userDoc.data() ?? {};
+
+      final updates = <String, dynamic>{};
+
+      // Fix followersCount
+      final followersCount = (userData['followersCount'] as num?)?.toInt() ?? 0;
+      final followersList =
+          (userData['followers'] as List<dynamic>?)?.cast<String>() ?? [];
+      if (followersCount < 0 || followersCount != followersList.length) {
+        updates['followersCount'] = followersList.length;
+      }
+
+      // Fix followingCount
+      final followingCount = (userData['followingCount'] as num?)?.toInt() ?? 0;
+      final followingList =
+          (userData['following'] as List<dynamic>?)?.cast<String>() ?? [];
+      if (followingCount < 0 || followingCount != followingList.length) {
+        updates['followingCount'] = followingList.length;
+      }
+
+      // Fix postsCount (cannot be negative)
+      final postsCount = (userData['postsCount'] as num?)?.toInt() ?? 0;
+      if (postsCount < 0) {
+        updates['postsCount'] = 0;
+      }
+
+      if (updates.isNotEmpty) {
+        await _usersCollection.doc(uid).update(updates);
+        if (kDebugMode) {
+          print('Fixed counts for $uid: $updates');
+        }
+      }
+    } catch (e, st) {
+      if (kDebugMode) {
+        print('Error fixing negative counts: $e');
         print(st);
       }
       rethrow;

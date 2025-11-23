@@ -31,6 +31,7 @@ class BookingService {
     String bookingId, {
     String? affiliation,
     int? numberOfPorters,
+    String? trekType,
     String? location,
     String? notes,
     bool resubmitDeclined = false,
@@ -43,6 +44,9 @@ class BookingService {
     }
     if (numberOfPorters != null) {
       updateData['numberOfPorters'] = numberOfPorters;
+    }
+    if (trekType != null) {
+      updateData['trekType'] = trekType;
     }
     if (location != null) {
       updateData['location'] = location;

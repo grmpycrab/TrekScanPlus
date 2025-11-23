@@ -10,6 +10,7 @@ import '../../services/validators.dart';
 import '../../models/climb.dart';
 import '../../components/climb_card.dart';
 import '../../components/app_dialogue_handler.dart';
+import '../../theme/color.dart';
 
 class BookAClimbScreen extends StatefulWidget {
   final String? highlightBookingId;
@@ -518,6 +519,15 @@ class _BookAClimbScreenState extends State<BookAClimbScreen> {
       locationValue = 'Outside Davao Oriental';
     }
 
+    // Convert trek type from database format
+    String trekTypeValue = booking.trekType;
+    if (trekTypeValue == 'recreational' ||
+        trekTypeValue.toLowerCase() == 'general') {
+      trekTypeValue = 'General';
+    } else if (trekTypeValue == 'research') {
+      trekTypeValue = 'Research';
+    }
+
     bool isSaving = false;
 
     // Check if this is a declined booking
@@ -573,6 +583,7 @@ class _BookAClimbScreenState extends State<BookAClimbScreen> {
                   booking.id!,
                   affiliation: affiliationController.text.trim(),
                   numberOfPorters: porters,
+                  trekType: trekTypeValue.toLowerCase(),
                   location: locationValue.toLowerCase().replaceAll(' ', '_'),
                   notes: notesController.text.trim().isEmpty
                       ? null
@@ -763,6 +774,80 @@ class _BookAClimbScreenState extends State<BookAClimbScreen> {
                                 },
                               ),
                               const SizedBox(height: 12),
+                              // Trek Type Dropdown
+                              Container(
+                                decoration: BoxDecoration(
+                                  color: Colors.white,
+                                  borderRadius: BorderRadius.circular(12),
+                                  border: Border.all(color: Colors.black26),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.black.withOpacity(0.05),
+                                      blurRadius: 4,
+                                      offset: const Offset(0, 2),
+                                    ),
+                                  ],
+                                ),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 12,
+                                  vertical: 4,
+                                ),
+                                child: DropdownButtonFormField<String>(
+                                  value: trekTypeValue,
+                                  decoration: const InputDecoration(
+                                    labelText: 'Trek Type',
+                                    border: InputBorder.none,
+                                    contentPadding: EdgeInsets.zero,
+                                  ),
+                                  icon: Icon(
+                                    Icons.arrow_drop_down,
+                                    color: Colors.blueGrey[700],
+                                  ),
+                                  style: const TextStyle(
+                                    fontSize: 15,
+                                    color: Colors.black87,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                  dropdownColor: Colors.white,
+                                  items: const [
+                                    DropdownMenuItem(
+                                      value: 'General',
+                                      child: Row(
+                                        children: [
+                                          Icon(
+                                            Icons.hiking,
+                                            size: 20,
+                                            color: Colors.blueGrey,
+                                          ),
+                                          SizedBox(width: 12),
+                                          Text('General'),
+                                        ],
+                                      ),
+                                    ),
+                                    DropdownMenuItem(
+                                      value: 'Research',
+                                      child: Row(
+                                        children: [
+                                          Icon(
+                                            Icons.science,
+                                            size: 20,
+                                            color: Colors.blueGrey,
+                                          ),
+                                          SizedBox(width: 12),
+                                          Text('Research'),
+                                        ],
+                                      ),
+                                    ),
+                                  ],
+                                  onChanged: (val) {
+                                    if (val != null) {
+                                      setModalState(() => trekTypeValue = val);
+                                    }
+                                  },
+                                ),
+                              ),
+                              const SizedBox(height: 12),
+                              // Location Dropdown
                               Container(
                                 decoration: BoxDecoration(
                                   color: Colors.white,
@@ -805,7 +890,7 @@ class _BookAClimbScreenState extends State<BookAClimbScreen> {
                                           Icon(
                                             Icons.location_city,
                                             size: 20,
-                                            color: Colors.green,
+                                            color: AppColors.primary,
                                           ),
                                           SizedBox(width: 12),
                                           Text('Inside San Isidro'),
@@ -819,7 +904,7 @@ class _BookAClimbScreenState extends State<BookAClimbScreen> {
                                           Icon(
                                             Icons.map,
                                             size: 20,
-                                            color: Colors.blue,
+                                            color: AppColors.primary,
                                           ),
                                           SizedBox(width: 12),
                                           Text('Inside Davao Oriental'),
@@ -833,7 +918,7 @@ class _BookAClimbScreenState extends State<BookAClimbScreen> {
                                           Icon(
                                             Icons.public,
                                             size: 20,
-                                            color: Colors.orange,
+                                            color: AppColors.primary,
                                           ),
                                           SizedBox(width: 12),
                                           Text('Outside Davao Oriental'),

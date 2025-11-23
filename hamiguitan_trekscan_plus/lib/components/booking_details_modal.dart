@@ -228,9 +228,17 @@ class BookingDetailsModal extends StatelessWidget {
                           if (onEdit != null) ...[
                             Expanded(
                               child: OutlinedButton.icon(
-                                onPressed: onEdit,
+                                onPressed:
+                                    (climb.computedStatus() == 'Cancelled' ||
+                                        climb.computedStatus() == 'Approved')
+                                    ? null
+                                    : onEdit,
                                 icon: const Icon(Icons.edit),
                                 label: const Text('Edit Details'),
+                                style: OutlinedButton.styleFrom(
+                                  disabledForegroundColor: Colors.grey[600],
+                                  disabledBackgroundColor: Colors.grey[100],
+                                ),
                               ),
                             ),
                             const SizedBox(width: 12),
