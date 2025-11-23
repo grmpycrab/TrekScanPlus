@@ -63,6 +63,18 @@ class AchievementService {
     _allAchievements = [];
   }
 
+  /// Force refresh from Firebase (useful for profile screen)
+  Future<void> refreshFromFirebase() async {
+    try {
+      final userId = _auth.currentUser?.uid;
+      if (userId == null) return;
+
+      await _mergeWithFirebaseAchievements(userId);
+    } catch (e) {
+      print('Error refreshing from Firebase: $e');
+    }
+  }
+
   /// Load achievements from badge.json file
   Future<void> _loadAchievementsFromJson() async {
     try {
@@ -116,7 +128,6 @@ class AchievementService {
   Future<void> _mergeWithFirebaseAchievements(String userId) async {
     try {
       final firebaseAchievements = await fetchFromFirebase();
-
       if (firebaseAchievements.isEmpty) return;
 
       for (int i = 0; i < _allAchievements.length; i++) {
@@ -336,11 +347,8 @@ class AchievementService {
       await _firestore.collection('users').doc(userId).update({
         'badges': FieldValue.arrayUnion([achievement.id]),
       });
-
-      print('✅ Synced achievement ${achievement.name} to Firebase');
     } catch (e) {
-      print('❌ Error syncing achievement to Firebase: $e');
-      // Add to sync queue to retry later
+      print('Error syncing achievement to Firebase: $e');
       await _localService.addToSyncQueue(achievement.id);
     }
   }
@@ -356,10 +364,6 @@ class AchievementService {
 
       final syncQueue = await _localService.getSyncQueue();
       if (syncQueue.isEmpty) return;
-
-      print(
-        '📤 Syncing ${syncQueue.length} pending achievements to Firebase...',
-      );
 
       for (final achievementId in syncQueue) {
         try {
@@ -385,18 +389,14 @@ class AchievementService {
                   'syncedAt': FieldValue.serverTimestamp(),
                 });
 
-            // Also update user's badges array
             await _firestore.collection('users').doc(userId).update({
               'badges': FieldValue.arrayUnion([achievement.id]),
             });
 
-            // Remove from sync queue
             await _localService.removeFromSyncQueue(achievementId);
-            print('✅ Synced ${achievement.name}');
           }
         } catch (e) {
-          print('❌ Failed to sync achievement $achievementId: $e');
-          // Continue with next achievement if one fails
+          print('Failed to sync achievement $achievementId: $e');
           continue;
         }
       }
@@ -479,36 +479,77 @@ class AchievementService {
 
       final firebaseAchievements = <Achievement>[];
 
-      for (var doc in querySnapshot.docs) {
-        try {
-          final data = doc.data();
-          // Ensure all required fields exist with defaults
-          final achievementData = {
-            'id': data['id'] ?? doc.id,
-            'name': data['name'] ?? '',
-            'description': data['description'] ?? '',
-            'category': data['category'] ?? 'general',
-            'icon': data['icon'] ?? '🏆',
-            'rarity': data['rarity'] ?? 'common',
-            'difficulty': data['difficulty'] ?? 'easy',
-            'requirement': data['requirement'] ?? <String, dynamic>{},
-            'isUnlocked': true, // If it's in Firebase, it's unlocked
-            'unlockedAt': data['unlockedAt'] != null
-                ? DateTime.parse(data['unlockedAt'] as String)
-                : null,
-          };
+      if (querySnapshot.docs.isNotEmpty) {
+        for (var doc in querySnapshot.docs) {
+          try {
+            final data = doc.data();
 
-          firebaseAchievements.add(Achievement.fromJson(achievementData));
-        } catch (e) {
-          print('Error parsing achievement ${doc.id}: $e');
-          // Continue with other achievements
-          continue;
+            // Handle unlockedAt which can be either Timestamp, DateTime, or String
+            DateTime? unlockedAt;
+            if (data['unlockedAt'] != null) {
+              final unlockedAtValue = data['unlockedAt'];
+              if (unlockedAtValue is Timestamp) {
+                unlockedAt = unlockedAtValue.toDate();
+              } else if (unlockedAtValue is DateTime) {
+                unlockedAt = unlockedAtValue;
+              } else if (unlockedAtValue is String) {
+                unlockedAt = DateTime.parse(unlockedAtValue);
+              }
+            }
+
+            final achievementData = {
+              'id': data['id'] ?? doc.id,
+              'name': data['name'] ?? '',
+              'description': data['description'] ?? '',
+              'category': data['category'] ?? 'general',
+              'icon': data['icon'] ?? '🏆',
+              'rarity': data['rarity'] ?? 'common',
+              'difficulty': data['difficulty'] ?? 'easy',
+              'requirement': data['requirement'] ?? <String, dynamic>{},
+              'isUnlocked': true,
+              'unlockedAt': unlockedAt?.toIso8601String(),
+            };
+
+            firebaseAchievements.add(Achievement.fromJson(achievementData));
+          } catch (e) {
+            print('Error parsing achievement ${doc.id}: $e');
+            continue;
+          }
+        }
+      } else {
+        // Fallback: Check badges array in user document
+        final userDoc = await _firestore.collection('users').doc(userId).get();
+
+        if (userDoc.exists) {
+          final userData = userDoc.data();
+          final badges = userData?['badges'] as List<dynamic>?;
+
+          if (badges != null && badges.isNotEmpty) {
+            for (var badgeId in badges) {
+              if (badgeId is String) {
+                Achievement? jsonAchievement;
+                try {
+                  jsonAchievement = _allAchievements.firstWhere(
+                    (a) => a.id == badgeId,
+                  );
+                } catch (e) {
+                  jsonAchievement = null;
+                }
+
+                if (jsonAchievement != null) {
+                  firebaseAchievements.add(
+                    jsonAchievement.copyWith(
+                      isUnlocked: true,
+                      unlockedAt: DateTime.now(),
+                    ),
+                  );
+                }
+              }
+            }
+          }
         }
       }
 
-      print(
-        '✅ Fetched ${firebaseAchievements.length} achievements from Firebase',
-      );
       return firebaseAchievements;
     } catch (e) {
       print('Error fetching achievements from Firebase: $e');
