@@ -6,6 +6,7 @@ import '../settings/badge_display.dart';
 import '../settings/about_screen.dart';
 import '../settings/help_and_support_screen.dart';
 import '../settings/account_settings.dart';
+import '../settings/notification_settings.dart';
 import '../../components/badge_filter.dart';
 import '../../services/achievement_service.dart';
 import '../../services/firebase_auth_service.dart';
@@ -284,6 +285,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     icon: Icons.notifications_outlined,
                     title: 'Notifications',
                     subtitle: 'Message, app & email notifications',
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) =>
+                              const NotificationSettingsScreen(),
+                        ),
+                      );
+                    },
                   ),
                   _buildSettingItem(
                     icon: Icons.security_outlined,

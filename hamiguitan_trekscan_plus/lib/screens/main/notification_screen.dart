@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../theme/color.dart';
 import '../../models/notification_model.dart';
 import '../../services/notification_services.dart';
+import '../../services/user_service.dart';
 
 class NotificationScreen extends StatefulWidget {
   const NotificationScreen({super.key});
@@ -13,6 +14,7 @@ class NotificationScreen extends StatefulWidget {
 
 class _NotificationScreenState extends State<NotificationScreen> {
   final NotificationService _service = NotificationService();
+  final UserService _userService = UserService.instance;
 
   String? get _userId => FirebaseAuth.instance.currentUser?.uid;
 
@@ -120,109 +122,103 @@ class _NotificationScreenState extends State<NotificationScreen> {
       child: Material(
         color: Colors.transparent,
         child: InkWell(
-          onTap: () async {
-            print('🔔 Notification tapped: ${notification.title}');
-            print('🔔 ActionType: ${notification.actionType}');
-            print('🔔 ActionData: ${notification.actionData}');
+          onTap: notification.showActionButtons
+              ? null
+              : () async {
+                  if (_userId != null) {
+                    await _service.markAsRead(_userId!, notification.id);
+                  }
+                  setState(() {
+                    notification.isRead = true;
+                  });
 
-            if (_userId != null) {
-              await _service.markAsRead(_userId!, notification.id);
-            }
-            setState(() {
-              notification.isRead = true;
-            });
-
-            // Handle notification tap - navigate to content
-            if (notification.actionType != null &&
-                notification.actionData != null) {
-              print('🔔 Starting navigation...');
-
-              if (notification.actionType == 'post') {
-                final postId = notification.actionData!;
-                print('🔔 Navigating to post: $postId');
-                if (mounted) {
-                  Navigator.pushNamed(
-                    context,
-                    '/post-detail',
-                    arguments: postId,
-                  );
-                }
-              } else if (notification.actionType == 'booking') {
-                final bookingId = notification.actionData!;
-                print('🔔 Navigating to booking: $bookingId');
-                if (mounted) {
-                  Navigator.pushNamed(
-                    context,
-                    '/book-climb',
-                    arguments: bookingId,
-                  );
-                }
-              }
-            } else {
-              // Backward compatibility for old notifications
-              print('🔔 No actionType/actionData - checking for old format');
-
-              // Detect old booking notifications by title
-              final bookingTitles = [
-                'Booking Approved',
-                'Booking Declined',
-                'Booking Under Review',
-                'Booking Cancelled',
-              ];
-
-              if (bookingTitles.any(
-                (title) => notification.title.contains(title),
-              )) {
-                print(
-                  '🔔 Old booking notification detected - navigating to book-climb',
-                );
-                if (mounted) {
-                  Navigator.pushNamed(context, '/book-climb');
-                }
-              } else {
-                print('🔔 No navigation available for this notification');
-              }
-            }
-          },
+                  _handleNotificationNavigation(notification);
+                },
           borderRadius: BorderRadius.circular(12),
           child: Padding(
             padding: const EdgeInsets.all(16),
-            child: Row(
+            child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _buildNotificationIcon(notification.type),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        notification.title,
-                        style: const TextStyle(
-                          fontWeight: FontWeight.w600,
-                          fontSize: 16,
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _buildNotificationIcon(notification.type),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            notification.title,
+                            style: const TextStyle(
+                              fontWeight: FontWeight.w600,
+                              fontSize: 16,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            notification.message,
+                            style: TextStyle(
+                              color: Colors.grey[600],
+                              fontSize: 14,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            _formatTimestamp(notification.timestamp),
+                            style: TextStyle(
+                              color: Colors.grey[500],
+                              fontSize: 12,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    if (!notification.isRead && !notification.showActionButtons)
+                      Container(
+                        width: 8,
+                        height: 8,
+                        decoration: const BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: AppColors.notificationDot,
                         ),
                       ),
-                      const SizedBox(height: 4),
-                      Text(
-                        notification.message,
-                        style: TextStyle(color: Colors.grey[600], fontSize: 14),
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        _formatTimestamp(notification.timestamp),
-                        style: TextStyle(color: Colors.grey[500], fontSize: 12),
-                      ),
-                    ],
-                  ),
+                  ],
                 ),
-                if (!notification.isRead)
-                  Container(
-                    width: 8,
-                    height: 8,
-                    decoration: const BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: AppColors.notificationDot,
+                // Action buttons for follow requests
+                if (notification.showActionButtons &&
+                    notification.actionType == 'follow_request' &&
+                    notification.followRequestId != null)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 12),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: OutlinedButton(
+                            onPressed: () =>
+                                _handleRejectFollowRequest(notification),
+                            style: OutlinedButton.styleFrom(
+                              foregroundColor: Colors.red,
+                              side: const BorderSide(color: Colors.red),
+                              padding: const EdgeInsets.symmetric(vertical: 8),
+                            ),
+                            child: const Text('Reject'),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: FilledButton(
+                            onPressed: () =>
+                                _handleAcceptFollowRequest(notification),
+                            style: FilledButton.styleFrom(
+                              backgroundColor: AppColors.primary,
+                              padding: const EdgeInsets.symmetric(vertical: 8),
+                            ),
+                            child: const Text('Accept'),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
               ],
@@ -278,6 +274,102 @@ class _NotificationScreenState extends State<NotificationScreen> {
       return '${difference.inDays}d ago';
     } else {
       return '${timestamp.day}/${timestamp.month}/${timestamp.year}';
+    }
+  }
+
+  void _handleNotificationNavigation(NotificationModel notification) {
+    if (notification.actionType != null && notification.actionData != null) {
+      if (notification.actionType == 'post') {
+        final postId = notification.actionData!;
+        if (mounted) {
+          Navigator.pushNamed(context, '/post-detail', arguments: postId);
+        }
+      } else if (notification.actionType == 'booking') {
+        final bookingId = notification.actionData!;
+        if (mounted) {
+          Navigator.pushNamed(context, '/book-climb', arguments: bookingId);
+        }
+      }
+    } else {
+      // Backward compatibility for old notifications
+      final bookingTitles = [
+        'Booking Approved',
+        'Booking Declined',
+        'Booking Under Review',
+        'Booking Cancelled',
+      ];
+
+      if (bookingTitles.any((title) => notification.title.contains(title))) {
+        if (mounted) {
+          Navigator.pushNamed(context, '/book-climb');
+        }
+      }
+    }
+  }
+
+  Future<void> _handleAcceptFollowRequest(
+    NotificationModel notification,
+  ) async {
+    if (_userId == null || notification.followRequestId == null) return;
+
+    try {
+      // Accept the follow request
+      await _userService.acceptFollowRequest(
+        _userId!,
+        notification.followRequestId!,
+      );
+
+      // Delete the notification
+      await _service.deleteNotification(_userId!, notification.id);
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Follow request accepted'),
+            backgroundColor: Colors.green,
+          ),
+        );
+        setState(() {});
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
+        );
+      }
+    }
+  }
+
+  Future<void> _handleRejectFollowRequest(
+    NotificationModel notification,
+  ) async {
+    if (_userId == null || notification.followRequestId == null) return;
+
+    try {
+      // Reject the follow request
+      await _userService.rejectFollowRequest(
+        _userId!,
+        notification.followRequestId!,
+      );
+
+      // Delete the notification
+      await _service.deleteNotification(_userId!, notification.id);
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Follow request rejected'),
+            backgroundColor: Colors.orange,
+          ),
+        );
+        setState(() {});
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
+        );
+      }
     }
   }
 }

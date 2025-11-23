@@ -32,65 +32,35 @@ class _ProfileScreenState extends State<ProfileScreen> {
     try {
       await achievementService.init();
       setState(() {});
-      print('AchievementService initialized in ProfileScreen');
     } catch (e) {
-      print('Error initializing AchievementService in ProfileScreen: $e');
+      debugPrint('Error initializing AchievementService: $e');
     }
   }
 
   Future<void> _initializeCertificates() async {
     try {
-      print(
-        'DEBUG: _initializeCertificates() called, _firebaseUser=$_firebaseUser',
-      );
       if (_firebaseUser != null) {
-        print(
-          'DEBUG: Initializing certificate service for user: ${_firebaseUser!.uid}',
-        );
         await _certificateService.init(userId: _firebaseUser!.uid);
-        print('DEBUG: Certificate service initialized');
 
-        // Get visited stations and check/award certificates
-        print('DEBUG: Initializing station service...');
         final stationService = await StationService.init(
           userId: _firebaseUser!.uid,
         );
-        print('DEBUG: Station service initialized, loading stations...');
         await stationService.loadStations();
-        print('DEBUG: Stations loaded, getting visited stations...');
         final visitedStations = stationService.getVisitedStations();
-        print(
-          'DEBUG: Visited stations retrieved: ${visitedStations.length} stations',
-        );
-        print(
-          'DEBUG: Station names: ${visitedStations.map((s) => s.name).toList()}',
-        );
 
         if (visitedStations.isNotEmpty) {
-          print(
-            '🎯 Profile Screen: Checking certificates for ${visitedStations.length} visited stations',
-          );
-
-          // Calculate trek statistics
           final totalDistance = stationService.getTotalDistance();
           final totalTimeMinutes = stationService.getTotalTimeMinutes();
           final trekStartDate = stationService.getTrekStartDate();
           final trekEndDate = stationService.getTrekEndDate();
 
-          print(
-            '📊 Trek stats: Distance=${totalDistance}km, Time=${totalTimeMinutes}min',
-          );
-
-          final result = await _certificateService.checkAndAwardCertificate(
+          await _certificateService.checkAndAwardCertificate(
             visitedStations,
             totalDistance: totalDistance,
             totalTimeMinutes: totalTimeMinutes,
             trekStartDate: trekStartDate,
             trekEndDate: trekEndDate,
           );
-          print('DEBUG: Certificate check result: $result');
-        } else {
-          print('DEBUG: No visited stations found');
         }
 
         if (mounted) {
@@ -98,8 +68,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
         }
       }
     } catch (e, stackTrace) {
-      print('ERROR initializing ECertificateService in ProfileScreen: $e');
-      print('Stack trace: $stackTrace');
+      debugPrint('Error initializing ECertificateService: $e');
+      debugPrint('Stack trace: $stackTrace');
     }
   }
 
@@ -112,6 +82,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
     _initializeCertificates();
 
     if (_firebaseUser != null) {
+      _userService.fixNegativeCounts(_firebaseUser!.uid).catchError((e) {
+        debugPrint('Error fixing negative counts: $e');
+      });
+
       final display = _firebaseUser!.displayName ?? '';
       final parts = display.isNotEmpty ? display.split(' ') : [];
       final first = parts.isNotEmpty
@@ -335,18 +309,27 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ],
           ),
         ),
-        Column(
-          children: [
-            Text(
-              user.postsCount.toString().padLeft(2, '0'),
-              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              'Posts',
-              style: TextStyle(fontSize: 12, color: Colors.grey[600]),
-            ),
-          ],
+        StreamBuilder<List<SocialPost>>(
+          stream: _socialService.streamUserPosts(_firebaseUser!.uid),
+          builder: (context, snapshot) {
+            final postsCount = snapshot.data?.length ?? 0;
+            return Column(
+              children: [
+                Text(
+                  postsCount.toString().padLeft(2, '0'),
+                  style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  'Posts',
+                  style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                ),
+              ],
+            );
+          },
         ),
         Column(
           children: [
@@ -368,16 +351,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Widget _buildBadgesSection(UserModel user) {
     final unlockedAchievements = achievementService.getUnlockedAchievements();
     final totalAchievements = achievementService.getTotalCount();
-
-    print('DEBUG: ProfileScreen _buildBadgesSection');
-    print('  Total achievements: $totalAchievements');
-    print('  Unlocked achievements: ${unlockedAchievements.length}');
-    print('  All achievements:');
-    for (var ach in achievementService.getAllAchievements()) {
-      print(
-        '    - ${ach.id}: isUnlocked=${ach.isUnlocked}, unlockedAt=${ach.unlockedAt}',
-      );
-    }
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -1399,106 +1372,115 @@ class _ProfileScreenState extends State<ProfileScreen> {
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (context) => DraggableScrollableSheet(
-        initialChildSize: 0.7,
-        minChildSize: 0.5,
-        maxChildSize: 0.95,
-        builder: (context, scrollController) => Container(
-          decoration: const BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.only(
-              topLeft: Radius.circular(20),
-              topRight: Radius.circular(20),
-            ),
-          ),
-          child: Column(
-            children: [
-              // Handle bar
-              Container(
-                margin: const EdgeInsets.symmetric(vertical: 12),
-                width: 40,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: Colors.grey[300],
-                  borderRadius: BorderRadius.circular(2),
+      builder: (context) => StatefulBuilder(
+        builder: (BuildContext context, StateSetter setModalState) {
+          return DraggableScrollableSheet(
+            initialChildSize: 0.7,
+            minChildSize: 0.5,
+            maxChildSize: 0.95,
+            builder: (context, scrollController) => Container(
+              decoration: const BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.only(
+                  topLeft: Radius.circular(20),
+                  topRight: Radius.circular(20),
                 ),
               ),
-              // Header
-              Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 8,
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    const Text(
-                      'Followers',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                      ),
+              child: Column(
+                children: [
+                  // Handle bar
+                  Container(
+                    margin: const EdgeInsets.symmetric(vertical: 12),
+                    width: 40,
+                    height: 4,
+                    decoration: BoxDecoration(
+                      color: Colors.grey[300],
+                      borderRadius: BorderRadius.circular(2),
                     ),
-                    IconButton(
-                      icon: const Icon(Icons.close),
-                      onPressed: () => Navigator.pop(context),
+                  ),
+                  // Header
+                  Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 8,
                     ),
-                  ],
-                ),
-              ),
-              const Divider(height: 1),
-              // Followers list
-              Expanded(
-                child: FutureBuilder<List<Map<String, dynamic>>>(
-                  future: _getFollowersList(),
-                  builder: (context, snapshot) {
-                    if (snapshot.connectionState == ConnectionState.waiting) {
-                      return const Center(child: CircularProgressIndicator());
-                    }
-
-                    if (snapshot.hasError) {
-                      return Center(child: Text('Error: ${snapshot.error}'));
-                    }
-
-                    final followers = snapshot.data ?? [];
-
-                    if (followers.isEmpty) {
-                      return Center(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(
-                              Icons.people_outline,
-                              size: 64,
-                              color: Colors.grey[400],
-                            ),
-                            const SizedBox(height: 16),
-                            Text(
-                              'No followers yet',
-                              style: TextStyle(
-                                fontSize: 16,
-                                color: Colors.grey[600],
-                              ),
-                            ),
-                          ],
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Text(
+                          'Followers',
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
-                      );
-                    }
+                        IconButton(
+                          icon: const Icon(Icons.close),
+                          onPressed: () => Navigator.pop(context),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const Divider(height: 1),
+                  // Followers list
+                  Expanded(
+                    child: FutureBuilder<List<Map<String, dynamic>>>(
+                      future: _getFollowersList(),
+                      builder: (context, snapshot) {
+                        if (snapshot.connectionState ==
+                            ConnectionState.waiting) {
+                          return const Center(
+                            child: CircularProgressIndicator(),
+                          );
+                        }
 
-                    return ListView.builder(
-                      controller: scrollController,
-                      itemCount: followers.length,
-                      itemBuilder: (context, index) {
-                        final user = followers[index];
-                        return _buildUserListTile(user);
+                        if (snapshot.hasError) {
+                          return Center(
+                            child: Text('Error: ${snapshot.error}'),
+                          );
+                        }
+
+                        final followers = snapshot.data ?? [];
+
+                        if (followers.isEmpty) {
+                          return Center(
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(
+                                  Icons.people_outline,
+                                  size: 64,
+                                  color: Colors.grey[400],
+                                ),
+                                const SizedBox(height: 16),
+                                Text(
+                                  'No followers yet',
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    color: Colors.grey[600],
+                                  ),
+                                ),
+                              ],
+                            ),
+                          );
+                        }
+
+                        return ListView.builder(
+                          controller: scrollController,
+                          itemCount: followers.length,
+                          itemBuilder: (context, index) {
+                            final user = followers[index];
+                            return _buildFollowerListTile(user, setModalState);
+                          },
+                        );
                       },
-                    );
-                  },
-                ),
+                    ),
+                  ),
+                ],
               ),
-            ],
-          ),
-        ),
+            ),
+          );
+        },
       ),
     );
   }
@@ -1510,106 +1492,115 @@ class _ProfileScreenState extends State<ProfileScreen> {
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (context) => DraggableScrollableSheet(
-        initialChildSize: 0.7,
-        minChildSize: 0.5,
-        maxChildSize: 0.95,
-        builder: (context, scrollController) => Container(
-          decoration: const BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.only(
-              topLeft: Radius.circular(20),
-              topRight: Radius.circular(20),
-            ),
-          ),
-          child: Column(
-            children: [
-              // Handle bar
-              Container(
-                margin: const EdgeInsets.symmetric(vertical: 12),
-                width: 40,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: Colors.grey[300],
-                  borderRadius: BorderRadius.circular(2),
+      builder: (context) => StatefulBuilder(
+        builder: (BuildContext context, StateSetter setModalState) {
+          return DraggableScrollableSheet(
+            initialChildSize: 0.7,
+            minChildSize: 0.5,
+            maxChildSize: 0.95,
+            builder: (context, scrollController) => Container(
+              decoration: const BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.only(
+                  topLeft: Radius.circular(20),
+                  topRight: Radius.circular(20),
                 ),
               ),
-              // Header
-              Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 8,
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    const Text(
-                      'Following',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                      ),
+              child: Column(
+                children: [
+                  // Handle bar
+                  Container(
+                    margin: const EdgeInsets.symmetric(vertical: 12),
+                    width: 40,
+                    height: 4,
+                    decoration: BoxDecoration(
+                      color: Colors.grey[300],
+                      borderRadius: BorderRadius.circular(2),
                     ),
-                    IconButton(
-                      icon: const Icon(Icons.close),
-                      onPressed: () => Navigator.pop(context),
+                  ),
+                  // Header
+                  Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 8,
                     ),
-                  ],
-                ),
-              ),
-              const Divider(height: 1),
-              // Following list
-              Expanded(
-                child: FutureBuilder<List<Map<String, dynamic>>>(
-                  future: _getFollowingList(),
-                  builder: (context, snapshot) {
-                    if (snapshot.connectionState == ConnectionState.waiting) {
-                      return const Center(child: CircularProgressIndicator());
-                    }
-
-                    if (snapshot.hasError) {
-                      return Center(child: Text('Error: ${snapshot.error}'));
-                    }
-
-                    final following = snapshot.data ?? [];
-
-                    if (following.isEmpty) {
-                      return Center(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(
-                              Icons.person_add_outlined,
-                              size: 64,
-                              color: Colors.grey[400],
-                            ),
-                            const SizedBox(height: 16),
-                            Text(
-                              'Not following anyone yet',
-                              style: TextStyle(
-                                fontSize: 16,
-                                color: Colors.grey[600],
-                              ),
-                            ),
-                          ],
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Text(
+                          'Following',
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
-                      );
-                    }
+                        IconButton(
+                          icon: const Icon(Icons.close),
+                          onPressed: () => Navigator.pop(context),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const Divider(height: 1),
+                  // Following list
+                  Expanded(
+                    child: FutureBuilder<List<Map<String, dynamic>>>(
+                      future: _getFollowingList(),
+                      builder: (context, snapshot) {
+                        if (snapshot.connectionState ==
+                            ConnectionState.waiting) {
+                          return const Center(
+                            child: CircularProgressIndicator(),
+                          );
+                        }
 
-                    return ListView.builder(
-                      controller: scrollController,
-                      itemCount: following.length,
-                      itemBuilder: (context, index) {
-                        final user = following[index];
-                        return _buildUserListTile(user);
+                        if (snapshot.hasError) {
+                          return Center(
+                            child: Text('Error: ${snapshot.error}'),
+                          );
+                        }
+
+                        final following = snapshot.data ?? [];
+
+                        if (following.isEmpty) {
+                          return Center(
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(
+                                  Icons.person_add_outlined,
+                                  size: 64,
+                                  color: Colors.grey[400],
+                                ),
+                                const SizedBox(height: 16),
+                                Text(
+                                  'Not following anyone yet',
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    color: Colors.grey[600],
+                                  ),
+                                ),
+                              ],
+                            ),
+                          );
+                        }
+
+                        return ListView.builder(
+                          controller: scrollController,
+                          itemCount: following.length,
+                          itemBuilder: (context, index) {
+                            final user = following[index];
+                            return _buildFollowingListTile(user, setModalState);
+                          },
+                        );
                       },
-                    );
-                  },
-                ),
+                    ),
+                  ),
+                ],
               ),
-            ],
-          ),
-        ),
+            ),
+          );
+        },
       ),
     );
   }
@@ -1630,15 +1621,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
             followers.add({...user, 'uid': uid});
           }
         } catch (e) {
-          // If we can't fetch user data due to permissions, skip this user
-          print('Skipping user $uid due to permission error: $e');
           continue;
         }
       }
 
       return followers;
     } catch (e) {
-      print('Error fetching followers: $e');
+      debugPrint('Error fetching followers: $e');
       return [];
     }
   }
@@ -1659,20 +1648,22 @@ class _ProfileScreenState extends State<ProfileScreen> {
             following.add({...user, 'uid': uid});
           }
         } catch (e) {
-          // If we can't fetch user data due to permissions, skip this user
-          print('Skipping user $uid due to permission error: $e');
           continue;
         }
       }
 
       return following;
     } catch (e) {
-      print('Error fetching following: $e');
+      debugPrint('Error fetching following: $e');
       return [];
     }
   }
 
-  Widget _buildUserListTile(Map<String, dynamic> user) {
+  // List tile for FOLLOWERS list - shows "Follow Back" button
+  Widget _buildFollowerListTile(
+    Map<String, dynamic> user,
+    StateSetter setModalState,
+  ) {
     final firstName = user['firstName'] as String? ?? '';
     final lastName = user['lastName'] as String? ?? '';
     final email = user['email'] as String? ?? '';
@@ -1710,26 +1701,32 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ? FutureBuilder<bool>(
               future: _userService.isFollowing(_firebaseUser!.uid, uid),
               builder: (context, snapshot) {
-                final isFollowing = snapshot.data ?? false;
+                final isFollowingBack = snapshot.data ?? false;
 
                 return OutlinedButton(
                   onPressed: () async {
-                    if (isFollowing) {
+                    if (isFollowingBack) {
+                      // Current user unfollows them (but they still follow you)
                       await _userService.unfollow(_firebaseUser!.uid, uid);
                     } else {
-                      await _userService.toggleFollow(_firebaseUser!.uid, uid);
+                      // Current user follows them back
+                      await _userService.toggleFollow(uid, _firebaseUser!.uid);
                     }
-                    setState(() {}); // Refresh the modal
+                    // Update both modal and parent screen
+                    setModalState(() {});
+                    if (mounted) {
+                      setState(() {});
+                    }
                   },
                   style: OutlinedButton.styleFrom(
                     padding: const EdgeInsets.symmetric(
                       horizontal: 20,
                       vertical: 8,
                     ),
-                    backgroundColor: isFollowing
+                    backgroundColor: isFollowingBack
                         ? Colors.white
                         : Colors.blueGrey[700],
-                    foregroundColor: isFollowing
+                    foregroundColor: isFollowingBack
                         ? Colors.blueGrey[700]
                         : Colors.white,
                     side: BorderSide(color: Colors.blueGrey[700]!, width: 1.5),
@@ -1738,7 +1735,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     ),
                   ),
                   child: Text(
-                    isFollowing ? 'Unfollow' : 'Follow',
+                    isFollowingBack ? 'Following' : 'Follow Back',
                     style: const TextStyle(
                       fontSize: 13,
                       fontWeight: FontWeight.w600,
@@ -1746,6 +1743,76 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   ),
                 );
               },
+            )
+          : null,
+    );
+  }
+
+  // List tile for FOLLOWING list - shows "Unfollow" button
+  Widget _buildFollowingListTile(
+    Map<String, dynamic> user,
+    StateSetter setModalState,
+  ) {
+    final firstName = user['firstName'] as String? ?? '';
+    final lastName = user['lastName'] as String? ?? '';
+    final email = user['email'] as String? ?? '';
+    final photoURL = user['photoURL'] as String?;
+    final uid = user['uid'] as String;
+
+    final displayName = firstName.isNotEmpty || lastName.isNotEmpty
+        ? '$firstName $lastName'.trim()
+        : email.split('@').first;
+
+    return ListTile(
+      leading: CircleAvatar(
+        radius: 24,
+        backgroundColor: Colors.blueGrey[100],
+        backgroundImage: photoURL != null ? NetworkImage(photoURL) : null,
+        child: photoURL == null
+            ? Text(
+                displayName.isNotEmpty ? displayName[0].toUpperCase() : '?',
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  color: Colors.blueGrey[700],
+                ),
+              )
+            : null,
+      ),
+      title: Text(
+        displayName,
+        style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 15),
+      ),
+      subtitle: Text(
+        email,
+        style: TextStyle(fontSize: 13, color: Colors.grey[600]),
+      ),
+      trailing: uid != _firebaseUser?.uid
+          ? OutlinedButton(
+              onPressed: () async {
+                // Unfollow this user (remove from your following list)
+                await _userService.unfollow(_firebaseUser!.uid, uid);
+                // Update both modal and parent screen
+                setModalState(() {});
+                if (mounted) {
+                  setState(() {});
+                }
+              },
+              style: OutlinedButton.styleFrom(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 20,
+                  vertical: 8,
+                ),
+                backgroundColor: Colors.white,
+                foregroundColor: Colors.blueGrey[700],
+                side: BorderSide(color: Colors.blueGrey[700]!, width: 1.5),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
+              child: const Text(
+                'Unfollow',
+                style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+              ),
             )
           : null,
     );

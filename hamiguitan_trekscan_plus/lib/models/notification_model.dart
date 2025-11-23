@@ -9,8 +9,12 @@ class NotificationModel {
   final NotificationType type;
   final DateTime timestamp;
   bool isRead;
-  final String? actionType; // e.g., 'post', 'booking', 'achievement'
-  final String? actionData; // e.g., postId, bookingId
+  final String?
+  actionType; // e.g., 'post', 'booking', 'achievement', 'follow_request'
+  final String?
+  actionData; // e.g., postId, bookingId, userId for follow request
+  final bool showActionButtons; // Show accept/reject buttons
+  final String? followRequestId; // ID of the user requesting to follow
 
   NotificationModel({
     required this.id,
@@ -21,6 +25,8 @@ class NotificationModel {
     this.isRead = false,
     this.actionType,
     this.actionData,
+    this.showActionButtons = false,
+    this.followRequestId,
   });
 
   factory NotificationModel.fromMap(String id, Map<String, dynamic> map) {
@@ -43,6 +49,8 @@ class NotificationModel {
       isRead: map['isRead'] as bool? ?? false,
       actionType: actionType,
       actionData: actionData,
+      showActionButtons: map['showActionButtons'] as bool? ?? false,
+      followRequestId: map['followRequestId'] as String?,
     );
   }
 
@@ -55,6 +63,8 @@ class NotificationModel {
       'isRead': isRead,
       if (actionType != null) 'actionType': actionType,
       if (actionData != null) 'actionData': actionData,
+      'showActionButtons': showActionButtons,
+      if (followRequestId != null) 'followRequestId': followRequestId,
     };
   }
 

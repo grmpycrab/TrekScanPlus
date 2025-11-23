@@ -38,6 +38,12 @@ class AppColors {
   // Notification Colors
   static const Color notificationDot = Colors.red;
 
+  // Using existing app colors for consistency
+  static const Color notificationBooking = primary; // Primary dark color
+  static const Color notificationToggle = Color(
+    0xFF06402B,
+  ); // Green (positive action)
+
   // Segment Colors
   static Color segmentBackground = Colors.grey[200]!;
 
