@@ -1,0 +1,15 @@
+# Firebase Service Account Key (NEVER commit this!)
+serviceAccountKey.json
+*-firebase-adminsdk-*.json
+
+# Node modules
+node_modules/
+
+# npm logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# OS files
+.DS_Store
+Thumbs.db
