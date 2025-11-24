@@ -63,6 +63,7 @@ class _EventCalendarState extends State<EventCalendar> {
         .listen((snap) async {
           // Only count approved bookings toward the slot limit
           final Map<String, int> slotsPerDay = {};
+
           for (final doc in snap.docs) {
             final data = doc.data();
             final status = (data['status'] as String?)?.toLowerCase() ?? '';
@@ -73,7 +74,8 @@ class _EventCalendarState extends State<EventCalendar> {
             final Timestamp? t = data['trekDate'] as Timestamp?;
             if (t == null) continue;
             final d = t.toDate();
-            final key = '${d.year}-${d.month}-${d.day}';
+            final key =
+                '${d.year}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
             final porters = (data['numberOfPorters'] as num?)?.toInt() ?? 0;
             final used = 1 + porters;
             slotsPerDay[key] = (slotsPerDay[key] ?? 0) + used;
@@ -98,14 +100,18 @@ class _EventCalendarState extends State<EventCalendar> {
             final daysInMonth = DateTime(month.year, month.month + 1, 0).day;
             _displayTrekDays = List.generate(daysInMonth, (index) {
               final date = DateTime(month.year, month.month, index + 1);
-              final key = '${date.year}-${date.month}-${date.day}';
+              final key =
+                  '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
               final booked = slotsPerDay[key] ?? 0;
               final dateConfig = dateConfigMap[key];
 
               // Get max slots for this date (date-specific or system default)
               final maxSlots = dateConfig?.maxSlots ?? defaultMaxSlots;
-              final isClosed = dateConfig?.isClosed ?? false;
-              final closureReason = dateConfig?.reason;
+              var isClosed = dateConfig?.isClosed ?? false;
+              var closureReason = dateConfig?.reason;
+
+              // Buffer days are now stored directly in Firebase calendar_config
+              // with isTrekDownDay flag, so they come through dateConfig
 
               final isResearchDay = date.weekday == DateTime.wednesday;
 
@@ -364,12 +370,13 @@ class _EventCalendarState extends State<EventCalendar> {
     }
 
     return GestureDetector(
-      onTap: isCurrentMonth && !isPastDate && widget.onDaySelected != null
+      onTap: isCurrentMonth && !isPastDate
           ? () {
               // Show closure reason if date is closed
               if (actualTrekDay.isClosed) {
                 _showClosureDateInfo(date, actualTrekDay.closureReason);
-              } else {
+              } else if (widget.onDaySelected != null) {
+                // Navigate to booking screen for available dates
                 widget.onDaySelected!(date);
               }
             }

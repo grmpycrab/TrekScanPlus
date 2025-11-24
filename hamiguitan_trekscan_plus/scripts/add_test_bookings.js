@@ -29,13 +29,13 @@ const path = require('path');
 const serviceAccountPath = path.join(__dirname, 'serviceAccountKey.json');
 
 // Target date for test bookings (YYYY-MM-DD)
-const TARGET_DATE = new Date('2025-11-26');
+const TARGET_DATE = new Date('2025-12-05');
 
 // Number of bookings to create (max 30)
-const NUMBER_OF_BOOKINGS = 24;
+const NUMBER_OF_BOOKINGS = 2;
 
 // Number of porters per booking (affects slot calculation)
-const PORTERS_PER_BOOKING = 0;
+const PORTERS_PER_BOOKING = 2;
 
 // User ID to assign bookings to (replace with actual user ID from Firebase Auth)
 const TEST_USER_ID = 'WoGQ7rEaQTdNKOaWyj1r5LSjMor2'; // Update this with a real user ID

@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/foundation.dart';
 //import '../models/calendar_model.dart';
 
 /// Service for managing centralized calendar configuration in Firestore
@@ -277,6 +278,106 @@ class CalendarConfigService {
       int.parse(parts[1]),
       int.parse(parts[2]),
     );
+  }
+
+  /// Mark a date as trek down day (buffer day)
+  /// This is automatically called when a booking is approved
+  Future<void> markTrekDownDay(DateTime trekDate) async {
+    final dayAfter = trekDate.add(const Duration(days: 1));
+    final dateKey = _formatDateKey(dayAfter);
+
+    await _firestore.collection('calendar_config').doc(dateKey).set({
+      'date': Timestamp.fromDate(dayAfter),
+      'isClosed': true,
+      'maxSlots': 0,
+      'reason': 'Trek down day - Trekkers descending',
+      'customNote':
+          'Blocked due to approved trek starting on ${_formatDateKey(trekDate)}',
+      'isTrekDownDay': true, // Flag to identify buffer days
+      'originalTrekDate': _formatDateKey(trekDate),
+      'lastUpdated': FieldValue.serverTimestamp(),
+    }, SetOptions(merge: true));
+  }
+
+  /// Remove trek down day marking
+  /// This is automatically called when a booking is cancelled/rejected
+  Future<void> removeTrekDownDay(DateTime trekDate) async {
+    final dayAfter = trekDate.add(const Duration(days: 1));
+    final dateKey = _formatDateKey(dayAfter);
+
+    // Check if this date is marked as trek down day
+    final doc = await _firestore
+        .collection('calendar_config')
+        .doc(dateKey)
+        .get();
+
+    if (doc.exists && doc.data()?['isTrekDownDay'] == true) {
+      // Only remove if it matches this trek date
+      if (doc.data()?['originalTrekDate'] == _formatDateKey(trekDate)) {
+        await _firestore.collection('calendar_config').doc(dateKey).delete();
+      }
+    }
+  }
+
+  /// Sync all trek down days for approved bookings
+  /// This should be run periodically or when needed to ensure consistency
+  Future<void> syncTrekDownDays() async {
+    try {
+      // Get all approved bookings
+      final bookingsSnapshot = await _firestore
+          .collection('bookings')
+          .where('status', isEqualTo: 'approved')
+          .get();
+
+      // Track all trek down days that should exist
+      final Map<String, Map<String, dynamic>> trekDownDays = {};
+
+      for (final doc in bookingsSnapshot.docs) {
+        final data = doc.data();
+        final trekDateTimestamp = data['trekDate'] as Timestamp?;
+        if (trekDateTimestamp == null) continue;
+
+        final trekDate = trekDateTimestamp.toDate();
+        final dayAfter = trekDate.add(const Duration(days: 1));
+        final dateKey = _formatDateKey(dayAfter);
+
+        trekDownDays[dateKey] = {
+          'date': Timestamp.fromDate(dayAfter),
+          'isClosed': true,
+          'maxSlots': 0,
+          'reason': 'Trek down day - Trekkers descending',
+          'customNote':
+              'Blocked due to approved trek starting on ${_formatDateKey(trekDate)}',
+          'isTrekDownDay': true,
+          'originalTrekDate': _formatDateKey(trekDate),
+          'lastUpdated': FieldValue.serverTimestamp(),
+        };
+      }
+
+      // Get all existing trek down days in calendar_config
+      final configSnapshot = await _firestore
+          .collection('calendar_config')
+          .where('isTrekDownDay', isEqualTo: true)
+          .get();
+
+      // Remove trek down days that shouldn't exist anymore
+      for (final doc in configSnapshot.docs) {
+        if (!trekDownDays.containsKey(doc.id)) {
+          await doc.reference.delete();
+        }
+      }
+
+      // Add/update trek down days that should exist
+      final batch = _firestore.batch();
+      for (final entry in trekDownDays.entries) {
+        final docRef = _firestore.collection('calendar_config').doc(entry.key);
+        batch.set(docRef, entry.value, SetOptions(merge: true));
+      }
+
+      await batch.commit();
+    } catch (e) {
+      debugPrint('Error syncing trek down days: $e');
+    }
   }
 }
 

@@ -21,7 +21,9 @@ import 'dart:async';
 import 'profile_screen.dart';
 
 class HomeScreen extends StatefulWidget {
-  const HomeScreen({super.key});
+  final Function(DateTime)? onNavigateToBooking;
+
+  const HomeScreen({super.key, this.onNavigateToBooking});
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
@@ -96,6 +98,7 @@ class _HomeScreenState extends State<HomeScreen> {
           // Map date -> booked slots. Count each booking as 1 + numberOfPorters
           // Only count approved bookings - pending bookings don't reserve slots
           final Map<String, int> slotsPerDay = {};
+
           for (final doc in snap.docs) {
             final data = doc.data();
             final status = (data['status'] as String?)?.toLowerCase() ?? '';
@@ -106,7 +109,8 @@ class _HomeScreenState extends State<HomeScreen> {
             final Timestamp? t = data['trekDate'] as Timestamp?;
             if (t == null) continue;
             final d = t.toDate();
-            final key = '${d.year}-${d.month}-${d.day}';
+            final key =
+                '${d.year}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
             final porters = (data['numberOfPorters'] as num?)?.toInt() ?? 0;
             final used =
                 1 + porters; // each booking occupies the requester + porters
@@ -133,14 +137,18 @@ class _HomeScreenState extends State<HomeScreen> {
             final daysInMonth = DateTime(now.year, now.month + 1, 0).day;
             _trekDays = List.generate(daysInMonth, (index) {
               final date = DateTime(now.year, now.month, index + 1);
-              final key = '${date.year}-${date.month}-${date.day}';
+              final key =
+                  '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
               final booked = slotsPerDay[key] ?? 0;
               final dateConfig = dateConfigMap[key];
 
               // Get max slots for this date (date-specific or system default)
               final maxSlots = dateConfig?.maxSlots ?? defaultMaxSlots;
-              final isClosed = dateConfig?.isClosed ?? false;
-              final closureReason = dateConfig?.reason;
+              var isClosed = dateConfig?.isClosed ?? false;
+              var closureReason = dateConfig?.reason;
+
+              // Buffer days are now stored directly in Firebase calendar_config
+              // with isTrekDownDay flag, so they come through dateConfig
 
               final isResearchDay = date.weekday == DateTime.wednesday;
 
@@ -390,13 +398,13 @@ class _HomeScreenState extends State<HomeScreen> {
         return EventCalendar(
           trekDays: _trekDays,
           onDaySelected: (date) {
-            if (_trekDays.any(
-              (day) =>
-                  day.date.year == date.year &&
-                  day.date.month == date.month &&
-                  day.date.day == date.day &&
-                  day.isAvailable,
-            )) {}
+            // Close the calendar dialog
+            Navigator.of(context).pop();
+
+            // Switch to booking tab with selected date
+            if (widget.onNavigateToBooking != null) {
+              widget.onNavigateToBooking!(date);
+            }
           },
         );
       },
@@ -425,6 +433,7 @@ class _HomeScreenState extends State<HomeScreen> {
         .get();
 
     final Map<String, int> slotsPerDay = {};
+
     for (final doc in snap.docs) {
       final data = doc.data();
       final status = (data['status'] as String?)?.toLowerCase() ?? '';
@@ -435,7 +444,8 @@ class _HomeScreenState extends State<HomeScreen> {
       final Timestamp? t = data['trekDate'] as Timestamp?;
       if (t == null) continue;
       final d = t.toDate();
-      final key = '${d.year}-${d.month}-${d.day}';
+      final key =
+          '${d.year}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
       final porters = (data['numberOfPorters'] as num?)?.toInt() ?? 0;
       final used = 1 + porters;
       slotsPerDay[key] = (slotsPerDay[key] ?? 0) + used;
@@ -459,14 +469,18 @@ class _HomeScreenState extends State<HomeScreen> {
       final daysInMonth = DateTime(now.year, now.month + 1, 0).day;
       _trekDays = List.generate(daysInMonth, (index) {
         final date = DateTime(now.year, now.month, index + 1);
-        final key = '${date.year}-${date.month}-${date.day}';
+        final key =
+            '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
         final booked = slotsPerDay[key] ?? 0;
         final dateConfig = dateConfigMap[key];
 
         // Get max slots for this date (date-specific or system default)
         final maxSlots = dateConfig?.maxSlots ?? defaultMaxSlots;
-        final isClosed = dateConfig?.isClosed ?? false;
-        final closureReason = dateConfig?.reason;
+        var isClosed = dateConfig?.isClosed ?? false;
+        var closureReason = dateConfig?.reason;
+
+        // Buffer days are now stored directly in Firebase calendar_config
+        // with isTrekDownDay flag, so they come through dateConfig
 
         final isResearchDay = date.weekday == DateTime.wednesday;
 

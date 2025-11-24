@@ -17,12 +17,20 @@ class MainScreen extends StatefulWidget {
 class _MainScreenState extends State<MainScreen> {
   int _currentIndex = 0;
   final AchievementService _achievementService = AchievementService();
+  DateTime? _selectedDateForBooking;
 
-  final List<Widget> _screens = [
-    const HomeScreen(),
+  void _navigateToBookingWithDate(DateTime date) {
+    setState(() {
+      _selectedDateForBooking = date;
+      _currentIndex = 3; // Index of BookAClimbScreen
+    });
+  }
+
+  List<Widget> get _screens => [
+    HomeScreen(onNavigateToBooking: _navigateToBookingWithDate),
     const StationScreen(),
     const ScannerScreen(),
-    const BookAClimbScreen(),
+    BookAClimbScreen(selectedDate: _selectedDateForBooking),
     const SettingsScreen(),
   ];
 
