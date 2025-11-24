@@ -78,6 +78,12 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
     // Removed the .then() that auto-closed the screen
   }
 
+  Future<void> _handleDelete() async {
+    final navigator = Navigator.of(context);
+    // Post was deleted, go back
+    navigator.pop();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -117,7 +123,13 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
           : SingleChildScrollView(
               child: Column(
                 children: [
-                  SocialCard(post: _post!, onCommentTap: _showComments),
+                  SocialCard(
+                    post: _post!,
+                    onCommentTap: _showComments,
+                    onDelete: () async {
+                      await _handleDelete();
+                    },
+                  ),
                   const SizedBox(height: 16),
                   Padding(
                     padding: const EdgeInsets.all(16),

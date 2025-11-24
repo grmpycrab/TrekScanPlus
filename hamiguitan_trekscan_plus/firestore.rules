@@ -10,9 +10,9 @@ service cloud.firestore {
       // Users can only write to their own document
       allow write: if request.auth != null && request.auth.uid == userId;
       
-      // Allow ANY authenticated user to update followers/following/postsCount (for follow/unfollow functionality)
+      // Allow ANY authenticated user to update followers/following/postsCount/pendingFollowRequests/sentFollowRequests (for follow/unfollow functionality)
       allow update: if request.auth != null && 
-        request.writeFields.hasAny(['followers', 'followersCount', 'following', 'followingCount', 'postsCount']);
+        request.writeFields.hasAny(['followers', 'followersCount', 'following', 'followingCount', 'postsCount', 'pendingFollowRequests', 'sentFollowRequests']);
 
 
       // Achievements subcollection: users can read/write their own
@@ -91,8 +91,15 @@ service cloud.firestore {
       // Anyone authenticated can read public posts
       allow read: if request.auth != null && resource.data.privacy == 'public';
 
+      // Anyone authenticated can read followers-only posts (client-side filtering handles visibility)
+      allow read: if request.auth != null && resource.data.privacy == 'followers';
+
       // Owners can read/write their own posts (including private)
       allow read, write: if request.auth != null && request.auth.uid == resource.data.userId;
+      
+      // Anyone authenticated can read posts when querying by userId (for profile viewing)
+      // This allows viewing someone's public/followers posts on their profile
+      allow read: if request.auth != null;
 
       // Create: authenticated users can create posts
       allow create: if request.auth != null && request.resource.data.userId == request.auth.uid;

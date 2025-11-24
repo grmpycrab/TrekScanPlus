@@ -9,10 +9,14 @@ class UserModel {
   final int followingCount;
   final int followersCount;
   final int postsCount;
+  final List<String>
+  pendingFollowRequests; // Users who sent follow requests to this user
+  final List<String>
+  sentFollowRequests; // Users this user sent follow requests to
 
   UserModel({
-    required this.firstName,
-    required this.lastName,
+    this.firstName = '',
+    this.lastName = '',
     required this.email,
     required this.birthDate,
     required this.gender,
@@ -21,6 +25,8 @@ class UserModel {
     this.followingCount = 0,
     this.followersCount = 0,
     this.postsCount = 0,
+    this.pendingFollowRequests = const [],
+    this.sentFollowRequests = const [],
   });
 
   UserModel copyWith({
@@ -34,6 +40,8 @@ class UserModel {
     int? followingCount,
     int? followersCount,
     int? postsCount,
+    List<String>? pendingFollowRequests,
+    List<String>? sentFollowRequests,
   }) {
     return UserModel(
       firstName: firstName ?? this.firstName,
@@ -46,6 +54,9 @@ class UserModel {
       followingCount: followingCount ?? this.followingCount,
       followersCount: followersCount ?? this.followersCount,
       postsCount: postsCount ?? this.postsCount,
+      pendingFollowRequests:
+          pendingFollowRequests ?? this.pendingFollowRequests,
+      sentFollowRequests: sentFollowRequests ?? this.sentFollowRequests,
     );
   }
 }

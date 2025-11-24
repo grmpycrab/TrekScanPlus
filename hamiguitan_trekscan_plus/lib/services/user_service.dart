@@ -41,6 +41,8 @@ class UserService {
         data['followingCount'] = 0;
         data['followers'] = [];
         data['following'] = [];
+        data['pendingFollowRequests'] = [];
+        data['sentFollowRequests'] = [];
         await docRef.set(data, SetOptions(merge: true));
         if (kDebugMode) {
           print('User document created for ${user.uid}');
@@ -191,9 +193,25 @@ class UserService {
     }
   }
 
-  /// Toggle follow status between two users
+  /// Send follow request (adds to pending list)
   Future<void> toggleFollow(String followingUid, String followerUid) async {
     try {
+      // Check if request already pending
+      final followingUserDoc = await _usersCollection.doc(followingUid).get();
+      final pendingRequests =
+          (followingUserDoc.data()?['pendingFollowRequests'] as List<dynamic>?)
+              ?.cast<String>() ??
+          [];
+
+      if (pendingRequests.contains(followerUid)) {
+        if (kDebugMode) {
+          print(
+            'Follow request already pending from $followerUid to $followingUid',
+          );
+        }
+        return; // Request already sent, prevent duplicates
+      }
+
       // Get follower's name for notification
       final followerDoc = await _usersCollection.doc(followerUid).get();
       final followerData = followerDoc.data() ?? {};
@@ -201,6 +219,16 @@ class UserService {
           followerData['displayName'] as String? ??
           followerData['email'] as String? ??
           'Someone';
+
+      // Add to pending follow requests (target user)
+      await _usersCollection.doc(followingUid).update({
+        'pendingFollowRequests': FieldValue.arrayUnion([followerUid]),
+      });
+
+      // Add to sent follow requests (requester)
+      await _usersCollection.doc(followerUid).update({
+        'sentFollowRequests': FieldValue.arrayUnion([followingUid]),
+      });
 
       // Send follow request notification
       await NotificationService().sendFollowRequest(
@@ -236,16 +264,18 @@ class UserService {
       final requesterFollowingCount =
           (requesterDoc.data()?['followingCount'] as num?)?.toInt() ?? 0;
 
-      // Add to following list (requester)
+      // Add to following list (requester) and remove from sent requests
       final requesterUpdate = <String, dynamic>{
         'following': FieldValue.arrayUnion([currentUid]),
+        'sentFollowRequests': FieldValue.arrayRemove([currentUid]),
       };
       requesterUpdate['followingCount'] = requesterFollowingCount + 1;
       await _usersCollection.doc(requesterUid).update(requesterUpdate);
 
-      // Add to followers list (current user)
+      // Add to followers list (current user) and remove from pending requests
       final currentUpdate = <String, dynamic>{
         'followers': FieldValue.arrayUnion([requesterUid]),
+        'pendingFollowRequests': FieldValue.arrayRemove([requesterUid]),
       };
       currentUpdate['followersCount'] = currentFollowersCount + 1;
       await _usersCollection.doc(currentUid).update(currentUpdate);
@@ -262,14 +292,31 @@ class UserService {
     }
   }
 
-  /// Reject a follow request (just remove the notification, no follow happens)
+  /// Reject a follow request (remove from pending lists)
   Future<void> rejectFollowRequest(
     String currentUid,
     String requesterUid,
   ) async {
-    // No action needed on user documents, notification will be deleted
-    if (kDebugMode) {
-      print('$currentUid rejected follow request from $requesterUid');
+    try {
+      // Remove from pending requests (current user)
+      await _usersCollection.doc(currentUid).update({
+        'pendingFollowRequests': FieldValue.arrayRemove([requesterUid]),
+      });
+
+      // Remove from sent requests (requester)
+      await _usersCollection.doc(requesterUid).update({
+        'sentFollowRequests': FieldValue.arrayRemove([currentUid]),
+      });
+
+      if (kDebugMode) {
+        print('$currentUid rejected follow request from $requesterUid');
+      }
+    } catch (e, st) {
+      if (kDebugMode) {
+        print('Error rejecting follow request: $e');
+        print(st);
+      }
+      rethrow;
     }
   }
 
@@ -343,6 +390,52 @@ class UserService {
         print(st);
       }
       return false;
+    }
+  }
+
+  /// Check if a follow request is pending
+  Future<bool> isPendingFollowRequest(
+    String currentUid,
+    String targetUid,
+  ) async {
+    try {
+      final userDoc = await _usersCollection.doc(currentUid).get();
+      final userData = userDoc.data() ?? {};
+      final sentRequests =
+          (userData['sentFollowRequests'] as List<dynamic>?)?.cast<String>() ??
+          [];
+      return sentRequests.contains(targetUid);
+    } catch (e, st) {
+      if (kDebugMode) {
+        print('Error checking pending follow request: $e');
+        print(st);
+      }
+      return false;
+    }
+  }
+
+  /// Cancel a sent follow request
+  Future<void> cancelFollowRequest(String currentUid, String targetUid) async {
+    try {
+      // Remove from sent requests (current user)
+      await _usersCollection.doc(currentUid).update({
+        'sentFollowRequests': FieldValue.arrayRemove([targetUid]),
+      });
+
+      // Remove from pending requests (target user)
+      await _usersCollection.doc(targetUid).update({
+        'pendingFollowRequests': FieldValue.arrayRemove([currentUid]),
+      });
+
+      if (kDebugMode) {
+        print('$currentUid cancelled follow request to $targetUid');
+      }
+    } catch (e, st) {
+      if (kDebugMode) {
+        print('Error cancelling follow request: $e');
+        print(st);
+      }
+      rethrow;
     }
   }
 

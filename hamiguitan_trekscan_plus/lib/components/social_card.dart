@@ -5,6 +5,7 @@ import '../models/social_model.dart';
 import '../services/social_sharing_service.dart';
 import '../services/user_service.dart';
 import '../theme/color.dart';
+import '../screens/main/profile_screen.dart';
 import 'comments_sheet.dart';
 import 'post_options_sheet.dart';
 
@@ -30,6 +31,7 @@ class _SocialCardState extends State<SocialCard> {
   bool _isLiked = false;
   bool _isBookmarked = false;
   bool _isFollowing = false;
+  bool _isPending = false;
   int _likesCount = 0;
   int _commentsCount = 0;
   int _sharesCount = 0;
@@ -46,6 +48,7 @@ class _SocialCardState extends State<SocialCard> {
     _checkLikedStatus();
     _checkBookmarkedStatus();
     _checkFollowStatus();
+    _checkPendingStatus();
     _loadUserName();
   }
 
@@ -110,27 +113,73 @@ class _SocialCardState extends State<SocialCard> {
     }
   }
 
+  Future<void> _checkPendingStatus() async {
+    final currentUser = FirebaseAuth.instance.currentUser;
+    if (currentUser == null || currentUser.uid == widget.post.userId) return;
+
+    try {
+      final isPending = await _userService.isPendingFollowRequest(
+        currentUser.uid,
+        widget.post.userId,
+      );
+      if (mounted) {
+        setState(() => _isPending = isPending);
+      }
+    } catch (e) {
+      debugPrint('Error checking pending status: $e');
+    }
+  }
+
   Future<void> _handleFollow() async {
     final currentUser = FirebaseAuth.instance.currentUser;
     if (currentUser == null) return;
 
-    setState(() => _isFollowing = !_isFollowing);
-
     try {
       if (_isFollowing) {
-        await _userService.toggleFollow(widget.post.userId, currentUser.uid);
-      } else {
+        // Unfollow
+        setState(() => _isFollowing = false);
         await _userService.unfollow(widget.post.userId, currentUser.uid);
+      } else if (_isPending) {
+        // Cancel pending request
+        setState(() => _isPending = false);
+        await _userService.cancelFollowRequest(
+          currentUser.uid,
+          widget.post.userId,
+        );
+      } else {
+        // Send follow request
+        setState(() => _isPending = true);
+        await _userService.toggleFollow(widget.post.userId, currentUser.uid);
       }
     } catch (e) {
       // Revert on error
-      setState(() => _isFollowing = !_isFollowing);
+      if (_isFollowing) {
+        setState(() => _isFollowing = true);
+      } else {
+        setState(() => _isPending = false);
+      }
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Failed to update follow status: $e')),
         );
       }
     }
+  }
+
+  void _navigateToUserProfile(BuildContext context) {
+    final currentUser = FirebaseAuth.instance.currentUser;
+
+    // Don't navigate if clicking own profile in post (already on profile tab)
+    if (currentUser?.uid == widget.post.userId) {
+      return;
+    }
+
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => ProfileScreen(userId: widget.post.userId),
+      ),
+    );
   }
 
   Future<void> _handleLike() async {
@@ -225,21 +274,173 @@ class _SocialCardState extends State<SocialCard> {
   }
 
   IconData _getVisibilityIcon() {
-    // For now, default to public icon
-    // Can be enhanced when visibility field is added to SocialPost model
-    return Icons.public;
+    switch (widget.post.privacy) {
+      case PostPrivacy.public:
+        return Icons.public;
+      case PostPrivacy.followers:
+        return Icons.people;
+      case PostPrivacy.private:
+        return Icons.lock;
+    }
   }
 
   void _showOptionsMenu() {
     PostOptionsSheet.show(
       context: context,
       postUserId: widget.post.userId,
+      onEdit: _showEditDialog,
       onDelete: widget.onDelete,
       onReport: () {
         ScaffoldMessenger.of(
           context,
         ).showSnackBar(const SnackBar(content: Text('Report submitted')));
       },
+    );
+  }
+
+  void _showEditDialog() {
+    final captionController = TextEditingController(text: widget.post.caption);
+    PostPrivacy selectedPrivacy = widget.post.privacy;
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setDialogState) => Container(
+          padding: EdgeInsets.only(
+            bottom: MediaQuery.of(context).viewInsets.bottom,
+            top: 20,
+            left: 20,
+            right: 20,
+          ),
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text(
+                    'Edit Post',
+                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.close),
+                    onPressed: () => Navigator.pop(context),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              TextField(
+                controller: captionController,
+                maxLines: 5,
+                maxLength: 500,
+                decoration: const InputDecoration(
+                  hintText: 'Caption',
+                  border: OutlineInputBorder(),
+                ),
+              ),
+              const SizedBox(height: 16),
+              const Text(
+                'Privacy',
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+              ),
+              const SizedBox(height: 8),
+              DropdownButtonFormField<PostPrivacy>(
+                value: selectedPrivacy,
+                decoration: const InputDecoration(border: OutlineInputBorder()),
+                items: const [
+                  DropdownMenuItem(
+                    value: PostPrivacy.public,
+                    child: Row(
+                      children: [
+                        Icon(Icons.public, size: 20),
+                        SizedBox(width: 8),
+                        Text('Public'),
+                      ],
+                    ),
+                  ),
+                  DropdownMenuItem(
+                    value: PostPrivacy.followers,
+                    child: Row(
+                      children: [
+                        Icon(Icons.people, size: 20),
+                        SizedBox(width: 8),
+                        Text('Followers'),
+                      ],
+                    ),
+                  ),
+                  DropdownMenuItem(
+                    value: PostPrivacy.private,
+                    child: Row(
+                      children: [
+                        Icon(Icons.lock, size: 20),
+                        SizedBox(width: 8),
+                        Text('Private'),
+                      ],
+                    ),
+                  ),
+                ],
+                onChanged: (value) {
+                  if (value != null) {
+                    setDialogState(() => selectedPrivacy = value);
+                  }
+                },
+              ),
+              const SizedBox(height: 24),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: () async {
+                    if (widget.post.id == null) return;
+
+                    try {
+                      await _socialService.updatePost(
+                        postId: widget.post.id!,
+                        caption: captionController.text.trim(),
+                        privacy: selectedPrivacy,
+                      );
+
+                      if (context.mounted) {
+                        Navigator.pop(context);
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('Post updated successfully'),
+                            backgroundColor: Colors.green,
+                          ),
+                        );
+                      }
+                    } catch (e) {
+                      if (context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text('Error updating post: $e'),
+                            backgroundColor: Colors.red,
+                          ),
+                        );
+                      }
+                    }
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primary,
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                  ),
+                  child: const Text(
+                    'Save Changes',
+                    style: TextStyle(color: Colors.white, fontSize: 16),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 20),
+            ],
+          ),
+        ),
+      ),
     );
   }
 
@@ -273,54 +474,63 @@ class _SocialCardState extends State<SocialCard> {
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       child: Row(
         children: [
-          CircleAvatar(
-            radius: 20,
-            backgroundColor: AppColors.primary,
-            backgroundImage: widget.post.userPhotoUrl != null
-                ? NetworkImage(widget.post.userPhotoUrl!)
-                : null,
-            child: widget.post.userPhotoUrl == null
-                ? const Icon(
-                    Icons.person,
-                    color: AppColors.iconPrimary,
-                    size: 20,
-                  )
-                : null,
+          GestureDetector(
+            onTap: () => _navigateToUserProfile(context),
+            child: CircleAvatar(
+              radius: 20,
+              backgroundColor: AppColors.primary,
+              backgroundImage: widget.post.userPhotoUrl != null
+                  ? NetworkImage(widget.post.userPhotoUrl!)
+                  : null,
+              child: widget.post.userPhotoUrl == null
+                  ? const Icon(
+                      Icons.person,
+                      color: AppColors.iconPrimary,
+                      size: 20,
+                    )
+                  : null,
+            ),
           ),
           const SizedBox(width: 12),
           Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  _displayName,
-                  style: const TextStyle(
-                    fontWeight: FontWeight.w600,
-                    fontSize: 15,
+            child: GestureDetector(
+              onTap: () => _navigateToUserProfile(context),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    _displayName,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w600,
+                      fontSize: 15,
+                    ),
                   ),
-                ),
-                const SizedBox(height: 2),
-                Row(
-                  children: [
-                    Text(
-                      _getTimeAgo(),
-                      style: TextStyle(fontSize: 12, color: Colors.grey[600]),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 6),
-                      child: Text(
-                        '•',
-                        style: TextStyle(fontSize: 12, color: Colors.grey[400]),
+                  const SizedBox(height: 2),
+                  Row(
+                    children: [
+                      Text(
+                        _getTimeAgo(),
+                        style: TextStyle(fontSize: 12, color: Colors.grey[600]),
                       ),
-                    ),
-                    Icon(
-                      _getVisibilityIcon(),
-                      size: 14,
-                      color: Colors.grey[600],
-                    ),
-                  ],
-                ),
-              ],
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 6),
+                        child: Text(
+                          '•',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Colors.grey[400],
+                          ),
+                        ),
+                      ),
+                      Icon(
+                        _getVisibilityIcon(),
+                        size: 14,
+                        color: Colors.grey[600],
+                      ),
+                    ],
+                  ),
+                ],
+              ),
             ),
           ),
           // Follow button (only show if not own post)
@@ -333,15 +543,27 @@ class _SocialCardState extends State<SocialCard> {
                   vertical: 6,
                 ),
                 decoration: BoxDecoration(
-                  color: _isFollowing ? Colors.grey[100] : AppColors.primary,
+                  color: _isFollowing
+                      ? Colors.grey[100]
+                      : _isPending
+                      ? Colors.orange[50]
+                      : AppColors.primary,
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: Text(
-                  _isFollowing ? 'Following' : 'Follow',
+                  _isFollowing
+                      ? 'Following'
+                      : _isPending
+                      ? 'Pending'
+                      : 'Follow',
                   style: TextStyle(
                     fontSize: 13,
                     fontWeight: FontWeight.w600,
-                    color: _isFollowing ? Colors.grey[700] : Colors.white,
+                    color: _isFollowing
+                        ? Colors.grey[700]
+                        : _isPending
+                        ? Colors.orange[700]
+                        : Colors.white,
                   ),
                 ),
               ),

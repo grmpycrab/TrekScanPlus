@@ -6,6 +6,7 @@ class PostOptionsSheet {
   static void show({
     required BuildContext context,
     required String postUserId,
+    VoidCallback? onEdit,
     VoidCallback? onDelete,
     VoidCallback? onReport,
   }) {
@@ -16,6 +17,17 @@ class PostOptionsSheet {
       context: context,
       builder: (BuildContext context) => CupertinoActionSheet(
         actions: [
+          if (isOwner)
+            CupertinoActionSheetAction(
+              onPressed: () {
+                Navigator.pop(context);
+                onEdit?.call();
+              },
+              child: const Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [SizedBox(width: 8), Text('Edit Post')],
+              ),
+            ),
           if (isOwner)
             CupertinoActionSheetAction(
               onPressed: () {
@@ -32,11 +44,7 @@ class PostOptionsSheet {
             },
             child: const Row(
               mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(CupertinoIcons.exclamationmark_shield, size: 20),
-                SizedBox(width: 8),
-                Text('Report Post'),
-              ],
+              children: [SizedBox(width: 8), Text('Report Post')],
             ),
           ),
         ],

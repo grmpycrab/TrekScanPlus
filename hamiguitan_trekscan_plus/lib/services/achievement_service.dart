@@ -31,6 +31,10 @@ class AchievementService {
     try {
       // Use current user ID if not provided
       final currentUserId = userId ?? _auth.currentUser?.uid;
+      final isOwnProfile = currentUserId == _auth.currentUser?.uid;
+      print(
+        '🎯 AchievementService: Initializing for userId: $currentUserId (isOwnProfile: $isOwnProfile)',
+      );
 
       // Initialize local service with user ID
       _localService = await LocalAchievementService.init(userId: currentUserId);
@@ -38,16 +42,23 @@ class AchievementService {
       // Load achievements from JSON file
       await _loadAchievementsFromJson();
 
-      // Merge with local achievements (keeping unlock status)
-      await _mergeWithLocalAchievements();
-
-      // Then, if user is authenticated, load achievements from Firebase and merge
-      if (currentUserId != null) {
-        await _mergeWithFirebaseAchievements(currentUserId);
+      // Only merge with local achievements if viewing own profile
+      if (isOwnProfile) {
+        await _mergeWithLocalAchievements();
       }
 
-      // Sync any pending achievements to Firebase if online
-      await _syncPendingToFirebase();
+      // Load achievements from Firebase and merge
+      if (currentUserId != null) {
+        await _mergeWithFirebaseAchievements(
+          currentUserId,
+          saveToLocal: isOwnProfile,
+        );
+      }
+
+      // Only sync to Firebase if viewing own profile
+      if (isOwnProfile) {
+        await _syncPendingToFirebase();
+      }
 
       _isInitialized = true;
     } catch (e) {
@@ -59,6 +70,7 @@ class AchievementService {
   /// Reset initialization so next init() call will reinitialize
   /// Call this when user changes
   void resetInitialization() {
+    print('🔄 AchievementService: Resetting initialization');
     _isInitialized = false;
     _allAchievements = [];
   }
@@ -125,10 +137,25 @@ class AchievementService {
 
   /// Merge achievements from Firebase into the list
   /// Updates local unlock status from Firebase data
-  Future<void> _mergeWithFirebaseAchievements(String userId) async {
+  Future<void> _mergeWithFirebaseAchievements(
+    String userId, {
+    bool saveToLocal = true,
+  }) async {
     try {
-      final firebaseAchievements = await fetchFromFirebase();
-      if (firebaseAchievements.isEmpty) return;
+      print(
+        '📥 AchievementService: Fetching achievements from Firebase for userId: $userId',
+      );
+      final firebaseAchievements = await fetchFromFirebase(userId: userId);
+      if (firebaseAchievements.isEmpty) {
+        print(
+          '📭 AchievementService: No achievements found in Firebase for userId: $userId',
+        );
+        return;
+      }
+
+      print(
+        '📦 AchievementService: Found ${firebaseAchievements.length} achievements in Firebase',
+      );
 
       for (int i = 0; i < _allAchievements.length; i++) {
         final achievement = _allAchievements[i];
@@ -151,8 +178,10 @@ class AchievementService {
                 true, // Don't show notification for existing achievements
           );
 
-          // Also save to local storage to keep them in sync
-          await _localService.saveAchievement(_allAchievements[i]);
+          // Only save to local storage if viewing own profile
+          if (saveToLocal) {
+            await _localService.saveAchievement(_allAchievements[i]);
+          }
         }
       }
     } catch (e) {
@@ -466,14 +495,14 @@ class AchievementService {
   }
 
   /// Fetch achievements from Firebase for current user
-  Future<List<Achievement>> fetchFromFirebase() async {
+  Future<List<Achievement>> fetchFromFirebase({String? userId}) async {
     try {
-      final userId = _auth.currentUser?.uid;
-      if (userId == null) return [];
+      final targetUserId = userId ?? _auth.currentUser?.uid;
+      if (targetUserId == null) return [];
 
       final querySnapshot = await _firestore
           .collection('users')
-          .doc(userId)
+          .doc(targetUserId)
           .collection('achievements')
           .get();
 

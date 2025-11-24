@@ -141,15 +141,69 @@ class SocialSharingService {
   }
 
   /// Stream all public posts
+  /// Stream all public and followers-only posts (filtered client-side for followers)
   Stream<List<SocialPost>> streamPublicPosts() {
+    final currentUser = _auth.currentUser;
+    if (currentUser == null) {
+      return Stream.value([]);
+    }
+
+    // Query for public and followers-only posts
     return _firestore
         .collection('posts')
-        .where('privacy', isEqualTo: PostPrivacy.public.name)
+        .where(
+          'privacy',
+          whereIn: [PostPrivacy.public.name, PostPrivacy.followers.name],
+        )
         .orderBy('createdAt', descending: true)
         .snapshots()
-        .map(
-          (snap) => snap.docs.map((doc) => SocialPost.fromDoc(doc)).toList(),
-        );
+        .asyncMap((snapshot) async {
+          try {
+            // Get current user's following list
+            final userDoc = await _firestore
+                .collection('users')
+                .doc(currentUser.uid)
+                .get();
+            final following =
+                (userDoc.data()?['following'] as List<dynamic>?)
+                    ?.cast<String>() ??
+                [];
+
+            // Filter posts based on privacy
+            final posts = snapshot.docs
+                .map((doc) {
+                  try {
+                    final post = SocialPost.fromDoc(doc);
+
+                    // Include public posts
+                    if (post.privacy == PostPrivacy.public) {
+                      return post;
+                    }
+
+                    // Include followers-only posts if user is following the author or is the author
+                    if (post.privacy == PostPrivacy.followers) {
+                      if (post.userId == currentUser.uid ||
+                          following.contains(post.userId)) {
+                        return post;
+                      }
+                    }
+
+                    return null;
+                  } catch (e) {
+                    debugPrint('Error parsing post from doc: $e');
+                    return null;
+                  }
+                })
+                .whereType<SocialPost>()
+                .toList();
+
+            return posts;
+          } catch (e) {
+            debugPrint('Error in streamPublicPosts: $e');
+            // Return empty list on error to prevent stream from breaking
+            return <SocialPost>[];
+          }
+        });
   }
 
   /// Stream posts for current user (including their own and followers' posts)
@@ -175,15 +229,66 @@ class SocialSharingService {
   }
 
   /// Stream user's own posts
-  Stream<List<SocialPost>> streamUserPosts(String userId) {
-    return _firestore
+  Stream<List<SocialPost>> streamUserPosts(String userId) async* {
+    final currentUser = _auth.currentUser;
+    final isOwnProfile = currentUser?.uid == userId;
+
+    // If viewing own profile, show all posts
+    if (isOwnProfile) {
+      yield* _firestore
+          .collection('posts')
+          .where('userId', isEqualTo: userId)
+          .orderBy('createdAt', descending: true)
+          .snapshots()
+          .map(
+            (snap) => snap.docs.map((doc) => SocialPost.fromDoc(doc)).toList(),
+          );
+      return;
+    }
+
+    // For other users' profiles, filter by privacy
+    yield* _firestore
         .collection('posts')
         .where('userId', isEqualTo: userId)
         .orderBy('createdAt', descending: true)
         .snapshots()
-        .map(
-          (snap) => snap.docs.map((doc) => SocialPost.fromDoc(doc)).toList(),
-        );
+        .asyncMap((snap) async {
+          final posts = snap.docs
+              .map((doc) => SocialPost.fromDoc(doc))
+              .toList();
+
+          // Get current user's following list to check followers-only posts
+          List<String> following = [];
+          if (currentUser != null) {
+            final userDoc = await _firestore
+                .collection('users')
+                .doc(currentUser.uid)
+                .get();
+            following = List<String>.from(userDoc.data()?['following'] ?? []);
+          }
+
+          // Filter posts based on privacy
+          final filteredPosts = posts.where((post) {
+            // Always show public posts
+            if (post.privacy == PostPrivacy.public) return true;
+
+            // Never show private posts on other profiles
+            if (post.privacy == PostPrivacy.private) return false;
+
+            // Show followers-only posts if current user follows the post owner
+            if (post.privacy == PostPrivacy.followers) {
+              return following.contains(userId);
+            }
+
+            // Default: show (treat as public)
+            return true;
+          }).toList();
+
+          print(
+            '🔍 Filtered ${filteredPosts.length}/${posts.length} posts for user $userId',
+          );
+          return filteredPosts;
+        });
   }
 
   /// Toggle like on a post
@@ -603,6 +708,30 @@ class SocialSharingService {
         .get();
 
     return bookmarkDoc.exists;
+  }
+
+  /// Update post caption and privacy
+  Future<void> updatePost({
+    required String postId,
+    String? caption,
+    PostPrivacy? privacy,
+  }) async {
+    final user = _auth.currentUser;
+    if (user == null) throw Exception('User not authenticated');
+
+    final updateData = <String, dynamic>{
+      'updatedAt': FieldValue.serverTimestamp(),
+    };
+
+    if (caption != null) {
+      updateData['caption'] = caption;
+    }
+
+    if (privacy != null) {
+      updateData['privacy'] = privacy.name;
+    }
+
+    await _firestore.collection('posts').doc(postId).update(updateData);
   }
 
   /// Delete a post
