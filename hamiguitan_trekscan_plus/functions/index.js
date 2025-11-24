@@ -1,0 +1,223 @@
+/**
+ * Cloud Functions for TrekScan Plus
+ * 
+ * Automatic buffer day management:
+ * - Creates buffer day when booking is approved
+ * - Removes buffer day when booking is cancelled/rejected
+ */
+
+const functions = require('firebase-functions');
+const admin = require('firebase-admin');
+
+admin.initializeApp();
+const db = admin.firestore();
+
+// Set region to match Firestore location
+const region = 'asia-southeast1';
+
+/**
+ * Format date as YYYY-MM-DD
+ */
+function formatDateKey(date) {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+}
+
+/**
+ * Trigger when a booking document is created or updated
+ * Automatically manages buffer days based on booking status
+ */
+exports.onBookingStatusChange = functions.region(region).firestore
+    .document('bookings/{bookingId}')
+    .onWrite(async (change, context) => {
+        const bookingId = context.params.bookingId;
+
+        // Get old and new data
+        const oldData = change.before.exists ? change.before.data() : null;
+        const newData = change.after.exists ? change.after.data() : null;
+
+        // Get old and new status
+        const oldStatus = oldData?.status;
+        const newStatus = newData?.status;
+
+        // Get trek date
+        const trekDate = newData?.trekDate?.toDate();
+
+        if (!trekDate) {
+            console.log(`Booking ${bookingId}: No trek date, skipping`);
+            return null;
+        }
+
+        const trekDateKey = formatDateKey(trekDate);
+        const dayAfter = new Date(trekDate);
+        dayAfter.setDate(dayAfter.getDate() + 1);
+        const bufferDateKey = formatDateKey(dayAfter);
+
+        console.log(`Booking ${bookingId}: Status changed from "${oldStatus}" to "${newStatus}"`);
+        console.log(`Trek date: ${trekDateKey}, Buffer day: ${bufferDateKey}`);
+
+        // Case 1: Booking approved (create buffer day)
+        if (newStatus === 'approved' && oldStatus !== 'approved') {
+            console.log(`Creating buffer day for ${bufferDateKey}`);
+
+            await db.collection('calendar_config').doc(bufferDateKey).set({
+                date: admin.firestore.Timestamp.fromDate(dayAfter),
+                isClosed: true,
+                maxSlots: 0,
+                reason: 'Trek down day - Trekkers descending',
+                customNote: `Blocked due to approved trek starting on ${trekDateKey}`,
+                isTrekDownDay: true,
+                originalTrekDate: trekDateKey,
+                lastUpdated: admin.firestore.FieldValue.serverTimestamp()
+            }, { merge: true });
+
+            console.log(`✅ Buffer day created: ${bufferDateKey}`);
+            return { action: 'created', bufferDate: bufferDateKey };
+        }
+
+        // Case 2: Booking no longer approved (remove buffer day if it was this booking's)
+        if (oldStatus === 'approved' && newStatus !== 'approved') {
+            console.log(`Checking if buffer day ${bufferDateKey} should be removed`);
+
+            const bufferDoc = await db.collection('calendar_config').doc(bufferDateKey).get();
+
+            if (bufferDoc.exists) {
+                const bufferData = bufferDoc.data();
+
+                // Only remove if this buffer was created by this booking
+                if (bufferData.isTrekDownDay && bufferData.originalTrekDate === trekDateKey) {
+                    // Check if there are other approved bookings on the same date
+                    const otherBookings = await db.collection('bookings')
+                        .where('trekDate', '==', admin.firestore.Timestamp.fromDate(trekDate))
+                        .where('status', '==', 'approved')
+                        .get();
+
+                    // Only delete if no other approved bookings exist for this date
+                    if (otherBookings.empty || (otherBookings.size === 1 && otherBookings.docs[0].id === bookingId)) {
+                        await db.collection('calendar_config').doc(bufferDateKey).delete();
+                        console.log(`✅ Buffer day removed: ${bufferDateKey}`);
+                        return { action: 'removed', bufferDate: bufferDateKey };
+                    } else {
+                        console.log(`⚠️  Buffer day ${bufferDateKey} kept (other approved bookings exist)`);
+                        return { action: 'kept', bufferDate: bufferDateKey, reason: 'other_bookings_exist' };
+                    }
+                }
+            }
+        }
+
+        // Case 3: Booking deleted (remove buffer day)
+        if (!change.after.exists && oldStatus === 'approved') {
+            console.log(`Booking deleted, checking buffer day ${bufferDateKey}`);
+
+            const bufferDoc = await db.collection('calendar_config').doc(bufferDateKey).get();
+
+            if (bufferDoc.exists) {
+                const bufferData = bufferDoc.data();
+
+                if (bufferData.isTrekDownDay && bufferData.originalTrekDate === trekDateKey) {
+                    // Check for other approved bookings
+                    const otherBookings = await db.collection('bookings')
+                        .where('trekDate', '==', admin.firestore.Timestamp.fromDate(trekDate))
+                        .where('status', '==', 'approved')
+                        .get();
+
+                    if (otherBookings.empty) {
+                        await db.collection('calendar_config').doc(bufferDateKey).delete();
+                        console.log(`✅ Buffer day removed: ${bufferDateKey}`);
+                        return { action: 'removed', bufferDate: bufferDateKey };
+                    }
+                }
+            }
+        }
+
+        console.log(`No buffer day action needed`);
+        return null;
+    });
+
+/**
+ * Manual trigger to sync all buffer days
+ * Call this via Firebase Console or HTTP function
+ */
+exports.syncAllBufferDays = functions.region(region).https.onCall(async (data, context) => {
+    // Verify admin access (optional - add your admin check here)
+    console.log('Starting manual buffer day sync...');
+
+    try {
+        // Get all approved bookings
+        const bookingsSnapshot = await db.collection('bookings')
+            .where('status', '==', 'approved')
+            .get();
+
+        console.log(`Found ${bookingsSnapshot.size} approved bookings`);
+
+        // Track buffer days that should exist
+        const bufferDays = new Map();
+
+        for (const doc of bookingsSnapshot.docs) {
+            const data = doc.data();
+            const trekDate = data.trekDate?.toDate();
+
+            if (!trekDate) continue;
+
+            const trekDateKey = formatDateKey(trekDate);
+            const dayAfter = new Date(trekDate);
+            dayAfter.setDate(dayAfter.getDate() + 1);
+            const bufferDateKey = formatDateKey(dayAfter);
+
+            if (!bufferDays.has(bufferDateKey)) {
+                bufferDays.set(bufferDateKey, {
+                    date: admin.firestore.Timestamp.fromDate(dayAfter),
+                    isClosed: true,
+                    maxSlots: 0,
+                    reason: 'Trek down day - Trekkers descending',
+                    customNote: `Blocked due to approved trek starting on ${trekDateKey}`,
+                    isTrekDownDay: true,
+                    originalTrekDate: trekDateKey,
+                    lastUpdated: admin.firestore.FieldValue.serverTimestamp()
+                });
+            }
+        }
+
+        // Get existing buffer days
+        const configSnapshot = await db.collection('calendar_config')
+            .where('isTrekDownDay', '==', true)
+            .get();
+
+        // Remove outdated buffer days
+        let removedCount = 0;
+        for (const doc of configSnapshot.docs) {
+            if (!bufferDays.has(doc.id)) {
+                await doc.ref.delete();
+                removedCount++;
+            }
+        }
+
+        // Add/update buffer days
+        const batch = db.batch();
+        let updatedCount = 0;
+
+        for (const [dateKey, data] of bufferDays) {
+            const docRef = db.collection('calendar_config').doc(dateKey);
+            batch.set(docRef, data, { merge: true });
+            updatedCount++;
+        }
+
+        await batch.commit();
+
+        const result = {
+            totalApprovedBookings: bookingsSnapshot.size,
+            bufferDaysCreated: bufferDays.size,
+            outdatedRemoved: removedCount,
+            updated: updatedCount
+        };
+
+        console.log('Sync complete:', result);
+        return result;
+
+    } catch (error) {
+        console.error('Error syncing buffer days:', error);
+        throw new functions.https.HttpsError('internal', error.message);
+    }
+});
