@@ -8,20 +8,29 @@ import 'settings_screen.dart';
 import 'book_a_climb.dart';
 
 class MainScreen extends StatefulWidget {
-  const MainScreen({super.key});
+  final int initialTabIndex;
+  final String? highlightBookingId;
+
+  const MainScreen({
+    super.key,
+    this.initialTabIndex = 0,
+    this.highlightBookingId,
+  });
 
   @override
   State<MainScreen> createState() => _MainScreenState();
 }
 
 class _MainScreenState extends State<MainScreen> {
-  int _currentIndex = 0;
+  late int _currentIndex;
   final AchievementService _achievementService = AchievementService();
   DateTime? _selectedDateForBooking;
+  bool _autoShowBookingForm = false;
 
   void _navigateToBookingWithDate(DateTime date) {
     setState(() {
       _selectedDateForBooking = date;
+      _autoShowBookingForm = true;
       _currentIndex = 3; // Index of BookAClimbScreen
     });
   }
@@ -30,13 +39,18 @@ class _MainScreenState extends State<MainScreen> {
     HomeScreen(onNavigateToBooking: _navigateToBookingWithDate),
     const StationScreen(),
     const ScannerScreen(),
-    BookAClimbScreen(selectedDate: _selectedDateForBooking),
+    BookAClimbScreen(
+      selectedDate: _selectedDateForBooking,
+      autoShowBookingForm: _autoShowBookingForm,
+      highlightBookingId: widget.highlightBookingId,
+    ),
     const SettingsScreen(),
   ];
 
   @override
   void initState() {
     super.initState();
+    _currentIndex = widget.initialTabIndex;
     _initializeAchievements();
   }
 
@@ -66,6 +80,11 @@ class _MainScreenState extends State<MainScreen> {
           currentIndex: _currentIndex,
           onTap: (index) {
             setState(() {
+              // Clear booking form state when switching away from booking tab
+              if (_currentIndex == 3 && index != 3) {
+                _selectedDateForBooking = null;
+                _autoShowBookingForm = false;
+              }
               _currentIndex = index;
             });
           },

@@ -9,6 +9,9 @@
 const functions = require('firebase-functions');
 const admin = require('firebase-admin');
 
+// Set timezone to Philippine Time to match app behavior
+process.env.TZ = 'Asia/Manila';
+
 admin.initializeApp();
 const db = admin.firestore();
 
@@ -16,12 +19,23 @@ const db = admin.firestore();
 const region = 'asia-southeast1';
 
 /**
- * Format date as YYYY-MM-DD
+ * Format date as YYYY-MM-DD in Philippine timezone
+ * This matches how the Flutter app creates date keys
  */
 function formatDateKey(date) {
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const day = String(date.getDate()).padStart(2, '0');
+    // Convert to Philippine timezone
+    const options = {
+        timeZone: 'Asia/Manila',
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit'
+    };
+
+    const parts = new Intl.DateTimeFormat('en-US', options).formatToParts(date);
+    const year = parts.find(p => p.type === 'year').value;
+    const month = parts.find(p => p.type === 'month').value;
+    const day = parts.find(p => p.type === 'day').value;
+
     return `${year}-${month}-${day}`;
 }
 
@@ -38,12 +52,12 @@ exports.onBookingStatusChange = functions.region(region).firestore
         const oldData = change.before.exists ? change.before.data() : null;
         const newData = change.after.exists ? change.after.data() : null;
 
-        // Get old and new status
-        const oldStatus = oldData?.status;
-        const newStatus = newData?.status;
+        // Get old and new status (normalize to lowercase for comparison)
+        const oldStatus = oldData?.status?.toLowerCase();
+        const newStatus = newData?.status?.toLowerCase();
 
-        // Get trek date
-        const trekDate = newData?.trekDate?.toDate();
+        // Get trek date (from newData if exists, otherwise from oldData for deletions)
+        const trekDate = (newData?.trekDate || oldData?.trekDate)?.toDate();
 
         if (!trekDate) {
             console.log(`Booking ${bookingId}: No trek date, skipping`);
