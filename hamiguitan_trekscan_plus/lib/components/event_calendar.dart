@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../models/calendar_model.dart';
 import '../theme/color.dart';
+import '../services/calendar_config_service.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'dart:async';
 
@@ -59,9 +60,10 @@ class _EventCalendarState extends State<EventCalendar> {
         .where('trekDate', isGreaterThanOrEqualTo: startTs)
         .where('trekDate', isLessThanOrEqualTo: endTs)
         .snapshots()
-        .listen((snap) {
+        .listen((snap) async {
           // Only count approved bookings toward the slot limit
           final Map<String, int> slotsPerDay = {};
+
           for (final doc in snap.docs) {
             final data = doc.data();
             final status = (data['status'] as String?)?.toLowerCase() ?? '';
@@ -72,35 +74,56 @@ class _EventCalendarState extends State<EventCalendar> {
             final Timestamp? t = data['trekDate'] as Timestamp?;
             if (t == null) continue;
             final d = t.toDate();
-            final key = '${d.year}-${d.month}-${d.day}';
+            final key =
+                '${d.year}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
             final porters = (data['numberOfPorters'] as num?)?.toInt() ?? 0;
             final used = 1 + porters;
             slotsPerDay[key] = (slotsPerDay[key] ?? 0) + used;
           }
+
+          // Get calendar configuration for the month
+          final calendarService = CalendarConfigService();
+          final systemSettings = await calendarService.getSystemSettings();
+          final defaultMaxSlots =
+              systemSettings['defaultMaxSlots'] as int? ?? 30;
+          final criticalThreshold =
+              systemSettings['criticalThreshold'] as int? ?? 5;
+
+          // Get date configs for the month
+          final dateConfigMap = await calendarService.getDateRangeConfig(
+            firstDay,
+            lastDay,
+          );
 
           if (!mounted) return;
           setState(() {
             final daysInMonth = DateTime(month.year, month.month + 1, 0).day;
             _displayTrekDays = List.generate(daysInMonth, (index) {
               final date = DateTime(month.year, month.month, index + 1);
-              final key = '${date.year}-${date.month}-${date.day}';
+              final key =
+                  '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
               final booked = slotsPerDay[key] ?? 0;
-              const maxSlots = 30;
-              TrekDayStatus status;
-              if (booked >= maxSlots) {
-                status = TrekDayStatus.full;
-              } else if (booked >= (maxSlots - 5)) {
-                status = TrekDayStatus.critical;
-              } else {
-                status = TrekDayStatus.available;
-              }
+              final dateConfig = dateConfigMap[key];
+
+              // Get max slots for this date (date-specific or system default)
+              final maxSlots = dateConfig?.maxSlots ?? defaultMaxSlots;
+              var isClosed = dateConfig?.isClosed ?? false;
+              var closureReason = dateConfig?.reason;
+
+              // Buffer days are now stored directly in Firebase calendar_config
+              // with isTrekDownDay flag, so they come through dateConfig
+
               final isResearchDay = date.weekday == DateTime.wednesday;
-              return TrekDay(
+
+              // Use factory method to create TrekDay with proper status
+              return TrekDay.fromBookingData(
                 date: date,
-                status: status,
-                isResearchDay: isResearchDay,
                 bookedSlots: booked,
                 maxSlots: maxSlots,
+                criticalThreshold: criticalThreshold,
+                isClosed: isClosed,
+                closureReason: closureReason,
+                isResearchDay: isResearchDay,
               );
             });
           });
@@ -298,6 +321,7 @@ class _EventCalendarState extends State<EventCalendar> {
     Color? borderColor;
     Color? badgeColor;
     String? displayText;
+    IconData? overlayIcon;
 
     if (!isCurrentMonth) {
       textColor = Colors.grey.shade300;
@@ -305,6 +329,17 @@ class _EventCalendarState extends State<EventCalendar> {
       // Gray out past dates
       textColor = Colors.grey.shade400;
       backgroundColor = Colors.grey.withValues(alpha: 0.05);
+    } else if (actualTrekDay.isClosed) {
+      // Show closed dates with gray background and X icon
+      textColor = Colors.grey.shade600;
+      backgroundColor = Colors.grey.withValues(alpha: 0.15);
+      overlayIcon = Icons.block;
+      // Show closure reason as badge text if available
+      if (actualTrekDay.closureReason != null &&
+          actualTrekDay.closureReason!.isNotEmpty) {
+        displayText = 'X';
+        badgeColor = Colors.grey.shade600;
+      }
     } else {
       final bookedSlots = actualTrekDay.bookedSlots;
       final maxSlots = actualTrekDay.maxSlots;
@@ -335,8 +370,16 @@ class _EventCalendarState extends State<EventCalendar> {
     }
 
     return GestureDetector(
-      onTap: isCurrentMonth && !isPastDate && widget.onDaySelected != null
-          ? () => widget.onDaySelected!(date)
+      onTap: isCurrentMonth && !isPastDate
+          ? () {
+              // Show closure reason if date is closed
+              if (actualTrekDay.isClosed) {
+                _showClosureDateInfo(date, actualTrekDay.closureReason);
+              } else if (widget.onDaySelected != null) {
+                // Navigate to booking screen for available dates
+                widget.onDaySelected!(date);
+              }
+            }
           : null,
       child: Container(
         width: 48,
@@ -361,6 +404,13 @@ class _EventCalendarState extends State<EventCalendar> {
                 ),
               ),
             ),
+            // Closed icon overlay (if date is closed)
+            if (overlayIcon != null)
+              Positioned(
+                bottom: 2,
+                right: 2,
+                child: Icon(overlayIcon, size: 16, color: Colors.grey.shade600),
+              ),
             // Booked count badge (if any)
             if (displayText != null)
               Positioned(
@@ -394,21 +444,71 @@ class _EventCalendarState extends State<EventCalendar> {
     );
   }
 
+  void _showClosureDateInfo(DateTime date, String? reason) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: Row(
+          children: [
+            Icon(Icons.block, color: Colors.grey.shade700),
+            const SizedBox(width: 8),
+            const Text('Date Closed'),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              DateFormat('MMMM d, yyyy').format(date),
+              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+            ),
+            const SizedBox(height: 12),
+            if (reason != null && reason.isNotEmpty) ...[
+              const Text(
+                'Reason:',
+                style: TextStyle(
+                  fontWeight: FontWeight.w600,
+                  color: Colors.black54,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(reason, style: const TextStyle(fontSize: 14)),
+            ] else
+              const Text(
+                'This date is closed for bookings.',
+                style: TextStyle(fontSize: 14),
+              ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('OK'),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildLegend() {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
+    return Wrap(
+      alignment: WrapAlignment.center,
+      spacing: 12,
+      runSpacing: 8,
       children: [
         _buildLegendItem('Available', const Color(0xFF06402B)),
-        const SizedBox(width: 12),
-        _buildLegendItem('Limited Slots Remaining', Colors.orange),
-        const SizedBox(width: 12),
+        _buildLegendItem('Limited Slots', Colors.orange),
         _buildLegendItem('Full', Colors.red),
+        _buildLegendItem('Closed', Colors.grey.shade600),
       ],
     );
   }
 
   Widget _buildLegendItem(String label, Color color) {
     return Row(
+      mainAxisSize: MainAxisSize.min,
       children: [
         Container(width: 12, height: 2, color: color),
         const SizedBox(width: 4),

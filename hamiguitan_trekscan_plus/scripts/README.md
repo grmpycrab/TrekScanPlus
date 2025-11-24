@@ -1,6 +1,41 @@
-# Test Booking Scripts
+# Scripts Directory
 
-This folder contains scripts to test the 30-booking limit for Mt. Hamiguitan.
+This folder contains utility scripts for the TrekScan Plus application.
+
+## 📁 Available Scripts
+
+### 🧪 Test Booking Scripts
+
+Scripts to test the 30-booking limit for Mt. Hamiguitan.
+
+#### 1. `add_test_bookings.js` (Node.js - Recommended)
+Firebase Admin script that creates 30 test bookings for a specific date.
+
+#### 2. `add_test_bookings.dart` (Flutter)
+Flutter script that creates test bookings using the app's context.
+
+#### 3. `delete_test_bookings.js` (Node.js)
+Cleanup script to remove all test bookings.
+
+### 📅 Calendar Configuration Script (NEW!)
+
+#### 4. `init_calendar_config.js` (Node.js)
+Initializes the centralized calendar configuration in Firestore.
+
+**Features:**
+- Creates system settings document with defaults
+- Sets up example date configurations
+- Demonstrates closing dates, custom limits
+- Helper functions for manual calendar management
+
+**Usage:**
+```bash
+node scripts/init_calendar_config.js
+```
+
+**See also:** `documentation/CALENDAR_CONFIG_GUIDE.md`
+
+---
 
 ## Overview
 

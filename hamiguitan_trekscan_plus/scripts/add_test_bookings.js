@@ -32,13 +32,13 @@ const serviceAccountPath = path.join(__dirname, 'serviceAccountKey.json');
 const TARGET_DATE = new Date('2025-11-26');
 
 // Number of bookings to create (max 30)
-const NUMBER_OF_BOOKINGS = 24;
+const NUMBER_OF_BOOKINGS = 2;
 
 // Number of porters per booking (affects slot calculation)
-const PORTERS_PER_BOOKING = 0;
+const PORTERS_PER_BOOKING = 2;
 
 // User ID to assign bookings to (replace with actual user ID from Firebase Auth)
-const TEST_USER_ID = 'WoGQ7rEaQTdNKOaWyj1r5LSjMor2'; // Update this with a real user ID
+const TEST_USER_ID = 'mvV3LeGH0IemtxgCFe8O0dz9MRk1'; // Update this with a real user ID
 
 // ============================================
 
@@ -109,6 +109,35 @@ async function main() {
         // Commit the batch
         console.log('\n⏳ Committing batch write...');
         await batch.commit();
+
+        console.log('✅ Bookings committed!');
+
+        // Create buffer days for approved bookings
+        console.log('\n📅 Creating buffer days (trek down days)...');
+        const bufferBatch = db.batch();
+        let bufferCount = 0;
+
+        const dayAfter = new Date(TARGET_DATE);
+        dayAfter.setDate(dayAfter.getDate() + 1);
+        const bufferDateKey = `${dayAfter.getFullYear()}-${String(dayAfter.getMonth() + 1).padStart(2, '0')}-${String(dayAfter.getDate()).padStart(2, '0')}`;
+        const trekDateKey = `${TARGET_DATE.getFullYear()}-${String(TARGET_DATE.getMonth() + 1).padStart(2, '0')}-${String(TARGET_DATE.getDate()).padStart(2, '0')}`;
+
+        const bufferRef = db.collection('calendar_config').doc(bufferDateKey);
+        bufferBatch.set(bufferRef, {
+            date: admin.firestore.Timestamp.fromDate(dayAfter),
+            isClosed: true,
+            maxSlots: 0,
+            reason: 'Trek down day - Trekkers descending',
+            customNote: `Blocked due to approved trek starting on ${trekDateKey}`,
+            isTrekDownDay: true,
+            originalTrekDate: trekDateKey,
+            lastUpdated: admin.firestore.FieldValue.serverTimestamp()
+        }, { merge: true });
+
+        bufferCount++;
+
+        await bufferBatch.commit();
+        console.log(`✅ Created ${bufferCount} buffer day: ${bufferDateKey}`);
 
         console.log('\n✨ Completed!\n');
         console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');

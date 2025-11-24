@@ -6,6 +6,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../../models/booking_model.dart';
 import '../../services/booking_service.dart';
+import '../../services/calendar_config_service.dart';
 import '../../services/validators.dart';
 import '../../models/climb.dart';
 import '../../components/climb_card.dart';
@@ -14,8 +15,13 @@ import '../../theme/color.dart';
 
 class BookAClimbScreen extends StatefulWidget {
   final String? highlightBookingId;
+  final DateTime? selectedDate;
 
-  const BookAClimbScreen({super.key, this.highlightBookingId});
+  const BookAClimbScreen({
+    super.key,
+    this.highlightBookingId,
+    this.selectedDate,
+  });
 
   @override
   State<BookAClimbScreen> createState() => _BookAClimbScreenState();
@@ -47,10 +53,16 @@ class _BookAClimbScreenState extends State<BookAClimbScreen> {
   final TextEditingController _portersController = TextEditingController();
   final TextEditingController _affiliationController = TextEditingController();
   DateTime? _selectedDate;
+  bool _shouldShowBookingForm = false;
 
   @override
   void initState() {
     super.initState();
+    // Set selected date if passed from calendar
+    if (widget.selectedDate != null) {
+      _selectedDate = widget.selectedDate;
+      _shouldShowBookingForm = true;
+    }
     // Listen for auth state changes so we can (re)subscribe to bookings for
     // the signed-in user. This handles cases where the screen loads before
     // authentication completes.
@@ -96,6 +108,16 @@ class _BookAClimbScreenState extends State<BookAClimbScreen> {
                 !_hasScrolledToBooking &&
                 bookings.isNotEmpty) {
               _scrollToBooking(widget.highlightBookingId!);
+            }
+
+            // Auto-show booking form if date was selected from calendar
+            if (_shouldShowBookingForm && mounted) {
+              _shouldShowBookingForm = false;
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                if (mounted) {
+                  _showBookingForm();
+                }
+              });
             }
           });
     });
@@ -146,6 +168,54 @@ class _BookAClimbScreenState extends State<BookAClimbScreen> {
     }
   }
 
+  /// Check if a date is within buffer period of existing bookings
+  /// Returns the conflicting booking date if found, null otherwise
+  Future<DateTime?> _checkBufferPeriod(DateTime date) async {
+    try {
+      // Check day before (26th conflicts with 27th)
+      final dayBefore = date.subtract(const Duration(days: 1));
+      final dayBeforeStart = DateTime(
+        dayBefore.year,
+        dayBefore.month,
+        dayBefore.day,
+        0,
+        0,
+        0,
+      );
+      final dayBeforeEnd = DateTime(
+        dayBefore.year,
+        dayBefore.month,
+        dayBefore.day,
+        23,
+        59,
+        59,
+      );
+
+      final beforeSnapshot = await FirebaseFirestore.instance
+          .collection('bookings')
+          .where(
+            'trekDate',
+            isGreaterThanOrEqualTo: Timestamp.fromDate(dayBeforeStart),
+          )
+          .where(
+            'trekDate',
+            isLessThanOrEqualTo: Timestamp.fromDate(dayBeforeEnd),
+          )
+          .where('status', isEqualTo: 'approved')
+          .limit(1)
+          .get();
+
+      if (beforeSnapshot.docs.isNotEmpty) {
+        return dayBefore;
+      }
+
+      return null;
+    } catch (e) {
+      debugPrint('Error checking buffer period: $e');
+      return null;
+    }
+  }
+
   /// Check if the selected date has available slots (max 30 slots per day)
   /// Returns a map with 'available' (bool) and 'slotsUsed' (int)
   Future<Map<String, dynamic>> _checkDateAvailability(
@@ -153,6 +223,43 @@ class _BookAClimbScreenState extends State<BookAClimbScreen> {
     int portersNeeded,
   ) async {
     try {
+      // Get calendar configuration for this date
+      final calendarService = CalendarConfigService();
+      final dateConfig = await calendarService.getDateConfig(date);
+
+      // Check if date is closed
+      if (dateConfig.isClosed) {
+        return {
+          'available': false,
+          'slotsUsed': 0,
+          'slotsNeeded': 1 + portersNeeded,
+          'maxSlots': dateConfig.maxSlots,
+          'remaining': 0,
+          'isClosed': true,
+          'closureReason': dateConfig.reason,
+        };
+      }
+
+      // Check for trek down day (day after existing bookings)
+      final conflictDate = await _checkBufferPeriod(date);
+      if (conflictDate != null) {
+        final conflictDateStr =
+            '${conflictDate.year}-${conflictDate.month.toString().padLeft(2, '0')}-${conflictDate.day.toString().padLeft(2, '0')}';
+        return {
+          'available': false,
+          'slotsUsed': 0,
+          'slotsNeeded': 1 + portersNeeded,
+          'maxSlots': dateConfig.maxSlots,
+          'remaining': 0,
+          'isClosed': false,
+          'isBufferDay': true,
+          'conflictDate': conflictDateStr,
+        };
+      }
+
+      // Use date-specific maxSlots from config
+      final maxSlots = dateConfig.maxSlots;
+
       // Normalize date to start and end of day to catch all bookings for this date
       final startOfDay = DateTime(date.year, date.month, date.day, 0, 0, 0);
       final endOfDay = DateTime(date.year, date.month, date.day, 23, 59, 59);
@@ -184,7 +291,6 @@ class _BookAClimbScreenState extends State<BookAClimbScreen> {
       final slotsNeeded = 1 + portersNeeded;
 
       // Check if there's enough space
-      const maxSlots = 30;
       final available = (slotsUsed + slotsNeeded) <= maxSlots;
 
       return {
@@ -193,6 +299,7 @@ class _BookAClimbScreenState extends State<BookAClimbScreen> {
         'slotsNeeded': slotsNeeded,
         'maxSlots': maxSlots,
         'remaining': maxSlots - slotsUsed,
+        'isClosed': false,
       };
     } catch (e) {
       debugPrint('Error checking date availability: $e');
@@ -203,6 +310,7 @@ class _BookAClimbScreenState extends State<BookAClimbScreen> {
         'slotsNeeded': 1 + portersNeeded,
         'maxSlots': 30,
         'remaining': 30,
+        'isClosed': false,
       };
     }
   }
@@ -1469,6 +1577,40 @@ class _BookAClimbScreenState extends State<BookAClimbScreen> {
     // Check if the selected date has available slots
     final porters = int.tryParse(_portersController.text.trim()) ?? 0;
     final availability = await _checkDateAvailability(_selectedDate!, porters);
+
+    // Check if date is closed
+    if (availability['isClosed'] == true) {
+      final closureReason = availability['closureReason'] as String?;
+
+      if (!mounted) return;
+
+      await AppDialogueHandler.showError(
+        context: context,
+        title: 'Date Closed',
+        message:
+            'Sorry, ${_formatSelectedDate()} is closed for bookings.\n\n'
+            '${closureReason != null ? 'Reason: $closureReason\n\n' : ''}'
+            'Please select another date.',
+      );
+      return;
+    }
+
+    // Check if date is in buffer period
+    if (availability['isBufferDay'] == true) {
+      final conflictDate = availability['conflictDate'] as String?;
+
+      if (!mounted) return;
+
+      await AppDialogueHandler.showError(
+        context: context,
+        title: 'Trek Down Day',
+        message:
+            'Sorry, ${_formatSelectedDate()} is not available.\n\n'
+            'There is an approved booking on $conflictDate. This date is reserved for trekkers descending from their 3-day trek.\n\n'
+            'Please select a different date.',
+      );
+      return;
+    }
 
     if (!availability['available']) {
       final slotsUsed = availability['slotsUsed'];

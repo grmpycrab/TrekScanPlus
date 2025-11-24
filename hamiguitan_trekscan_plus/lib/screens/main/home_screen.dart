@@ -14,13 +14,16 @@ import '../../theme/color.dart';
 import '../../services/firebase_auth_service.dart';
 import '../../services/user_service.dart';
 import '../../services/social_sharing_service.dart';
+import '../../services/calendar_config_service.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'dart:async';
 import 'profile_screen.dart';
 
 class HomeScreen extends StatefulWidget {
-  const HomeScreen({super.key});
+  final Function(DateTime)? onNavigateToBooking;
+
+  const HomeScreen({super.key, this.onNavigateToBooking});
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
@@ -91,10 +94,11 @@ class _HomeScreenState extends State<HomeScreen> {
         .where('trekDate', isGreaterThanOrEqualTo: startTs)
         .where('trekDate', isLessThanOrEqualTo: endTs)
         .snapshots()
-        .listen((snap) {
+        .listen((snap) async {
           // Map date -> booked slots. Count each booking as 1 + numberOfPorters
           // Only count approved bookings - pending bookings don't reserve slots
           final Map<String, int> slotsPerDay = {};
+
           for (final doc in snap.docs) {
             final data = doc.data();
             final status = (data['status'] as String?)?.toLowerCase() ?? '';
@@ -105,37 +109,58 @@ class _HomeScreenState extends State<HomeScreen> {
             final Timestamp? t = data['trekDate'] as Timestamp?;
             if (t == null) continue;
             final d = t.toDate();
-            final key = '${d.year}-${d.month}-${d.day}';
+            final key =
+                '${d.year}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
             final porters = (data['numberOfPorters'] as num?)?.toInt() ?? 0;
             final used =
                 1 + porters; // each booking occupies the requester + porters
             slotsPerDay[key] = (slotsPerDay[key] ?? 0) + used;
           }
 
-          // Rebuild trekDays for the month using a maxSlots of 30
+          // Get calendar configuration for the month
+          final calendarService = CalendarConfigService();
+          final systemSettings = await calendarService.getSystemSettings();
+          final defaultMaxSlots =
+              systemSettings['defaultMaxSlots'] as int? ?? 30;
+          final criticalThreshold =
+              systemSettings['criticalThreshold'] as int? ?? 5;
+
+          // Get date configs for the month
+          final dateConfigMap = await calendarService.getDateRangeConfig(
+            firstDay,
+            lastDay,
+          );
+
+          // Rebuild trekDays for the month using calendar config
           setState(() {
             final now = month;
             final daysInMonth = DateTime(now.year, now.month + 1, 0).day;
             _trekDays = List.generate(daysInMonth, (index) {
               final date = DateTime(now.year, now.month, index + 1);
-              final key = '${date.year}-${date.month}-${date.day}';
+              final key =
+                  '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
               final booked = slotsPerDay[key] ?? 0;
-              const maxSlots = 30;
-              TrekDayStatus status;
-              if (booked >= maxSlots) {
-                status = TrekDayStatus.full;
-              } else if (booked >= (maxSlots - 5)) {
-                status = TrekDayStatus.critical;
-              } else {
-                status = TrekDayStatus.available;
-              }
+              final dateConfig = dateConfigMap[key];
+
+              // Get max slots for this date (date-specific or system default)
+              final maxSlots = dateConfig?.maxSlots ?? defaultMaxSlots;
+              var isClosed = dateConfig?.isClosed ?? false;
+              var closureReason = dateConfig?.reason;
+
+              // Buffer days are now stored directly in Firebase calendar_config
+              // with isTrekDownDay flag, so they come through dateConfig
+
               final isResearchDay = date.weekday == DateTime.wednesday;
-              return TrekDay(
+
+              // Use factory method to create TrekDay with proper status
+              return TrekDay.fromBookingData(
                 date: date,
-                status: status,
-                isResearchDay: isResearchDay,
                 bookedSlots: booked,
                 maxSlots: maxSlots,
+                criticalThreshold: criticalThreshold,
+                isClosed: isClosed,
+                closureReason: closureReason,
+                isResearchDay: isResearchDay,
               );
             });
           });
@@ -373,13 +398,13 @@ class _HomeScreenState extends State<HomeScreen> {
         return EventCalendar(
           trekDays: _trekDays,
           onDaySelected: (date) {
-            if (_trekDays.any(
-              (day) =>
-                  day.date.year == date.year &&
-                  day.date.month == date.month &&
-                  day.date.day == date.day &&
-                  day.isAvailable,
-            )) {}
+            // Close the calendar dialog
+            Navigator.of(context).pop();
+
+            // Switch to booking tab with selected date
+            if (widget.onNavigateToBooking != null) {
+              widget.onNavigateToBooking!(date);
+            }
           },
         );
       },
@@ -408,6 +433,7 @@ class _HomeScreenState extends State<HomeScreen> {
         .get();
 
     final Map<String, int> slotsPerDay = {};
+
     for (final doc in snap.docs) {
       final data = doc.data();
       final status = (data['status'] as String?)?.toLowerCase() ?? '';
@@ -418,11 +444,24 @@ class _HomeScreenState extends State<HomeScreen> {
       final Timestamp? t = data['trekDate'] as Timestamp?;
       if (t == null) continue;
       final d = t.toDate();
-      final key = '${d.year}-${d.month}-${d.day}';
+      final key =
+          '${d.year}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
       final porters = (data['numberOfPorters'] as num?)?.toInt() ?? 0;
       final used = 1 + porters;
       slotsPerDay[key] = (slotsPerDay[key] ?? 0) + used;
     }
+
+    // Get calendar configuration for the month
+    final calendarService = CalendarConfigService();
+    final systemSettings = await calendarService.getSystemSettings();
+    final defaultMaxSlots = systemSettings['defaultMaxSlots'] as int? ?? 30;
+    final criticalThreshold = systemSettings['criticalThreshold'] as int? ?? 5;
+
+    // Get date configs for the month
+    final dateConfigMap = await calendarService.getDateRangeConfig(
+      firstDay,
+      lastDay,
+    );
 
     if (!mounted) return;
     setState(() {
@@ -430,24 +469,30 @@ class _HomeScreenState extends State<HomeScreen> {
       final daysInMonth = DateTime(now.year, now.month + 1, 0).day;
       _trekDays = List.generate(daysInMonth, (index) {
         final date = DateTime(now.year, now.month, index + 1);
-        final key = '${date.year}-${date.month}-${date.day}';
+        final key =
+            '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
         final booked = slotsPerDay[key] ?? 0;
-        const maxSlots = 30;
-        TrekDayStatus status;
-        if (booked >= maxSlots) {
-          status = TrekDayStatus.full;
-        } else if (booked >= (maxSlots - 5)) {
-          status = TrekDayStatus.critical;
-        } else {
-          status = TrekDayStatus.available;
-        }
+        final dateConfig = dateConfigMap[key];
+
+        // Get max slots for this date (date-specific or system default)
+        final maxSlots = dateConfig?.maxSlots ?? defaultMaxSlots;
+        var isClosed = dateConfig?.isClosed ?? false;
+        var closureReason = dateConfig?.reason;
+
+        // Buffer days are now stored directly in Firebase calendar_config
+        // with isTrekDownDay flag, so they come through dateConfig
+
         final isResearchDay = date.weekday == DateTime.wednesday;
-        return TrekDay(
+
+        // Use factory method to create TrekDay with proper status
+        return TrekDay.fromBookingData(
           date: date,
-          status: status,
-          isResearchDay: isResearchDay,
           bookedSlots: booked,
           maxSlots: maxSlots,
+          criticalThreshold: criticalThreshold,
+          isClosed: isClosed,
+          closureReason: closureReason,
+          isResearchDay: isResearchDay,
         );
       });
     });
