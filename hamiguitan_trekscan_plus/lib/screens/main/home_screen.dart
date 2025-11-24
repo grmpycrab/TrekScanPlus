@@ -14,6 +14,7 @@ import '../../theme/color.dart';
 import '../../services/firebase_auth_service.dart';
 import '../../services/user_service.dart';
 import '../../services/social_sharing_service.dart';
+import '../../services/calendar_config_service.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'dart:async';
@@ -91,7 +92,7 @@ class _HomeScreenState extends State<HomeScreen> {
         .where('trekDate', isGreaterThanOrEqualTo: startTs)
         .where('trekDate', isLessThanOrEqualTo: endTs)
         .snapshots()
-        .listen((snap) {
+        .listen((snap) async {
           // Map date -> booked slots. Count each booking as 1 + numberOfPorters
           // Only count approved bookings - pending bookings don't reserve slots
           final Map<String, int> slotsPerDay = {};
@@ -112,7 +113,21 @@ class _HomeScreenState extends State<HomeScreen> {
             slotsPerDay[key] = (slotsPerDay[key] ?? 0) + used;
           }
 
-          // Rebuild trekDays for the month using a maxSlots of 30
+          // Get calendar configuration for the month
+          final calendarService = CalendarConfigService();
+          final systemSettings = await calendarService.getSystemSettings();
+          final defaultMaxSlots =
+              systemSettings['defaultMaxSlots'] as int? ?? 30;
+          final criticalThreshold =
+              systemSettings['criticalThreshold'] as int? ?? 5;
+
+          // Get date configs for the month
+          final dateConfigMap = await calendarService.getDateRangeConfig(
+            firstDay,
+            lastDay,
+          );
+
+          // Rebuild trekDays for the month using calendar config
           setState(() {
             final now = month;
             final daysInMonth = DateTime(now.year, now.month + 1, 0).day;
@@ -120,22 +135,24 @@ class _HomeScreenState extends State<HomeScreen> {
               final date = DateTime(now.year, now.month, index + 1);
               final key = '${date.year}-${date.month}-${date.day}';
               final booked = slotsPerDay[key] ?? 0;
-              const maxSlots = 30;
-              TrekDayStatus status;
-              if (booked >= maxSlots) {
-                status = TrekDayStatus.full;
-              } else if (booked >= (maxSlots - 5)) {
-                status = TrekDayStatus.critical;
-              } else {
-                status = TrekDayStatus.available;
-              }
+              final dateConfig = dateConfigMap[key];
+
+              // Get max slots for this date (date-specific or system default)
+              final maxSlots = dateConfig?.maxSlots ?? defaultMaxSlots;
+              final isClosed = dateConfig?.isClosed ?? false;
+              final closureReason = dateConfig?.reason;
+
               final isResearchDay = date.weekday == DateTime.wednesday;
-              return TrekDay(
+
+              // Use factory method to create TrekDay with proper status
+              return TrekDay.fromBookingData(
                 date: date,
-                status: status,
-                isResearchDay: isResearchDay,
                 bookedSlots: booked,
                 maxSlots: maxSlots,
+                criticalThreshold: criticalThreshold,
+                isClosed: isClosed,
+                closureReason: closureReason,
+                isResearchDay: isResearchDay,
               );
             });
           });
@@ -424,6 +441,18 @@ class _HomeScreenState extends State<HomeScreen> {
       slotsPerDay[key] = (slotsPerDay[key] ?? 0) + used;
     }
 
+    // Get calendar configuration for the month
+    final calendarService = CalendarConfigService();
+    final systemSettings = await calendarService.getSystemSettings();
+    final defaultMaxSlots = systemSettings['defaultMaxSlots'] as int? ?? 30;
+    final criticalThreshold = systemSettings['criticalThreshold'] as int? ?? 5;
+
+    // Get date configs for the month
+    final dateConfigMap = await calendarService.getDateRangeConfig(
+      firstDay,
+      lastDay,
+    );
+
     if (!mounted) return;
     setState(() {
       final now = month;
@@ -432,22 +461,24 @@ class _HomeScreenState extends State<HomeScreen> {
         final date = DateTime(now.year, now.month, index + 1);
         final key = '${date.year}-${date.month}-${date.day}';
         final booked = slotsPerDay[key] ?? 0;
-        const maxSlots = 30;
-        TrekDayStatus status;
-        if (booked >= maxSlots) {
-          status = TrekDayStatus.full;
-        } else if (booked >= (maxSlots - 5)) {
-          status = TrekDayStatus.critical;
-        } else {
-          status = TrekDayStatus.available;
-        }
+        final dateConfig = dateConfigMap[key];
+
+        // Get max slots for this date (date-specific or system default)
+        final maxSlots = dateConfig?.maxSlots ?? defaultMaxSlots;
+        final isClosed = dateConfig?.isClosed ?? false;
+        final closureReason = dateConfig?.reason;
+
         final isResearchDay = date.weekday == DateTime.wednesday;
-        return TrekDay(
+
+        // Use factory method to create TrekDay with proper status
+        return TrekDay.fromBookingData(
           date: date,
-          status: status,
-          isResearchDay: isResearchDay,
           bookedSlots: booked,
           maxSlots: maxSlots,
+          criticalThreshold: criticalThreshold,
+          isClosed: isClosed,
+          closureReason: closureReason,
+          isResearchDay: isResearchDay,
         );
       });
     });

@@ -146,5 +146,33 @@ service cloud.firestore {
       }
     }
 
+    // System settings collection (calendar configuration)
+    match /system_settings/{settingId} {
+      // Anyone can read system settings
+      allow read: if true;
+      
+      // Only admins can write system settings
+      allow write: if request.auth != null && request.auth.token.admin == true;
+    }
+
+    // Calendar configuration collection (date-specific settings)
+    match /calendar_config/{dateKey} {
+      // Anyone can read calendar configuration (for checking availability)
+      allow read: if true;
+      
+      // Only admins can write calendar configuration
+      allow create, update: if request.auth != null && request.auth.token.admin == true;
+      
+      // Only admins can delete date configurations
+      allow delete: if request.auth != null && request.auth.token.admin == true;
+      
+      // Validate calendar config data structure
+      allow create, update: if request.resource.data.keys().hasAll(['date', 'isClosed', 'maxSlots', 'lastUpdated']) &&
+        request.resource.data.isClosed is bool &&
+        request.resource.data.maxSlots is int &&
+        request.resource.data.maxSlots >= 0 &&
+        request.resource.data.maxSlots <= 45; // Max 30 normally, can increase up to 45 for special events
+    }
+
   }
 }
