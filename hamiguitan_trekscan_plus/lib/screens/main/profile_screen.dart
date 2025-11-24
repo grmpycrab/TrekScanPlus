@@ -15,7 +15,9 @@ import 'package:firebase_auth/firebase_auth.dart';
 import '../../components/social_card.dart';
 
 class ProfileScreen extends StatefulWidget {
-  const ProfileScreen({super.key});
+  final String? userId; // If null, shows current user's profile
+
+  const ProfileScreen({super.key, this.userId});
 
   @override
   State<ProfileScreen> createState() => _ProfileScreenState();
@@ -24,24 +26,49 @@ class ProfileScreen extends StatefulWidget {
 class _ProfileScreenState extends State<ProfileScreen> {
   late UserModel _user;
   User? _firebaseUser;
+  bool _isOwnProfile = true; // Track if viewing own profile or someone else's
   late AchievementService achievementService;
   final UserService _userService = UserService.instance;
   final SocialSharingService _socialService = SocialSharingService.instance;
   final ECertificateService _certificateService = ECertificateService.instance;
   bool _achievementsLoading = true;
 
-  Future<void> _initializeAchievements() async {
+  /// Get display name from user data, fallback to email if no first/last name
+  String _getDisplayName(UserModel user) {
+    if (user.firstName.isNotEmpty || user.lastName.isNotEmpty) {
+      return '${user.firstName} ${user.lastName}'.trim();
+    }
+    // Fallback to email username if no name provided
+    return user.email.split('@').first;
+  }
+
+  Future<void> _initializeAchievements({String? userId}) async {
     try {
-      await achievementService.init();
-      // Also force refresh from Firebase to get latest data
-      await achievementService.refreshFromFirebase();
+      debugPrint(
+        '👤 ProfileScreen: Initializing achievements for userId: $userId',
+      );
+
+      // CRITICAL: Reset and reinitialize for the specific user
+      achievementService.resetInitialization();
+
+      // Initialize with the specific userId - this will load their achievements from Firebase
+      await achievementService.init(userId: userId);
+
+      final unlockedCount = achievementService.getUnlockedAchievements().length;
+      final totalCount = achievementService.getAllAchievements().length;
+      debugPrint(
+        '✅ ProfileScreen: Loaded $unlockedCount/$totalCount achievements for userId: $userId',
+      );
+
       if (mounted) {
         setState(() {
           _achievementsLoading = false;
         });
       }
     } catch (e) {
-      debugPrint('Error initializing AchievementService: $e');
+      debugPrint(
+        'Error initializing AchievementService for userId $userId: $e',
+      );
       if (mounted) {
         setState(() {
           _achievementsLoading = false;
@@ -89,12 +116,28 @@ class _ProfileScreenState extends State<ProfileScreen> {
   @override
   void initState() {
     super.initState();
+    // Create a new instance of AchievementService for this profile view
     achievementService = AchievementService();
-    _initializeAchievements();
     _firebaseUser = FirebaseAuthService.instance.currentUser;
-    _initializeCertificates();
 
-    if (_firebaseUser != null) {
+    // Determine if viewing own profile or someone else's
+    _isOwnProfile =
+        widget.userId == null || widget.userId == _firebaseUser?.uid;
+
+    // Get the userId to display (either provided userId or current user)
+    final displayUserId = widget.userId ?? _firebaseUser?.uid;
+
+    // Initialize achievements for the profile being viewed
+    if (displayUserId != null) {
+      _initializeAchievements(userId: displayUserId);
+    }
+
+    // Only initialize certificates for own profile
+    if (_isOwnProfile) {
+      _initializeCertificates();
+    }
+
+    if (_firebaseUser != null && _isOwnProfile) {
       _userService.fixNegativeCounts(_firebaseUser!.uid).catchError((e) {
         debugPrint('Error fixing negative counts: $e');
       });
@@ -116,11 +159,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
       );
     } else {
       _user = UserModel(
-        firstName: 'John',
-        lastName: 'Doe',
-        email: 'john.doe@example.com',
+        firstName: 'Loading',
+        lastName: '...',
+        email: '',
         birthDate: '01/01/1990',
-        gender: 'Male',
+        gender: 'Not specified',
       );
     }
   }
@@ -151,19 +194,38 @@ class _ProfileScreenState extends State<ProfileScreen> {
     return Scaffold(
       backgroundColor: Colors.white,
       body: StreamBuilder<DocumentSnapshot<Map<String, dynamic>>>(
-        stream: _userService.streamUser(_firebaseUser!.uid),
+        stream: _userService.streamUser(widget.userId ?? _firebaseUser!.uid),
         builder: (context, snapshot) {
           UserModel displayUser = _user;
 
           if (snapshot.hasData && snapshot.data != null) {
             final userData = snapshot.data!.data() ?? {};
+
+            // Handle users who only have displayName (Gmail users)
+            String firstName = userData['firstName'] as String? ?? '';
+            String lastName = userData['lastName'] as String? ?? '';
+
+            if (firstName.isEmpty && lastName.isEmpty) {
+              // Try to extract from displayName
+              final displayName = userData['displayName'] as String? ?? '';
+              if (displayName.isNotEmpty) {
+                final nameParts = displayName.split(' ');
+                firstName = nameParts.first;
+                if (nameParts.length > 1) {
+                  lastName = nameParts.skip(1).join(' ');
+                }
+              }
+            }
+
             displayUser = UserModel(
-              firstName: userData['firstName'] ?? _user.firstName,
-              lastName: userData['lastName'] ?? _user.lastName,
+              firstName: firstName,
+              lastName: lastName,
               email: userData['email'] ?? _user.email,
               birthDate: userData['birthDate'] ?? _user.birthDate,
               gender: userData['gender'] ?? _user.gender,
-              profileImage: userData['photoURL'] ?? _firebaseUser!.photoURL,
+              profileImage:
+                  userData['photoURL'] ??
+                  (widget.userId == null ? _firebaseUser!.photoURL : null),
               badges:
                   (userData['badges'] as List<dynamic>?)
                       ?.whereType<String>()
@@ -206,8 +268,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             ),
                           ),
                         ),
-                        // E-Certificates on the right
-                        _buildCertificatesBadge(),
+                        // E-Certificates on the right (only show for own profile)
+                        if (_isOwnProfile) _buildCertificatesBadge(),
                       ],
                     ),
                   ),
@@ -265,7 +327,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         ),
         const SizedBox(height: 12),
         Text(
-          "${user.firstName} ${user.lastName}",
+          _getDisplayName(user),
           style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
         ),
         const SizedBox(height: 4),
@@ -323,7 +385,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ),
         ),
         StreamBuilder<List<SocialPost>>(
-          stream: _socialService.streamUserPosts(_firebaseUser!.uid),
+          stream: _socialService.streamUserPosts(
+            widget.userId ?? _firebaseUser!.uid,
+          ),
           builder: (context, snapshot) {
             final postsCount = snapshot.data?.length ?? 0;
             return Column(
@@ -430,11 +494,31 @@ class _ProfileScreenState extends State<ProfileScreen> {
         ),
         const SizedBox(height: 12),
         if (unlockedAchievements.isEmpty)
-          Padding(
-            padding: const EdgeInsets.symmetric(vertical: 16.0),
-            child: Text(
-              'No achievements unlocked yet. Start scanning stations to earn achievements!',
-              style: TextStyle(fontSize: 14, color: Colors.grey[600]),
+          Container(
+            padding: const EdgeInsets.all(16.0),
+            margin: const EdgeInsets.symmetric(vertical: 8.0),
+            decoration: BoxDecoration(
+              color: Colors.grey[100],
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: Colors.grey.shade300),
+            ),
+            child: Row(
+              children: [
+                Icon(
+                  Icons.emoji_events_outlined,
+                  color: Colors.grey[400],
+                  size: 32,
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    _isOwnProfile
+                        ? 'No achievements unlocked yet. Start scanning stations to earn achievements!'
+                        : 'No achievements unlocked yet.',
+                    style: TextStyle(fontSize: 14, color: Colors.grey[600]),
+                  ),
+                ),
+              ],
             ),
           )
         else
@@ -729,7 +813,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ),
               const SizedBox(width: 8),
               StreamBuilder<List<SocialPost>>(
-                stream: _socialService.streamUserPosts(_firebaseUser!.uid),
+                stream: _socialService.streamUserPosts(
+                  widget.userId ?? _firebaseUser!.uid,
+                ),
                 builder: (context, snapshot) {
                   final count = snapshot.data?.length ?? 0;
                   return Text(
@@ -748,7 +834,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
         const SizedBox(height: 16),
         // Posts list
         StreamBuilder<List<SocialPost>>(
-          stream: _socialService.streamUserPosts(_firebaseUser!.uid),
+          stream: _socialService.streamUserPosts(
+            widget.userId ?? _firebaseUser!.uid,
+          ),
           builder: (context, snapshot) {
             if (snapshot.connectionState == ConnectionState.waiting) {
               return const Padding(
@@ -758,11 +846,24 @@ class _ProfileScreenState extends State<ProfileScreen> {
             }
 
             if (snapshot.hasError) {
+              debugPrint(
+                'Error loading posts for user ${widget.userId ?? _firebaseUser!.uid}: ${snapshot.error}',
+              );
               return Padding(
                 padding: const EdgeInsets.all(16.0),
-                child: Text(
-                  'Error loading posts',
-                  style: TextStyle(color: Colors.red[600]),
+                child: Column(
+                  children: [
+                    Text(
+                      'Error loading posts',
+                      style: TextStyle(color: Colors.red[600]),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      '${snapshot.error}',
+                      style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                      textAlign: TextAlign.center,
+                    ),
+                  ],
                 ),
               );
             }
