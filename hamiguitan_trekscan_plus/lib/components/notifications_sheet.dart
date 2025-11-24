@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../models/notification_model.dart';
 import '../services/notification_services.dart';
+import '../screens/main/main_screen.dart';
 import '../theme/color.dart';
+import 'app_dialogue_handler.dart';
 
 class NotificationsSheet extends StatefulWidget {
   final String userId;
@@ -15,6 +17,8 @@ class NotificationsSheet extends StatefulWidget {
 
 class _NotificationsSheetState extends State<NotificationsSheet> {
   final _notificationService = NotificationService();
+  bool _isSelectionMode = false;
+  final Set<String> _selectedNotifications = {};
 
   @override
   Widget build(BuildContext context) {
@@ -32,22 +36,51 @@ class _NotificationsSheetState extends State<NotificationsSheet> {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text(
-                  'Notifications',
-                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                Text(
+                  _isSelectionMode
+                      ? '${_selectedNotifications.length} selected'
+                      : 'Notifications',
+                  style: const TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
                 Row(
                   children: [
-                    TextButton(
-                      onPressed: () async {
-                        await _notificationService.markAllAsRead(widget.userId);
-                      },
-                      child: const Text('Mark all as read'),
-                    ),
-                    IconButton(
-                      icon: const Icon(Icons.close),
-                      onPressed: () => Navigator.pop(context),
-                    ),
+                    if (_isSelectionMode) ...[
+                      TextButton(
+                        onPressed: _selectAll,
+                        child: const Text('Select all'),
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.delete, color: Colors.red),
+                        onPressed: _selectedNotifications.isEmpty
+                            ? null
+                            : _deleteSelectedNotifications,
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.close),
+                        onPressed: () {
+                          setState(() {
+                            _isSelectionMode = false;
+                            _selectedNotifications.clear();
+                          });
+                        },
+                      ),
+                    ] else ...[
+                      TextButton(
+                        onPressed: () async {
+                          await _notificationService.markAllAsRead(
+                            widget.userId,
+                          );
+                        },
+                        child: const Text('Mark all as read'),
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.close),
+                        onPressed: () => Navigator.pop(context),
+                      ),
+                    ],
                   ],
                 ),
               ],
@@ -79,82 +112,7 @@ class _NotificationsSheetState extends State<NotificationsSheet> {
                   itemCount: notifications.length,
                   itemBuilder: (context, index) {
                     final notification = notifications[index];
-                    return _NotificationTile(
-                      notification: notification,
-                      onTap: () async {
-                        print('🔔 Notification tapped: ${notification.title}');
-                        print('🔔 ActionType: ${notification.actionType}');
-                        print('🔔 ActionData: ${notification.actionData}');
-
-                        // Handle navigation first BEFORE marking as read
-                        if (notification.actionType != null &&
-                            notification.actionData != null) {
-                          print('🔔 Starting navigation...');
-
-                          // Close the notifications sheet immediately
-                          print('🔔 Closing notification sheet...');
-                          Navigator.pop(context);
-
-                          // Mark as read asynchronously (don't wait)
-                          _notificationService.markAsRead(
-                            widget.userId,
-                            notification.id,
-                          );
-
-                          // Navigate based on type
-                          if (notification.actionType == 'post') {
-                            final postId = notification.actionData!;
-                            print('🔔 Navigating to post: $postId');
-                            Navigator.pushNamed(
-                              context,
-                              '/post-detail',
-                              arguments: postId,
-                            );
-                          } else if (notification.actionType == 'booking') {
-                            final bookingId = notification.actionData!;
-                            print('🔔 Navigating to booking: $bookingId');
-                            Navigator.pushNamed(
-                              context,
-                              '/book-climb',
-                              arguments: bookingId,
-                            );
-                          }
-                        } else {
-                          // Backward compatibility for old notifications
-                          print(
-                            '🔔 No actionType/actionData - checking for old format',
-                          );
-
-                          // Detect old booking notifications by title
-                          final bookingTitles = [
-                            'Booking Approved',
-                            'Booking Declined',
-                            'Booking Under Review',
-                            'Booking Cancelled',
-                          ];
-
-                          if (bookingTitles.any(
-                            (title) => notification.title.contains(title),
-                          )) {
-                            print(
-                              '🔔 Old booking notification - navigating to book-climb',
-                            );
-                            Navigator.pop(
-                              context,
-                            ); // Already closed above, but just in case
-                            Navigator.pushNamed(context, '/book-climb');
-                          } else {
-                            print('🔔 No navigation available');
-                          }
-
-                          // Mark as read
-                          await _notificationService.markAsRead(
-                            widget.userId,
-                            notification.id,
-                          );
-                        }
-                      },
-                    );
+                    return _buildNotificationTile(notification, notifications);
                   },
                 );
               },
@@ -164,15 +122,228 @@ class _NotificationsSheetState extends State<NotificationsSheet> {
       ),
     );
   }
+
+  Widget _buildNotificationTile(
+    NotificationModel notification,
+    List<NotificationModel> allNotifications,
+  ) {
+    final isSelected = _selectedNotifications.contains(notification.id);
+
+    return Dismissible(
+      key: Key(notification.id),
+      direction: DismissDirection.endToStart,
+      confirmDismiss: (direction) async {
+        return await _confirmDelete(notification);
+      },
+      background: Container(
+        margin: const EdgeInsets.symmetric(vertical: 4),
+        decoration: BoxDecoration(
+          color: Colors.red,
+          borderRadius: BorderRadius.circular(12),
+        ),
+        alignment: Alignment.centerRight,
+        padding: const EdgeInsets.only(right: 20),
+        child: const Icon(Icons.delete, color: Colors.white, size: 28),
+      ),
+      child: _NotificationTile(
+        notification: notification,
+        isSelectionMode: _isSelectionMode,
+        isSelected: isSelected,
+        onTap: () async {
+          if (_isSelectionMode) {
+            _toggleSelection(notification.id);
+            return;
+          }
+
+          print('🔔 Notification tapped: ${notification.title}');
+          print('🔔 ActionType: ${notification.actionType}');
+          print('🔔 ActionData: ${notification.actionData}');
+
+          // Handle navigation first BEFORE marking as read
+          if (notification.actionType != null &&
+              notification.actionData != null) {
+            print('🔔 Starting navigation...');
+
+            // Close the notifications sheet immediately
+            print('🔔 Closing notification sheet...');
+            Navigator.pop(context);
+
+            // Mark as read asynchronously (don't wait)
+            _notificationService.markAsRead(widget.userId, notification.id);
+
+            // Navigate based on type
+            if (notification.actionType == 'post') {
+              final postId = notification.actionData!;
+              print('🔔 Navigating to post: $postId');
+              Navigator.pushNamed(context, '/post-detail', arguments: postId);
+            } else if (notification.actionType == 'booking') {
+              final bookingId = notification.actionData!;
+              print('🔔 Navigating to booking: $bookingId');
+              // Navigate to MainScreen with booking tab selected
+              Navigator.pushAndRemoveUntil(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => MainScreen(
+                    initialTabIndex: 3, // Booking tab
+                    highlightBookingId: bookingId,
+                  ),
+                ),
+                (route) => false,
+              );
+            }
+          } else {
+            // Backward compatibility for old notifications
+            print('🔔 No actionType/actionData - checking for old format');
+
+            // Detect old booking notifications by title
+            final bookingTitles = [
+              'Booking Approved',
+              'Booking Declined',
+              'Booking Under Review',
+              'Booking Cancelled',
+            ];
+
+            if (bookingTitles.any(
+              (title) => notification.title.contains(title),
+            )) {
+              print('🔔 Old booking notification - navigating to book-climb');
+              // Navigate to MainScreen with booking tab selected
+              Navigator.pushAndRemoveUntil(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const MainScreen(
+                    initialTabIndex: 3, // Booking tab
+                  ),
+                ),
+                (route) => false,
+              );
+            } else {
+              print('🔔 No navigation available');
+            }
+
+            // Mark as read
+            await _notificationService.markAsRead(
+              widget.userId,
+              notification.id,
+            );
+          }
+        },
+        onLongPress: () {
+          setState(() {
+            _isSelectionMode = true;
+            _selectedNotifications.add(notification.id);
+          });
+        },
+        onSelectionChanged: (selected) {
+          _toggleSelection(notification.id);
+        },
+      ),
+    );
+  }
+
+  void _toggleSelection(String notificationId) {
+    setState(() {
+      if (_selectedNotifications.contains(notificationId)) {
+        _selectedNotifications.remove(notificationId);
+        if (_selectedNotifications.isEmpty) {
+          _isSelectionMode = false;
+        }
+      } else {
+        _selectedNotifications.add(notificationId);
+      }
+    });
+  }
+
+  Future<void> _selectAll() async {
+    final snapshot = await _notificationService
+        .notificationsStream(widget.userId)
+        .first;
+    setState(() {
+      _selectedNotifications.clear();
+      _selectedNotifications.addAll(snapshot.map((n) => n.id));
+    });
+  }
+
+  Future<bool> _confirmDelete(NotificationModel notification) async {
+    final confirmed = await AppDialogueHandler.showConfirmation(
+      context: context,
+      title: 'Delete Notification',
+      message: 'Are you sure you want to delete this notification?',
+      confirmText: 'Delete',
+      cancelText: 'Cancel',
+      isDestructive: true,
+    );
+
+    if (confirmed == true) {
+      await _notificationService.deleteNotification(
+        widget.userId,
+        notification.id,
+      );
+      return true;
+    }
+    return false;
+  }
+
+  Future<void> _deleteSelectedNotifications() async {
+    if (_selectedNotifications.isEmpty) return;
+
+    final confirmed = await AppDialogueHandler.showConfirmation(
+      context: context,
+      title: 'Delete Notifications',
+      message:
+          'Are you sure you want to delete ${_selectedNotifications.length} notification${_selectedNotifications.length > 1 ? 's' : ''}?',
+      confirmText: 'Delete',
+      cancelText: 'Cancel',
+      isDestructive: true,
+    );
+
+    if (confirmed == true) {
+      // Delete all selected notifications
+      for (final notificationId in _selectedNotifications) {
+        await _notificationService.deleteNotification(
+          widget.userId,
+          notificationId,
+        );
+      }
+
+      setState(() {
+        _selectedNotifications.clear();
+        _isSelectionMode = false;
+      });
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Notifications deleted'),
+            backgroundColor: Colors.green,
+          ),
+        );
+      }
+    }
+  }
 }
 
 class _NotificationTile extends StatelessWidget {
   final NotificationModel notification;
   final VoidCallback onTap;
+  final VoidCallback? onLongPress;
+  final void Function(bool?)? onSelectionChanged;
+  final bool isSelectionMode;
+  final bool isSelected;
 
-  const _NotificationTile({required this.notification, required this.onTap});
+  const _NotificationTile({
+    required this.notification,
+    required this.onTap,
+    this.onLongPress,
+    this.onSelectionChanged,
+    this.isSelectionMode = false,
+    this.isSelected = false,
+  });
 
   Color _getBackgroundColor() {
+    if (isSelected) {
+      return AppColors.primary.withValues(alpha: 0.1);
+    }
     return switch (notification.type) {
       NotificationType.success => Colors.green.withValues(alpha: 0.1),
       NotificationType.warning => Colors.orange.withValues(alpha: 0.1),
@@ -208,16 +379,19 @@ class _NotificationTile extends StatelessWidget {
         print('🔴🔴🔴 GESTURE DETECTOR TAPPED!!! 🔴🔴🔴');
         onTap();
       },
+      onLongPress: onLongPress,
       child: Container(
         margin: const EdgeInsets.symmetric(vertical: 4),
         decoration: BoxDecoration(
-          color: notification.isRead
+          color: notification.isRead && !isSelected
               ? Colors.transparent
               : _getBackgroundColor(),
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
-            color: notification.isRead ? Colors.grey[300]! : _getIconColor(),
-            width: notification.isRead ? 0.5 : 1.5,
+            color: isSelected
+                ? AppColors.primary
+                : (notification.isRead ? Colors.grey[300]! : _getIconColor()),
+            width: isSelected ? 2 : (notification.isRead ? 0.5 : 1.5),
           ),
         ),
         child: ListTile(
@@ -225,7 +399,13 @@ class _NotificationTile extends StatelessWidget {
             print('🔴 ListTile tapped!');
             onTap();
           },
-          leading: Icon(_getIcon(), color: _getIconColor()),
+          leading: isSelectionMode
+              ? Checkbox(
+                  value: isSelected,
+                  onChanged: onSelectionChanged,
+                  activeColor: AppColors.primary,
+                )
+              : Icon(_getIcon(), color: _getIconColor()),
           title: Text(
             notification.title,
             style: TextStyle(
@@ -251,16 +431,18 @@ class _NotificationTile extends StatelessWidget {
             ],
           ),
           isThreeLine: true,
-          trailing: notification.isRead
+          trailing: !isSelectionMode && notification.isRead
               ? null
-              : Container(
-                  width: 8,
-                  height: 8,
-                  decoration: const BoxDecoration(
-                    color: AppColors.primary,
-                    shape: BoxShape.circle,
-                  ),
-                ),
+              : (!isSelectionMode
+                    ? Container(
+                        width: 8,
+                        height: 8,
+                        decoration: const BoxDecoration(
+                          color: AppColors.primary,
+                          shape: BoxShape.circle,
+                        ),
+                      )
+                    : null),
         ),
       ),
     );

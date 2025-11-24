@@ -16,11 +16,13 @@ import '../../theme/color.dart';
 class BookAClimbScreen extends StatefulWidget {
   final String? highlightBookingId;
   final DateTime? selectedDate;
+  final bool autoShowBookingForm;
 
   const BookAClimbScreen({
     super.key,
     this.highlightBookingId,
     this.selectedDate,
+    this.autoShowBookingForm = false,
   });
 
   @override
@@ -61,7 +63,7 @@ class _BookAClimbScreenState extends State<BookAClimbScreen> {
     // Set selected date if passed from calendar
     if (widget.selectedDate != null) {
       _selectedDate = widget.selectedDate;
-      _shouldShowBookingForm = true;
+      _shouldShowBookingForm = widget.autoShowBookingForm;
     }
     // Listen for auth state changes so we can (re)subscribe to bookings for
     // the signed-in user. This handles cases where the screen loads before

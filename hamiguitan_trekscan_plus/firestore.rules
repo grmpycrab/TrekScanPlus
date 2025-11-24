@@ -59,6 +59,7 @@ service cloud.firestore {
       allow read: if request.auth != null;
 
       // Update: owners can update their booking while it's pending or declined (to allow resubmission)
+      // Owners can also cancel their own bookings at any time
       // Admins can update anytime
       allow update: if request.auth != null && (
         // owner may update while booking is pending or declined/rejected
@@ -66,6 +67,9 @@ service cloud.firestore {
          (resource.data.status == 'pending' || 
           resource.data.status == 'declined' || 
           resource.data.status == 'rejected'))
+        // owner may cancel their own booking at any time
+        || (resource.data.userId == request.auth.uid && 
+            request.resource.data.status == 'cancelled')
         // admin override
         || request.auth.token.admin == true
       );
