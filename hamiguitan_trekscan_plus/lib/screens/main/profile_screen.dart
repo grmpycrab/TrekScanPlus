@@ -926,11 +926,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Future<void> _handleDeletePost(String postId) async {
     try {
       await _socialService.deletePost(postId);
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Post deleted successfully')),
-        );
-      }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(

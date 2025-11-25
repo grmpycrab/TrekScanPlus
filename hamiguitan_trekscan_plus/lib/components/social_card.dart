@@ -409,12 +409,6 @@ class _SocialCardState extends State<SocialCard> {
 
                       if (context.mounted) {
                         Navigator.pop(context);
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text('Post updated successfully'),
-                            backgroundColor: Colors.green,
-                          ),
-                        );
                       }
                     } catch (e) {
                       if (context.mounted) {
@@ -449,8 +443,7 @@ class _SocialCardState extends State<SocialCard> {
   Widget build(BuildContext context) {
     // Calculate consistent card height based on device size
     final screenHeight = MediaQuery.of(context).size.height;
-    final cardHeight =
-        screenHeight * 0.40; // Approximately 55% of screen height
+    final cardHeight = screenHeight * 0.45;
 
     return Card(
       margin: const EdgeInsets.only(bottom: 16),

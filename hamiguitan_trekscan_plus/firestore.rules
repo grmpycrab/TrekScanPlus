@@ -74,8 +74,11 @@ service cloud.firestore {
         || request.auth.token.admin == true
       );
 
-      // Delete: only admins can delete bookings
-      allow delete: if request.auth != null && request.auth.token.admin == true;
+      // Delete: owners can delete their own bookings, admins can delete any booking
+      allow delete: if request.auth != null && (
+        resource.data.userId == request.auth.uid || 
+        request.auth.token.admin == true
+      );
     }
 
     // If you use subcollections, allow collection-group queries for admin:

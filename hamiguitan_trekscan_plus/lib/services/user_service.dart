@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/foundation.dart';
 import 'notification_services.dart';
 
@@ -83,9 +84,214 @@ class UserService {
     }).toList();
   }
 
-  /// Delete user document
+  /// Delete user document and all associated data (cascade deletion)
   Future<void> deleteUser(String uid) async {
-    await _usersCollection.doc(uid).delete();
+    try {
+      final batch = _firestore.batch();
+
+      if (kDebugMode) {
+        print('Starting cascade deletion for user: $uid');
+      }
+
+      // 1. Delete subcollections under users/{uid}
+      final subcollections = [
+        'achievements',
+        'notifications',
+        'bookmarks',
+        'visitedStations',
+      ];
+
+      for (final subcollection in subcollections) {
+        final subcollectionRef = _usersCollection
+            .doc(uid)
+            .collection(subcollection);
+        final subcollectionDocs = await subcollectionRef.get();
+
+        for (final doc in subcollectionDocs.docs) {
+          batch.delete(doc.reference);
+        }
+
+        if (kDebugMode) {
+          print(
+            'Deleting ${subcollectionDocs.docs.length} documents from $subcollection',
+          );
+        }
+      }
+
+      // 2. Delete user's posts and their subcollections
+      final postsQuery = await _firestore
+          .collection('posts')
+          .where('userId', isEqualTo: uid)
+          .get();
+
+      if (kDebugMode) {
+        print('Deleting ${postsQuery.docs.length} posts');
+      }
+
+      for (final postDoc in postsQuery.docs) {
+        // Delete post subcollections (likes, comments)
+        final likesSnapshot = await postDoc.reference.collection('likes').get();
+        for (final likeDoc in likesSnapshot.docs) {
+          batch.delete(likeDoc.reference);
+        }
+
+        final commentsSnapshot = await postDoc.reference
+            .collection('comments')
+            .get();
+        for (final commentDoc in commentsSnapshot.docs) {
+          // Delete comment likes and replies
+          final commentLikesSnapshot = await commentDoc.reference
+              .collection('likes')
+              .get();
+          for (final commentLikeDoc in commentLikesSnapshot.docs) {
+            batch.delete(commentLikeDoc.reference);
+          }
+
+          final repliesSnapshot = await commentDoc.reference
+              .collection('replies')
+              .get();
+          for (final replyDoc in repliesSnapshot.docs) {
+            // Delete reply likes
+            final replyLikesSnapshot = await replyDoc.reference
+                .collection('likes')
+                .get();
+            for (final replyLikeDoc in replyLikesSnapshot.docs) {
+              batch.delete(replyLikeDoc.reference);
+            }
+            batch.delete(replyDoc.reference);
+          }
+
+          batch.delete(commentDoc.reference);
+        }
+
+        // Delete the post itself
+        batch.delete(postDoc.reference);
+      }
+
+      // 3. Delete user's bookings
+      final bookingsQuery = await _firestore
+          .collection('bookings')
+          .where('userId', isEqualTo: uid)
+          .get();
+
+      if (kDebugMode) {
+        print('Deleting ${bookingsQuery.docs.length} bookings');
+      }
+
+      for (final bookingDoc in bookingsQuery.docs) {
+        batch.delete(bookingDoc.reference);
+      }
+
+      // 4. Clean up follower/following relationships
+      final userDoc = await _usersCollection.doc(uid).get();
+      final userData = userDoc.data();
+
+      if (userData != null) {
+        // Remove this user from followers' following lists
+        final followers = List<String>.from(userData['followers'] ?? []);
+        for (final followerId in followers) {
+          final followerRef = _usersCollection.doc(followerId);
+          batch.update(followerRef, {
+            'following': FieldValue.arrayRemove([uid]),
+            'followingCount': FieldValue.increment(-1),
+          });
+        }
+
+        // Remove this user from following users' followers lists
+        final following = List<String>.from(userData['following'] ?? []);
+        for (final followingId in following) {
+          final followingRef = _usersCollection.doc(followingId);
+          batch.update(followingRef, {
+            'followers': FieldValue.arrayRemove([uid]),
+            'followersCount': FieldValue.increment(-1),
+          });
+        }
+
+        // Clean up pending follow requests
+        final pendingRequests = List<String>.from(
+          userData['pendingFollowRequests'] ?? [],
+        );
+        for (final requesterId in pendingRequests) {
+          final requesterRef = _usersCollection.doc(requesterId);
+          batch.update(requesterRef, {
+            'sentFollowRequests': FieldValue.arrayRemove([uid]),
+          });
+        }
+
+        final sentRequests = List<String>.from(
+          userData['sentFollowRequests'] ?? [],
+        );
+        for (final targetId in sentRequests) {
+          final targetRef = _usersCollection.doc(targetId);
+          batch.update(targetRef, {
+            'pendingFollowRequests': FieldValue.arrayRemove([uid]),
+          });
+        }
+
+        if (kDebugMode) {
+          print(
+            'Cleaning up ${followers.length} followers and ${following.length} following',
+          );
+        }
+      }
+
+      // 5. Delete Storage files (profile photos, post images)
+      try {
+        final storage = FirebaseStorage.instance;
+
+        // Delete user's profile photo
+        try {
+          final profilePhotoRef = storage.ref().child('users/$uid/profile.jpg');
+          await profilePhotoRef.delete();
+          if (kDebugMode) {
+            print('Deleted profile photo');
+          }
+        } catch (e) {
+          // Profile photo might not exist, ignore
+          if (kDebugMode) {
+            print('No profile photo to delete or error: $e');
+          }
+        }
+
+        // Delete user's post images folder
+        try {
+          final postsFolder = storage.ref().child('posts/$uid');
+          final postsList = await postsFolder.listAll();
+          for (final item in postsList.items) {
+            await item.delete();
+          }
+          if (kDebugMode) {
+            print('Deleted ${postsList.items.length} post images');
+          }
+        } catch (e) {
+          // Posts folder might not exist, ignore
+          if (kDebugMode) {
+            print('No post images to delete or error: $e');
+          }
+        }
+      } catch (e) {
+        if (kDebugMode) {
+          print('Error deleting storage files: $e');
+        }
+        // Continue with deletion even if storage cleanup fails
+      }
+
+      // 6. Finally, delete the user document
+      batch.delete(_usersCollection.doc(uid));
+
+      // Commit all deletions
+      await batch.commit();
+
+      if (kDebugMode) {
+        print('Successfully completed cascade deletion for user: $uid');
+      }
+    } catch (e, st) {
+      if (kDebugMode) {
+        print('Error deleting user: $e');
+        print(st);
+      }
+      rethrow;
+    }
   }
 
   /// Update user personal information

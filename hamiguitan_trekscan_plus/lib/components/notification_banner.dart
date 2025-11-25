@@ -133,7 +133,7 @@ class NotificationBannerOverlayState extends State<NotificationBannerOverlay>
   }
 
   Color _getBackgroundColor() {
-    return AppColors.primary.withValues(alpha: 0.95);
+    return AppColors.primary.withOpacity(0.95);
   }
 
   IconData _getIcon() {
@@ -230,7 +230,7 @@ class NotificationBannerOverlayState extends State<NotificationBannerOverlay>
                           onTap: _dismissCurrent,
                           child: Icon(
                             Icons.close,
-                            color: Colors.white.withOpacity(0.7),
+                            color: Colors.white,
                             size: 20,
                           ),
                         ),
