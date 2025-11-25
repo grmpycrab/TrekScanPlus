@@ -33,7 +33,8 @@ class _BookAClimbScreenState extends State<BookAClimbScreen> {
   final _formKey = GlobalKey<FormState>();
   final ScrollController _scrollController = ScrollController();
   String _climbType = 'General';
-  String _location = 'Inside San Isidro';
+  String _hometown = 'Inside San Isidro';
+  bool _isSenior = false;
   bool _hasScrolledToBooking = false;
 
   // Store picked PlatformFile objects so we can upload bytes/paths to Firebase
@@ -346,8 +347,9 @@ class _BookAClimbScreenState extends State<BookAClimbScreen> {
       trekDate: Timestamp.fromDate(_selectedDate ?? now),
       numberOfPorters: int.tryParse(meta['porters'] ?? '') ?? 0,
       trekType: meta['trekType'] ?? _climbType.toLowerCase(),
-      location:
-          meta['location'] ?? _location.toLowerCase().replaceAll(' ', '_'),
+      hometown:
+          meta['hometown'] ?? _hometown.toLowerCase().replaceAll(' ', '_'),
+      isSenior: meta['isSenior'] == 'true' || _isSenior,
       notes: meta['notes'],
     );
 
@@ -681,14 +683,16 @@ class _BookAClimbScreenState extends State<BookAClimbScreen> {
     final notesController = TextEditingController(text: booking.notes ?? '');
 
     // Convert database format to display format
-    String locationValue = booking.location;
-    if (locationValue == 'inside_san_isidro') {
-      locationValue = 'Inside San Isidro';
-    } else if (locationValue == 'inside_davao_oriental') {
-      locationValue = 'Inside Davao Oriental';
-    } else if (locationValue == 'outside_davao_oriental') {
-      locationValue = 'Outside Davao Oriental';
+    String hometownValue = booking.hometown;
+    if (hometownValue == 'inside_san_isidro') {
+      hometownValue = 'Inside San Isidro';
+    } else if (hometownValue == 'inside_davao_oriental') {
+      hometownValue = 'Inside Davao Oriental';
+    } else if (hometownValue == 'outside_davao_oriental') {
+      hometownValue = 'Outside Davao Oriental';
     }
+
+    bool isSeniorValue = booking.isSenior;
 
     // Convert trek type from database format
     String trekTypeValue = booking.trekType;
@@ -755,7 +759,8 @@ class _BookAClimbScreenState extends State<BookAClimbScreen> {
                   affiliation: affiliationController.text.trim(),
                   numberOfPorters: porters,
                   trekType: trekTypeValue.toLowerCase(),
-                  location: locationValue.toLowerCase().replaceAll(' ', '_'),
+                  hometown: hometownValue.toLowerCase().replaceAll(' ', '_'),
+                  isSenior: isSeniorValue,
                   notes: notesController.text.trim().isEmpty
                       ? null
                       : notesController.text.trim(),
@@ -1018,7 +1023,7 @@ class _BookAClimbScreenState extends State<BookAClimbScreen> {
                                 ),
                               ),
                               const SizedBox(height: 12),
-                              // Location Dropdown
+                              // Hometown Dropdown
                               Container(
                                 decoration: BoxDecoration(
                                   color: Colors.white,
@@ -1037,9 +1042,9 @@ class _BookAClimbScreenState extends State<BookAClimbScreen> {
                                   vertical: 4,
                                 ),
                                 child: DropdownButtonFormField<String>(
-                                  value: locationValue,
+                                  value: hometownValue,
                                   decoration: const InputDecoration(
-                                    labelText: 'Location',
+                                    labelText: 'Hometown',
                                     border: InputBorder.none,
                                     contentPadding: EdgeInsets.zero,
                                   ),
@@ -1047,12 +1052,6 @@ class _BookAClimbScreenState extends State<BookAClimbScreen> {
                                     Icons.arrow_drop_down,
                                     color: Colors.blueGrey[700],
                                   ),
-                                  style: const TextStyle(
-                                    fontSize: 15,
-                                    color: Colors.black87,
-                                    fontWeight: FontWeight.w500,
-                                  ),
-                                  dropdownColor: Colors.white,
                                   items: const [
                                     DropdownMenuItem(
                                       value: 'Inside San Isidro',
@@ -1099,7 +1098,74 @@ class _BookAClimbScreenState extends State<BookAClimbScreen> {
                                   ],
                                   onChanged: (val) {
                                     if (val != null) {
-                                      setModalState(() => locationValue = val);
+                                      setModalState(() => hometownValue = val);
+                                    }
+                                  },
+                                ),
+                              ),
+                              const SizedBox(height: 12),
+                              // Senior Citizen Dropdown
+                              Container(
+                                decoration: BoxDecoration(
+                                  color: Colors.white,
+                                  borderRadius: BorderRadius.circular(12),
+                                  border: Border.all(color: Colors.black26),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.black.withOpacity(0.05),
+                                      blurRadius: 4,
+                                      offset: const Offset(0, 2),
+                                    ),
+                                  ],
+                                ),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 12,
+                                  vertical: 4,
+                                ),
+                                child: DropdownButtonFormField<bool>(
+                                  value: isSeniorValue,
+                                  decoration: const InputDecoration(
+                                    labelText: 'Senior Citizen (60+)',
+                                    border: InputBorder.none,
+                                    contentPadding: EdgeInsets.zero,
+                                  ),
+                                  icon: Icon(
+                                    Icons.arrow_drop_down,
+                                    color: Colors.blueGrey[700],
+                                  ),
+                                  items: const [
+                                    DropdownMenuItem(
+                                      value: false,
+                                      child: Row(
+                                        children: [
+                                          Icon(
+                                            Icons.person,
+                                            size: 20,
+                                            color: AppColors.primary,
+                                          ),
+                                          SizedBox(width: 12),
+                                          Text('No'),
+                                        ],
+                                      ),
+                                    ),
+                                    DropdownMenuItem(
+                                      value: true,
+                                      child: Row(
+                                        children: [
+                                          Icon(
+                                            Icons.elderly,
+                                            size: 20,
+                                            color: AppColors.primary,
+                                          ),
+                                          SizedBox(width: 12),
+                                          Text('Yes'),
+                                        ],
+                                      ),
+                                    ),
+                                  ],
+                                  onChanged: (val) {
+                                    if (val != null) {
+                                      setModalState(() => isSeniorValue = val);
                                     }
                                   },
                                 ),
@@ -1680,7 +1746,8 @@ class _BookAClimbScreenState extends State<BookAClimbScreen> {
                     _reviewRow('Affiliation', _affiliationController.text),
                     _reviewRow('Number of Porters', _portersController.text),
                     _reviewRow('Purpose of Trek', _climbType),
-                    _reviewRow('Location', _location),
+                    _reviewRow('Hometown', _hometown),
+                    _reviewRow('Senior Citizen', _isSenior ? 'Yes' : 'No'),
                     _reviewRow(
                       'Trek Date',
                       _selectedDate != null ? _formatSelectedDate() : 'Not set',
@@ -1751,10 +1818,8 @@ class _BookAClimbScreenState extends State<BookAClimbScreen> {
                                 'affiliation': _affiliationController.text,
                                 'porters': _portersController.text,
                                 'trekType': _climbType.toLowerCase(),
-                                'location': _location.toLowerCase().replaceAll(
-                                  ' ',
-                                  '_',
-                                ),
+                                'hometown': _hometown,
+                                'isSenior': _isSenior.toString(),
                               },
                               onProgress: (uploaded, total, fileName, percent) {
                                 // Update the dialog-scoped progress variables
@@ -1800,7 +1865,8 @@ class _BookAClimbScreenState extends State<BookAClimbScreen> {
                                 _portersController.clear();
                                 _pickedFiles = [];
                                 _climbType = 'General';
-                                _location = 'Inside San Isidro';
+                                _hometown = 'Inside San Isidro';
+                                _isSenior = false;
                                 _selectedDate = null;
                               });
                             }
@@ -1919,7 +1985,7 @@ class _BookAClimbScreenState extends State<BookAClimbScreen> {
         ),
         const SizedBox(height: 18),
         const Text(
-          'Location',
+          'Hometown',
           style: TextStyle(
             fontWeight: FontWeight.w600,
             fontSize: 15,
@@ -1942,7 +2008,7 @@ class _BookAClimbScreenState extends State<BookAClimbScreen> {
           ),
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
           child: DropdownButtonFormField<String>(
-            value: _location,
+            value: _hometown,
             decoration: const InputDecoration(
               border: InputBorder.none,
               contentPadding: EdgeInsets.zero,
@@ -1987,7 +2053,71 @@ class _BookAClimbScreenState extends State<BookAClimbScreen> {
               ),
             ],
             onChanged: (val) {
-              if (val != null) setState(() => _location = val);
+              if (val != null) setState(() => _hometown = val);
+            },
+          ),
+        ),
+        const SizedBox(height: 18),
+        const Text(
+          'Senior Citizen (60+)',
+          style: TextStyle(
+            fontWeight: FontWeight.w600,
+            fontSize: 15,
+            color: Colors.black87,
+          ),
+        ),
+        const SizedBox(height: 8),
+        Container(
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: Colors.black26),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.05),
+                blurRadius: 4,
+                offset: const Offset(0, 2),
+              ),
+            ],
+          ),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+          child: DropdownButtonFormField<bool>(
+            value: _isSenior,
+            decoration: const InputDecoration(
+              border: InputBorder.none,
+              contentPadding: EdgeInsets.zero,
+            ),
+            icon: Icon(Icons.arrow_drop_down, color: Colors.blueGrey[700]),
+            style: const TextStyle(
+              fontSize: 15,
+              color: Colors.black87,
+              fontWeight: FontWeight.w500,
+            ),
+            dropdownColor: Colors.white,
+            items: const [
+              DropdownMenuItem(
+                value: false,
+                child: Row(
+                  children: [
+                    Icon(Icons.person, size: 20, color: Colors.blueGrey),
+                    SizedBox(width: 12),
+                    Text('No'),
+                  ],
+                ),
+              ),
+              DropdownMenuItem(
+                value: true,
+                child: Row(
+                  children: [
+                    Icon(Icons.elderly, size: 20, color: Colors.blueGrey),
+                    SizedBox(width: 12),
+                    Text('Yes'),
+                  ],
+                ),
+              ),
+            ],
+            onChanged: (val) {
+              if (val != null) setState(() => _isSenior = val);
             },
           ),
         ),

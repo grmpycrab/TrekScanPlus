@@ -73,7 +73,8 @@ class BookingService {
     String? affiliation,
     int? numberOfPorters,
     String? trekType,
-    String? location,
+    String? hometown,
+    bool? isSenior,
     String? notes,
     bool resubmitDeclined = false,
   }) async {
@@ -89,8 +90,11 @@ class BookingService {
     if (trekType != null) {
       updateData['trekType'] = trekType;
     }
-    if (location != null) {
-      updateData['location'] = location;
+    if (hometown != null) {
+      updateData['hometown'] = hometown;
+    }
+    if (isSenior != null) {
+      updateData['isSenior'] = isSenior;
     }
     // Allow clearing notes by sending null
     updateData['notes'] = notes;

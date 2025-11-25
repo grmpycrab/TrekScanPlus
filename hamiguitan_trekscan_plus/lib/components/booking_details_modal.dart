@@ -144,6 +144,18 @@ class BookingDetailsModal extends StatelessWidget {
                               'Affiliation:',
                               booking?.affiliation ?? 'Not provided',
                             ),
+                            const SizedBox(height: 8),
+                            _buildDetailRow(
+                              'Hometown:',
+                              booking?.hometown ?? 'Not provided',
+                            ),
+                            const SizedBox(height: 8),
+                            _buildDetailRow(
+                              'Senior Citizen:',
+                              booking != null
+                                  ? (booking!.isSenior ? 'Yes' : 'No')
+                                  : 'N/A',
+                            ),
                             const SizedBox(height: 24),
                             // Notes section
                             if (booking?.notes != null &&
