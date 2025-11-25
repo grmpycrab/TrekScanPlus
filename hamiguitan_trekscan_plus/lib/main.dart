@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'firebase_options.dart';
 import 'screens/auth/login_screen.dart';
@@ -13,6 +14,9 @@ import 'services/station_service.dart';
 import 'services/connectivity_service.dart';
 import 'services/booking_service.dart';
 import 'services/permission_service.dart';
+import 'services/fcm_service.dart';
+import 'services/notification_manager.dart';
+import 'components/notification_banner.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -49,6 +53,7 @@ class _MyAppState extends State<MyApp> {
     FirebaseAuthService.instance.authStateChanges.listen((user) {
       if (user != null) {
         BookingService.instance.startBookingStatusListener(user.uid);
+        _initializeFCM();
 
         // Request permissions once user is authenticated
         if (!_permissionsRequested) {
@@ -59,6 +64,68 @@ class _MyAppState extends State<MyApp> {
         }
       }
     });
+  }
+
+  Future<void> _initializeFCM() async {
+    try {
+      await FCMService().initialize(
+        onMessageReceived: (message) {
+          // Show in-app banner for foreground notifications
+          final title = message.notification?.title ?? 'Notification';
+          final body = message.notification?.body ?? '';
+          final actionType = message.data['actionType'] as String?;
+
+          // Determine notification type based on actionType
+          final notificationType = _getNotificationType(actionType);
+
+          if (notificationType == NotificationBannerType.success) {
+            NotificationManager.showSuccess(title: title, message: body);
+          } else if (notificationType == NotificationBannerType.warning) {
+            NotificationManager.showWarning(title: title, message: body);
+          } else if (notificationType == NotificationBannerType.error) {
+            NotificationManager.showError(title: title, message: body);
+          } else {
+            NotificationManager.showInfo(title: title, message: body);
+          }
+        },
+        onMessageOpened: (message) {
+          // Handle navigation when notification is tapped
+          debugPrint('🔔 Notification opened: ${message.data}');
+          _handleNotificationNavigation(message);
+        },
+      );
+      debugPrint('✅ FCM initialized successfully');
+    } catch (e) {
+      debugPrint('❌ FCM initialization error: $e');
+    }
+  }
+
+  NotificationBannerType _getNotificationType(String? actionType) {
+    return switch (actionType) {
+      'booking_approved' => NotificationBannerType.success,
+      'booking_rejected' => NotificationBannerType.error,
+      'booking_pending' => NotificationBannerType.warning,
+      'follow_request' => NotificationBannerType.info,
+      'post_liked' => NotificationBannerType.success,
+      'post_commented' => NotificationBannerType.info,
+      _ => NotificationBannerType.info,
+    };
+  }
+
+  void _handleNotificationNavigation(RemoteMessage message) {
+    final actionType = message.data['actionType'] as String?;
+    final actionData = message.data['actionData'] as String?;
+
+    debugPrint('🔔 ActionType: $actionType, ActionData: $actionData');
+
+    if (actionType == 'post' && actionData != null) {
+      Navigator.pushNamed(context, '/post-detail', arguments: actionData);
+    } else if (actionType == 'booking' && actionData != null) {
+      Navigator.pushNamed(context, '/book-climb', arguments: actionData);
+    } else if (actionType?.startsWith('booking_') == true) {
+      // Navigate to booking tab in MainScreen
+      Navigator.pushReplacementNamed(context, '/main');
+    }
   }
 
   Future<void> _requestPermissions() async {
@@ -87,6 +154,12 @@ class _MyAppState extends State<MyApp> {
               seedColor: const Color(0xFF252B30),
             ),
             useMaterial3: true,
+          ),
+          builder: (context, child) => Stack(
+            children: [
+              child!,
+              NotificationBannerOverlay(key: NotificationManager.overlayKey),
+            ],
           ),
           home: snapshot.connectionState == ConnectionState.waiting
               ? const Scaffold(body: Center(child: CircularProgressIndicator()))

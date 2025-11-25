@@ -185,5 +185,14 @@ service cloud.firestore {
         request.resource.data.maxSlots <= 45; // Max 30 normally, can increase up to 45 for special events
     }
 
+    // Top-level notifications collection (for FCM push notifications)
+    match /notifications/{notificationId} {
+      // Any authenticated user can create notifications (system will use this for push notifications)
+      allow create: if request.auth != null;
+      
+      // No read/write access to top-level notifications (they're managed by backend)
+      allow read, write, delete: if false;
+    }
+
   }
 }
