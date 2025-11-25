@@ -19,6 +19,7 @@ dependencies:
   google_sign_in: ^5.4.4
   cloud_firestore: ^4.9.0
   firebase_storage: ^11.3.0
+  firebase_messaging: ^14.6.0
   intl: ^0.20.2
   connectivity_plus: ^7.0.0
   geolocator: ^9.0.2
