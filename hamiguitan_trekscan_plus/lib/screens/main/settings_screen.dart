@@ -7,6 +7,7 @@ import '../settings/about_screen.dart';
 import '../settings/help_and_support_screen.dart';
 import '../settings/account_settings.dart';
 import '../settings/notification_settings.dart';
+import '../settings/security_screen.dart';
 import '../../components/badge_filter.dart';
 import '../../services/achievement_service.dart';
 import '../../services/firebase_auth_service.dart';
@@ -299,6 +300,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     icon: Icons.security_outlined,
                     title: 'Security',
                     subtitle: 'Password, Face ID & Touch ID',
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const SecurityScreen(),
+                        ),
+                      );
+                    },
                   ),
                   _buildSettingItem(
                     icon: Icons.remove_red_eye_outlined,
