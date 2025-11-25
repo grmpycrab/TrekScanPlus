@@ -45,6 +45,7 @@ class BookingModel {
   final String trekType; // recreational | research
   final String hometown; // User's hometown/city
   final bool isSenior; // Whether the user is a senior citizen
+  final String phoneNumber; // Contact phone number
   final String? notes;
   final String? adminNotes;
   List<Attachment> attachments;
@@ -61,6 +62,7 @@ class BookingModel {
     required this.trekType,
     this.hometown = '',
     this.isSenior = false,
+    this.phoneNumber = '',
     this.notes,
     this.adminNotes,
     this.attachments = const [],
@@ -78,6 +80,7 @@ class BookingModel {
     'trekType': trekType,
     'hometown': hometown,
     'isSenior': isSenior,
+    'phoneNumber': phoneNumber,
     'notes': notes,
     'adminNotes': adminNotes,
     'attachments': attachments.map((a) => a.toMap()).toList(),
@@ -97,6 +100,7 @@ class BookingModel {
       trekType: data['trekType'] as String? ?? 'recreational',
       hometown: data['hometown'] as String? ?? '',
       isSenior: data['isSenior'] as bool? ?? false,
+      phoneNumber: data['phoneNumber'] as String? ?? '',
       notes: data['notes'] as String?,
       adminNotes: data['adminNotes'] as String?,
       attachments:

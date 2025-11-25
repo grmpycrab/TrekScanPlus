@@ -70,7 +70,6 @@ class AchievementService {
   /// Reset initialization so next init() call will reinitialize
   /// Call this when user changes
   void resetInitialization() {
-    print('🔄 AchievementService: Resetting initialization');
     _isInitialized = false;
     _allAchievements = [];
   }

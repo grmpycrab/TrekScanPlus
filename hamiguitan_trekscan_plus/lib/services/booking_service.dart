@@ -75,6 +75,7 @@ class BookingService {
     String? trekType,
     String? hometown,
     bool? isSenior,
+    String? phoneNumber,
     String? notes,
     bool resubmitDeclined = false,
   }) async {
@@ -95,6 +96,9 @@ class BookingService {
     }
     if (isSenior != null) {
       updateData['isSenior'] = isSenior;
+    }
+    if (phoneNumber != null) {
+      updateData['phoneNumber'] = phoneNumber;
     }
     // Allow clearing notes by sending null
     updateData['notes'] = notes;
@@ -157,11 +161,6 @@ class BookingService {
 
       // Append metadata to booking doc with retry logic for reliability
       try {
-        print(
-          'DEBUG: Updating booking $bookingId with attachment ${meta.fileName}',
-        );
-        print('DEBUG: Attachment metadata: ${meta.toMap()}');
-
         await _firestore
             .collection('bookings')
             .doc(bookingId)
@@ -175,23 +174,13 @@ class BookingService {
                 'Firestore update timeout after 10 seconds',
               ),
             );
-
-        print('DEBUG: Successfully updated Firestore with attachment');
       } catch (e) {
-        print('ERROR: Firestore attachment metadata update failed: $e');
-        print('ERROR: Stack trace: ${e.toString()}');
         // Still rethrow so caller knows about the issue
         rethrow;
       }
 
       return meta;
-    } on FirebaseException catch (e) {
-      print('ERROR uploading file: ${e.code} - ${e.message}');
-      print('ERROR: Firebase exception details: ${e.toString()}');
-      rethrow;
     } catch (e) {
-      print('ERROR uploading file: $e');
-      print('ERROR: Stack trace: ${e.toString()}');
       rethrow;
     }
   }
