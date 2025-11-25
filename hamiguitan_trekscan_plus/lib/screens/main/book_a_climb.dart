@@ -350,6 +350,7 @@ class _BookAClimbScreenState extends State<BookAClimbScreen> {
       hometown:
           meta['hometown'] ?? _hometown.toLowerCase().replaceAll(' ', '_'),
       isSenior: meta['isSenior'] == 'true' || _isSenior,
+      phoneNumber: meta['contact'] ?? '',
       notes: meta['notes'],
     );
 
@@ -677,6 +678,7 @@ class _BookAClimbScreenState extends State<BookAClimbScreen> {
     final affiliationController = TextEditingController(
       text: booking.affiliation,
     );
+    final phoneController = TextEditingController(text: booking.phoneNumber);
     final portersController = TextEditingController(
       text: booking.numberOfPorters.toString(),
     );
@@ -757,6 +759,7 @@ class _BookAClimbScreenState extends State<BookAClimbScreen> {
                 await BookingService.instance.updateBooking(
                   booking.id!,
                   affiliation: affiliationController.text.trim(),
+                  phoneNumber: phoneController.text.trim(),
                   numberOfPorters: porters,
                   trekType: trekTypeValue.toLowerCase(),
                   hometown: hometownValue.toLowerCase().replaceAll(' ', '_'),
@@ -926,6 +929,21 @@ class _BookAClimbScreenState extends State<BookAClimbScreen> {
                                 validator: (value) {
                                   if (value == null || value.trim().isEmpty) {
                                     return 'Affiliation is required';
+                                  }
+                                  return null;
+                                },
+                              ),
+                              const SizedBox(height: 12),
+                              TextFormField(
+                                controller: phoneController,
+                                decoration: const InputDecoration(
+                                  labelText: 'Contact Number',
+                                  border: OutlineInputBorder(),
+                                ),
+                                keyboardType: TextInputType.phone,
+                                validator: (value) {
+                                  if (value == null || value.trim().isEmpty) {
+                                    return 'Contact number is required';
                                   }
                                   return null;
                                 },

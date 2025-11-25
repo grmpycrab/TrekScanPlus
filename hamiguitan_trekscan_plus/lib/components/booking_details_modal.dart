@@ -146,6 +146,11 @@ class BookingDetailsModal extends StatelessWidget {
                             ),
                             const SizedBox(height: 8),
                             _buildDetailRow(
+                              'Contact Number:',
+                              booking?.phoneNumber ?? 'Not provided',
+                            ),
+                            const SizedBox(height: 8),
+                            _buildDetailRow(
                               'Hometown:',
                               booking?.hometown ?? 'Not provided',
                             ),
