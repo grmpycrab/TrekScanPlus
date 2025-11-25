@@ -225,7 +225,7 @@ class _NotificationSettingsScreenState
         boxShadow: [
           BoxShadow(
             color: _pushNotificationsEnabled
-                ? AppColors.notificationBooking.withValues(alpha: 0.3)
+                ? AppColors.notificationBooking.withOpacity(0.3)
                 : AppColors.shadowLight,
             blurRadius: 12,
             offset: const Offset(0, 6),
@@ -237,7 +237,7 @@ class _NotificationSettingsScreenState
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: AppColors.white.withValues(alpha: 0.3),
+              color: AppColors.white.withOpacity(0.3),
               borderRadius: BorderRadius.circular(12),
             ),
             child: Icon(
@@ -267,7 +267,7 @@ class _NotificationSettingsScreenState
                       ? 'Notifications are enabled'
                       : 'Notifications are disabled',
                   style: TextStyle(
-                    color: AppColors.white.withValues(alpha: 0.9),
+                    color: AppColors.white.withOpacity(0.9),
                     fontSize: 14,
                   ),
                 ),
@@ -294,9 +294,9 @@ class _NotificationSettingsScreenState
               }
             },
             activeColor: AppColors.white,
-            activeTrackColor: AppColors.white.withValues(alpha: 0.5),
-            inactiveThumbColor: AppColors.white.withValues(alpha: 0.7),
-            inactiveTrackColor: AppColors.white.withValues(alpha: 0.3),
+            activeTrackColor: AppColors.white.withOpacity(0.5),
+            inactiveThumbColor: AppColors.white.withOpacity(0.7),
+            inactiveTrackColor: AppColors.white.withOpacity(0.3),
           ),
         ],
       ),
@@ -344,7 +344,7 @@ class _NotificationSettingsScreenState
         leading: Container(
           padding: const EdgeInsets.all(10),
           decoration: BoxDecoration(
-            color: iconColor.withValues(alpha: 0.1),
+            color: iconColor.withOpacity(0.1),
             borderRadius: BorderRadius.circular(10),
           ),
           child: Icon(icon, color: iconColor, size: 24),
@@ -436,10 +436,10 @@ class _NotificationSettingsScreenState
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppColors.notificationBooking.withValues(alpha: 0.1),
+        color: AppColors.notificationBooking.withOpacity(0.1),
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: AppColors.notificationBooking.withValues(alpha: 0.3),
+          color: AppColors.notificationBooking.withOpacity(0.3),
         ),
       ),
       child: Row(
@@ -459,7 +459,7 @@ class _NotificationSettingsScreenState
                   'About Notifications',
                   style: TextStyle(
                     fontWeight: FontWeight.bold,
-                    color: AppColors.notificationBooking.withValues(alpha: 0.9),
+                    color: AppColors.notificationBooking.withOpacity(0.9),
                     fontSize: 14,
                   ),
                 ),
@@ -467,7 +467,7 @@ class _NotificationSettingsScreenState
                 Text(
                   'You can customize which notifications you receive. Turn off push notifications to disable all alerts.',
                   style: TextStyle(
-                    color: AppColors.notificationBooking.withValues(alpha: 0.8),
+                    color: AppColors.notificationBooking.withOpacity(0.8),
                     fontSize: 13,
                   ),
                 ),

@@ -133,7 +133,7 @@ class NotificationBannerOverlayState extends State<NotificationBannerOverlay>
   }
 
   Color _getBackgroundColor() {
-    return AppColors.primary.withValues(alpha: 0.95);
+    return AppColors.primary.withOpacity(0.95);
   }
 
   IconData _getIcon() {
