@@ -153,7 +153,7 @@ class _ImageViewerState extends State<ImageViewer> {
                 gradient: LinearGradient(
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
-                  colors: [Colors.black.withValues(0.6), Colors.transparent],
+                  colors: [Colors.black.withOpacity(0.6), Colors.transparent],
                 ),
               ),
               child: Row(
@@ -170,7 +170,7 @@ class _ImageViewerState extends State<ImageViewer> {
                         vertical: 6,
                       ),
                       decoration: BoxDecoration(
-                        color: Colors.black.withValues(0.6),
+                        color: Colors.black.withOpacity(0.6),
                         borderRadius: BorderRadius.circular(16),
                       ),
                       child: Text(
@@ -205,7 +205,7 @@ class _ImageViewerState extends State<ImageViewer> {
                       shape: BoxShape.circle,
                       color: _currentIndex == index
                           ? Colors.white
-                          : Colors.white.withValues(0.4),
+                          : Colors.white.withOpacity(0.4),
                     ),
                   ),
                 ),
@@ -228,7 +228,7 @@ class _ImageViewerState extends State<ImageViewer> {
                 gradient: LinearGradient(
                   begin: Alignment.bottomCenter,
                   end: Alignment.topCenter,
-                  colors: [Colors.black.withValues(0.7), Colors.transparent],
+                  colors: [Colors.black.withOpacity(0.7), Colors.transparent],
                 ),
               ),
               child: Row(

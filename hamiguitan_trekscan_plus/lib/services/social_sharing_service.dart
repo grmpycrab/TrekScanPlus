@@ -5,6 +5,7 @@ import 'package:flutter/foundation.dart';
 import 'package:image/image.dart' as img;
 import 'dart:io';
 import '../models/social_model.dart';
+import '../services/notification_manager.dart';
 
 class SocialSharingService {
   SocialSharingService._();
@@ -48,6 +49,12 @@ class SocialSharingService {
     } catch (e) {
       debugPrint('Error updating post count: $e');
     }
+
+    // Show success notification
+    NotificationManager.showSuccess(
+      title: 'Post Created ✓',
+      message: 'Your post has been shared successfully!',
+    );
 
     return docRef.id;
   }
@@ -732,6 +739,12 @@ class SocialSharingService {
     }
 
     await _firestore.collection('posts').doc(postId).update(updateData);
+
+    // Show success notification banner
+    NotificationManager.showSuccess(
+      title: 'Post Updated ✓',
+      message: 'Your changes have been saved successfully!',
+    );
   }
 
   /// Delete a post
@@ -768,6 +781,12 @@ class SocialSharingService {
     } catch (e) {
       debugPrint('Error updating post count: $e');
     }
+
+    // Show info notification banner
+    NotificationManager.showInfo(
+      title: 'Post Deleted',
+      message: 'Your post has been removed successfully.',
+    );
   }
 
   /// Send notification when someone likes a post

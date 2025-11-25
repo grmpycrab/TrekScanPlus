@@ -230,7 +230,7 @@ class NotificationBannerOverlayState extends State<NotificationBannerOverlay>
                           onTap: _dismissCurrent,
                           child: Icon(
                             Icons.close,
-                            color: Colors.white.withOpacity(0.7),
+                            color: Colors.white,
                             size: 20,
                           ),
                         ),
