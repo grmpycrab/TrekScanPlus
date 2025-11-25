@@ -603,31 +603,40 @@ class _SocialCardState extends State<SocialCard> {
     final images = widget.post.imageUrls;
     if (images.isEmpty) return const SizedBox.shrink();
 
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(12),
+        child: _buildImageLayout(images),
+      ),
+    );
+  }
+
+  Widget _buildImageLayout(List<String> images) {
     if (images.length == 1) {
       return _buildSingleImage(images[0]);
     } else if (images.length == 2) {
       return _buildTwoImages(images);
     } else if (images.length == 3) {
       return _buildThreeImages(images);
-    } else {
+    } else if (images.length == 4) {
       return _buildFourImages(images);
+    } else {
+      return _buildFivePlusImages(images);
     }
   }
 
   Widget _buildSingleImage(String url) {
     return GestureDetector(
       onTap: () => _openImageViewer(0),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(12),
-        child: AspectRatio(
-          aspectRatio: 1,
-          child: Image.network(
-            url,
-            fit: BoxFit.cover,
-            errorBuilder: (context, error, stack) => Container(
-              color: Colors.grey[200],
-              child: const Icon(Icons.broken_image),
-            ),
+      child: AspectRatio(
+        aspectRatio: 4 / 3,
+        child: Image.network(
+          url,
+          fit: BoxFit.cover,
+          errorBuilder: (context, error, stack) => Container(
+            color: Colors.grey[200],
+            child: const Icon(Icons.broken_image, size: 48),
           ),
         ),
       ),
@@ -636,11 +645,11 @@ class _SocialCardState extends State<SocialCard> {
 
   Widget _buildTwoImages(List<String> urls) {
     return AspectRatio(
-      aspectRatio: 2 / 1,
+      aspectRatio: 16 / 9,
       child: Row(
         children: [
           Expanded(child: _buildImageTile(urls[0], 0)),
-          const SizedBox(width: 2),
+          Container(width: 2, color: Colors.white),
           Expanded(child: _buildImageTile(urls[1], 1)),
         ],
       ),
@@ -649,16 +658,19 @@ class _SocialCardState extends State<SocialCard> {
 
   Widget _buildThreeImages(List<String> urls) {
     return AspectRatio(
-      aspectRatio: 2 / 1,
+      aspectRatio: 16 / 9,
       child: Row(
         children: [
-          Expanded(child: _buildImageTile(urls[0], 0)),
-          const SizedBox(width: 2),
+          // First image takes 2/3 of width
+          Expanded(flex: 2, child: _buildImageTile(urls[0], 0)),
+          Container(width: 2, color: Colors.white),
+          // Two images stacked, taking 1/3 of width
           Expanded(
+            flex: 1,
             child: Column(
               children: [
                 Expanded(child: _buildImageTile(urls[1], 1)),
-                const SizedBox(height: 2),
+                Container(height: 2, color: Colors.white),
                 Expanded(child: _buildImageTile(urls[2], 2)),
               ],
             ),
@@ -670,25 +682,77 @@ class _SocialCardState extends State<SocialCard> {
 
   Widget _buildFourImages(List<String> urls) {
     return AspectRatio(
+      aspectRatio: 16 / 9,
+      child: Row(
+        children: [
+          // First image takes 2/3 of width
+          Expanded(flex: 2, child: _buildImageTile(urls[0], 0)),
+          Container(width: 2, color: Colors.white),
+          // Three images stacked, taking 1/3 of width
+          Expanded(
+            flex: 1,
+            child: Column(
+              children: [
+                Expanded(child: _buildImageTile(urls[1], 1)),
+                Container(height: 2, color: Colors.white),
+                Expanded(child: _buildImageTile(urls[2], 2)),
+                Container(height: 2, color: Colors.white),
+                Expanded(child: _buildImageTile(urls[3], 3)),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildFivePlusImages(List<String> urls) {
+    final hasMoreThanFour = urls.length > 4;
+    final displayCount = urls.length - 4;
+
+    return AspectRatio(
       aspectRatio: 1,
       child: Column(
         children: [
+          // Top row - 2 images
           Expanded(
             child: Row(
               children: [
                 Expanded(child: _buildImageTile(urls[0], 0)),
-                const SizedBox(width: 2),
+                Container(width: 2, color: Colors.white),
                 Expanded(child: _buildImageTile(urls[1], 1)),
               ],
             ),
           ),
-          const SizedBox(height: 2),
+          Container(height: 2, color: Colors.white),
+          // Bottom row - 2 images
           Expanded(
             child: Row(
               children: [
                 Expanded(child: _buildImageTile(urls[2], 2)),
-                const SizedBox(width: 2),
-                Expanded(child: _buildImageTile(urls[3], 3)),
+                Container(width: 2, color: Colors.white),
+                Expanded(
+                  child: Stack(
+                    fit: StackFit.expand,
+                    children: [
+                      _buildImageTile(urls[3], 3),
+                      if (hasMoreThanFour)
+                        Container(
+                          color: Colors.black.withOpacity(0.6),
+                          child: Center(
+                            child: Text(
+                              '+$displayCount',
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 32,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
               ],
             ),
           ),
@@ -700,18 +764,12 @@ class _SocialCardState extends State<SocialCard> {
   Widget _buildImageTile(String url, int index) {
     return GestureDetector(
       onTap: () => _openImageViewer(index),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(12),
-        child: AspectRatio(
-          aspectRatio: 1,
-          child: Image.network(
-            url,
-            fit: BoxFit.cover,
-            errorBuilder: (context, error, stack) => Container(
-              color: Colors.grey[200],
-              child: const Icon(Icons.broken_image),
-            ),
-          ),
+      child: Image.network(
+        url,
+        fit: BoxFit.cover,
+        errorBuilder: (context, error, stack) => Container(
+          color: Colors.grey[200],
+          child: const Icon(Icons.broken_image, size: 32),
         ),
       ),
     );
