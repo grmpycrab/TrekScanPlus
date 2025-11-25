@@ -79,16 +79,6 @@ class NotificationManager {
     required Duration duration,
     VoidCallback? onTap,
   }) {
-    // This will be called by NavigatorObserver with BuildContext
-    // For now, we store the data and show it through the overlay
-    print(
-      '📢 [NotificationManager] _showNotification called: $title, type: $type',
-    );
-    print('📢 [NotificationManager] GlobalKey: $_globalNotificationKey');
-    print(
-      '📢 [NotificationManager] currentState: ${_globalNotificationKey.currentState}',
-    );
-
     final data = NotificationBannerData(
       title: title,
       message: message,
@@ -98,9 +88,6 @@ class NotificationManager {
     );
 
     if (_globalNotificationKey.currentState == null) {
-      print(
-        '❌ [NotificationManager] ERROR: currentState is null! Overlay not initialized.',
-      );
       return;
     }
 
