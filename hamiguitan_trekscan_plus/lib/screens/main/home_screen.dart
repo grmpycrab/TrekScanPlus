@@ -8,6 +8,7 @@ import '../../components/create_post.dart';
 import '../../components/comments_sheet.dart';
 import '../../components/do_and_dont.dart';
 import '../../components/trek_tips.dart';
+import '../../components/banner_slideshow.dart';
 import '../../models/calendar_model.dart';
 import '../../models/social_model.dart';
 import '../../theme/color.dart';
@@ -176,6 +177,9 @@ class _HomeScreenState extends State<HomeScreen> {
           children: [
             const ConnectivityBanner(),
             _buildHeader(),
+            _buildWelcomeBanner(),
+            _buildInfoButtons(),
+            const SizedBox(height: 16),
             Expanded(
               child: RefreshIndicator(
                 onRefresh: _refreshAll,
@@ -184,11 +188,11 @@ class _HomeScreenState extends State<HomeScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      _buildWelcomeBanner(),
-                      const SizedBox(height: 8),
-                      _buildInfoButtons(),
                       const SizedBox(height: 20),
                       _buildSocialFeed(),
+                      const SizedBox(
+                        height: 30,
+                      ), // Bottom padding for comfortable scrolling
                     ],
                   ),
                 ),
@@ -502,75 +506,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildWelcomeBanner() {
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-      clipBehavior: Clip.none,
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: const Color(0xFF252B30),
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.06),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: SizedBox(
-        height: 160,
-        child: Row(
-          children: [
-            Expanded(
-              child: Padding(
-                padding: const EdgeInsets.only(right: 8.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: const [
-                    Text(
-                      'Mt. Hamiguitan Trek Scan Plus',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 24,
-                        fontWeight: FontWeight.w800,
-                        height: 1.2,
-                      ),
-                    ),
-                    SizedBox(height: 12),
-                    Text(
-                      'Explore the unique beauty and biodiversity of Mt. Hamiguitan, a UNESCO World Heritage Site.',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 15,
-                        height: 1.4,
-                      ),
-                      maxLines: 5,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            // Illustration on the right. use an OverflowBox so the image can extend outside the card
-            SizedBox(
-              width: 140,
-              child: Transform.translate(
-                offset: const Offset(6, 0),
-                child: Image.asset(
-                  'assets/images/Trekking.png',
-                  width: 200,
-                  height: 200,
-                  fit: BoxFit.cover,
-                  errorBuilder: (context, error, stack) =>
-                      Icon(Icons.landscape, size: 72, color: Colors.brown[300]),
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
+    return const BannerSlideshow();
   }
 
   Widget _buildInfoButtons() {

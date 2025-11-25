@@ -447,22 +447,36 @@ class _SocialCardState extends State<SocialCard> {
 
   @override
   Widget build(BuildContext context) {
+    // Calculate consistent card height based on device size
+    final screenHeight = MediaQuery.of(context).size.height;
+    final cardHeight =
+        screenHeight * 0.40; // Approximately 55% of screen height
+
     return Card(
       margin: const EdgeInsets.only(bottom: 16),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       elevation: 2,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Header
-          _buildHeader(),
-          // Caption
-          if (widget.post.caption.isNotEmpty) _buildCaption(),
-          // Images
-          if (widget.post.imageUrls.isNotEmpty) _buildImages(),
-          // Footer with actions
-          _buildFooter(),
-        ],
+      child: SizedBox(
+        height: cardHeight,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Header
+            _buildHeader(),
+            // Caption
+            if (widget.post.caption.isNotEmpty) _buildCaption(),
+            // Images - takes remaining space with scroll if needed
+            if (widget.post.imageUrls.isNotEmpty)
+              Expanded(
+                child: SingleChildScrollView(
+                  physics: const NeverScrollableScrollPhysics(),
+                  child: _buildImages(),
+                ),
+              ),
+            // Footer with actions
+            _buildFooter(),
+          ],
+        ),
       ),
     );
   }
