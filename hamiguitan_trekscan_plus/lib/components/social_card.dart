@@ -8,6 +8,7 @@ import '../theme/color.dart';
 import '../screens/main/profile_screen.dart';
 import 'comments_sheet.dart';
 import 'post_options_sheet.dart';
+import 'image_viewer.dart';
 
 class SocialCard extends StatefulWidget {
   final SocialPost post;
@@ -607,16 +608,19 @@ class _SocialCardState extends State<SocialCard> {
   }
 
   Widget _buildSingleImage(String url) {
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(12),
-      child: AspectRatio(
-        aspectRatio: 1,
-        child: Image.network(
-          url,
-          fit: BoxFit.cover,
-          errorBuilder: (context, error, stack) => Container(
-            color: Colors.grey[200],
-            child: const Icon(Icons.broken_image),
+    return GestureDetector(
+      onTap: () => _openImageViewer(0),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(12),
+        child: AspectRatio(
+          aspectRatio: 1,
+          child: Image.network(
+            url,
+            fit: BoxFit.cover,
+            errorBuilder: (context, error, stack) => Container(
+              color: Colors.grey[200],
+              child: const Icon(Icons.broken_image),
+            ),
           ),
         ),
       ),
@@ -624,67 +628,95 @@ class _SocialCardState extends State<SocialCard> {
   }
 
   Widget _buildTwoImages(List<String> urls) {
-    return Row(
-      children: [
-        Expanded(child: _buildImageTile(urls[0])),
-        const SizedBox(width: 2),
-        Expanded(child: _buildImageTile(urls[1])),
-      ],
+    return AspectRatio(
+      aspectRatio: 2 / 1,
+      child: Row(
+        children: [
+          Expanded(child: _buildImageTile(urls[0], 0)),
+          const SizedBox(width: 2),
+          Expanded(child: _buildImageTile(urls[1], 1)),
+        ],
+      ),
     );
   }
 
   Widget _buildThreeImages(List<String> urls) {
-    return Row(
-      children: [
-        Expanded(child: _buildImageTile(urls[0])),
-        const SizedBox(width: 2),
-        Expanded(
-          child: Column(
-            children: [
-              Expanded(child: _buildImageTile(urls[1])),
-              const SizedBox(height: 2),
-              Expanded(child: _buildImageTile(urls[2])),
-            ],
+    return AspectRatio(
+      aspectRatio: 2 / 1,
+      child: Row(
+        children: [
+          Expanded(child: _buildImageTile(urls[0], 0)),
+          const SizedBox(width: 2),
+          Expanded(
+            child: Column(
+              children: [
+                Expanded(child: _buildImageTile(urls[1], 1)),
+                const SizedBox(height: 2),
+                Expanded(child: _buildImageTile(urls[2], 2)),
+              ],
+            ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 
   Widget _buildFourImages(List<String> urls) {
-    return Column(
-      children: [
-        Row(
-          children: [
-            Expanded(child: _buildImageTile(urls[0])),
-            const SizedBox(width: 2),
-            Expanded(child: _buildImageTile(urls[1])),
-          ],
-        ),
-        const SizedBox(height: 2),
-        Row(
-          children: [
-            Expanded(child: _buildImageTile(urls[2])),
-            const SizedBox(width: 2),
-            Expanded(child: _buildImageTile(urls[3])),
-          ],
-        ),
-      ],
+    return AspectRatio(
+      aspectRatio: 1,
+      child: Column(
+        children: [
+          Expanded(
+            child: Row(
+              children: [
+                Expanded(child: _buildImageTile(urls[0], 0)),
+                const SizedBox(width: 2),
+                Expanded(child: _buildImageTile(urls[1], 1)),
+              ],
+            ),
+          ),
+          const SizedBox(height: 2),
+          Expanded(
+            child: Row(
+              children: [
+                Expanded(child: _buildImageTile(urls[2], 2)),
+                const SizedBox(width: 2),
+                Expanded(child: _buildImageTile(urls[3], 3)),
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 
-  Widget _buildImageTile(String url) {
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(12),
-      child: AspectRatio(
-        aspectRatio: 1,
-        child: Image.network(
-          url,
-          fit: BoxFit.cover,
-          errorBuilder: (context, error, stack) => Container(
-            color: Colors.grey[200],
-            child: const Icon(Icons.broken_image),
+  Widget _buildImageTile(String url, int index) {
+    return GestureDetector(
+      onTap: () => _openImageViewer(index),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(12),
+        child: AspectRatio(
+          aspectRatio: 1,
+          child: Image.network(
+            url,
+            fit: BoxFit.cover,
+            errorBuilder: (context, error, stack) => Container(
+              color: Colors.grey[200],
+              child: const Icon(Icons.broken_image),
+            ),
           ),
+        ),
+      ),
+    );
+  }
+
+  void _openImageViewer(int initialIndex) {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => ImageViewer(
+          imageUrls: widget.post.imageUrls,
+          post: widget.post,
+          initialIndex: initialIndex,
         ),
       ),
     );
