@@ -203,6 +203,8 @@ class FirebaseAuthService {
   /// plugin/platform-side Pigeon type-cast mismatch: if `signInWithCredential`
   /// throws but the Firebase native SDK reports a current user, we return
   /// that user so the app can continue.
+  ///
+  /// Also extracts first and last names from Google profile and saves them to Firestore.
   Future<User?> signInWithGoogle() async {
     try {
       // Use a single GoogleSignIn instance so we can control cached state.
@@ -229,6 +231,7 @@ class FirebaseAuthService {
 
       if (kDebugMode) {
         print('Google user signed in: ${googleUser.email}');
+        print('Google display name: ${googleUser.displayName}');
       }
 
       final GoogleSignInAuthentication googleAuth =
@@ -257,8 +260,29 @@ class FirebaseAuthService {
         // Ensure Firestore has a user document for this account
         if (userCredential.user != null) {
           try {
+            // Extract first and last names from Google profile
+            String firstName = '';
+            String lastName = '';
+
+            if (googleUser.displayName != null &&
+                googleUser.displayName!.isNotEmpty) {
+              final nameParts = googleUser.displayName!.split(' ');
+              firstName = nameParts.first;
+              if (nameParts.length > 1) {
+                lastName = nameParts.skip(1).join(' ');
+              }
+            }
+
+            if (kDebugMode) {
+              print(
+                'Extracted from Google: firstName="$firstName", lastName="$lastName"',
+              );
+            }
+
             await UserService.instance.createOrUpdateUserFromFirebase(
               userCredential.user!,
+              firstName: firstName.isNotEmpty ? firstName : null,
+              lastName: lastName.isNotEmpty ? lastName : null,
             );
           } catch (e) {
             // Log Firestore error but don't block sign-in

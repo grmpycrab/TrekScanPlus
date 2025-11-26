@@ -18,11 +18,33 @@ class UserService {
   ///
   /// If the document doesn't exist, it will be created with `createdAt`.
   /// `lastSeen` will always be updated to server timestamp.
-  Future<void> createOrUpdateUserFromFirebase(User user) async {
+  ///
+  /// [firstName] and [lastName] can be provided to override extraction from displayName.
+  /// If not provided and user is new, will attempt to extract from displayName.
+  Future<void> createOrUpdateUserFromFirebase(
+    User user, {
+    String? firstName,
+    String? lastName,
+  }) async {
     try {
       final docRef = _usersCollection.doc(user.uid);
 
       final doc = await docRef.get();
+
+      // Extract first/last names if not provided
+      String extractedFirstName = firstName ?? '';
+      String extractedLastName = lastName ?? '';
+
+      if (extractedFirstName.isEmpty && extractedLastName.isEmpty) {
+        // Try to extract from displayName
+        if (user.displayName != null && user.displayName!.isNotEmpty) {
+          final nameParts = user.displayName!.split(' ');
+          extractedFirstName = nameParts.first;
+          if (nameParts.length > 1) {
+            extractedLastName = nameParts.skip(1).join(' ');
+          }
+        }
+      }
 
       final data = <String, dynamic>{
         'uid': user.uid,
@@ -33,6 +55,14 @@ class UserService {
         'providerData': user.providerData.map((p) => p.providerId).toList(),
         'lastSeen': FieldValue.serverTimestamp(),
       };
+
+      // Add firstName and lastName if extracted/provided
+      if (extractedFirstName.isNotEmpty) {
+        data['firstName'] = extractedFirstName;
+      }
+      if (extractedLastName.isNotEmpty) {
+        data['lastName'] = extractedLastName;
+      }
 
       if (!doc.exists) {
         data['createdAt'] = FieldValue.serverTimestamp();
@@ -47,11 +77,17 @@ class UserService {
         await docRef.set(data, SetOptions(merge: true));
         if (kDebugMode) {
           print('User document created for ${user.uid}');
+          print('  - firstName: $extractedFirstName');
+          print('  - lastName: $extractedLastName');
         }
       } else {
         await docRef.set(data, SetOptions(merge: true));
         if (kDebugMode) {
           print('User document updated for ${user.uid}');
+          if (extractedFirstName.isNotEmpty || extractedLastName.isNotEmpty) {
+            print('  - firstName: $extractedFirstName');
+            print('  - lastName: $extractedLastName');
+          }
         }
       }
     } catch (e, st) {

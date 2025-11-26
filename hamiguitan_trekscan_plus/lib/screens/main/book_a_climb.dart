@@ -8,6 +8,7 @@ import '../../models/booking_model.dart';
 import '../../services/booking_service.dart';
 import '../../services/calendar_config_service.dart';
 import '../../services/validators.dart';
+import '../../services/user_service.dart';
 import '../../models/climb.dart';
 import '../../components/climb_card.dart';
 import '../../components/app_dialogue_handler.dart';
@@ -78,7 +79,31 @@ class _BookAClimbScreenState extends State<BookAClimbScreen> {
       }
       _bookingSub = BookingService.instance
           .streamBookingsForUser(user.uid)
-          .listen((bookings) {
+          .listen((bookings) async {
+            // Fetch user data to get firstName and lastName
+            String userName = 'You';
+            try {
+              final userData = await UserService.instance.getUserOnce(user.uid);
+              if (userData != null) {
+                final firstName = userData['firstName'] as String? ?? '';
+                final lastName = userData['lastName'] as String? ?? '';
+
+                if (firstName.isNotEmpty && lastName.isNotEmpty) {
+                  userName = '$firstName $lastName';
+                } else if (firstName.isNotEmpty) {
+                  userName = firstName;
+                } else if (lastName.isNotEmpty) {
+                  userName = lastName;
+                } else {
+                  // Fallback to displayName
+                  userName = userData['displayName'] as String? ?? 'You';
+                }
+              }
+            } catch (e) {
+              // If we can't fetch from Firestore, use Firebase displayName
+              userName = user.displayName ?? 'You';
+            }
+
             setState(() {
               // Map BookingModel -> {climb, booking} for display
               _bookings = bookings
@@ -86,9 +111,7 @@ class _BookAClimbScreenState extends State<BookAClimbScreen> {
                     (b) => {
                       'climb': Climb(
                         id: b.id,
-                        name:
-                            FirebaseAuth.instance.currentUser?.displayName ??
-                            'You',
+                        name: userName,
                         date: b.trekDate.toDate(),
                         dateBooked: b.createdAt.toDate(),
                         targetDate: b.trekDate.toDate(),
@@ -534,6 +557,9 @@ class _BookAClimbScreenState extends State<BookAClimbScreen> {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) return;
     try {
+      // Get user's first and last name for display
+      String userName = await _getUserDisplayName(user.uid);
+
       // Cancel current subscription and clear local state first
       _bookingSub?.cancel();
       setState(() => _bookings = []);
@@ -550,7 +576,7 @@ class _BookAClimbScreenState extends State<BookAClimbScreen> {
               (b) => {
                 'climb': Climb(
                   id: b.id,
-                  name: FirebaseAuth.instance.currentUser?.displayName ?? 'You',
+                  name: userName,
                   date: b.trekDate.toDate(),
                   dateBooked: b.createdAt.toDate(),
                   targetDate: b.trekDate.toDate(),
@@ -578,12 +604,7 @@ class _BookAClimbScreenState extends State<BookAClimbScreen> {
                         (b) => {
                           'climb': Climb(
                             id: b.id,
-                            name:
-                                FirebaseAuth
-                                    .instance
-                                    .currentUser
-                                    ?.displayName ??
-                                'You',
+                            name: userName,
                             date: b.trekDate.toDate(),
                             dateBooked: b.createdAt.toDate(),
                             targetDate: b.trekDate.toDate(),
@@ -606,6 +627,33 @@ class _BookAClimbScreenState extends State<BookAClimbScreen> {
     } catch (e) {
       debugPrint('Error refreshing bookings: $e');
     }
+  }
+
+  /// Get the user's display name from Firestore (firstName lastName or displayName)
+  Future<String> _getUserDisplayName(String userId) async {
+    try {
+      final userData = await UserService.instance.getUserOnce(userId);
+      if (userData != null) {
+        final firstName = userData['firstName'] as String? ?? '';
+        final lastName = userData['lastName'] as String? ?? '';
+
+        if (firstName.isNotEmpty && lastName.isNotEmpty) {
+          return '$firstName $lastName';
+        } else if (firstName.isNotEmpty) {
+          return firstName;
+        } else if (lastName.isNotEmpty) {
+          return lastName;
+        } else {
+          // Fallback to displayName
+          return userData['displayName'] as String? ?? 'You';
+        }
+      }
+    } catch (e) {
+      debugPrint('Error fetching user display name: $e');
+    }
+
+    // Final fallback to Firebase displayName
+    return FirebaseAuth.instance.currentUser?.displayName ?? 'You';
   }
 
   // Convert internal _bookings (dynamic) to a list of Climb objects.
