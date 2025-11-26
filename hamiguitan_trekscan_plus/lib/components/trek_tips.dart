@@ -322,7 +322,7 @@ class _TrekTipsOverlayState extends State<TrekTipsOverlay> {
       backgroundColor: Colors.transparent,
       child: Container(
         constraints: BoxConstraints(
-          maxHeight: screenHeight * 0.85,
+          maxHeight: screenHeight * 0.60,
           maxWidth: 600,
         ),
         decoration: BoxDecoration(
