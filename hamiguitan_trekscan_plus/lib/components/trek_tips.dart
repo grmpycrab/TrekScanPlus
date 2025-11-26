@@ -357,7 +357,7 @@ class _TrekTipsOverlayState extends State<TrekTipsOverlay> {
                 children: [
                   const Icon(
                     Icons.lightbulb_outline,
-                    color: Colors.white,
+                    color: Color.fromARGB(255, 252, 194, 6),
                     size: 28,
                   ),
                   const SizedBox(width: 12),
@@ -520,13 +520,18 @@ class _TrekTipsOverlayState extends State<TrekTipsOverlay> {
           Container(
             padding: const EdgeInsets.all(6),
             decoration: BoxDecoration(
-              color: const Color(0xFF06402B).withValues(alpha: 0.1),
+              color: const Color.fromARGB(
+                255,
+                167,
+                136,
+                0,
+              ).withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(6),
             ),
             child: Icon(
-              Icons.tips_and_updates,
-              size: isSmallScreen ? 14 : 16,
-              color: const Color(0xFF06402B),
+              Icons.lightbulb_outlined,
+              size: isSmallScreen ? 16 : 20,
+              color: Color.fromARGB(255, 252, 194, 6),
             ),
           ),
           SizedBox(width: isSmallScreen ? 8 : 10),
