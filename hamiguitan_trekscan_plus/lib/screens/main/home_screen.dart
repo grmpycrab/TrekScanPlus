@@ -32,7 +32,7 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   //int _selectedNavIndex = 0;
-  late List<TrekDay> _trekDays;
+  late ValueNotifier<List<TrekDay>> _trekDaysNotifier;
   User? _firebaseUser;
   StreamSubscription<User?>? _authSubscription;
   StreamSubscription<QuerySnapshot>? _bookingsSubscription;
@@ -58,6 +58,7 @@ class _HomeScreenState extends State<HomeScreen> {
   void dispose() {
     _authSubscription?.cancel();
     _bookingsSubscription?.cancel();
+    _trekDaysNotifier.dispose();
     super.dispose();
   }
 
@@ -68,7 +69,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
     // Initialize with closed status; real statuses will be set when bookings
     // snapshot is received.
-    _trekDays = List.generate(daysInMonth, (index) {
+    final initialDays = List.generate(daysInMonth, (index) {
       final date = DateTime(now.year, now.month, index + 1);
       final isResearchDay = date.weekday == DateTime.wednesday;
       return TrekDay(
@@ -78,6 +79,7 @@ class _HomeScreenState extends State<HomeScreen> {
         bookedSlots: 0,
       );
     });
+    _trekDaysNotifier = ValueNotifier(initialDays);
   }
 
   void _subscribeBookingsForMonth(DateTime month) {
@@ -133,37 +135,36 @@ class _HomeScreenState extends State<HomeScreen> {
           );
 
           // Rebuild trekDays for the month using calendar config
-          setState(() {
-            final now = month;
-            final daysInMonth = DateTime(now.year, now.month + 1, 0).day;
-            _trekDays = List.generate(daysInMonth, (index) {
-              final date = DateTime(now.year, now.month, index + 1);
-              final key =
-                  '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
-              final booked = slotsPerDay[key] ?? 0;
-              final dateConfig = dateConfigMap[key];
+          // Use ValueNotifier instead of setState to avoid rebuilding social feed
+          final now = month;
+          final daysInMonth = DateTime(now.year, now.month + 1, 0).day;
+          _trekDaysNotifier.value = List.generate(daysInMonth, (index) {
+            final date = DateTime(now.year, now.month, index + 1);
+            final key =
+                '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
+            final booked = slotsPerDay[key] ?? 0;
+            final dateConfig = dateConfigMap[key];
 
-              // Get max slots for this date (date-specific or system default)
-              final maxSlots = dateConfig?.maxSlots ?? defaultMaxSlots;
-              var isClosed = dateConfig?.isClosed ?? false;
-              var closureReason = dateConfig?.reason;
+            // Get max slots for this date (date-specific or system default)
+            final maxSlots = dateConfig?.maxSlots ?? defaultMaxSlots;
+            var isClosed = dateConfig?.isClosed ?? false;
+            var closureReason = dateConfig?.reason;
 
-              // Buffer days are now stored directly in Firebase calendar_config
-              // with isTrekDownDay flag, so they come through dateConfig
+            // Buffer days are now stored directly in Firebase calendar_config
+            // with isTrekDownDay flag, so they come through dateConfig
 
-              final isResearchDay = date.weekday == DateTime.wednesday;
+            final isResearchDay = date.weekday == DateTime.wednesday;
 
-              // Use factory method to create TrekDay with proper status
-              return TrekDay.fromBookingData(
-                date: date,
-                bookedSlots: booked,
-                maxSlots: maxSlots,
-                criticalThreshold: criticalThreshold,
-                isClosed: isClosed,
-                closureReason: closureReason,
-                isResearchDay: isResearchDay,
-              );
-            });
+            // Use factory method to create TrekDay with proper status
+            return TrekDay.fromBookingData(
+              date: date,
+              bookedSlots: booked,
+              maxSlots: maxSlots,
+              criticalThreshold: criticalThreshold,
+              isClosed: isClosed,
+              closureReason: closureReason,
+              isResearchDay: isResearchDay,
+            );
           });
         });
   }
@@ -179,7 +180,7 @@ class _HomeScreenState extends State<HomeScreen> {
             _buildHeader(),
             _buildWelcomeBanner(),
             _buildInfoButtons(),
-            const SizedBox(height: 16),
+            const SizedBox(height: 10),
             Expanded(
               child: RefreshIndicator(
                 onRefresh: _refreshAll,
@@ -399,16 +400,21 @@ class _HomeScreenState extends State<HomeScreen> {
       context: context,
       barrierDismissible: true,
       builder: (context) {
-        return EventCalendar(
-          trekDays: _trekDays,
-          onDaySelected: (date) {
-            // Close the calendar dialog
-            Navigator.of(context).pop();
+        return ValueListenableBuilder<List<TrekDay>>(
+          valueListenable: _trekDaysNotifier,
+          builder: (context, trekDays, _) {
+            return EventCalendar(
+              trekDays: trekDays,
+              onDaySelected: (date) {
+                // Close the calendar dialog
+                Navigator.of(context).pop();
 
-            // Switch to booking tab with selected date
-            if (widget.onNavigateToBooking != null) {
-              widget.onNavigateToBooking!(date);
-            }
+                // Switch to booking tab with selected date
+                if (widget.onNavigateToBooking != null) {
+                  widget.onNavigateToBooking!(date);
+                }
+              },
+            );
           },
         );
       },
@@ -468,37 +474,36 @@ class _HomeScreenState extends State<HomeScreen> {
     );
 
     if (!mounted) return;
-    setState(() {
-      final now = month;
-      final daysInMonth = DateTime(now.year, now.month + 1, 0).day;
-      _trekDays = List.generate(daysInMonth, (index) {
-        final date = DateTime(now.year, now.month, index + 1);
-        final key =
-            '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
-        final booked = slotsPerDay[key] ?? 0;
-        final dateConfig = dateConfigMap[key];
+    // Use ValueNotifier instead of setState to avoid rebuilding social feed
+    final now = month;
+    final daysInMonth = DateTime(now.year, now.month + 1, 0).day;
+    _trekDaysNotifier.value = List.generate(daysInMonth, (index) {
+      final date = DateTime(now.year, now.month, index + 1);
+      final key =
+          '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
+      final booked = slotsPerDay[key] ?? 0;
+      final dateConfig = dateConfigMap[key];
 
-        // Get max slots for this date (date-specific or system default)
-        final maxSlots = dateConfig?.maxSlots ?? defaultMaxSlots;
-        var isClosed = dateConfig?.isClosed ?? false;
-        var closureReason = dateConfig?.reason;
+      // Get max slots for this date (date-specific or system default)
+      final maxSlots = dateConfig?.maxSlots ?? defaultMaxSlots;
+      var isClosed = dateConfig?.isClosed ?? false;
+      var closureReason = dateConfig?.reason;
 
-        // Buffer days are now stored directly in Firebase calendar_config
-        // with isTrekDownDay flag, so they come through dateConfig
+      // Buffer days are now stored directly in Firebase calendar_config
+      // with isTrekDownDay flag, so they come through dateConfig
 
-        final isResearchDay = date.weekday == DateTime.wednesday;
+      final isResearchDay = date.weekday == DateTime.wednesday;
 
-        // Use factory method to create TrekDay with proper status
-        return TrekDay.fromBookingData(
-          date: date,
-          bookedSlots: booked,
-          maxSlots: maxSlots,
-          criticalThreshold: criticalThreshold,
-          isClosed: isClosed,
-          closureReason: closureReason,
-          isResearchDay: isResearchDay,
-        );
-      });
+      // Use factory method to create TrekDay with proper status
+      return TrekDay.fromBookingData(
+        date: date,
+        bookedSlots: booked,
+        maxSlots: maxSlots,
+        criticalThreshold: criticalThreshold,
+        isClosed: isClosed,
+        closureReason: closureReason,
+        isResearchDay: isResearchDay,
+      );
     });
 
     // Re-subscribe to live updates for the month

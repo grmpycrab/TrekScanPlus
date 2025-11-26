@@ -53,7 +53,7 @@ class _BannerSlideshowState extends State<BannerSlideshow> {
   Widget build(BuildContext context) {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-      height: 150,
+      height: 180,
       clipBehavior: Clip.hardEdge,
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(12),

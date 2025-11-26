@@ -455,7 +455,7 @@ class UserService {
     }
   }
 
-  /// Accept a follow request
+  /// Accept a follow request - automatically makes both users mutual followers
   Future<void> acceptFollowRequest(
     String currentUid,
     String requesterUid,
@@ -467,27 +467,38 @@ class UserService {
 
       final currentFollowersCount =
           (currentUserDoc.data()?['followersCount'] as num?)?.toInt() ?? 0;
+      final currentFollowingCount =
+          (currentUserDoc.data()?['followingCount'] as num?)?.toInt() ?? 0;
+      final requesterFollowersCount =
+          (requesterDoc.data()?['followersCount'] as num?)?.toInt() ?? 0;
       final requesterFollowingCount =
           (requesterDoc.data()?['followingCount'] as num?)?.toInt() ?? 0;
 
-      // Add to following list (requester) and remove from sent requests
+      // Make them mutual followers automatically
+      // Requester: add currentUid to following AND followers, remove from sent requests
       final requesterUpdate = <String, dynamic>{
         'following': FieldValue.arrayUnion([currentUid]),
+        'followers': FieldValue.arrayUnion([currentUid]),
         'sentFollowRequests': FieldValue.arrayRemove([currentUid]),
+        'followingCount': requesterFollowingCount + 1,
+        'followersCount': requesterFollowersCount + 1,
       };
-      requesterUpdate['followingCount'] = requesterFollowingCount + 1;
       await _usersCollection.doc(requesterUid).update(requesterUpdate);
 
-      // Add to followers list (current user) and remove from pending requests
+      // Current user: add requesterUid to followers AND following, remove from pending requests
       final currentUpdate = <String, dynamic>{
         'followers': FieldValue.arrayUnion([requesterUid]),
+        'following': FieldValue.arrayUnion([requesterUid]),
         'pendingFollowRequests': FieldValue.arrayRemove([requesterUid]),
+        'followersCount': currentFollowersCount + 1,
+        'followingCount': currentFollowingCount + 1,
       };
-      currentUpdate['followersCount'] = currentFollowersCount + 1;
       await _usersCollection.doc(currentUid).update(currentUpdate);
 
       if (kDebugMode) {
-        print('$currentUid accepted follow request from $requesterUid');
+        print(
+          '$currentUid accepted follow request from $requesterUid - now mutual followers',
+        );
       }
     } catch (e, st) {
       if (kDebugMode) {
@@ -526,7 +537,7 @@ class UserService {
     }
   }
 
-  /// Unfollow a user
+  /// Unfollow a user - removes mutual follow relationship
   Future<void> unfollow(String currentUid, String userToUnfollowUid) async {
     try {
       // First check if the user is actually following
@@ -549,29 +560,42 @@ class UserService {
 
       final currentFollowingCount =
           (currentUserDoc.data()?['followingCount'] as num?)?.toInt() ?? 0;
+      final currentFollowersCount =
+          (currentUserDoc.data()?['followersCount'] as num?)?.toInt() ?? 0;
+      final targetFollowingCount =
+          (targetUserDoc.data()?['followingCount'] as num?)?.toInt() ?? 0;
       final targetFollowersCount =
           (targetUserDoc.data()?['followersCount'] as num?)?.toInt() ?? 0;
 
-      // Remove from following list
+      // Remove mutual follow relationship
+      // Current user: remove from following AND followers
       final currentUserUpdate = <String, dynamic>{
         'following': FieldValue.arrayRemove([userToUnfollowUid]),
+        'followers': FieldValue.arrayRemove([userToUnfollowUid]),
       };
       if (currentFollowingCount > 0) {
         currentUserUpdate['followingCount'] = FieldValue.increment(-1);
       }
+      if (currentFollowersCount > 0) {
+        currentUserUpdate['followersCount'] = FieldValue.increment(-1);
+      }
       await _usersCollection.doc(currentUid).update(currentUserUpdate);
 
-      // Remove from followers list
+      // Target user: remove from followers AND following
       final targetUserUpdate = <String, dynamic>{
         'followers': FieldValue.arrayRemove([currentUid]),
+        'following': FieldValue.arrayRemove([currentUid]),
       };
       if (targetFollowersCount > 0) {
         targetUserUpdate['followersCount'] = FieldValue.increment(-1);
       }
+      if (targetFollowingCount > 0) {
+        targetUserUpdate['followingCount'] = FieldValue.increment(-1);
+      }
       await _usersCollection.doc(userToUnfollowUid).update(targetUserUpdate);
 
       if (kDebugMode) {
-        print('$currentUid unfollowed $userToUnfollowUid');
+        print('$currentUid unfollowed $userToUnfollowUid (mutual unfollow)');
       }
     } catch (e, st) {
       if (kDebugMode) {
