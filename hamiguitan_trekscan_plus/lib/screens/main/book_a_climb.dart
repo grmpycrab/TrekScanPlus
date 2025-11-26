@@ -41,6 +41,9 @@ class _BookAClimbScreenState extends State<BookAClimbScreen> {
   // Store picked PlatformFile objects so we can upload bytes/paths to Firebase
   List<PlatformFile> _pickedFiles = [];
 
+  // Store setModalState to update UI when files are picked
+  Function(VoidCallback)? _setModalState;
+
   // Bookings shown on main screen. This will be populated from Firestore
   // for the current authenticated user. Keep as dynamic to preserve
   // compatibility with the existing UI helper methods.
@@ -154,6 +157,26 @@ class _BookAClimbScreenState extends State<BookAClimbScreen> {
     return '${_selectedDate!.year}-${_selectedDate!.month.toString().padLeft(2, '0')}-${_selectedDate!.day.toString().padLeft(2, '0')}';
   }
 
+  /// Fetch and pre-fill phone number from user settings
+  Future<void> _prefillPhoneNumber() async {
+    try {
+      final user = FirebaseAuth.instance.currentUser;
+      if (user == null) return;
+
+      final userData = await UserService.instance.getUserOnce(user.uid);
+      if (userData != null && _contactController.text.isEmpty) {
+        final phoneNumber = userData['phoneNumber'] as String? ?? '';
+        if (phoneNumber.isNotEmpty && mounted) {
+          setState(() {
+            _contactController.text = phoneNumber;
+          });
+        }
+      }
+    } catch (e) {
+      debugPrint('Error prefilling phone number: $e');
+    }
+  }
+
   void _scrollToBooking(String bookingId) {
     _hasScrolledToBooking = true;
 
@@ -188,9 +211,13 @@ class _BookAClimbScreenState extends State<BookAClimbScreen> {
       allowedExtensions: ['docx', 'pdf', 'jpg', 'jpeg', 'png'],
     );
     if (result != null) {
-      setState(() {
-        _pickedFiles = result.files;
-      });
+      _pickedFiles = result.files;
+      // Update modal UI if modal is open, otherwise update widget state
+      if (_setModalState != null) {
+        _setModalState!(() {});
+      } else {
+        setState(() {});
+      }
     }
   }
 
@@ -755,10 +782,11 @@ class _BookAClimbScreenState extends State<BookAClimbScreen> {
 
     bool isSaving = false;
 
-    // Check if this is a declined booking
+    // Check if this is a declined or changes required booking
     final isDeclined =
         booking.status.toLowerCase() == 'declined' ||
-        booking.status.toLowerCase() == 'rejected';
+        booking.status.toLowerCase() == 'rejected' ||
+        booking.status.toLowerCase() == 'changes required';
 
     // Track existing attachments (can be marked for deletion)
     List<Attachment> existingAttachments = List.from(booking.attachments);
@@ -795,6 +823,24 @@ class _BookAClimbScreenState extends State<BookAClimbScreen> {
                 ScaffoldMessenger.of(this.context).showSnackBar(
                   const SnackBar(
                     content: Text('Enter a valid number of porters.'),
+                  ),
+                );
+                return;
+              }
+
+              // Validate that at least one file exists (current or new)
+              final remainingExistingFiles = existingAttachments
+                  .where((a) => !attachmentsToDelete.contains(a.fileName))
+                  .length;
+              final totalFiles = remainingExistingFiles + newFiles.length;
+
+              if (totalFiles == 0) {
+                ScaffoldMessenger.of(this.context).showSnackBar(
+                  const SnackBar(
+                    content: Text(
+                      'Please keep at least one document or upload a new one.',
+                    ),
+                    backgroundColor: Colors.red,
                   ),
                 );
                 return;
@@ -914,16 +960,27 @@ class _BookAClimbScreenState extends State<BookAClimbScreen> {
                         Container(
                           padding: const EdgeInsets.all(12),
                           decoration: BoxDecoration(
-                            color: Colors.red[50],
+                            color: booking.status.toLowerCase() == 'rejected'
+                                ? Colors.red[50]
+                                : Colors.orange[50],
                             borderRadius: BorderRadius.circular(8),
-                            border: Border.all(color: Colors.red[300]!),
+                            border: Border.all(
+                              color: booking.status.toLowerCase() == 'rejected'
+                                  ? Colors.red[300]!
+                                  : Colors.orange[300]!,
+                            ),
                           ),
                           child: Row(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Icon(
-                                Icons.warning_amber,
-                                color: Colors.red[700],
+                                booking.status.toLowerCase() == 'rejected'
+                                    ? Icons.cancel
+                                    : Icons.info,
+                                color:
+                                    booking.status.toLowerCase() == 'rejected'
+                                    ? Colors.red[700]
+                                    : Colors.orange[700],
                                 size: 20,
                               ),
                               const SizedBox(width: 8),
@@ -932,27 +989,45 @@ class _BookAClimbScreenState extends State<BookAClimbScreen> {
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     Text(
-                                      'Booking Declined',
+                                      booking.status.toLowerCase() == 'rejected'
+                                          ? 'Booking Rejected'
+                                          : 'Changes Required',
                                       style: TextStyle(
                                         fontWeight: FontWeight.bold,
-                                        color: Colors.red[900],
+                                        color:
+                                            booking.status.toLowerCase() ==
+                                                'rejected'
+                                            ? Colors.red[900]
+                                            : Colors.orange[900],
                                       ),
                                     ),
                                     const SizedBox(height: 4),
-                                    Text(
-                                      'Admin notes: ${booking.adminNotes}',
-                                      style: TextStyle(
-                                        fontSize: 13,
-                                        color: Colors.red[800],
+                                    // Only show admin notes if status is NOT rejected
+                                    if (booking.status.toLowerCase() !=
+                                            'rejected' &&
+                                        booking.adminNotes != null &&
+                                        booking.adminNotes!.isNotEmpty) ...[
+                                      Text(
+                                        '${booking.adminNotes}',
+                                        style: TextStyle(
+                                          fontSize: 13,
+                                          color: Colors.orange[800],
+                                        ),
                                       ),
-                                    ),
-                                    const SizedBox(height: 4),
+                                      const SizedBox(height: 4),
+                                    ],
                                     Text(
-                                      'Update your booking and save to resubmit for review.',
+                                      booking.status.toLowerCase() == 'rejected'
+                                          ? 'Your booking has been rejected. You can submit a new booking.'
+                                          : 'Update your booking and save to resubmit for review.',
                                       style: TextStyle(
                                         fontSize: 12,
                                         fontStyle: FontStyle.italic,
-                                        color: Colors.red[700],
+                                        color:
+                                            booking.status.toLowerCase() ==
+                                                'rejected'
+                                            ? Colors.red[700]
+                                            : Colors.orange[700],
                                       ),
                                     ),
                                   ],
@@ -1237,15 +1312,6 @@ class _BookAClimbScreenState extends State<BookAClimbScreen> {
                                 ),
                               ),
                               const SizedBox(height: 12),
-                              TextFormField(
-                                controller: notesController,
-                                decoration: const InputDecoration(
-                                  labelText: 'Additional Notes (optional)',
-                                  border: OutlineInputBorder(),
-                                ),
-                                maxLines: 4,
-                              ),
-                              const SizedBox(height: 16),
                               // Documents section
                               const Text(
                                 'Documents',
@@ -1445,203 +1511,247 @@ class _BookAClimbScreenState extends State<BookAClimbScreen> {
   }
 
   // Opens the existing form inside a modal bottom sheet so main screen shows bookings
-  void _showBookingForm() {
+  void _showBookingForm() async {
+    // Prefill phone number from user settings
+    await _prefillPhoneNumber();
+
+    if (!mounted) return;
+
+    final scaffoldContext = context; // Capture outer context for SnackBar
+
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (context) => Container(
-        height: MediaQuery.of(context).size.height * 0.92,
-        decoration: const BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-        ),
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Form(
-            key: _formKey,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      builder: (modalContext) => StatefulBuilder(
+        builder: (modalContext, setModalState) {
+          // Store setModalState so _pickFiles can use it
+          _setModalState = setModalState;
+          return Container(
+            height: MediaQuery.of(context).size.height * 0.92,
+            decoration: const BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+            ),
+            child: Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Form(
+                key: _formKey,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
-                      'New Booking',
-                      style: TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    IconButton(
-                      icon: const Icon(Icons.close),
-                      onPressed: () => Navigator.pop(context),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 12),
-                Expanded(
-                  child: SingleChildScrollView(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        // Show the authenticated user's name/email (read-only)
-                        Builder(
-                          builder: (context) {
-                            final user = FirebaseAuth.instance.currentUser;
-                            return Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  'Booking for',
-                                  style: TextStyle(
-                                    fontWeight: FontWeight.w600,
-                                    color: Colors.grey[700],
-                                  ),
-                                ),
-                                const SizedBox(height: 6),
-                                Container(
-                                  padding: const EdgeInsets.all(12),
-                                  decoration: BoxDecoration(
-                                    color: Colors.grey[100],
-                                    borderRadius: BorderRadius.circular(12),
-                                    border: Border.all(color: Colors.black12),
-                                  ),
-                                  child: Row(
-                                    children: [
-                                      Expanded(
-                                        child: Column(
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.start,
-                                          children: [
-                                            Text(
-                                              user?.displayName ?? 'Guest',
-                                              style: const TextStyle(
-                                                fontWeight: FontWeight.w600,
-                                              ),
-                                            ),
-                                            const SizedBox(height: 4),
-                                            Text(
-                                              user?.email ?? '',
-                                              style: const TextStyle(
-                                                color: Colors.black54,
-                                              ),
-                                            ),
-                                          ],
+                        const Text(
+                          'New Booking',
+                          style: TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.close),
+                          onPressed: () => Navigator.pop(context),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    Expanded(
+                      child: SingleChildScrollView(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            // Show the authenticated user's name/email (read-only)
+                            Builder(
+                              builder: (context) {
+                                final user = FirebaseAuth.instance.currentUser;
+                                return Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      'Booking for',
+                                      style: TextStyle(
+                                        fontWeight: FontWeight.w600,
+                                        color: Colors.grey[700],
+                                      ),
+                                    ),
+                                    const SizedBox(height: 6),
+                                    Container(
+                                      padding: const EdgeInsets.all(12),
+                                      decoration: BoxDecoration(
+                                        color: Colors.grey[100],
+                                        borderRadius: BorderRadius.circular(12),
+                                        border: Border.all(
+                                          color: Colors.black12,
                                         ),
                                       ),
-                                    ],
+                                      child: Row(
+                                        children: [
+                                          Expanded(
+                                            child: Column(
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.start,
+                                              children: [
+                                                Text(
+                                                  user?.displayName ?? 'Guest',
+                                                  style: const TextStyle(
+                                                    fontWeight: FontWeight.w600,
+                                                  ),
+                                                ),
+                                                const SizedBox(height: 4),
+                                                Text(
+                                                  user?.email ?? '',
+                                                  style: const TextStyle(
+                                                    color: Colors.black54,
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ],
+                                );
+                              },
+                            ),
+                            const SizedBox(height: 12),
+                            // Contact number (still editable)
+                            _buildRoundedTextField(
+                              'Contact Number',
+                              controller: _contactController,
+                              keyboardType: TextInputType.phone,
+                              validator: Validators.validContactNumber,
+                            ),
+                            const SizedBox(height: 12),
+                            const SizedBox(height: 12),
+                            _buildRoundedTextField(
+                              'Affiliation',
+                              controller: _affiliationController,
+                            ),
+                            const SizedBox(height: 12),
+                            _buildRoundedTextField(
+                              'Number of Porters',
+                              controller: _portersController,
+                              keyboardType: TextInputType.number,
+                              validator: Validators.validPorters,
+                            ),
+                            const SizedBox(height: 12),
+                            // Date picker row
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 12,
+                                      vertical: 8,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: Colors.white,
+                                      borderRadius: BorderRadius.circular(16),
+                                      border: Border.all(color: Colors.black26),
+                                    ),
+                                    child: Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.spaceBetween,
+                                      children: [
+                                        Text(_formatSelectedDate()),
+                                        TextButton(
+                                          onPressed: () async {
+                                            final now = DateTime.now();
+                                            final picked = await showDatePicker(
+                                              context: context,
+                                              initialDate: _selectedDate ?? now,
+                                              firstDate: now,
+                                              lastDate: DateTime(now.year + 2),
+                                            );
+                                            if (picked != null) {
+                                              setState(
+                                                () => _selectedDate = picked,
+                                              );
+                                              setModalState(() {});
+                                            }
+                                          },
+                                          child: const Text('Pick Date'),
+                                        ),
+                                      ],
+                                    ),
                                   ),
                                 ),
                               ],
-                            );
-                          },
-                        ),
-                        const SizedBox(height: 12),
-                        // Contact number (still editable)
-                        _buildRoundedTextField(
-                          'Contact Number',
-                          controller: _contactController,
-                          keyboardType: TextInputType.phone,
-                          validator: Validators.validContactNumber,
-                        ),
-                        const SizedBox(height: 12),
-                        const SizedBox(height: 12),
-                        _buildRoundedTextField(
-                          'Affiliation',
-                          controller: _affiliationController,
-                        ),
-                        const SizedBox(height: 12),
-                        _buildRoundedTextField(
-                          'Number of Porters',
-                          controller: _portersController,
-                          keyboardType: TextInputType.number,
-                          validator: Validators.validPorters,
-                        ),
-                        const SizedBox(height: 12),
-                        // Date picker row
-                        Row(
-                          children: [
-                            Expanded(
-                              child: Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 12,
-                                  vertical: 8,
+                            ),
+                            const SizedBox(height: 12),
+                            _buildDropdown(),
+                            const SizedBox(height: 18),
+                            const Text(
+                              'Documents',
+                              style: TextStyle(fontWeight: FontWeight.w600),
+                            ),
+                            const SizedBox(height: 8),
+                            _buildDocumentsArea(setModalState),
+                            const SizedBox(height: 24),
+                            SizedBox(
+                              width: double.infinity,
+                              child: ElevatedButton(
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: Colors.blueGrey[700],
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  padding: const EdgeInsets.symmetric(
+                                    vertical: 14,
+                                  ),
                                 ),
-                                decoration: BoxDecoration(
-                                  color: Colors.white,
-                                  borderRadius: BorderRadius.circular(16),
-                                  border: Border.all(color: Colors.black26),
-                                ),
-                                child: Row(
-                                  mainAxisAlignment:
-                                      MainAxisAlignment.spaceBetween,
-                                  children: [
-                                    Text(_formatSelectedDate()),
-                                    TextButton(
-                                      onPressed: () async {
-                                        final now = DateTime.now();
-                                        final picked = await showDatePicker(
-                                          context: context,
-                                          initialDate: _selectedDate ?? now,
-                                          firstDate: now,
-                                          lastDate: DateTime(now.year + 2),
-                                        );
-                                        if (picked != null) {
-                                          setState(
-                                            () => _selectedDate = picked,
-                                          );
-                                        }
-                                      },
-                                      child: const Text('Pick Date'),
-                                    ),
-                                  ],
+                                onPressed: () {
+                                  // Validate form fields
+                                  if (!_formKey.currentState!.validate()) {
+                                    if (mounted) {
+                                      AppDialogueHandler.showAlert(
+                                        context: scaffoldContext,
+                                        title: 'Missing Information',
+                                        message:
+                                            'Please fill in all required fields before submitting.',
+                                      );
+                                    }
+                                    return;
+                                  }
+
+                                  // Validate files are selected
+                                  if (_pickedFiles.isEmpty) {
+                                    if (mounted) {
+                                      AppDialogueHandler.showError(
+                                        context: scaffoldContext,
+                                        title: 'No Documents Uploaded',
+                                        message:
+                                            'Please upload at least one document (Docx, PDF, or Image) before submitting your booking.',
+                                      );
+                                    }
+                                    return;
+                                  }
+
+                                  Navigator.pop(modalContext);
+                                  _showReviewDialog();
+                                },
+                                child: const Text(
+                                  'Submit',
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 16,
+                                  ),
                                 ),
                               ),
                             ),
                           ],
                         ),
-                        const SizedBox(height: 12),
-                        _buildDropdown(),
-                        const SizedBox(height: 18),
-                        const Text(
-                          'Documents',
-                          style: TextStyle(fontWeight: FontWeight.w600),
-                        ),
-                        const SizedBox(height: 8),
-                        _buildDocumentsArea(),
-                        const SizedBox(height: 24),
-                        SizedBox(
-                          width: double.infinity,
-                          child: ElevatedButton(
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.blueGrey[700],
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              padding: const EdgeInsets.symmetric(vertical: 14),
-                            ),
-                            onPressed: () {
-                              Navigator.pop(context);
-                              _showReviewDialog();
-                            },
-                            child: const Text(
-                              'Submit',
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 16,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ],
+                      ),
                     ),
-                  ),
+                  ],
                 ),
-              ],
+              ),
             ),
-          ),
-        ),
+          );
+        },
       ),
     );
   }
@@ -1861,9 +1971,41 @@ class _BookAClimbScreenState extends State<BookAClimbScreen> {
                   onPressed: isSubmitting
                       ? null
                       : () async {
+                          // Check for duplicate bookings on the same date
+                          try {
+                            final hasDuplicate = await BookingService.instance
+                                .hasExistingBookingOnDate(
+                                  user!.uid,
+                                  _selectedDate!,
+                                );
+
+                            if (hasDuplicate) {
+                              if (mounted) {
+                                await AppDialogueHandler.showError(
+                                  context: context,
+                                  title: 'Duplicate Booking',
+                                  message:
+                                      'You already have a booking on ${_formatSelectedDate()}. '
+                                      'Please choose a different date or cancel your existing booking.',
+                                );
+                              }
+                              return;
+                            }
+                          } catch (e) {
+                            if (mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text('Error checking bookings: $e'),
+                                  backgroundColor: Colors.red,
+                                ),
+                              );
+                            }
+                            return;
+                          }
+
                           // create local object for immediate insertion
                           final newClimb = Climb(
-                            name: user?.displayName ?? 'Guest',
+                            name: user.displayName ?? 'Guest',
                             date: _selectedDate ?? DateTime.now(),
                             type: _climbType,
                             status: 'Pending',
@@ -2191,7 +2333,7 @@ class _BookAClimbScreenState extends State<BookAClimbScreen> {
     );
   }
 
-  Widget _buildDocumentsArea() {
+  Widget _buildDocumentsArea(Function(VoidCallback fn) setModalState) {
     return SizedBox(
       width: double.infinity,
       child: Container(
@@ -2222,27 +2364,70 @@ class _BookAClimbScreenState extends State<BookAClimbScreen> {
                 onPressed: _pickFiles,
               ),
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 12),
             if (_pickedFiles.isEmpty)
-              const Text(
-                'No files uploaded.',
-                style: TextStyle(color: Colors.black38),
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                decoration: BoxDecoration(
+                  color: Colors.red[50],
+                  border: Border.all(color: Colors.red[300]!),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Center(
+                  child: Text(
+                    'No files uploaded.',
+                    style: TextStyle(
+                      color: Colors.red[700],
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ),
               )
             else
-              ..._pickedFiles.map(
-                (f) => Row(
-                  children: [
-                    const Icon(
-                      Icons.insert_drive_file,
-                      size: 18,
-                      color: Colors.blueGrey,
-                    ),
-                    const SizedBox(width: 6),
-                    Expanded(
-                      child: Text(f.name, style: const TextStyle(fontSize: 14)),
-                    ),
-                  ],
-                ),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: _pickedFiles
+                    .map(
+                      (f) => Padding(
+                        padding: const EdgeInsets.only(bottom: 8.0),
+                        child: Row(
+                          children: [
+                            const Icon(
+                              Icons.insert_drive_file,
+                              size: 18,
+                              color: Colors.blueGrey,
+                            ),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                f.name,
+                                style: const TextStyle(fontSize: 14),
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            SizedBox(
+                              width: 32,
+                              height: 32,
+                              child: IconButton(
+                                padding: EdgeInsets.zero,
+                                iconSize: 18,
+                                icon: const Icon(Icons.close),
+                                color: Colors.red,
+                                onPressed: () {
+                                  setModalState(() {
+                                    _pickedFiles.remove(f);
+                                  });
+                                },
+                                tooltip: 'Remove file',
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    )
+                    .toList(),
               ),
           ],
         ),

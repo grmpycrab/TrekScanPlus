@@ -21,8 +21,68 @@ class BookingService {
   final _storage = FirebaseStorage.instance;
   final _notificationService = NotificationService();
 
+  /// Check if user already has a booking on the same date
+  /// Returns true if a booking exists for that date, false otherwise
+  Future<bool> hasExistingBookingOnDate(
+    String userId,
+    DateTime trekDate,
+  ) async {
+    try {
+      // Normalize the date to start of day (00:00:00)
+      final startOfDay = DateTime(trekDate.year, trekDate.month, trekDate.day);
+      final endOfDay = DateTime(
+        trekDate.year,
+        trekDate.month,
+        trekDate.day,
+        23,
+        59,
+        59,
+      );
+
+      final snapshot = await _firestore
+          .collection('bookings')
+          .where('userId', isEqualTo: userId)
+          .where(
+            'trekDate',
+            isGreaterThanOrEqualTo: Timestamp.fromDate(startOfDay),
+          )
+          .where('trekDate', isLessThanOrEqualTo: Timestamp.fromDate(endOfDay))
+          .get();
+
+      return snapshot.docs.isNotEmpty;
+    } catch (e) {
+      print('Error checking for existing bookings: $e');
+      rethrow;
+    }
+  }
+
+  /// Get server timestamp for consistent time across clients
+  Future<DateTime> getServerTimestamp() async {
+    final doc = await _firestore.collection('_metadata').doc('timestamp').get();
+    if (doc.exists) {
+      final timestamp = doc['timestamp'] as Timestamp?;
+      if (timestamp != null) {
+        return timestamp.toDate();
+      }
+    }
+    return DateTime.now();
+  }
+
   /// Create a booking document and return its generated id
+  /// Validates that user doesn't already have a booking on the same date
   Future<String> createBooking(BookingModel booking) async {
+    // Check for duplicate bookings on the same date
+    final hasDuplicateBooking = await hasExistingBookingOnDate(
+      booking.userId,
+      booking.trekDate.toDate(),
+    );
+
+    if (hasDuplicateBooking) {
+      throw Exception(
+        'You already have a booking on this date. Please choose a different date or cancel your existing booking.',
+      );
+    }
+
     final data = booking.toMap();
     // Remove id if present so Firestore generates one
     data.remove('id');

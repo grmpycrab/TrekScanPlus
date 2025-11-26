@@ -51,10 +51,14 @@ class UserService {
         'email': user.email,
         'displayName': user.displayName,
         'photoURL': user.photoURL,
-        'phoneNumber': user.phoneNumber,
         'providerData': user.providerData.map((p) => p.providerId).toList(),
         'lastSeen': FieldValue.serverTimestamp(),
       };
+
+      // Only include phoneNumber if it exists (to preserve existing phone numbers in Firestore)
+      if (user.phoneNumber != null && user.phoneNumber!.isNotEmpty) {
+        data['phoneNumber'] = user.phoneNumber;
+      }
 
       // Add firstName and lastName if extracted/provided
       if (extractedFirstName.isNotEmpty) {
