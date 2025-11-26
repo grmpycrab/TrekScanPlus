@@ -40,6 +40,73 @@ function formatDateKey(date) {
 }
 
 /**
+ * Check if user already has a booking on the same date
+ * Prevents duplicate bookings on the same date
+ */
+exports.validateNoDuplicateBooking = functions.region(region).firestore
+    .document('bookings/{bookingId}')
+    .onCreate(async (snap, context) => {
+        const booking = snap.data();
+        const bookingId = context.params.bookingId;
+
+        if (!booking.userId || !booking.trekDate) {
+            console.log(`Booking ${bookingId}: Missing userId or trekDate`);
+            return null;
+        }
+
+        const trekDate = booking.trekDate.toDate();
+        const startOfDay = new Date(trekDate.getFullYear(), trekDate.getMonth(), trekDate.getDate());
+        const endOfDay = new Date(trekDate.getFullYear(), trekDate.getMonth(), trekDate.getDate(), 23, 59, 59);
+
+        try {
+            // Query for other bookings by the same user on the same date
+            const existingBookings = await db.collection('bookings')
+                .where('userId', '==', booking.userId)
+                .where('trekDate', '>=', admin.firestore.Timestamp.fromDate(startOfDay))
+                .where('trekDate', '<=', admin.firestore.Timestamp.fromDate(endOfDay))
+                .get();
+
+            // Should only be the current booking
+            if (existingBookings.size > 1) {
+                console.log(`🚫 Duplicate booking detected: ${booking.userId} on ${formatDateKey(trekDate)}`);
+
+                // Delete the new booking to prevent duplicates
+                await snap.ref.delete();
+                console.log(`✅ Duplicate booking ${bookingId} deleted`);
+
+                return { action: 'deleted', reason: 'duplicate_booking' };
+            }
+
+            console.log(`✅ Booking ${bookingId} validated: No duplicates found`);
+            return { action: 'validated' };
+
+        } catch (error) {
+            console.error(`Error validating booking: ${error.message}`);
+            // Don't fail the booking creation, just log the error
+            return null;
+        }
+    });
+
+/**
+ * Update server timestamp metadata for client synchronization
+ * This ensures all clients use the same server time
+ */
+exports.updateServerTimestamp = functions.region(region).https.onCall(async (data, context) => {
+    try {
+        const timestamp = admin.firestore.FieldValue.serverTimestamp();
+        await db.collection('_metadata').doc('timestamp').set({ timestamp }, { merge: true });
+
+        return {
+            success: true,
+            timestamp: new Date().toISOString()
+        };
+    } catch (error) {
+        console.error('Error updating server timestamp:', error);
+        throw new functions.https.HttpsError('internal', error.message);
+    }
+});
+
+/**
  * Trigger when a booking document is created or updated
  * Automatically manages buffer days based on booking status
  */

@@ -161,66 +161,7 @@ class BookingDetailsModal extends StatelessWidget {
                                   ? (booking!.isSenior ? 'Yes' : 'No')
                                   : 'N/A',
                             ),
-                            const SizedBox(height: 24),
-                            // Notes section
-                            if (booking?.notes != null &&
-                                booking!.notes!.isNotEmpty)
-                              Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  _buildSectionTitle('Your Notes'),
-                                  const SizedBox(height: 12),
-                                  Container(
-                                    padding: const EdgeInsets.all(12),
-                                    decoration: BoxDecoration(
-                                      color: Colors.grey[100],
-                                      borderRadius: BorderRadius.circular(12),
-                                      border: Border.all(
-                                        color: Colors.grey[300]!,
-                                      ),
-                                    ),
-                                    child: Text(
-                                      booking!.notes!,
-                                      style: const TextStyle(
-                                        fontSize: 14,
-                                        height: 1.5,
-                                      ),
-                                    ),
-                                  ),
-                                  const SizedBox(height: 24),
-                                ],
-                              ),
-                            // Admin notes section
-                            if (_hasAdminNotes())
-                              Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  _buildSectionTitle(
-                                    "Admin's Notes",
-                                    icon: Icons.admin_panel_settings,
-                                  ),
-                                  const SizedBox(height: 12),
-                                  Container(
-                                    padding: const EdgeInsets.all(12),
-                                    decoration: BoxDecoration(
-                                      color: Colors.blue[50],
-                                      borderRadius: BorderRadius.circular(12),
-                                      border: Border.all(
-                                        color: Colors.blue[200]!,
-                                      ),
-                                    ),
-                                    child: Text(
-                                      _getAdminNotes(),
-                                      style: const TextStyle(
-                                        fontSize: 14,
-                                        height: 1.5,
-                                        color: Colors.black87,
-                                      ),
-                                    ),
-                                  ),
-                                  const SizedBox(height: 24),
-                                ],
-                              ),
+                            const SizedBox(height: 12),
                             // Attachments section
                             if (booking != null &&
                                 booking!.attachments.isNotEmpty)
@@ -301,27 +242,39 @@ class BookingDetailsModal extends StatelessWidget {
         children: [
           Icon(_getStatusIcon(status), color: statusTextColor, size: 28),
           const SizedBox(width: 12),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text(
-                'Booking Status',
-                style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w600,
-                  color: Colors.black54,
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Booking Status',
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.black54,
+                  ),
                 ),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                status,
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: statusTextColor,
+                const SizedBox(height: 4),
+                Text(
+                  status,
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: statusTextColor,
+                  ),
                 ),
-              ),
-            ],
+                const SizedBox(height: 6),
+                Text(
+                  _hasAdminNotes() ? _getAdminNotes() : 'No notes to be shown',
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontStyle: FontStyle.italic,
+                    color: statusTextColor.withValues(alpha: 0.85),
+                    height: 1.3,
+                  ),
+                ),
+              ],
+            ),
           ),
         ],
       ),
