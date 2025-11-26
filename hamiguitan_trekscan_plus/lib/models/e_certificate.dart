@@ -131,7 +131,44 @@ class ECertificate {
 
   factory ECertificate.fromFirestore(DocumentSnapshot doc) {
     final data = doc.data() as Map<String, dynamic>;
-    return ECertificate.fromJson({...data, 'certificateId': doc.id});
+
+    // Convert Timestamp fields to DateTime
+    DateTime _parseTimestamp(dynamic value) {
+      if (value is Timestamp) {
+        return value.toDate();
+      } else if (value is String) {
+        return DateTime.parse(value);
+      }
+      return DateTime.now();
+    }
+
+    return ECertificate(
+      certificateId: doc.id,
+      userId: data['userId'] as String? ?? '',
+      trekkerName: data['trekkerName'] as String? ?? '',
+      certificateType: CertificateType.values.firstWhere(
+        (type) =>
+            type.toString().split('.').last ==
+            (data['certificateType'] as String? ?? 'camp3'),
+        orElse: () => CertificateType.camp3,
+      ),
+      dateEarned: _parseTimestamp(data['dateEarned']),
+      stationsVisited: data['stationsVisited'] as int? ?? 0,
+      totalDistance: (data['totalDistance'] as num?)?.toDouble() ?? 0.0,
+      totalTimeMinutes: data['totalTimeMinutes'] as int? ?? 0,
+      trekStartDate: data['trekStartDate'] != null
+          ? _parseTimestamp(data['trekStartDate'])
+          : null,
+      trekEndDate: data['trekEndDate'] != null
+          ? _parseTimestamp(data['trekEndDate'])
+          : null,
+      isVerified: data['isVerified'] as bool? ?? true,
+      verificationCode: data['verificationCode'] as String? ?? '',
+      createdAt: _parseTimestamp(data['createdAt']),
+      lastUpdated: data['lastUpdated'] != null
+          ? _parseTimestamp(data['lastUpdated'])
+          : null,
+    );
   }
 
   Map<String, dynamic> toJson() {

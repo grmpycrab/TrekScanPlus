@@ -16,6 +16,7 @@ import 'services/booking_service.dart';
 import 'services/permission_service.dart';
 import 'services/fcm_service.dart';
 import 'services/notification_manager.dart';
+import 'services/presence_service.dart';
 import 'components/notification_banner.dart';
 
 void main() async {
@@ -43,12 +44,17 @@ class MyApp extends StatefulWidget {
   State<MyApp> createState() => _MyAppState();
 }
 
-class _MyAppState extends State<MyApp> {
+class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
   bool _permissionsRequested = false;
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
+
+    // Initialize presence service
+    PresenceService.instance.initialize();
+
     // Listen to auth changes and start booking status listener when user logs in
     FirebaseAuthService.instance.authStateChanges.listen((user) {
       if (user != null) {
@@ -62,8 +68,34 @@ class _MyAppState extends State<MyApp> {
             _requestPermissions();
           });
         }
+      } else {
+        // User logged out, mark as offline handled by PresenceService
       }
     });
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    PresenceService.instance.dispose();
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    super.didChangeAppLifecycleState(state);
+    final user = FirebaseAuth.instance.currentUser;
+
+    if (user != null) {
+      if (state == AppLifecycleState.paused ||
+          state == AppLifecycleState.detached) {
+        // App going to background or closing
+        PresenceService.instance.markOffline(user.uid);
+      } else if (state == AppLifecycleState.resumed) {
+        // App coming back to foreground
+        PresenceService.instance.initialize();
+      }
+    }
   }
 
   Future<void> _initializeFCM() async {

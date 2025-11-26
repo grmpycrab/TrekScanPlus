@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -307,6 +308,37 @@ class ECertificateService {
   /// Get all certificates for current user
   List<ECertificate> getAllCertificates() {
     return List.unmodifiable(_userCertificates);
+  }
+
+  /// Stream all certificates for current user
+  /// Listens to Firestore for real-time updates
+  Stream<List<ECertificate>> streamAllCertificates() {
+    // Get current user ID from Firebase Auth
+    final userId = _auth.currentUser?.uid;
+
+    if (userId == null) {
+      return Stream.value([]);
+    }
+
+    // Update the current user ID
+    _currentUserId = userId;
+
+    return _firestore
+        .collection('users')
+        .doc(userId)
+        .collection('certificates')
+        .snapshots()
+        .map<List<ECertificate>>((snapshot) {
+          try {
+            _userCertificates = snapshot.docs
+                .map((doc) => ECertificate.fromFirestore(doc))
+                .toList();
+            return List.unmodifiable(_userCertificates);
+          } catch (e) {
+            debugPrint('Error parsing certificates: $e');
+            return <ECertificate>[];
+          }
+        });
   }
 
   /// Get certificates by type

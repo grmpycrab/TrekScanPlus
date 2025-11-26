@@ -9,6 +9,7 @@ import '../screens/main/profile_screen.dart';
 import 'comments_sheet.dart';
 import 'post_options_sheet.dart';
 import 'image_viewer.dart';
+import 'profile_avatar_with_status.dart';
 
 class SocialCard extends StatefulWidget {
   final SocialPost post;
@@ -484,19 +485,10 @@ class _SocialCardState extends State<SocialCard> {
         children: [
           GestureDetector(
             onTap: () => _navigateToUserProfile(context),
-            child: CircleAvatar(
+            child: ProfileAvatarWithStatus(
+              userId: widget.post.userId,
+              photoUrl: widget.post.userPhotoUrl,
               radius: 20,
-              backgroundColor: AppColors.primary,
-              backgroundImage: widget.post.userPhotoUrl != null
-                  ? NetworkImage(widget.post.userPhotoUrl!)
-                  : null,
-              child: widget.post.userPhotoUrl == null
-                  ? const Icon(
-                      Icons.person,
-                      color: AppColors.iconPrimary,
-                      size: 20,
-                    )
-                  : null,
             ),
           ),
           const SizedBox(width: 12),

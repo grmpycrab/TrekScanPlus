@@ -9,6 +9,8 @@ import '../../components/comments_sheet.dart';
 import '../../components/do_and_dont.dart';
 import '../../components/trek_tips.dart';
 import '../../components/banner_slideshow.dart';
+import '../../components/profile_avatar_with_status.dart';
+import '../../services/presence_service.dart';
 import '../../models/calendar_model.dart';
 import '../../models/social_model.dart';
 import '../../theme/color.dart';
@@ -38,6 +40,12 @@ class _HomeScreenState extends State<HomeScreen> {
   StreamSubscription<QuerySnapshot>? _bookingsSubscription;
   final UserService _userService = UserService.instance;
 
+  // Search functionality
+  bool _isSearchExpanded = false;
+  final TextEditingController _searchController = TextEditingController();
+  final FocusNode _searchFocusNode = FocusNode();
+  String _searchQuery = '';
+
   @override
   void initState() {
     super.initState();
@@ -52,6 +60,12 @@ class _HomeScreenState extends State<HomeScreen> {
     });
     // Subscribe to bookings for the current month to update calendar availability
     _subscribeBookingsForMonth(DateTime.now());
+
+    _searchController.addListener(() {
+      setState(() {
+        _searchQuery = _searchController.text.toLowerCase();
+      });
+    });
   }
 
   @override
@@ -59,6 +73,8 @@ class _HomeScreenState extends State<HomeScreen> {
     _authSubscription?.cancel();
     _bookingsSubscription?.cancel();
     _trekDaysNotifier.dispose();
+    _searchController.dispose();
+    _searchFocusNode.dispose();
     super.dispose();
   }
 
@@ -213,62 +229,118 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildHeader() {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
-      color: Colors.white,
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Expanded(
-            child: GestureDetector(
-              onTap: () {
-                Navigator.of(context).push(
-                  MaterialPageRoute(
-                    builder: (context) => const ProfileScreen(),
-                  ),
-                );
-              },
-              child: _firebaseUser != null
-                  ? StreamBuilder<DocumentSnapshot<Map<String, dynamic>>>(
-                      stream: _userService.streamUser(_firebaseUser!.uid),
-                      builder: (context, snapshot) {
-                        String firstName = '';
-                        String lastName = '';
+    return Column(
+      children: [
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
+          color: Colors.white,
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              if (!_isSearchExpanded)
+                Expanded(
+                  child: GestureDetector(
+                    onTap: () {
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (context) => const ProfileScreen(),
+                        ),
+                      );
+                    },
+                    child: _firebaseUser != null
+                        ? StreamBuilder<DocumentSnapshot<Map<String, dynamic>>>(
+                            stream: _userService.streamUser(_firebaseUser!.uid),
+                            builder: (context, snapshot) {
+                              String firstName = '';
+                              String lastName = '';
 
-                        if (snapshot.hasData && snapshot.data != null) {
-                          final userData = snapshot.data!.data() ?? {};
-                          firstName = userData['firstName'] ?? '';
-                          lastName = userData['lastName'] ?? '';
-                        }
+                              if (snapshot.hasData && snapshot.data != null) {
+                                final userData = snapshot.data!.data() ?? {};
+                                firstName = userData['firstName'] ?? '';
+                                lastName = userData['lastName'] ?? '';
+                              }
 
-                        // Fallback to Firebase displayName if no Firestore data
-                        if (firstName.isEmpty && lastName.isEmpty) {
-                          firstName =
-                              _firebaseUser!.displayName ??
-                              _firebaseUser!.email?.split('@').first ??
-                              'Traveler';
-                        }
+                              // Fallback to Firebase displayName if no Firestore data
+                              if (firstName.isEmpty && lastName.isEmpty) {
+                                firstName =
+                                    _firebaseUser!.displayName ??
+                                    _firebaseUser!.email?.split('@').first ??
+                                    'Traveler';
+                              }
 
-                        return Row(
-                          children: [
-                            CircleAvatar(
-                              backgroundColor: AppColors.primary,
-                              backgroundImage: _firebaseUser?.photoURL != null
-                                  ? NetworkImage(_firebaseUser!.photoURL!)
-                                  : null,
-                              child: _firebaseUser?.photoURL == null
-                                  ? const Icon(
-                                      Icons.person,
-                                      color: AppColors.iconPrimary,
-                                    )
-                                  : null,
-                            ),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
+                              return Row(
                                 children: [
-                                  const Text(
+                                  ProfileAvatarWithStatus(
+                                    userId: _firebaseUser!.uid,
+                                    photoUrl: _firebaseUser?.photoURL,
+                                    radius: 20,
+                                  ),
+                                  const SizedBox(width: 4),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        const Text(
+                                          'Welcome,',
+                                          style: TextStyle(
+                                            color: AppColors.textSecondary,
+                                            fontSize: 14,
+                                          ),
+                                        ),
+                                        Text(
+                                          firstName.isNotEmpty
+                                              ? '$firstName ${lastName.isNotEmpty ? lastName : ''}'
+                                                    .trim()
+                                              : 'Traveler!',
+                                          style: const TextStyle(
+                                            fontWeight: FontWeight.w600,
+                                            fontSize: 16,
+                                          ),
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                        StreamBuilder<bool>(
+                                          stream: PresenceService.instance
+                                              .userOnlineStatus(
+                                                _firebaseUser!.uid,
+                                              ),
+                                          builder: (context, snapshot) {
+                                            final isOnline =
+                                                snapshot.data ?? false;
+                                            return Text(
+                                              isOnline ? 'Online' : 'Offline',
+                                              style: TextStyle(
+                                                color: isOnline
+                                                    ? Colors.green
+                                                    : Colors.red,
+                                                fontSize: 10,
+                                                fontWeight: FontWeight.w500,
+                                              ),
+                                            );
+                                          },
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ],
+                              );
+                            },
+                          )
+                        : Row(
+                            children: [
+                              CircleAvatar(
+                                backgroundColor: AppColors.primary,
+                                child: const Icon(
+                                  Icons.person,
+                                  color: AppColors.iconPrimary,
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: const [
+                                  Text(
                                     'Welcome,',
                                     style: TextStyle(
                                       color: AppColors.textSecondary,
@@ -276,123 +348,136 @@ class _HomeScreenState extends State<HomeScreen> {
                                     ),
                                   ),
                                   Text(
-                                    firstName.isNotEmpty
-                                        ? '$firstName ${lastName.isNotEmpty ? lastName : ''}'
-                                              .trim()
-                                        : 'Traveler!',
-                                    style: const TextStyle(
+                                    'Traveler!',
+                                    style: TextStyle(
                                       fontWeight: FontWeight.w600,
                                       fontSize: 16,
                                     ),
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
                                   ),
                                 ],
                               ),
-                            ),
-                          ],
-                        );
-                      },
-                    )
-                  : Row(
-                      children: [
-                        CircleAvatar(
-                          backgroundColor: AppColors.primary,
-                          child: const Icon(
-                            Icons.person,
-                            color: AppColors.iconPrimary,
+                            ],
                           ),
-                        ),
-                        const SizedBox(width: 12),
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: const [
-                            Text(
-                              'Welcome,',
-                              style: TextStyle(
-                                color: AppColors.textSecondary,
-                                fontSize: 14,
-                              ),
-                            ),
-                            Text(
-                              'Traveler!',
-                              style: TextStyle(
-                                fontWeight: FontWeight.w600,
-                                fontSize: 16,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
+                  ),
+                ),
+              if (_isSearchExpanded)
+                Expanded(
+                  child: TextField(
+                    controller: _searchController,
+                    focusNode: _searchFocusNode,
+                    decoration: InputDecoration(
+                      hintText: 'Search posts and users...',
+                      hintStyle: TextStyle(color: AppColors.textSecondary),
+                      border: InputBorder.none,
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                      ),
                     ),
-            ),
-          ),
-          Row(
-            children: [
-              IconButton(
-                icon: const Icon(Icons.calendar_today, size: 24),
-                tooltip: 'View calendar',
-                onPressed: _showCalendarOverlay,
-              ),
-              Stack(
+                    style: const TextStyle(fontSize: 16),
+                  ),
+                ),
+              Row(
                 children: [
                   IconButton(
-                    icon: Image.asset(
-                      'assets/icons/bell.png',
-                      width: 28,
-                      height: 28,
-                      color: Colors.black,
+                    icon: Icon(
+                      _isSearchExpanded ? Icons.close : Icons.search,
+                      size: 24,
+                      color: _searchQuery.isNotEmpty
+                          ? AppColors.primary
+                          : Colors.black,
                     ),
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const NotificationScreen(),
-                        ),
-                      );
-                    },
+                    tooltip: _isSearchExpanded
+                        ? 'Close search'
+                        : 'Search posts',
+                    onPressed: _toggleSearch,
                   ),
-                  // Show red dot only when there are unread notifications for the signed-in user
-                  if (_firebaseUser != null)
-                    StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
-                      stream: FirebaseFirestore.instance
-                          .collection('users')
-                          .doc(_firebaseUser!.uid)
-                          .collection('notifications')
-                          .where('isRead', isEqualTo: false)
-                          .limit(1)
-                          .snapshots(),
-                      builder: (context, snapshot) {
-                        if (_firebaseUser == null) {
-                          return const SizedBox.shrink();
-                        }
-                        final hasUnread =
-                            snapshot.hasData && snapshot.data!.docs.isNotEmpty;
-                        return hasUnread
-                            ? const Positioned(
-                                right: 12,
-                                top: 12,
-                                child: SizedBox(
-                                  width: 8,
-                                  height: 8,
-                                  child: DecoratedBox(
-                                    decoration: BoxDecoration(
-                                      color: AppColors.notificationDot,
-                                      shape: BoxShape.circle,
-                                    ),
-                                  ),
-                                ),
-                              )
-                            : const SizedBox.shrink();
-                      },
+                  if (!_isSearchExpanded)
+                    IconButton(
+                      icon: const Icon(Icons.calendar_today, size: 24),
+                      tooltip: 'View calendar',
+                      onPressed: _showCalendarOverlay,
                     ),
+                  if (!_isSearchExpanded)
+                    if (!_isSearchExpanded)
+                      Stack(
+                        children: [
+                          IconButton(
+                            icon: Image.asset(
+                              'assets/icons/bell.png',
+                              width: 28,
+                              height: 28,
+                              color: Colors.black,
+                            ),
+                            onPressed: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) =>
+                                      const NotificationScreen(),
+                                ),
+                              );
+                            },
+                          ),
+                          // Show red dot only when there are unread notifications for the signed-in user
+                          if (_firebaseUser != null)
+                            StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+                              stream: FirebaseFirestore.instance
+                                  .collection('users')
+                                  .doc(_firebaseUser!.uid)
+                                  .collection('notifications')
+                                  .where('isRead', isEqualTo: false)
+                                  .limit(1)
+                                  .snapshots(),
+                              builder: (context, snapshot) {
+                                if (_firebaseUser == null) {
+                                  return const SizedBox.shrink();
+                                }
+                                final hasUnread =
+                                    snapshot.hasData &&
+                                    snapshot.data!.docs.isNotEmpty;
+                                return hasUnread
+                                    ? const Positioned(
+                                        right: 12,
+                                        top: 12,
+                                        child: SizedBox(
+                                          width: 8,
+                                          height: 8,
+                                          child: DecoratedBox(
+                                            decoration: BoxDecoration(
+                                              color: AppColors.notificationDot,
+                                              shape: BoxShape.circle,
+                                            ),
+                                          ),
+                                        ),
+                                      )
+                                    : const SizedBox.shrink();
+                              },
+                            ),
+                        ],
+                      ),
                 ],
               ),
             ],
           ),
-        ],
-      ),
+        ),
+      ],
     );
+  }
+
+  void _toggleSearch() {
+    setState(() {
+      _isSearchExpanded = !_isSearchExpanded;
+      if (_isSearchExpanded) {
+        Future.delayed(const Duration(milliseconds: 100), () {
+          if (mounted) {
+            _searchFocusNode.requestFocus();
+          }
+        });
+      } else {
+        _searchController.clear();
+        _searchFocusNode.unfocus();
+      }
+    });
   }
 
   void _showCalendarOverlay() {
@@ -658,6 +743,19 @@ class _HomeScreenState extends State<HomeScreen> {
           );
         }
 
+        // Filter posts based on search query
+        final filteredPosts = _searchQuery.isEmpty
+            ? posts
+            : posts.where((post) {
+                final captionMatch = post.caption.toLowerCase().contains(
+                  _searchQuery,
+                );
+                final userNameMatch = post.userName.toLowerCase().contains(
+                  _searchQuery,
+                );
+                return captionMatch || userNameMatch;
+              }).toList();
+
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -668,7 +766,17 @@ class _HomeScreenState extends State<HomeScreen> {
                 style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
               ),
             ),
-            ...posts.map(
+            if (_searchQuery.isNotEmpty && filteredPosts.isEmpty)
+              Padding(
+                padding: const EdgeInsets.all(16),
+                child: Center(
+                  child: Text(
+                    'No posts found for "$_searchQuery"',
+                    style: TextStyle(color: AppColors.textSecondary),
+                  ),
+                ),
+              ),
+            ...filteredPosts.map(
               (post) => Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
                 child: SocialCard(

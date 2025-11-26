@@ -21,46 +21,51 @@ class ECertificateBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final certificates = certificateService.getAllCertificates();
-    final certificateCount = certificates.length;
+    return StreamBuilder<List<ECertificate>>(
+      stream: certificateService.streamAllCertificates(),
+      builder: (context, snapshot) {
+        final certificates = snapshot.data ?? [];
+        final certificateCount = certificates.length;
 
-    return GestureDetector(
-      onTap: certificateCount > 0
-          ? () => _showCertificatesModal(context, certificates)
-          : null,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: [Colors.amber.shade400, Colors.amber.shade600],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
-          borderRadius: BorderRadius.circular(12),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.amber.withValues(alpha: 0.3),
-              blurRadius: 8,
-              offset: const Offset(0, 4),
-            ),
-          ],
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Icon(Icons.emoji_events, color: Colors.white, size: 18),
-            const SizedBox(width: 6),
-            Text(
-              certificateCount.toString(),
-              style: const TextStyle(
-                color: Colors.white,
-                fontWeight: FontWeight.bold,
-                fontSize: 14,
+        return GestureDetector(
+          onTap: certificateCount > 0
+              ? () => _showCertificatesModal(context, certificates)
+              : null,
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [Colors.amber.shade400, Colors.amber.shade600],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
               ),
+              borderRadius: BorderRadius.circular(12),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.amber.withValues(alpha: 0.3),
+                  blurRadius: 8,
+                  offset: const Offset(0, 4),
+                ),
+              ],
             ),
-          ],
-        ),
-      ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(Icons.emoji_events, color: Colors.white, size: 18),
+                const SizedBox(width: 6),
+                Text(
+                  certificateCount.toString(),
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 14,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 

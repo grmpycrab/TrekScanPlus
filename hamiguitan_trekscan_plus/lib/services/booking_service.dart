@@ -10,6 +10,8 @@ import '../models/notification_model.dart';
 import 'notification_services.dart';
 import 'fcm_service.dart';
 import 'notification_manager.dart';
+import 'e_certificate_service.dart';
+import 'station_service.dart';
 
 class BookingService {
   BookingService._();
@@ -258,6 +260,11 @@ class BookingService {
                   status: currentStatus,
                   adminNotes: booking.adminNotes,
                 );
+
+                // When booking is approved, check and award certificates
+                if (currentStatus.toLowerCase() == 'approved') {
+                  _checkCertificatesOnBookingApproval(userId);
+                }
               }
 
               _lastKnownStatus[bookingId] = currentStatus;
@@ -270,6 +277,28 @@ class BookingService {
             }
           }
         });
+  }
+
+  /// Check and award certificates when a booking is approved
+  Future<void> _checkCertificatesOnBookingApproval(String userId) async {
+    try {
+      // Initialize StationService if not already done
+      final stationService = await StationService.init(userId: userId);
+
+      // Load stations and check certificate eligibility
+      await stationService.loadStations();
+      final visitedStations = stationService.getVisitedStations();
+
+      if (visitedStations.isNotEmpty) {
+        // Check if user is eligible for any certificates
+        await ECertificateService.instance.checkAndAwardCertificate(
+          visitedStations,
+        );
+      }
+    } catch (e) {
+      print('Failed to check certificates on booking approval: $e');
+      // Don't fail - let the app continue normally
+    }
   }
 
   Future<void> cancelBooking(String bookingId) async {
