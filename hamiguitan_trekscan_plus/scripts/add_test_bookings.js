@@ -29,16 +29,16 @@ const path = require('path');
 const serviceAccountPath = path.join(__dirname, 'serviceAccountKey.json');
 
 // Target date for test bookings (YYYY-MM-DD)
-const TARGET_DATE = new Date('2025-11-26');
+const TARGET_DATE = new Date('2025-12-02');
 
 // Number of bookings to create (max 30)
-const NUMBER_OF_BOOKINGS = 2;
+const NUMBER_OF_BOOKINGS = 30;
 
 // Number of porters per booking (affects slot calculation)
-const PORTERS_PER_BOOKING = 2;
+const PORTERS_PER_BOOKING = 0;
 
 // User ID to assign bookings to (replace with actual user ID from Firebase Auth)
-const TEST_USER_ID = 'mvV3LeGH0IemtxgCFe8O0dz9MRk1'; // Update this with a real user ID
+const TEST_USER_ID = 'WoGQ7rEaQTdNKOaWyj1r5LSjMor2'; // Update this with a real user ID
 
 // ============================================
 
@@ -76,13 +76,21 @@ async function main() {
 
         for (let i = 1; i <= NUMBER_OF_BOOKINGS; i++) {
             try {
+                // Vary the data for more realistic testing
+                const hometowns = ['inside_san_isidro', 'inside_davao_oriental', 'outside_davao_oriental'];
+                const hometown = hometowns[i % 3];
+                const isSenior = i % 4 === 0; // Every 4th booking is a senior
+                const phoneNumber = `0912345${String(6000 + i).padStart(4, '0')}`; // Generate unique phone numbers
+
                 const bookingData = {
                     userId: TEST_USER_ID,
                     affiliation: `Test Affiliation ${i}`,
                     trekDate: admin.firestore.Timestamp.fromDate(TARGET_DATE),
                     numberOfPorters: PORTERS_PER_BOOKING,
-                    trekType: 'recreational',
-                    location: 'inside_san_isidro',
+                    trekType: i % 2 === 0 ? 'recreational' : 'research', // Alternate between types
+                    hometown: hometown,
+                    isSenior: isSenior,
+                    phoneNumber: phoneNumber,
                     notes: `Test booking ${i} - Created for testing booking limits`,
                     adminNotes: null,
                     attachments: [],
