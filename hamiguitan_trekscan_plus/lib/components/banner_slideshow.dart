@@ -1,6 +1,8 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import '../theme/color.dart';
+import '../services/e_certificate_service.dart';
+import 'e_certificate_badge.dart';
 
 class BannerSlideshow extends StatefulWidget {
   const BannerSlideshow({super.key});
@@ -168,6 +170,15 @@ class _BannerSlideshowState extends State<BannerSlideshow> {
                   ),
                 ],
               ),
+            ),
+          ),
+
+          // E-Certificate Trophy Badge - Top Right Corner
+          Positioned(
+            top: 6,
+            right: 6,
+            child: ECertificateBadge(
+              certificateService: ECertificateService.instance,
             ),
           ),
         ],
