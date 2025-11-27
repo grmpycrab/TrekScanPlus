@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:app_links/app_links.dart';
 import 'firebase_options.dart';
 import 'screens/auth/login_screen.dart';
 import 'screens/auth/signup_screen.dart';
@@ -19,6 +20,9 @@ import 'services/notification_manager.dart';
 import 'services/presence_service.dart';
 import 'services/notification_service.dart';
 import 'components/notification_banner.dart';
+
+// Global navigator key for deep linking
+final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -52,6 +56,10 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+
+    // Handle deep links
+    _handleInitialDeepLink();
+    _listenToDeepLinks();
 
     // Initialize notification service
     NotificationService().initialize();
@@ -167,6 +175,68 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
     }
   }
 
+  /// Handle deep link when app is launched from closed state
+  Future<void> _handleInitialDeepLink() async {
+    try {
+      final appLinks = AppLinks();
+      final link = await appLinks.getInitialLink();
+      if (link != null) {
+        debugPrint('🔗 [DeepLink] Initial link: $link');
+        _handleDeepLink(link.toString());
+      }
+    } catch (e) {
+      debugPrint('❌ [DeepLink] Error getting initial link: $e');
+    }
+  }
+
+  /// Listen for deep links when app is running
+  void _listenToDeepLinks() {
+    final appLinks = AppLinks();
+    appLinks.uriLinkStream.listen(
+      (Uri link) {
+        debugPrint('🔗 [DeepLink] Received link: $link');
+        _handleDeepLink(link.toString());
+      },
+      onError: (err) {
+        debugPrint('❌ [DeepLink] Stream error: $err');
+      },
+    );
+  }
+
+  /// Route user to the correct screen based on deep link
+  void _handleDeepLink(String link) {
+    try {
+      final uri = Uri.parse(link);
+      debugPrint(
+        '🔗 [DeepLink] Parsed URI - scheme: ${uri.scheme}, path: ${uri.path}, host: ${uri.host}',
+      );
+
+      // Handle both https://trekscanplus.app/posts/{postId} and trekscanplus://posts/{postId}
+      String? postId;
+
+      if (uri.scheme == 'https' && uri.host == 'trekscanplus.app') {
+        // Handle https://trekscanplus.app/posts/{postId}
+        if (uri.path.startsWith('/posts/')) {
+          postId = uri.path.replaceFirst('/posts/', '');
+        }
+      } else if (uri.scheme == 'trekscanplus') {
+        // Handle trekscanplus://posts/{postId}
+        if (uri.host == 'posts' && uri.path.isNotEmpty) {
+          postId = uri.path.replaceFirst('/', '');
+        }
+      }
+
+      if (postId != null && postId.isNotEmpty) {
+        debugPrint('🔗 [DeepLink] Navigating to post: $postId');
+        navigatorKey.currentState?.pushNamed('/post-detail', arguments: postId);
+      } else {
+        debugPrint('⚠️ [DeepLink] Could not extract postId from link');
+      }
+    } catch (e) {
+      debugPrint('❌ [DeepLink] Error parsing deep link: $e');
+    }
+  }
+
   Future<void> _requestPermissions() async {
     // Wait a bit for UI to settle after login
     await Future.delayed(const Duration(milliseconds: 800));
@@ -187,6 +257,7 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
         return MaterialApp(
           debugShowCheckedModeBanner: false,
           title: 'Hamiguitan TrekScan+',
+          navigatorKey: navigatorKey,
           theme: ThemeData(
             primaryColor: const Color(0xFF252B30),
             colorScheme: ColorScheme.fromSeed(

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:intl/intl.dart';
+import 'package:share_plus/share_plus.dart';
 import '../models/social_model.dart';
 import '../services/social_sharing_service.dart';
 import '../services/user_service.dart';
@@ -212,18 +213,32 @@ class _SocialCardState extends State<SocialCard> {
     if (widget.post.id == null) return;
 
     try {
-      await _socialService.sharePost(widget.post.id!);
+      // Generate shareable content with deep link
+      final deepLink = 'https://trekscanplus.app/posts/${widget.post.id}';
+      final shareText =
+          '${widget.post.caption}\n\n$deepLink\n\n🏔️ Check out this post on TrekScanPlus!';
+
+      // Open native share sheet
+      await Share.share(
+        shareText,
+        subject: 'Amazing Trek Post from TrekScanPlus',
+      );
+
+      // If share dialog opened without error, increment counter
+      // (User either selected an app to share or manually dismissed)
       setState(() => _sharesCount++);
+      await _socialService.sharePost(widget.post.id!);
+
       if (mounted) {
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(const SnackBar(content: Text('Post shared!')));
+        ).showSnackBar(const SnackBar(content: Text('Post shared! 🎉')));
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(SnackBar(content: Text('Failed to share: $e')));
+        ).showSnackBar(SnackBar(content: Text('Failed to open share: $e')));
       }
     }
   }
