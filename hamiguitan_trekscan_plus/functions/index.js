@@ -302,3 +302,111 @@ exports.syncAllBufferDays = functions.region(region).https.onCall(async (data, c
         throw new functions.https.HttpsError('internal', error.message);
     }
 });
+
+/**
+ * Send FCM notification when booking status changes
+ * This triggers whenever a booking is updated
+ */
+exports.sendBookingStatusNotification = functions.region(region).firestore
+    .document('bookings/{bookingId}')
+    .onUpdate(async (change, context) => {
+        const newData = change.after.data();
+        const oldData = change.before.data();
+        const bookingId = context.params.bookingId;
+
+        // Only send notification if status changed
+        if (newData.status === oldData.status) {
+            console.log(`📍 [FCM] Status not changed for booking ${bookingId}`);
+            return;
+        }
+
+        const userId = newData.userId;
+        const newStatus = newData.status;
+        const adminNotes = newData.adminNotes || '';
+
+        try {
+            // Get user's FCM token
+            const userDoc = await db.collection('users').doc(userId).get();
+            if (!userDoc.exists) {
+                console.log(`⚠️ [FCM] User ${userId} not found`);
+                return;
+            }
+
+            const userFCMToken = userDoc.data().fcmToken;
+            if (!userFCMToken) {
+                console.log(`⚠️ [FCM] No FCM token for user ${userId}`);
+                return;
+            }
+
+            // Prepare notification message based on status
+            let title = 'Booking Updated';
+            let body = 'Your booking has been updated';
+            let notificationType = 'info';
+
+            if (newStatus.toLowerCase() === 'approved') {
+                title = '✅ Booking Approved!';
+                body = 'Your booking has been approved and is ready to go.';
+                notificationType = 'success';
+            } else if (newStatus.toLowerCase() === 'rejected') {
+                title = '❌ Booking Rejected';
+                body = adminNotes || 'Your booking was rejected.';
+                notificationType = 'error';
+            } else if (newStatus.toLowerCase() === 'changes required') {
+                title = '⚠️ Changes Required';
+                body = adminNotes || 'Admin notes: Please review and update.';
+                notificationType = 'warning';
+            } else if (newStatus.toLowerCase() === 'pending') {
+                title = '⏳ Booking Submitted';
+                body = 'Your booking has been submitted for review.';
+                notificationType = 'info';
+            }
+
+            // Send FCM message
+            const message = {
+                token: userFCMToken,
+                notification: {
+                    title: title,
+                    body: body,
+                },
+                data: {
+                    bookingId: bookingId,
+                    status: newStatus,
+                    notificationType: notificationType,
+                    click_action: 'FLUTTER_NOTIFICATION_CLICK',
+                },
+                android: {
+                    priority: 'high',
+                    notification: {
+                        sound: 'default',
+                        channelId: 'booking_updates',
+                        defaultVibrateTimings: true,
+                        defaultLightSettings: true,
+                    },
+                },
+                apns: {
+                    headers: {
+                        'apns-priority': '10',
+                    },
+                    payload: {
+                        aps: {
+                            alert: {
+                                title: title,
+                                body: body,
+                            },
+                            sound: 'default',
+                            badge: 1,
+                        },
+                    },
+                },
+            };
+
+            const response = await admin.messaging().send(message);
+            console.log(`✅ [FCM] Notification sent to user ${userId}:`, response);
+            return { success: true, messageId: response };
+
+        } catch (error) {
+            console.error(`❌ [FCM] Error sending notification for booking ${bookingId}:`, error);
+            return { success: false, error: error.message };
+        }
+    });
+

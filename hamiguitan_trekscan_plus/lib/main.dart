@@ -17,6 +17,7 @@ import 'services/permission_service.dart';
 import 'services/fcm_service.dart';
 import 'services/notification_manager.dart';
 import 'services/presence_service.dart';
+import 'services/notification_service.dart';
 import 'components/notification_banner.dart';
 
 void main() async {
@@ -52,6 +53,9 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
 
+    // Initialize notification service
+    NotificationService().initialize();
+
     // Initialize presence service
     PresenceService.instance.initialize();
 
@@ -60,6 +64,9 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
       if (user != null) {
         BookingService.instance.startBookingStatusListener(user.uid);
         _initializeFCM();
+
+        // Setup booking update notifications
+        NotificationService().listenToBookingUpdates();
 
         // Request permissions once user is authenticated
         if (!_permissionsRequested) {
