@@ -285,7 +285,7 @@ class _BookAClimbScreenState extends State<BookAClimbScreen> {
         return {
           'available': false,
           'slotsUsed': 0,
-          'slotsNeeded': 1 + portersNeeded,
+          'slotsNeeded': 1, // Only count trekker, not porters
           'maxSlots': dateConfig.maxSlots,
           'remaining': 0,
           'isClosed': true,
@@ -301,7 +301,7 @@ class _BookAClimbScreenState extends State<BookAClimbScreen> {
         return {
           'available': false,
           'slotsUsed': 0,
-          'slotsNeeded': 1 + portersNeeded,
+          'slotsNeeded': 1, // Only count trekker, not porters
           'maxSlots': dateConfig.maxSlots,
           'remaining': 0,
           'isClosed': false,
@@ -328,6 +328,7 @@ class _BookAClimbScreenState extends State<BookAClimbScreen> {
 
       // Calculate total slots used (only count approved bookings)
       // Pending bookings don't count until admin approves them
+      // Note: Only count trekkers (users), not porters
       int slotsUsed = 0;
       for (final doc in querySnapshot.docs) {
         final data = doc.data();
@@ -335,13 +336,12 @@ class _BookAClimbScreenState extends State<BookAClimbScreen> {
 
         // Only count approved bookings - pending bookings don't reserve slots
         if (status == 'approved') {
-          final porters = (data['numberOfPorters'] as num?)?.toInt() ?? 0;
-          slotsUsed += 1 + porters; // 1 person + porters
+          slotsUsed += 1; // 1 trekker per booking (porters excluded from count)
         }
       }
 
-      // Calculate slots needed for this booking
-      final slotsNeeded = 1 + portersNeeded;
+      // Calculate slots needed for this booking (only count the trekker)
+      final slotsNeeded = 1;
 
       // Check if there's enough space
       final available = (slotsUsed + slotsNeeded) <= maxSlots;
@@ -360,7 +360,7 @@ class _BookAClimbScreenState extends State<BookAClimbScreen> {
       return {
         'available': true,
         'slotsUsed': 0,
-        'slotsNeeded': 1 + portersNeeded,
+        'slotsNeeded': 1, // Only count trekker, not porters
         'maxSlots': 30,
         'remaining': 30,
         'isClosed': false,

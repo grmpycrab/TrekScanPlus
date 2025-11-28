@@ -30,7 +30,7 @@ class BookingDetailsModal extends StatelessWidget {
     return GestureDetector(
       onTap: onClose,
       child: Container(
-        color: Colors.black.withValues(alpha: 0.5),
+        color: AppColors.black.withValues(alpha: 0.5),
         child: GestureDetector(
           onTap: () {},
           child: Center(
@@ -42,11 +42,11 @@ class BookingDetailsModal extends StatelessWidget {
                   maxWidth: MediaQuery.of(context).size.width * 0.95,
                 ),
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: AppColors.white,
                   borderRadius: BorderRadius.circular(20),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.3),
+                      color: AppColors.black.withValues(alpha: 0.3),
                       blurRadius: 10,
                       offset: const Offset(0, 5),
                     ),
@@ -74,7 +74,7 @@ class BookingDetailsModal extends StatelessWidget {
                                 Text(
                                   'Booking Details',
                                   style: const TextStyle(
-                                    color: Colors.white,
+                                    color: AppColors.white,
                                     fontSize: 20,
                                     fontWeight: FontWeight.bold,
                                   ),
@@ -83,7 +83,7 @@ class BookingDetailsModal extends StatelessWidget {
                                 Text(
                                   climb.name,
                                   style: const TextStyle(
-                                    color: Colors.white70,
+                                    color: AppColors.textLight,
                                     fontSize: 14,
                                   ),
                                 ),
@@ -91,7 +91,10 @@ class BookingDetailsModal extends StatelessWidget {
                             ),
                           ),
                           IconButton(
-                            icon: const Icon(Icons.close, color: Colors.white),
+                            icon: const Icon(
+                              Icons.close,
+                              color: AppColors.white,
+                            ),
                             onPressed: onClose,
                           ),
                         ],
@@ -194,8 +197,8 @@ class BookingDetailsModal extends StatelessWidget {
                                 icon: const Icon(Icons.edit),
                                 label: const Text('Edit Details'),
                                 style: OutlinedButton.styleFrom(
-                                  disabledForegroundColor: Colors.grey[600],
-                                  disabledBackgroundColor: Colors.grey[100],
+                                  disabledForegroundColor: AppColors.textLight,
+                                  disabledBackgroundColor: AppColors.background,
                                 ),
                               ),
                             ),
