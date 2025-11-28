@@ -70,11 +70,13 @@ service cloud.firestore {
       // Owners can also cancel their own bookings at any time
       // Admins can update anytime
       allow update: if request.auth != null && (
-        // owner may update while booking is pending or declined/rejected
+        // owner may update while booking is pending, declined/rejected, or changes required
         (resource.data.userId == request.auth.uid && 
          (resource.data.status == 'pending' || 
           resource.data.status == 'declined' || 
-          resource.data.status == 'rejected'))
+          resource.data.status == 'rejected' ||
+          resource.data.status == 'changes_required' ||
+          resource.data.status == 'changes required'))
         // owner may cancel their own booking at any time
         || (resource.data.userId == request.auth.uid && 
             request.resource.data.status == 'cancelled')

@@ -61,8 +61,79 @@ class Climb {
       dateApproved: dateApproved,
       type: m['type'] ?? 'General',
       status: m['status'] ?? 'Pending',
-      adminNotes: m['adminNotes'] as String?,
+      adminNotes: _parseAdminNotes(m['adminNotes']),
     );
+  }
+
+  /// Parse adminNotes from various formats (String, List, Map) to clean text
+  /// Firebase stores it as JSON string: '[{\"id\":\"...\",\"text\":\"...\",\"adminName\":\"...\"}]'
+  static String? _parseAdminNotes(dynamic adminNotes) {
+    if (adminNotes == null) return null;
+
+    // If it's a String, try to parse it as JSON first
+    if (adminNotes is String) {
+      final trimmed = adminNotes.trim();
+      if (trimmed.isEmpty) return null;
+
+      // Check if it's a JSON string (starts with [ or {)
+      if (trimmed.startsWith('[') || trimmed.startsWith('{')) {
+        try {
+          // Extract text field from JSON string using regex
+          final textMatch = RegExp(
+            r'\"text\"\\s*:\\s*\"([^\"]+)\"',
+          ).firstMatch(trimmed);
+          if (textMatch != null && textMatch.groupCount > 0) {
+            return textMatch.group(1);
+          }
+          final messageMatch = RegExp(
+            r'\"message\"\\s*:\\s*\"([^\"]+)\"',
+          ).firstMatch(trimmed);
+          if (messageMatch != null && messageMatch.groupCount > 0) {
+            return messageMatch.group(1);
+          }
+          // If no match found, return null to hide malformed data
+          return null;
+        } catch (e) {
+          // If parsing fails, return null to hide malformed data
+          return null;
+        }
+      }
+      // Plain text string
+      return trimmed;
+    }
+
+    // If it's a List (e.g., [{\"text\": \"...\"}]), extract first message
+    if (adminNotes is List && adminNotes.isNotEmpty) {
+      final first = adminNotes.first;
+      if (first is Map) {
+        // Try common field names for the message
+        final message =
+            first['text'] ??
+            first['message'] ??
+            first['note'] ??
+            first['adminNotes'];
+        if (message is String && message.trim().isNotEmpty) {
+          return message.trim();
+        }
+      } else if (first is String) {
+        return first.trim().isEmpty ? null : first.trim();
+      }
+    }
+
+    // If it's a Map, extract message field
+    if (adminNotes is Map) {
+      final message =
+          adminNotes['text'] ??
+          adminNotes['message'] ??
+          adminNotes['note'] ??
+          adminNotes['adminNotes'];
+      if (message is String && message.trim().isNotEmpty) {
+        return message.trim();
+      }
+    }
+
+    // Fallback: return null to hide unparseable data
+    return null;
   }
 
   Map<String, dynamic> toMap() {
@@ -97,8 +168,15 @@ class Climb {
     final today = DateTime.now();
     final todayDate = DateTime(today.year, today.month, today.day);
     if (date.isBefore(todayDate)) return 'Expired';
-    // Capitalize status for display (e.g. 'approved' -> 'Approved')
+    // Handle status formatting (e.g. 'changes_required' -> 'Changes Required')
     if (st.isEmpty) return status;
-    return st[0].toUpperCase() + st.substring(1);
+    // Replace underscores with spaces and capitalize each word
+    final words = st.split('_');
+    return words
+        .map((word) {
+          if (word.isEmpty) return word;
+          return word[0].toUpperCase() + word.substring(1);
+        })
+        .join(' ');
   }
 }

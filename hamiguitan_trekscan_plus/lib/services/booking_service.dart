@@ -122,8 +122,8 @@ class BookingService {
         actionData: bookingId,
       );
     } catch (e) {
+      // Log error but don't fail the booking creation
       print('Failed to send booking created notification: $e');
-      // Don't fail the booking creation if notification fails
     }
 
     return bookingId;
