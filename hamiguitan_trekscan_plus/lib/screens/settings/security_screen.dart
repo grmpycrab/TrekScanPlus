@@ -40,10 +40,10 @@ class _SecurityScreenState extends State<SecurityScreen> {
         backgroundColor: AppColors.primary,
         title: const Text(
           'Security & Privacy',
-          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+          style: TextStyle(color: AppColors.white, fontWeight: FontWeight.bold),
         ),
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.white),
+          icon: const Icon(Icons.arrow_back, color: AppColors.white),
           onPressed: () => Navigator.pop(context),
         ),
         elevation: 0,
@@ -69,7 +69,10 @@ class _SecurityScreenState extends State<SecurityScreen> {
                   trailing: _isGoogleUser
                       ? const Text(
                           'N/A',
-                          style: TextStyle(color: Colors.grey, fontSize: 12),
+                          style: TextStyle(
+                            color: AppColors.textSecondary,
+                            fontSize: 12,
+                          ),
                         )
                       : null,
                 ),
@@ -162,13 +165,13 @@ class _SecurityScreenState extends State<SecurityScreen> {
   }) {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppColors.white,
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: AppColors.shadowLight,
             blurRadius: 10,
-            offset: const Offset(0, 2),
+            offset: const Offset(0, 1),
           ),
         ],
       ),
@@ -208,12 +211,12 @@ class _SecurityScreenState extends State<SecurityScreen> {
   Widget _buildDangerZoneCard() {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppColors.white,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.red.shade200, width: 2),
+        border: Border.all(color: AppColors.redShade200, width: 2),
         boxShadow: [
           BoxShadow(
-            color: Colors.red.withOpacity(0.05),
+            color: AppColors.red.withOpacity(0.05),
             blurRadius: 10,
             offset: const Offset(0, 2),
           ),
@@ -234,7 +237,7 @@ class _SecurityScreenState extends State<SecurityScreen> {
                   ),
                   child: const Icon(
                     Icons.warning_amber_rounded,
-                    color: Colors.red,
+                    color: AppColors.red,
                     size: 20,
                   ),
                 ),
@@ -244,7 +247,7 @@ class _SecurityScreenState extends State<SecurityScreen> {
                   style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
-                    color: Colors.red,
+                    color: AppColors.red,
                   ),
                 ),
               ],
@@ -279,9 +282,9 @@ class _SecurityScreenState extends State<SecurityScreen> {
             Icon(
               icon,
               color: isDanger
-                  ? Colors.red
+                  ? AppColors.red
                   : onTap == null
-                  ? Colors.grey
+                  ? AppColors.textSecondary
                   : AppColors.primary,
               size: 24,
             ),
@@ -296,9 +299,9 @@ class _SecurityScreenState extends State<SecurityScreen> {
                       fontSize: 16,
                       fontWeight: FontWeight.w500,
                       color: isDanger
-                          ? Colors.red
+                          ? AppColors.red
                           : onTap == null
-                          ? Colors.grey
+                          ? AppColors.textSecondary
                           : AppColors.textPrimary,
                     ),
                   ),
@@ -308,7 +311,7 @@ class _SecurityScreenState extends State<SecurityScreen> {
                     style: TextStyle(
                       fontSize: 14,
                       color: isDanger
-                          ? Colors.red.shade300
+                          ? AppColors.red300
                           : AppColors.textSecondary,
                     ),
                   ),
@@ -321,7 +324,7 @@ class _SecurityScreenState extends State<SecurityScreen> {
               Icon(
                 Icons.arrow_forward_ios,
                 size: 16,
-                color: isDanger ? Colors.red : AppColors.textTertiary,
+                color: isDanger ? AppColors.red : AppColors.textTertiary,
               ),
           ],
         ),
@@ -333,16 +336,16 @@ class _SecurityScreenState extends State<SecurityScreen> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
-        color: Colors.orange.withOpacity(0.1),
+        color: AppColors.orange.withOpacity(0.1),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.orange.withOpacity(0.3)),
+        border: Border.all(color: AppColors.orange.withOpacity(0.3)),
       ),
       child: const Text(
         'Coming Soon',
         style: TextStyle(
           fontSize: 11,
           fontWeight: FontWeight.w600,
-          color: Colors.orange,
+          color: AppColors.orange,
         ),
       ),
     );
@@ -421,7 +424,7 @@ class _SecurityScreenState extends State<SecurityScreen> {
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(
                     content: Text('Please fill in all fields'),
-                    backgroundColor: Colors.red,
+                    backgroundColor: AppColors.red,
                   ),
                 );
                 return;
@@ -432,7 +435,7 @@ class _SecurityScreenState extends State<SecurityScreen> {
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(
                     content: Text('New passwords do not match'),
-                    backgroundColor: Colors.red,
+                    backgroundColor: AppColors.red,
                   ),
                 );
                 return;
@@ -442,7 +445,7 @@ class _SecurityScreenState extends State<SecurityScreen> {
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(
                     content: Text('Password must be at least 6 characters'),
-                    backgroundColor: Colors.red,
+                    backgroundColor: AppColors.red,
                   ),
                 );
                 return;
@@ -464,7 +467,7 @@ class _SecurityScreenState extends State<SecurityScreen> {
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
                     content: Text('Error: ${e.toString()}'),
-                    backgroundColor: Colors.red,
+                    backgroundColor: AppColors.red,
                   ),
                 );
               }
@@ -472,7 +475,7 @@ class _SecurityScreenState extends State<SecurityScreen> {
             style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary),
             child: const Text(
               'Change Password',
-              style: TextStyle(color: Colors.white),
+              style: TextStyle(color: AppColors.white),
             ),
           ),
         ],
@@ -483,7 +486,7 @@ class _SecurityScreenState extends State<SecurityScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Password changed successfully'),
-          backgroundColor: Colors.green,
+          backgroundColor: AppColors.green,
         ),
       );
     }
@@ -501,7 +504,7 @@ class _SecurityScreenState extends State<SecurityScreen> {
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         title: const Row(
           children: [
-            Icon(Icons.warning_amber_rounded, color: Colors.red),
+            Icon(Icons.warning_amber_rounded, color: AppColors.red),
             SizedBox(width: 8),
             Text('Delete Account'),
           ],
@@ -512,7 +515,10 @@ class _SecurityScreenState extends State<SecurityScreen> {
           children: [
             const Text(
               'This action cannot be undone. All your data will be permanently deleted.',
-              style: TextStyle(color: Colors.red, fontWeight: FontWeight.w500),
+              style: TextStyle(
+                color: AppColors.red,
+                fontWeight: FontWeight.w500,
+              ),
             ),
             const SizedBox(height: 16),
             if (!_isGoogleUser) ...[
@@ -593,16 +599,16 @@ class _SecurityScreenState extends State<SecurityScreen> {
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
                       content: Text('Error: ${e.toString()}'),
-                      backgroundColor: Colors.red,
+                      backgroundColor: AppColors.red,
                     ),
                   );
                 }
               }
             },
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+            style: ElevatedButton.styleFrom(backgroundColor: AppColors.red),
             child: const Text(
               'Delete Account',
-              style: TextStyle(color: Colors.white),
+              style: TextStyle(color: AppColors.white),
             ),
           ),
         ],

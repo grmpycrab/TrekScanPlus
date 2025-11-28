@@ -17,10 +17,6 @@ class AppColors {
   static Color textTertiary = Colors.grey[600]!;
   static const Color textLight = Colors.white70;
   static Color textGrey700 = Colors.grey[700]!;
-  static const Color textBlack87 = Colors.black87;
-  static const Color textBlack54 = Colors.black54;
-  static const Color textBlack38 = Colors.black38;
-  static const Color textBlack45 = Colors.black45;
 
   // Station Difficulty Colors
   static const Color difficultyEasy = Colors.green;
@@ -46,13 +42,6 @@ class AppColors {
   static Color shadowMedium = Colors.black.withValues(alpha: 0.1);
   static Color shadowDark = Colors.black.withValues(alpha: 0.2);
   static Color shadowOverlay = Colors.black.withValues(alpha: 0.7);
-  static Color shadowBlack06 = Colors.black.withValues(alpha: 0.06);
-  static Color shadowBlack08 = Colors.black.withValues(alpha: 0.08);
-  static Color shadowBlack15 = Colors.black.withValues(alpha: 0.15);
-  static Color shadowBlack3 = Colors.black.withValues(alpha: 0.3);
-  static Color shadowBlack4 = Colors.black.withValues(alpha: 0.4);
-  static Color shadowBlack5 = Colors.black.withValues(alpha: 0.5);
-  static Color shadowBlack6 = Colors.black.withValues(alpha: 0.6);
 
   // Notification Colors
   static const Color notificationDot = Colors.red;
@@ -73,7 +62,6 @@ class AppColors {
   static Color blueGrey800 = Colors.blueGrey[800]!;
 
   // Grey Variants
-  static Color grey = Colors.grey;
   static Color grey50 = Colors.grey[50]!;
   static Color grey100 = Colors.grey[100]!;
   static Color grey200 = Colors.grey[200]!;
