@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 class Attachment {
@@ -89,6 +90,65 @@ class BookingModel {
     'updatedAt': updatedAt,
   };
 
+  /// Parse adminNotes from Firestore which might be String, List, or Map
+  /// Firebase stores it as JSON string: '[{"id":"...","text":"...","adminName":"..."}]'
+  static String? _parseAdminNotes(dynamic adminNotes) {
+    if (adminNotes == null) return null;
+
+    // If it's a String, try to parse it as JSON first
+    if (adminNotes is String) {
+      final trimmed = adminNotes.trim();
+      if (trimmed.isEmpty) return null;
+
+      // Check if it's a JSON string (starts with [ or {)
+      if (trimmed.startsWith('[') || trimmed.startsWith('{')) {
+        try {
+          final parsed = jsonDecode(trimmed);
+          // Recursively parse the decoded JSON
+          return _parseAdminNotes(parsed);
+        } catch (e) {
+          // If JSON parsing fails, return null to hide malformed data
+          return null;
+        }
+      }
+      // Plain text string
+      return trimmed;
+    }
+
+    // If it's a List (e.g., [{"text": "..."}]), extract first message
+    if (adminNotes is List && adminNotes.isNotEmpty) {
+      final first = adminNotes.first;
+      if (first is Map) {
+        // Try common field names for the message (text, message, note, adminNotes)
+        final message =
+            first['text'] ??
+            first['message'] ??
+            first['note'] ??
+            first['adminNotes'];
+        if (message is String && message.trim().isNotEmpty) {
+          return message.trim();
+        }
+      } else if (first is String) {
+        return first.trim().isEmpty ? null : first.trim();
+      }
+    }
+
+    // If it's a Map, extract message field
+    if (adminNotes is Map) {
+      final message =
+          adminNotes['text'] ??
+          adminNotes['message'] ??
+          adminNotes['note'] ??
+          adminNotes['adminNotes'];
+      if (message is String && message.trim().isNotEmpty) {
+        return message.trim();
+      }
+    }
+
+    // Fallback: return null to hide unparseable data
+    return null;
+  }
+
   factory BookingModel.fromDoc(DocumentSnapshot doc) {
     final data = doc.data() as Map<String, dynamic>;
     return BookingModel(
@@ -102,7 +162,7 @@ class BookingModel {
       isSenior: data['isSenior'] as bool? ?? false,
       phoneNumber: data['phoneNumber'] as String? ?? '',
       notes: data['notes'] as String?,
-      adminNotes: data['adminNotes'] as String?,
+      adminNotes: _parseAdminNotes(data['adminNotes']),
       attachments:
           (data['attachments'] as List<dynamic>?)
               ?.map((e) => Attachment.fromMap(Map<String, dynamic>.from(e)))

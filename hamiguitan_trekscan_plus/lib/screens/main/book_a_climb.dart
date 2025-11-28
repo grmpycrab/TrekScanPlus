@@ -786,7 +786,8 @@ class _BookAClimbScreenState extends State<BookAClimbScreen> {
     final isDeclined =
         booking.status.toLowerCase() == 'declined' ||
         booking.status.toLowerCase() == 'rejected' ||
-        booking.status.toLowerCase() == 'changes required';
+        booking.status.toLowerCase() == 'changes required' ||
+        booking.status.toLowerCase() == 'changes_required';
 
     // Track existing attachments (can be marked for deletion)
     List<Attachment> existingAttachments = List.from(booking.attachments);
@@ -2253,7 +2254,7 @@ class _BookAClimbScreenState extends State<BookAClimbScreen> {
                 value: 'Outside Davao Oriental',
                 child: Row(
                   children: [
-                    Icon(Icons.public, size: 20, color: Colors.orange),
+                    Icon(Icons.public, size: 20, color: AppColors.primary),
                     SizedBox(width: 12),
                     Text('Outside Davao Oriental'),
                   ],
