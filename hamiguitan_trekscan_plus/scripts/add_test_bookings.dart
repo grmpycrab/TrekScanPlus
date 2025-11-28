@@ -32,15 +32,15 @@ void main() async {
   // Number of bookings to create (max 30 for Mt. Hamiguitan)
   const numberOfBookings = 30;
 
-  // Number of porters per booking (affects slot calculation: 1 person + porters)
-  const portersPerBooking = 0; // Set to 0 to use 1 slot per booking
+  // Number of porters per booking (porters don't count towards slots)
+  const portersPerBooking = 0; // Porters are excluded from slot calculation
 
   // ============================================
 
   print('📅 Target Date: ${targetDate.toString().split(' ')[0]}');
   print('📊 Bookings to create: $numberOfBookings');
-  print('👷 Porters per booking: $portersPerBooking');
-  print('💺 Slots per booking: ${1 + portersPerBooking}\n');
+  print('👷 Porters per booking: $portersPerBooking (not counted in slots)');
+  print('💺 Slots per booking: 1 (trekker only)\n');
 
   // Check if user is authenticated
   User? currentUser = auth.currentUser;
@@ -111,12 +111,10 @@ void main() async {
       .where('trekDate', isEqualTo: Timestamp.fromDate(targetDate))
       .get();
 
-  // Calculate slots used
+  // Calculate slots used (only count trekkers, not porters)
   int totalSlotsUsed = 0;
   for (var doc in querySnapshot.docs) {
-    final data = doc.data();
-    final porters = (data['numberOfPorters'] as num?)?.toInt() ?? 0;
-    totalSlotsUsed += 1 + porters; // 1 person + porters
+    totalSlotsUsed += 1; // 1 trekker per booking (porters excluded from count)
   }
 
   print('📈 Current Status for ${targetDate.toString().split(' ')[0]}:');

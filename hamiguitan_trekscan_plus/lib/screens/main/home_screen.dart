@@ -130,9 +130,8 @@ class _HomeScreenState extends State<HomeScreen> {
             final d = t.toDate();
             final key =
                 '${d.year}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
-            final porters = (data['numberOfPorters'] as num?)?.toInt() ?? 0;
-            final used =
-                1 + porters; // each booking occupies the requester + porters
+            // Only count trekker, not porters
+            final used = 1;
             slotsPerDay[key] = (slotsPerDay[key] ?? 0) + used;
           }
 
@@ -541,8 +540,8 @@ class _HomeScreenState extends State<HomeScreen> {
       final d = t.toDate();
       final key =
           '${d.year}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
-      final porters = (data['numberOfPorters'] as num?)?.toInt() ?? 0;
-      final used = 1 + porters;
+      // Only count trekker, not porters
+      final used = 1;
       slotsPerDay[key] = (slotsPerDay[key] ?? 0) + used;
     }
 
