@@ -217,7 +217,7 @@ class _NotificationSettingsScreenState
         gradient: LinearGradient(
           colors: _pushNotificationsEnabled
               ? [AppColors.notificationBooking, AppColors.primary]
-              : [Colors.grey.shade300, Colors.grey.shade400],
+              : [AppColors.grey300, AppColors.grey400],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),

@@ -290,7 +290,7 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
                 margin: const EdgeInsets.only(bottom: 16),
                 decoration: BoxDecoration(
                   color: AppColors.red50,
-                  border: Border.all(color: AppColors.redShade200),
+                  border: Border.all(color: AppColors.red200),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Row(
@@ -314,7 +314,7 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
                 margin: const EdgeInsets.only(bottom: 16),
                 decoration: BoxDecoration(
                   color: AppColors.green50,
-                  border: Border.all(color: AppColors.greenShade200),
+                  border: Border.all(color: AppColors.green200),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Row(
@@ -338,7 +338,7 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
                 margin: const EdgeInsets.only(bottom: 16),
                 decoration: BoxDecoration(
                   color: AppColors.orange50,
-                  border: Border.all(color: AppColors.orangeShade200),
+                  border: Border.all(color: AppColors.orange200),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Row(

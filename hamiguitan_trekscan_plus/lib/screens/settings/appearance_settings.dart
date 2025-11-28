@@ -9,7 +9,7 @@ class AppearanceSettingsScreen extends StatelessWidget {
     return Scaffold(
       backgroundColor: AppColors.white,
       appBar: AppBar(
-        backgroundColor: AppColors.notificationToggle,
+        backgroundColor: AppColors.primary,
         elevation: 0,
         centerTitle: true,
         leading: IconButton(
@@ -87,10 +87,10 @@ class AppearanceSettingsScreen extends StatelessWidget {
         leading: Container(
           padding: const EdgeInsets.all(10),
           decoration: BoxDecoration(
-            color: AppColors.blueGrey50,
+            color: AppColors.primary,
             borderRadius: BorderRadius.circular(10),
           ),
-          child: Icon(icon, color: AppColors.blueGrey700, size: 24),
+          child: Icon(icon, color: AppColors.white, size: 24),
         ),
         title: Text(
           title,

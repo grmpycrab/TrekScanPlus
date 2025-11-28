@@ -213,7 +213,7 @@ class _SecurityScreenState extends State<SecurityScreen> {
       decoration: BoxDecoration(
         color: AppColors.white,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.redShade200, width: 2),
+        border: Border.all(color: AppColors.red200, width: 2),
         boxShadow: [
           BoxShadow(
             color: AppColors.red.withOpacity(0.05),

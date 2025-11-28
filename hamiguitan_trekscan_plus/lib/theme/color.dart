@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 class AppColors {
   // Primary Colors
   static const Color primary = Color(0xFF252B30);
+  static const Color darkGreen = Color(0xFF252B30); // Same as primary
   static const Color white = Colors.white;
   static const Color black = Colors.black;
 
@@ -17,6 +18,8 @@ class AppColors {
   static Color textTertiary = Colors.grey[600]!;
   static const Color textLight = Colors.white70;
   static Color textGrey700 = Colors.grey[700]!;
+  static const Color textBlack87 = Colors.black87;
+  static const Color textBlack54 = Colors.black54;
 
   // Station Difficulty Colors
   static const Color difficultyEasy = Colors.green;
@@ -62,65 +65,43 @@ class AppColors {
   static Color blueGrey800 = Colors.blueGrey[800]!;
 
   // Grey Variants
+  static const Color grey = Colors.grey;
   static Color grey50 = Colors.grey[50]!;
   static Color grey100 = Colors.grey[100]!;
   static Color grey200 = Colors.grey[200]!;
   static Color grey300 = Colors.grey[300]!;
   static Color grey400 = Colors.grey[400]!;
-  static Color grey500 = Colors.grey[500]!;
   static Color grey600 = Colors.grey[600]!;
   static Color grey700 = Colors.grey[700]!;
-  static Color greyShade300 = Colors.grey.shade300;
-  static Color greyShade400 = Colors.grey.shade400;
-  static Color greyShade600 = Colors.grey.shade600;
-  static Color greyShade700 = Colors.grey.shade700;
 
   // Red Variants
   static const Color red = Colors.red;
   static Color red50 = Colors.red[50]!;
-  static Color red100 = Colors.red[100]!;
+  static Color red200 = Colors.red[200]!;
   static Color red300 = Colors.red[300]!;
   static Color red700 = Colors.red[700]!;
-  static Color red800 = Colors.red[800]!;
   static Color red900 = Colors.red[900]!;
-  static Color redShade200 = Colors.red.shade200;
-  static Color redShade300 = Colors.red.shade300;
-  static Color redShade700 = Colors.red.shade700;
-  static const Color redAccent = Colors.redAccent;
 
   // Orange Variants
   static const Color orange = Colors.orange;
   static Color orange50 = Colors.orange[50]!;
   static Color orange100 = Colors.orange[100]!;
+  static Color orange200 = Colors.orange[200]!;
   static Color orange300 = Colors.orange[300]!;
   static Color orange700 = Colors.orange[700]!;
   static Color orange800 = Colors.orange[800]!;
   static Color orange900 = Colors.orange[900]!;
-  static Color orangeShade50 = Colors.orange.shade50;
-  static Color orangeShade200 = Colors.orange.shade200;
-  static Color orangeShade300 = Colors.orange.shade300;
-  static Color orangeShade700 = Colors.orange.shade700;
-  static Color orangeShade800 = Colors.orange.shade800;
-  static Color orangeShade900 = Colors.orange.shade900;
 
   // Green Variants
   static const Color green = Colors.green;
   static Color green50 = Colors.green[50]!;
-  static Color green100 = Colors.green[100]!;
-  static Color green300 = Colors.green[300]!;
+  static Color green200 = Colors.green[200]!;
   static Color green700 = Colors.green[700]!;
-  static Color green800 = Colors.green[800]!;
-  static Color greenShade50 = Colors.green.shade50;
-  static Color greenShade200 = Colors.green.shade200;
-  static Color greenShade700 = Colors.green.shade700;
 
   // Blue Variants
   static const Color blue = Colors.blue;
-  static Color blue50 = Colors.blue[50]!;
   static Color blue700 = Colors.blue[700]!;
   static Color blue900 = Colors.blue[900]!;
-  static Color blueShade50 = Colors.blue.shade50;
-  static Color blueShade200 = Colors.blue.shade200;
   static const Color blueAccent = Colors.blueAccent;
 
   // Status Colors (for booking states, notifications, etc.)
