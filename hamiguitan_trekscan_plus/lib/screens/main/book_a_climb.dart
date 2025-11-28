@@ -442,9 +442,9 @@ class _BookAClimbScreenState extends State<BookAClimbScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: AppColors.white,
       appBar: AppBar(
-        backgroundColor: const Color(0xFF252B30),
+        backgroundColor: AppColors.darkGreen,
         elevation: 0,
         centerTitle: true,
         // Prevent the automatic leading (back) button so the top-left
@@ -452,7 +452,7 @@ class _BookAClimbScreenState extends State<BookAClimbScreen> {
         automaticallyImplyLeading: false,
         title: const Text(
           'Book a Climb',
-          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+          style: TextStyle(color: AppColors.white, fontWeight: FontWeight.bold),
         ),
         shape: const RoundedRectangleBorder(
           borderRadius: BorderRadius.vertical(top: Radius.circular(8)),
@@ -463,11 +463,11 @@ class _BookAClimbScreenState extends State<BookAClimbScreen> {
         child: Column(
           children: [
             Container(
-              color: Colors.white,
+              color: AppColors.white,
               child: TabBar(
-                labelColor: Colors.blueGrey[800],
-                unselectedLabelColor: Colors.grey,
-                indicatorColor: Colors.blueGrey[700],
+                labelColor: AppColors.blueGrey800,
+                unselectedLabelColor: AppColors.grey,
+                indicatorColor: AppColors.blueGrey700,
                 tabs: const [
                   Tab(text: 'Upcoming'),
                   Tab(text: 'Previous'),
@@ -488,9 +488,9 @@ class _BookAClimbScreenState extends State<BookAClimbScreen> {
         ),
       ),
       floatingActionButton: FloatingActionButton(
-        backgroundColor: Colors.blueGrey[700],
+        backgroundColor: AppColors.primary,
         onPressed: _showBookingForm,
-        child: const Icon(Icons.add, color: Colors.white),
+        child: const Icon(Icons.add, color: AppColors.white),
       ),
     );
   }
@@ -533,16 +533,16 @@ class _BookAClimbScreenState extends State<BookAClimbScreen> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.list_alt, size: 64, color: Colors.grey[400]),
+                  Icon(Icons.list_alt, size: 64, color: AppColors.grey400),
                   const SizedBox(height: 16),
                   Text(
                     'No bookings',
-                    style: TextStyle(color: Colors.grey[600], fontSize: 16),
+                    style: TextStyle(color: AppColors.grey600, fontSize: 16),
                   ),
                   const SizedBox(height: 8),
                   Text(
                     'Tap the + button to create a booking',
-                    style: TextStyle(color: Colors.grey[500]),
+                    style: TextStyle(color: AppColors.grey),
                   ),
                 ],
               ),
@@ -841,7 +841,7 @@ class _BookAClimbScreenState extends State<BookAClimbScreen> {
                     content: Text(
                       'Please keep at least one document or upload a new one.',
                     ),
-                    backgroundColor: Colors.red,
+                    backgroundColor: AppColors.red,
                   ),
                 );
                 return;
@@ -929,7 +929,7 @@ class _BookAClimbScreenState extends State<BookAClimbScreen> {
                   maxHeight: MediaQuery.of(context).size.height * 0.9,
                 ),
                 decoration: const BoxDecoration(
-                  color: Colors.white,
+                  color: AppColors.white,
                   borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
                 ),
                 padding: const EdgeInsets.all(20),
@@ -962,13 +962,13 @@ class _BookAClimbScreenState extends State<BookAClimbScreen> {
                           padding: const EdgeInsets.all(12),
                           decoration: BoxDecoration(
                             color: booking.status.toLowerCase() == 'rejected'
-                                ? Colors.red[50]
-                                : Colors.orange[50],
+                                ? AppColors.red50
+                                : AppColors.orange50,
                             borderRadius: BorderRadius.circular(8),
                             border: Border.all(
                               color: booking.status.toLowerCase() == 'rejected'
-                                  ? Colors.red[300]!
-                                  : Colors.orange[300]!,
+                                  ? AppColors.red300
+                                  : AppColors.orange300,
                             ),
                           ),
                           child: Row(
@@ -980,8 +980,8 @@ class _BookAClimbScreenState extends State<BookAClimbScreen> {
                                     : Icons.info,
                                 color:
                                     booking.status.toLowerCase() == 'rejected'
-                                    ? Colors.red[700]
-                                    : Colors.orange[700],
+                                    ? AppColors.red700
+                                    : AppColors.orange700,
                                 size: 20,
                               ),
                               const SizedBox(width: 8),
@@ -998,8 +998,8 @@ class _BookAClimbScreenState extends State<BookAClimbScreen> {
                                         color:
                                             booking.status.toLowerCase() ==
                                                 'rejected'
-                                            ? Colors.red[900]
-                                            : Colors.orange[900],
+                                            ? AppColors.red900
+                                            : AppColors.orange900,
                                       ),
                                     ),
                                     const SizedBox(height: 4),
@@ -1012,7 +1012,7 @@ class _BookAClimbScreenState extends State<BookAClimbScreen> {
                                         '${booking.adminNotes}',
                                         style: TextStyle(
                                           fontSize: 13,
-                                          color: Colors.orange[800],
+                                          color: AppColors.orange800,
                                         ),
                                       ),
                                       const SizedBox(height: 4),
@@ -1027,8 +1027,8 @@ class _BookAClimbScreenState extends State<BookAClimbScreen> {
                                         color:
                                             booking.status.toLowerCase() ==
                                                 'rejected'
-                                            ? Colors.red[700]
-                                            : Colors.orange[700],
+                                            ? AppColors.red700
+                                            : AppColors.orange700,
                                       ),
                                     ),
                                   ],
@@ -1119,14 +1119,14 @@ class _BookAClimbScreenState extends State<BookAClimbScreen> {
                                   ),
                                   icon: Icon(
                                     Icons.arrow_drop_down,
-                                    color: Colors.blueGrey[700],
+                                    color: AppColors.blueGrey700,
                                   ),
                                   style: const TextStyle(
                                     fontSize: 15,
-                                    color: Colors.black87,
+                                    color: AppColors.textBlack87,
                                     fontWeight: FontWeight.w500,
                                   ),
-                                  dropdownColor: Colors.white,
+                                  dropdownColor: AppColors.white,
                                   items: const [
                                     DropdownMenuItem(
                                       value: 'General',
@@ -1135,7 +1135,7 @@ class _BookAClimbScreenState extends State<BookAClimbScreen> {
                                           Icon(
                                             Icons.hiking,
                                             size: 20,
-                                            color: Colors.blueGrey,
+                                            color: AppColors.primary,
                                           ),
                                           SizedBox(width: 12),
                                           Text('General'),
@@ -1192,7 +1192,7 @@ class _BookAClimbScreenState extends State<BookAClimbScreen> {
                                   ),
                                   icon: Icon(
                                     Icons.arrow_drop_down,
-                                    color: Colors.blueGrey[700],
+                                    color: AppColors.primary,
                                   ),
                                   items: const [
                                     DropdownMenuItem(
@@ -1249,12 +1249,14 @@ class _BookAClimbScreenState extends State<BookAClimbScreen> {
                               // Senior Citizen Dropdown
                               Container(
                                 decoration: BoxDecoration(
-                                  color: Colors.white,
+                                  color: AppColors.white,
                                   borderRadius: BorderRadius.circular(12),
-                                  border: Border.all(color: Colors.black26),
+                                  border: Border.all(
+                                    color: AppColors.borderBlack26,
+                                  ),
                                   boxShadow: [
                                     BoxShadow(
-                                      color: Colors.black.withOpacity(0.05),
+                                      color: AppColors.black.withOpacity(0.05),
                                       blurRadius: 4,
                                       offset: const Offset(0, 2),
                                     ),
@@ -1273,7 +1275,7 @@ class _BookAClimbScreenState extends State<BookAClimbScreen> {
                                   ),
                                   icon: Icon(
                                     Icons.arrow_drop_down,
-                                    color: Colors.blueGrey[700],
+                                    color: AppColors.primary,
                                   ),
                                   items: const [
                                     DropdownMenuItem(
@@ -1329,7 +1331,7 @@ class _BookAClimbScreenState extends State<BookAClimbScreen> {
                                   style: TextStyle(
                                     fontSize: 14,
                                     fontWeight: FontWeight.w600,
-                                    color: Colors.black54,
+                                    color: AppColors.textBlack54,
                                   ),
                                 ),
                                 const SizedBox(height: 8),
@@ -1341,13 +1343,13 @@ class _BookAClimbScreenState extends State<BookAClimbScreen> {
                                     padding: const EdgeInsets.all(12),
                                     decoration: BoxDecoration(
                                       color: isMarkedForDelete
-                                          ? Colors.red[50]
-                                          : Colors.grey[50],
+                                          ? AppColors.red50
+                                          : AppColors.grey50,
                                       borderRadius: BorderRadius.circular(8),
                                       border: Border.all(
                                         color: isMarkedForDelete
-                                            ? Colors.red[300]!
-                                            : Colors.grey[300]!,
+                                            ? AppColors.red300
+                                            : AppColors.grey300,
                                       ),
                                     ),
                                     child: Row(
@@ -1356,8 +1358,8 @@ class _BookAClimbScreenState extends State<BookAClimbScreen> {
                                           Icons.insert_drive_file,
                                           size: 20,
                                           color: isMarkedForDelete
-                                              ? Colors.red[700]
-                                              : Colors.blueGrey[700],
+                                              ? AppColors.red700
+                                              : AppColors.primary,
                                         ),
                                         const SizedBox(width: 8),
                                         Expanded(
@@ -1369,8 +1371,8 @@ class _BookAClimbScreenState extends State<BookAClimbScreen> {
                                                   ? TextDecoration.lineThrough
                                                   : null,
                                               color: isMarkedForDelete
-                                                  ? Colors.grey
-                                                  : Colors.black87,
+                                                  ? AppColors.grey
+                                                  : AppColors.textBlack87,
                                             ),
                                           ),
                                         ),
@@ -1381,8 +1383,8 @@ class _BookAClimbScreenState extends State<BookAClimbScreen> {
                                                 : Icons.delete_outline,
                                           ),
                                           color: isMarkedForDelete
-                                              ? Colors.blue
-                                              : Colors.red,
+                                              ? AppColors.blue
+                                              : AppColors.red,
                                           onPressed: () {
                                             setModalState(() {
                                               if (isMarkedForDelete) {
@@ -1410,7 +1412,7 @@ class _BookAClimbScreenState extends State<BookAClimbScreen> {
                                   style: TextStyle(
                                     fontSize: 14,
                                     fontWeight: FontWeight.w600,
-                                    color: Colors.black54,
+                                    color: AppColors.textBlack54,
                                   ),
                                 ),
                                 const SizedBox(height: 8),
@@ -1419,10 +1421,10 @@ class _BookAClimbScreenState extends State<BookAClimbScreen> {
                                     margin: const EdgeInsets.only(bottom: 8),
                                     padding: const EdgeInsets.all(12),
                                     decoration: BoxDecoration(
-                                      color: Colors.green[50],
+                                      color: AppColors.green50,
                                       borderRadius: BorderRadius.circular(8),
                                       border: Border.all(
-                                        color: Colors.green[300]!,
+                                        color: AppColors.green50,
                                       ),
                                     ),
                                     child: Row(
@@ -1430,7 +1432,7 @@ class _BookAClimbScreenState extends State<BookAClimbScreen> {
                                         Icon(
                                           Icons.upload_file,
                                           size: 20,
-                                          color: Colors.green[700],
+                                          color: AppColors.green700,
                                         ),
                                         const SizedBox(width: 8),
                                         Expanded(
@@ -1438,13 +1440,13 @@ class _BookAClimbScreenState extends State<BookAClimbScreen> {
                                             file.name,
                                             style: const TextStyle(
                                               fontSize: 13,
-                                              color: Colors.black87,
+                                              color: AppColors.textBlack54,
                                             ),
                                           ),
                                         ),
                                         IconButton(
                                           icon: const Icon(Icons.close),
-                                          color: Colors.red,
+                                          color: AppColors.red,
                                           onPressed: () {
                                             setModalState(() {
                                               newFiles.remove(file);
@@ -1465,7 +1467,7 @@ class _BookAClimbScreenState extends State<BookAClimbScreen> {
                                   icon: const Icon(Icons.upload_file),
                                   label: const Text('Add New Files'),
                                   style: ElevatedButton.styleFrom(
-                                    backgroundColor: Colors.blueGrey[700],
+                                    backgroundColor: AppColors.primary,
                                     padding: const EdgeInsets.symmetric(
                                       vertical: 12,
                                     ),
@@ -1482,7 +1484,7 @@ class _BookAClimbScreenState extends State<BookAClimbScreen> {
                         child: ElevatedButton(
                           onPressed: isSaving ? null : handleSave,
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.blueGrey[700],
+                            backgroundColor: AppColors.primary,
                             padding: const EdgeInsets.symmetric(vertical: 14),
                           ),
                           child: isSaving
@@ -1495,7 +1497,7 @@ class _BookAClimbScreenState extends State<BookAClimbScreen> {
                                 )
                               : const Text(
                                   'Save Changes',
-                                  style: TextStyle(color: Colors.white),
+                                  style: TextStyle(color: AppColors.white),
                                 ),
                         ),
                       ),
@@ -1523,15 +1525,15 @@ class _BookAClimbScreenState extends State<BookAClimbScreen> {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      backgroundColor: Colors.transparent,
+      backgroundColor: AppColors.transparent,
       builder: (modalContext) => StatefulBuilder(
         builder: (modalContext, setModalState) {
           // Store setModalState so _pickFiles can use it
           _setModalState = setModalState;
           return Container(
-            height: MediaQuery.of(context).size.height * 0.92,
+            height: MediaQuery.of(modalContext).size.height * 0.92,
             decoration: const BoxDecoration(
-              color: Colors.white,
+              color: AppColors.white,
               borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
             ),
             child: Padding(
@@ -1574,17 +1576,17 @@ class _BookAClimbScreenState extends State<BookAClimbScreen> {
                                       'Booking for',
                                       style: TextStyle(
                                         fontWeight: FontWeight.w600,
-                                        color: Colors.grey[700],
+                                        color: AppColors.primary,
                                       ),
                                     ),
                                     const SizedBox(height: 6),
                                     Container(
                                       padding: const EdgeInsets.all(12),
                                       decoration: BoxDecoration(
-                                        color: Colors.grey[100],
+                                        color: AppColors.grey100,
                                         borderRadius: BorderRadius.circular(12),
                                         border: Border.all(
-                                          color: Colors.black12,
+                                          color: AppColors.borderBlack12,
                                         ),
                                       ),
                                       child: Row(
@@ -1604,7 +1606,8 @@ class _BookAClimbScreenState extends State<BookAClimbScreen> {
                                                 Text(
                                                   user?.email ?? '',
                                                   style: const TextStyle(
-                                                    color: Colors.black54,
+                                                    color:
+                                                        AppColors.textBlack87,
                                                   ),
                                                 ),
                                               ],
@@ -1649,9 +1652,11 @@ class _BookAClimbScreenState extends State<BookAClimbScreen> {
                                       vertical: 8,
                                     ),
                                     decoration: BoxDecoration(
-                                      color: Colors.white,
+                                      color: AppColors.white,
                                       borderRadius: BorderRadius.circular(16),
-                                      border: Border.all(color: Colors.black26),
+                                      border: Border.all(
+                                        color: AppColors.borderBlack12,
+                                      ),
                                     ),
                                     child: Row(
                                       mainAxisAlignment:
@@ -1696,7 +1701,7 @@ class _BookAClimbScreenState extends State<BookAClimbScreen> {
                               width: double.infinity,
                               child: ElevatedButton(
                                 style: ElevatedButton.styleFrom(
-                                  backgroundColor: Colors.blueGrey[700],
+                                  backgroundColor: AppColors.primary,
                                   shape: RoundedRectangleBorder(
                                     borderRadius: BorderRadius.circular(12),
                                   ),
@@ -1737,7 +1742,7 @@ class _BookAClimbScreenState extends State<BookAClimbScreen> {
                                 child: const Text(
                                   'Submit',
                                   style: TextStyle(
-                                    color: Colors.white,
+                                    color: AppColors.white,
                                     fontSize: 16,
                                   ),
                                 ),
@@ -1771,33 +1776,33 @@ class _BookAClimbScreenState extends State<BookAClimbScreen> {
       decoration: InputDecoration(
         labelText: label,
         filled: true,
-        fillColor: Colors.white,
+        fillColor: AppColors.white,
         contentPadding: const EdgeInsets.symmetric(
           horizontal: 16,
           vertical: 12,
         ),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),
-          borderSide: const BorderSide(color: Colors.black12),
+          borderSide: const BorderSide(color: AppColors.borderBlack12),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),
-          borderSide: const BorderSide(color: Colors.black26),
+          borderSide: const BorderSide(color: AppColors.borderBlack26),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),
-          borderSide: const BorderSide(color: Colors.blueAccent),
+          borderSide: const BorderSide(color: AppColors.primary),
         ),
         errorBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),
-          borderSide: const BorderSide(color: Colors.red, width: 1.5),
+          borderSide: const BorderSide(color: AppColors.red, width: 1.5),
         ),
         focusedErrorBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),
-          borderSide: const BorderSide(color: Colors.red, width: 2),
+          borderSide: const BorderSide(color: AppColors.red, width: 2),
         ),
         errorStyle: const TextStyle(
-          color: Colors.red,
+          color: AppColors.red,
           fontSize: 12,
           fontWeight: FontWeight.w500,
         ),
@@ -1813,7 +1818,7 @@ class _BookAClimbScreenState extends State<BookAClimbScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Please select a trek date.'),
-          backgroundColor: Colors.orange,
+          backgroundColor: AppColors.orange,
         ),
       );
       return;
@@ -1938,7 +1943,7 @@ class _BookAClimbScreenState extends State<BookAClimbScreen> {
                         ? [
                             const Text(
                               'No files uploaded.',
-                              style: TextStyle(color: Colors.black38),
+                              style: TextStyle(color: AppColors.textBlack54),
                             ),
                           ]
                         : _pickedFiles.map((f) => Text(f.name)).toList()),
@@ -1964,7 +1969,7 @@ class _BookAClimbScreenState extends State<BookAClimbScreen> {
                 ),
                 ElevatedButton(
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.blueGrey[700],
+                    backgroundColor: AppColors.primary,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(8),
                     ),
@@ -1997,7 +2002,7 @@ class _BookAClimbScreenState extends State<BookAClimbScreen> {
                               ScaffoldMessenger.of(context).showSnackBar(
                                 SnackBar(
                                   content: Text('Error checking bookings: $e'),
-                                  backgroundColor: Colors.red,
+                                  backgroundColor: AppColors.red,
                                 ),
                               );
                             }
@@ -2102,7 +2107,7 @@ class _BookAClimbScreenState extends State<BookAClimbScreen> {
                         )
                       : const Text(
                           'Proceed',
-                          style: TextStyle(color: Colors.white),
+                          style: TextStyle(color: AppColors.white),
                         ),
                 ),
               ],
@@ -2134,18 +2139,18 @@ class _BookAClimbScreenState extends State<BookAClimbScreen> {
           style: TextStyle(
             fontWeight: FontWeight.w600,
             fontSize: 15,
-            color: Colors.black87,
+            color: AppColors.textBlack87,
           ),
         ),
         const SizedBox(height: 8),
         Container(
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: AppColors.white,
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: Colors.black26),
+            border: Border.all(color: AppColors.borderBlack12),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.05),
+                color: AppColors.black.withOpacity(0.05),
                 blurRadius: 4,
                 offset: const Offset(0, 2),
               ),
@@ -2158,19 +2163,19 @@ class _BookAClimbScreenState extends State<BookAClimbScreen> {
               border: InputBorder.none,
               contentPadding: EdgeInsets.zero,
             ),
-            icon: Icon(Icons.arrow_drop_down, color: Colors.blueGrey[700]),
+            icon: Icon(Icons.arrow_drop_down, color: AppColors.primary),
             style: const TextStyle(
               fontSize: 15,
-              color: Colors.black87,
+              color: AppColors.textBlack87,
               fontWeight: FontWeight.w500,
             ),
-            dropdownColor: Colors.white,
+            dropdownColor: AppColors.white,
             items: const [
               DropdownMenuItem(
                 value: 'General',
                 child: Row(
                   children: [
-                    Icon(Icons.hiking, size: 20, color: Colors.blueGrey),
+                    Icon(Icons.hiking, size: 20, color: AppColors.primary),
                     SizedBox(width: 12),
                     Text('General'),
                   ],
@@ -2180,7 +2185,7 @@ class _BookAClimbScreenState extends State<BookAClimbScreen> {
                 value: 'Research',
                 child: Row(
                   children: [
-                    Icon(Icons.science, size: 20, color: Colors.blueGrey),
+                    Icon(Icons.science, size: 20, color: AppColors.primary),
                     SizedBox(width: 12),
                     Text('Research'),
                   ],
@@ -2198,18 +2203,18 @@ class _BookAClimbScreenState extends State<BookAClimbScreen> {
           style: TextStyle(
             fontWeight: FontWeight.w600,
             fontSize: 15,
-            color: Colors.black87,
+            color: AppColors.textBlack87,
           ),
         ),
         const SizedBox(height: 8),
         Container(
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: AppColors.white,
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: Colors.black26),
+            border: Border.all(color: AppColors.borderBlack12),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.05),
+                color: AppColors.black.withOpacity(0.05),
                 blurRadius: 4,
                 offset: const Offset(0, 2),
               ),
@@ -2222,19 +2227,23 @@ class _BookAClimbScreenState extends State<BookAClimbScreen> {
               border: InputBorder.none,
               contentPadding: EdgeInsets.zero,
             ),
-            icon: Icon(Icons.arrow_drop_down, color: Colors.blueGrey[700]),
+            icon: Icon(Icons.arrow_drop_down, color: AppColors.primary),
             style: const TextStyle(
               fontSize: 15,
-              color: Colors.black87,
+              color: AppColors.textBlack87,
               fontWeight: FontWeight.w500,
             ),
-            dropdownColor: Colors.white,
+            dropdownColor: AppColors.white,
             items: const [
               DropdownMenuItem(
                 value: 'Inside San Isidro',
                 child: Row(
                   children: [
-                    Icon(Icons.location_city, size: 20, color: Colors.green),
+                    Icon(
+                      Icons.location_city,
+                      size: 20,
+                      color: AppColors.primary,
+                    ),
                     SizedBox(width: 12),
                     Text('Inside San Isidro'),
                   ],
@@ -2244,7 +2253,7 @@ class _BookAClimbScreenState extends State<BookAClimbScreen> {
                 value: 'Inside Davao Oriental',
                 child: Row(
                   children: [
-                    Icon(Icons.map, size: 20, color: Colors.blue),
+                    Icon(Icons.map, size: 20, color: AppColors.primary),
                     SizedBox(width: 12),
                     Text('Inside Davao Oriental'),
                   ],
@@ -2272,18 +2281,18 @@ class _BookAClimbScreenState extends State<BookAClimbScreen> {
           style: TextStyle(
             fontWeight: FontWeight.w600,
             fontSize: 15,
-            color: Colors.black87,
+            color: AppColors.textBlack87,
           ),
         ),
         const SizedBox(height: 8),
         Container(
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: AppColors.white,
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: Colors.black26),
+            border: Border.all(color: AppColors.borderBlack12),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.05),
+                color: AppColors.black.withOpacity(0.05),
                 blurRadius: 4,
                 offset: const Offset(0, 2),
               ),
@@ -2296,19 +2305,19 @@ class _BookAClimbScreenState extends State<BookAClimbScreen> {
               border: InputBorder.none,
               contentPadding: EdgeInsets.zero,
             ),
-            icon: Icon(Icons.arrow_drop_down, color: Colors.blueGrey[700]),
+            icon: Icon(Icons.arrow_drop_down, color: AppColors.primary),
             style: const TextStyle(
               fontSize: 15,
-              color: Colors.black87,
+              color: AppColors.textBlack87,
               fontWeight: FontWeight.w500,
             ),
-            dropdownColor: Colors.white,
+            dropdownColor: AppColors.white,
             items: const [
               DropdownMenuItem(
                 value: false,
                 child: Row(
                   children: [
-                    Icon(Icons.person, size: 20, color: Colors.blueGrey),
+                    Icon(Icons.person, size: 20, color: AppColors.primary),
                     SizedBox(width: 12),
                     Text('No'),
                   ],
@@ -2318,7 +2327,7 @@ class _BookAClimbScreenState extends State<BookAClimbScreen> {
                 value: true,
                 child: Row(
                   children: [
-                    Icon(Icons.elderly, size: 20, color: Colors.blueGrey),
+                    Icon(Icons.elderly, size: 20, color: AppColors.primary),
                     SizedBox(width: 12),
                     Text('Yes'),
                   ],
@@ -2340,9 +2349,9 @@ class _BookAClimbScreenState extends State<BookAClimbScreen> {
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: Colors.grey[100],
+          color: AppColors.grey100,
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: Colors.black26),
+          border: Border.all(color: AppColors.borderBlack26),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -2351,13 +2360,13 @@ class _BookAClimbScreenState extends State<BookAClimbScreen> {
               width: double.infinity,
               child: ElevatedButton.icon(
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.blueGrey[700],
+                  backgroundColor: AppColors.primary,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
                   ),
                   padding: const EdgeInsets.symmetric(vertical: 14),
                 ),
-                icon: const Icon(Icons.upload_file, color: Colors.white),
+                icon: const Icon(Icons.upload_file, color: AppColors.white),
                 label: const Text(
                   'Upload Docx, PDF, or Image',
                   style: TextStyle(color: Colors.white),
@@ -2371,15 +2380,15 @@ class _BookAClimbScreenState extends State<BookAClimbScreen> {
                 width: double.infinity,
                 padding: const EdgeInsets.symmetric(vertical: 16),
                 decoration: BoxDecoration(
-                  color: Colors.red[50],
-                  border: Border.all(color: Colors.red[300]!),
+                  color: AppColors.red50,
+                  border: Border.all(color: AppColors.red300),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Center(
                   child: Text(
                     'No files uploaded.',
                     style: TextStyle(
-                      color: Colors.red[700],
+                      color: AppColors.red700,
                       fontWeight: FontWeight.w500,
                     ),
                   ),
@@ -2397,7 +2406,7 @@ class _BookAClimbScreenState extends State<BookAClimbScreen> {
                             const Icon(
                               Icons.insert_drive_file,
                               size: 18,
-                              color: Colors.blueGrey,
+                              color: AppColors.primary,
                             ),
                             const SizedBox(width: 8),
                             Expanded(
@@ -2415,7 +2424,7 @@ class _BookAClimbScreenState extends State<BookAClimbScreen> {
                                 padding: EdgeInsets.zero,
                                 iconSize: 18,
                                 icon: const Icon(Icons.close),
-                                color: Colors.red,
+                                color: AppColors.red700,
                                 onPressed: () {
                                   setModalState(() {
                                     _pickedFiles.remove(f);
