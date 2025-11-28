@@ -8,6 +8,7 @@ import '../settings/help_and_support_screen.dart';
 import '../settings/account_settings.dart';
 import '../settings/notification_settings.dart';
 import '../settings/security_screen.dart';
+import '../settings/appearance_settings.dart';
 import '../../components/badge_filter.dart';
 import '../../services/achievement_service.dart';
 import '../../services/firebase_auth_service.dart';
@@ -313,6 +314,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     icon: Icons.remove_red_eye_outlined,
                     title: 'Appearance',
                     subtitle: 'Themes, wallpapers & app icon',
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) =>
+                              const AppearanceSettingsScreen(),
+                        ),
+                      );
+                    },
                   ),
                   _buildSettingItem(
                     icon: Icons.help_outline,
