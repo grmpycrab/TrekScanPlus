@@ -16,7 +16,7 @@ class BottomNavigation extends StatelessWidget {
     return Container(
       height: 65,
       decoration: BoxDecoration(
-        color: const Color(0xFF252B30),
+        color: AppColors.primary,
         boxShadow: [
           BoxShadow(
             color: AppColors.shadowDark,
@@ -56,13 +56,13 @@ class BottomNavigation extends StatelessWidget {
               iconPath,
               width: 24,
               height: 24,
-              color: isSelected ? Colors.white : Colors.grey,
+              color: isSelected ? AppColors.white : AppColors.textSecondary,
             ),
             const SizedBox(height: 4),
             Text(
               label,
               style: TextStyle(
-                color: isSelected ? Colors.white : Colors.grey,
+                color: isSelected ? AppColors.white : AppColors.textSecondary,
                 fontSize: 12,
               ),
             ),

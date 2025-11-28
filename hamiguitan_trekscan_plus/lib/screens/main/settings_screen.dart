@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'dart:convert';
 import '../../models/badge.dart';
+import '../../theme/color.dart';
 import '../settings/badge_display.dart';
 import '../settings/about_screen.dart';
 import '../settings/help_and_support_screen.dart';
@@ -68,7 +69,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
           .map((badge) => UserBadge.fromJson(badge as Map<String, dynamic>))
           .toList();
     } catch (e) {
-      print('Failed to load badges: $e');
       return [];
     }
   }
@@ -146,7 +146,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   Widget build(BuildContext context) {
     if (widget.showBadgesOnly) {
       return Scaffold(
-        backgroundColor: Colors.grey[100],
+        backgroundColor: AppColors.shadowMedium,
         body: SafeArea(
           child: Column(
             children: [
@@ -172,7 +172,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       return Center(
                         child: Text(
                           'No badges available',
-                          style: TextStyle(color: Colors.grey[600]),
+                          style: TextStyle(color: AppColors.textSecondary),
                         ),
                       );
                     }
@@ -185,13 +185,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
                             Icon(
                               Icons.filter_none,
                               size: 48,
-                              color: Colors.grey[400],
+                              color: AppColors.textSecondary,
                             ),
                             const SizedBox(height: 12),
                             Text(
                               'No badges match your filters',
                               style: TextStyle(
-                                color: Colors.grey[600],
+                                color: AppColors.textSecondary,
                                 fontSize: 16,
                               ),
                             ),
@@ -247,7 +247,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
     // Default settings screen
     return Scaffold(
-      backgroundColor: Colors.grey[100],
+      backgroundColor: AppColors.shadowMedium,
       body: SafeArea(
         child: Column(
           children: [
@@ -369,12 +369,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
   Widget _buildHeader() {
     return Container(
       padding: const EdgeInsets.all(16),
-      color: const Color(0xFF252B30),
+      color: AppColors.primary,
       child: Row(
         children: [
           if (widget.showBadgesOnly)
             IconButton(
-              icon: const Icon(Icons.arrow_back, color: Colors.white),
+              icon: const Icon(Icons.arrow_back, color: AppColors.white),
               onPressed: () => Navigator.pop(context),
             ),
           const SizedBox(width: 8),
@@ -383,7 +383,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               child: Text(
                 widget.showBadgesOnly ? 'All Badges' : 'Settings',
                 style: const TextStyle(
-                  color: Colors.white,
+                  color: AppColors.white,
                   fontSize: 20,
                   fontWeight: FontWeight.bold,
                 ),
@@ -392,7 +392,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ),
           if (widget.showBadgesOnly)
             IconButton(
-              icon: const Icon(Icons.filter_list, color: Colors.white),
+              icon: const Icon(Icons.filter_list, color: AppColors.white),
               onPressed: _showFilterBottomSheet,
             ),
           if (!widget.showBadgesOnly) const SizedBox(width: 56),
@@ -412,13 +412,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
       child: Container(
         margin: const EdgeInsets.only(bottom: 16),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: AppColors.white,
           borderRadius: BorderRadius.circular(12),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.05),
+              color: AppColors.shadowLight,
               blurRadius: 10,
-              offset: const Offset(0, 2),
+              offset: const Offset(0, 1),
             ),
           ],
         ),
@@ -430,10 +430,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
           leading: Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: const Color(0xFF252B30).withValues(alpha: 0.1),
+              color: AppColors.primary.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(8),
             ),
-            child: Icon(icon, color: const Color(0xFF252B30)),
+            child: Icon(icon, color: AppColors.primary),
           ),
           title: Text(
             title,
@@ -441,12 +441,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ),
           subtitle: Text(
             subtitle,
-            style: TextStyle(color: Colors.grey[600], fontSize: 14),
+            style: TextStyle(color: AppColors.textSecondary, fontSize: 14),
           ),
           trailing: const Icon(
             Icons.arrow_forward_ios,
             size: 16,
-            color: Colors.grey,
+            color: AppColors.textSecondary,
           ),
         ),
       ),

@@ -111,11 +111,11 @@ class _SignUpScreenState extends State<SignUpScreen> {
                   Container(
                     padding: const EdgeInsets.all(20),
                     decoration: BoxDecoration(
-                      color: Colors.white,
+                      color: AppColors.white,
                       shape: BoxShape.circle,
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withOpacity(0.1),
+                          color: AppColors.shadowMedium,
                           blurRadius: 20,
                           spreadRadius: 5,
                         ),
@@ -165,11 +165,11 @@ class _SignUpScreenState extends State<SignUpScreen> {
                   Container(
                     padding: const EdgeInsets.all(24),
                     decoration: BoxDecoration(
-                      color: Colors.white,
+                      color: AppColors.white,
                       borderRadius: BorderRadius.circular(20),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withOpacity(0.08),
+                          color: AppColors.shadowMedium,
                           blurRadius: 15,
                           offset: const Offset(0, 5),
                         ),
@@ -188,14 +188,14 @@ class _SignUpScreenState extends State<SignUpScreen> {
                             labelText: 'Email',
                             prefixIcon: const Icon(Icons.email_outlined),
                             filled: true,
-                            fillColor: Colors.grey[50],
+                            fillColor: AppColors.grey50,
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(12),
                               borderSide: BorderSide.none,
                             ),
                             enabledBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(12),
-                              borderSide: BorderSide(color: Colors.grey[200]!),
+                              borderSide: BorderSide(color: AppColors.grey200),
                             ),
                             focusedBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(12),
@@ -218,14 +218,14 @@ class _SignUpScreenState extends State<SignUpScreen> {
                             labelText: 'Password',
                             prefixIcon: const Icon(Icons.lock_outline),
                             filled: true,
-                            fillColor: Colors.grey[50],
+                            fillColor: AppColors.grey50,
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(12),
                               borderSide: BorderSide.none,
                             ),
                             enabledBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(12),
-                              borderSide: BorderSide(color: Colors.grey[200]!),
+                              borderSide: BorderSide(color: AppColors.grey200),
                             ),
                             focusedBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(12),
@@ -239,7 +239,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                                 _obscurePassword
                                     ? Icons.visibility_off_outlined
                                     : Icons.visibility_outlined,
-                                color: Colors.grey[600],
+                                color: AppColors.grey600,
                               ),
                               onPressed: () {
                                 setState(() {
@@ -261,14 +261,14 @@ class _SignUpScreenState extends State<SignUpScreen> {
                             labelText: 'Confirm Password',
                             prefixIcon: const Icon(Icons.lock_outline),
                             filled: true,
-                            fillColor: Colors.grey[50],
+                            fillColor: AppColors.grey50,
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(12),
                               borderSide: BorderSide.none,
                             ),
                             enabledBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(12),
-                              borderSide: BorderSide(color: Colors.grey[200]!),
+                              borderSide: BorderSide(color: AppColors.grey200),
                             ),
                             focusedBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(12),
@@ -282,7 +282,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                                 _obscureConfirmPassword
                                     ? Icons.visibility_off_outlined
                                     : Icons.visibility_outlined,
-                                color: Colors.grey[600],
+                                color: AppColors.grey600,
                               ),
                               onPressed: () {
                                 setState(() {
@@ -321,7 +321,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                               child: Text(
                                 'I agree to the Terms & Conditions',
                                 style: TextStyle(
-                                  color: Colors.grey[700],
+                                  color: AppColors.grey700,
                                   fontSize: 14,
                                 ),
                               ),
@@ -348,7 +348,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                                   child: CircularProgressIndicator(
                                     strokeWidth: 2,
                                     valueColor: AlwaysStoppedAnimation<Color>(
-                                      Colors.white,
+                                      AppColors.white,
                                     ),
                                   ),
                                 )
@@ -366,7 +366,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                         // Divider
                         Row(
                           children: [
-                            Expanded(child: Divider(color: Colors.grey[300])),
+                            Expanded(child: Divider(color: AppColors.grey300)),
                             Padding(
                               padding: const EdgeInsets.symmetric(
                                 horizontal: 16.0,
@@ -374,12 +374,12 @@ class _SignUpScreenState extends State<SignUpScreen> {
                               child: Text(
                                 'OR',
                                 style: TextStyle(
-                                  color: Colors.grey[600],
+                                  color: AppColors.grey600,
                                   fontWeight: FontWeight.w600,
                                 ),
                               ),
                             ),
-                            Expanded(child: Divider(color: Colors.grey[300])),
+                            Expanded(child: Divider(color: AppColors.grey300)),
                           ],
                         ),
                         const SizedBox(height: 24),
@@ -428,11 +428,11 @@ class _SignUpScreenState extends State<SignUpScreen> {
                                 },
                           style: OutlinedButton.styleFrom(
                             padding: const EdgeInsets.symmetric(vertical: 16),
-                            side: BorderSide(color: Colors.grey[300]!),
+                            side: BorderSide(color: AppColors.grey300),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(12),
                             ),
-                            backgroundColor: Colors.white,
+                            backgroundColor: AppColors.white,
                           ),
                           icon: Image.asset(
                             'assets/icons/google_icon.png',
@@ -458,7 +458,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                     children: [
                       Text(
                         'Already have an account? ',
-                        style: TextStyle(color: Colors.grey[700]),
+                        style: TextStyle(color: AppColors.grey700),
                       ),
                       TextButton(
                         onPressed: _isLoading

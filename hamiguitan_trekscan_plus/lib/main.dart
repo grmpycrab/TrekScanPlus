@@ -233,7 +233,7 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
         debugPrint('⚠️ [DeepLink] Could not extract postId from link');
       }
     } catch (e) {
-      debugPrint('❌ [DeepLink] Error parsing deep link: $e');
+      debugPrint('❌ [DeepLink] Error handling deep link: $e');
     }
   }
 

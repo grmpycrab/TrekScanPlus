@@ -234,7 +234,7 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
             borderSide: BorderSide(color: AppColors.primary),
           ),
           filled: true,
-          fillColor: Colors.grey[50],
+          fillColor: AppColors.grey50,
         ),
       ),
     );
@@ -249,10 +249,13 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
           backgroundColor: AppColors.primary,
           title: const Text(
             'Account Settings',
-            style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+            style: TextStyle(
+              color: AppColors.white,
+              fontWeight: FontWeight.bold,
+            ),
           ),
           leading: IconButton(
-            icon: const Icon(Icons.arrow_back, color: Colors.white),
+            icon: const Icon(Icons.arrow_back, color: AppColors.white),
             onPressed: () => Navigator.pop(context),
           ),
           elevation: 0,
@@ -267,10 +270,10 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
         backgroundColor: AppColors.primary,
         title: const Text(
           'Account Settings',
-          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+          style: TextStyle(color: AppColors.white, fontWeight: FontWeight.bold),
         ),
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.white),
+          icon: const Icon(Icons.arrow_back, color: AppColors.white),
           onPressed: () => Navigator.pop(context),
         ),
         elevation: 0,
@@ -286,18 +289,18 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
                 padding: const EdgeInsets.all(12),
                 margin: const EdgeInsets.only(bottom: 16),
                 decoration: BoxDecoration(
-                  color: Colors.red.shade50,
-                  border: Border.all(color: Colors.red.shade200),
+                  color: AppColors.red50,
+                  border: Border.all(color: AppColors.redShade200),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Row(
                   children: [
-                    Icon(Icons.error_outline, color: Colors.red.shade700),
+                    Icon(Icons.error_outline, color: AppColors.red700),
                     const SizedBox(width: 12),
                     Expanded(
                       child: Text(
                         _errorMessage!,
-                        style: TextStyle(color: Colors.red.shade700),
+                        style: TextStyle(color: AppColors.red700),
                       ),
                     ),
                   ],
@@ -310,21 +313,18 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
                 padding: const EdgeInsets.all(12),
                 margin: const EdgeInsets.only(bottom: 16),
                 decoration: BoxDecoration(
-                  color: Colors.green.shade50,
-                  border: Border.all(color: Colors.green.shade200),
+                  color: AppColors.green50,
+                  border: Border.all(color: AppColors.greenShade200),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Row(
                   children: [
-                    Icon(
-                      Icons.check_circle_outline,
-                      color: Colors.green.shade700,
-                    ),
+                    Icon(Icons.check_circle_outline, color: AppColors.green700),
                     const SizedBox(width: 12),
                     Expanded(
                       child: Text(
                         _successMessage!,
-                        style: TextStyle(color: Colors.green.shade700),
+                        style: TextStyle(color: AppColors.green700),
                       ),
                     ),
                   ],
@@ -337,18 +337,18 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
                 padding: const EdgeInsets.all(12),
                 margin: const EdgeInsets.only(bottom: 16),
                 decoration: BoxDecoration(
-                  color: Colors.orange.shade50,
-                  border: Border.all(color: Colors.orange.shade200),
+                  color: AppColors.orange50,
+                  border: Border.all(color: AppColors.orangeShade200),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Row(
                   children: [
-                    Icon(Icons.info_outline, color: Colors.orange.shade700),
+                    Icon(Icons.info_outline, color: AppColors.orange700),
                     const SizedBox(width: 12),
                     Expanded(
                       child: Text(
                         'You can change your name in $_nameChangeCooldownDays days',
-                        style: TextStyle(color: Colors.orange.shade700),
+                        style: TextStyle(color: AppColors.orange700),
                       ),
                     ),
                   ],
@@ -359,13 +359,13 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: AppColors.white,
                 borderRadius: BorderRadius.circular(12),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.05),
+                    color: AppColors.shadowLight,
                     blurRadius: 10,
-                    offset: const Offset(0, 2),
+                    offset: const Offset(0, 1),
                   ),
                 ],
               ),
@@ -440,7 +440,7 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
                           borderSide: BorderSide(color: AppColors.primary),
                         ),
                         filled: true,
-                        fillColor: Colors.grey[50],
+                        fillColor: AppColors.grey50,
                         suffixIcon: const Icon(Icons.calendar_today),
                       ),
                     ),
@@ -462,7 +462,7 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
                           borderSide: BorderSide(color: AppColors.primary),
                         ),
                         filled: true,
-                        fillColor: Colors.grey[50],
+                        fillColor: AppColors.grey50,
                       ),
                       items: const [
                         DropdownMenuItem(value: 'Male', child: Text('Male')),
@@ -507,19 +507,19 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
                         child: CircularProgressIndicator(
                           strokeWidth: 2,
                           valueColor: AlwaysStoppedAnimation<Color>(
-                            Colors.white,
+                            AppColors.white,
                           ),
                         ),
                       )
                     : const Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Icon(Icons.save, color: Colors.white, size: 20),
+                          Icon(Icons.save, color: AppColors.white, size: 20),
                           SizedBox(width: 8),
                           Text(
                             'Save Changes',
                             style: TextStyle(
-                              color: Colors.white,
+                              color: AppColors.white,
                               fontSize: 16,
                               fontWeight: FontWeight.bold,
                             ),
