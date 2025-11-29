@@ -13,7 +13,6 @@ class StationScreen extends StatefulWidget {
 
 class _StationScreenState extends State<StationScreen> {
   int _selectedTabIndex = 0;
-  late StationService _stationService;
   bool _isLoading = true;
 
   @override
@@ -23,8 +22,10 @@ class _StationScreenState extends State<StationScreen> {
   }
 
   Future<void> _initializeStationService() async {
-    _stationService = await StationService.init();
-    await _stationService.loadStations();
+    // Ensure stations are loaded
+    if (!StationService.instance.isLoaded) {
+      await StationService.instance.loadStations();
+    }
     if (mounted) {
       setState(() {
         _isLoading = false;
@@ -96,11 +97,11 @@ class _StationScreenState extends State<StationScreen> {
           children: [
             _buildTab(
               0,
-              'Visited (${_stationService.getVisitedStations().length})',
+              'Visited (${StationService.instance.getVisitedStations().length})',
             ),
             _buildTab(
               1,
-              'Not Visited (${_stationService.getUnvisitedStations().length})',
+              'Not Visited (${StationService.instance.getUnvisitedStations().length})',
             ),
           ],
         ),
@@ -133,7 +134,7 @@ class _StationScreenState extends State<StationScreen> {
   }
 
   Widget _buildVisitedStations() {
-    final visitedStations = _stationService.getVisitedStations();
+    final visitedStations = StationService.instance.getVisitedStations();
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -188,7 +189,7 @@ class _StationScreenState extends State<StationScreen> {
   }
 
   Widget _buildNotVisitedStations() {
-    final unvisitedStations = _stationService.getUnvisitedStations();
+    final unvisitedStations = StationService.instance.getUnvisitedStations();
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),

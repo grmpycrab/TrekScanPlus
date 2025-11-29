@@ -100,6 +100,7 @@ class AppColors {
 
   // Blue Variants
   static const Color blue = Colors.blue;
+  static Color blue50 = Colors.blue[50]!;
   static Color blue700 = Colors.blue[700]!;
   static Color blue900 = Colors.blue[900]!;
   static const Color blueAccent = Colors.blueAccent;

@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/station_data.dart';
@@ -6,14 +7,34 @@ import 'geofencing_service.dart';
 import 'firestore_station_service.dart';
 import 'e_certificate_service.dart';
 
-class StationService {
+class StationService extends ChangeNotifier {
   static const String VISITED_STATIONS_KEY = 'visited_stations';
+  static StationService? _instance;
 
   final SharedPreferences prefs;
   List<StationData> _stations = [];
   String? _currentUserId;
+  bool _isLoaded = false;
+  bool _isLoading = false;
+  String? _loadError;
 
   StationService._(this.prefs, {String? userId}) : _currentUserId = userId;
+
+  /// Get singleton instance
+  static StationService get instance {
+    if (_instance == null) {
+      throw StateError('StationService not initialized. Call init() first.');
+    }
+    return _instance!;
+  }
+
+  /// Check if instance is initialized
+  static bool get isInitialized => _instance != null;
+
+  /// Get loading state
+  bool get isLoaded => _isLoaded;
+  bool get isLoading => _isLoading;
+  String? get loadError => _loadError;
 
   /// Get the key for visited stations scoped to current user
   String get _userVisitedStationsKey {
@@ -28,8 +49,16 @@ class StationService {
   }
 
   static Future<StationService> init({String? userId}) async {
+    if (_instance != null) {
+      if (userId != null) {
+        _instance!.setCurrentUser(userId);
+      }
+      return _instance!;
+    }
+
     final prefs = await SharedPreferences.getInstance();
-    return StationService._(prefs, userId: userId);
+    _instance = StationService._(prefs, userId: userId);
+    return _instance!;
   }
 
   /// Update the current user ID (call this when user changes)
@@ -38,6 +67,23 @@ class StationService {
   }
 
   Future<List<StationData>> loadStations() async {
+    // Return immediately if already loaded
+    if (_isLoaded) {
+      return List.unmodifiable(_stations);
+    }
+
+    // If already loading, wait for completion
+    if (_isLoading) {
+      while (_isLoading) {
+        await Future.delayed(const Duration(milliseconds: 100));
+      }
+      return List.unmodifiable(_stations);
+    }
+
+    _isLoading = true;
+    _loadError = null;
+    notifyListeners();
+
     if (_stations.isEmpty) {
       try {
         // Load stations data
@@ -124,7 +170,15 @@ class StationService {
         print('Error loading station data: $e');
         print('Stack trace: ${StackTrace.current}');
         _stations = [];
+        _loadError = e.toString();
+      } finally {
+        _isLoaded = true;
+        _isLoading = false;
+        notifyListeners();
       }
+    } else {
+      _isLoaded = true;
+      _isLoading = false;
     }
     return List.unmodifiable(_stations);
   }

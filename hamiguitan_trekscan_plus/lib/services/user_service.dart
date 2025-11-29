@@ -228,7 +228,9 @@ class UserService {
 
       if (userData != null) {
         // Remove this user from followers' following lists
-        final followers = List<String>.from(userData['followers'] ?? []);
+        final followersData = userData['followers'] as List<dynamic>?;
+        final followers =
+            followersData?.map((e) => e.toString()).toList() ?? [];
         for (final followerId in followers) {
           final followerRef = _usersCollection.doc(followerId);
           batch.update(followerRef, {
@@ -238,7 +240,9 @@ class UserService {
         }
 
         // Remove this user from following users' followers lists
-        final following = List<String>.from(userData['following'] ?? []);
+        final followingData = userData['following'] as List<dynamic>?;
+        final following =
+            followingData?.map((e) => e.toString()).toList() ?? [];
         for (final followingId in following) {
           final followingRef = _usersCollection.doc(followingId);
           batch.update(followingRef, {
@@ -248,9 +252,10 @@ class UserService {
         }
 
         // Clean up pending follow requests
-        final pendingRequests = List<String>.from(
-          userData['pendingFollowRequests'] ?? [],
-        );
+        final pendingRequestsData =
+            userData['pendingFollowRequests'] as List<dynamic>?;
+        final pendingRequests =
+            pendingRequestsData?.map((e) => e.toString()).toList() ?? [];
         for (final requesterId in pendingRequests) {
           final requesterRef = _usersCollection.doc(requesterId);
           batch.update(requesterRef, {
@@ -258,9 +263,10 @@ class UserService {
           });
         }
 
-        final sentRequests = List<String>.from(
-          userData['sentFollowRequests'] ?? [],
-        );
+        final sentRequestsData =
+            userData['sentFollowRequests'] as List<dynamic>?;
+        final sentRequests =
+            sentRequestsData?.map((e) => e.toString()).toList() ?? [];
         for (final targetId in sentRequests) {
           final targetRef = _usersCollection.doc(targetId);
           batch.update(targetRef, {
@@ -316,7 +322,28 @@ class UserService {
         // Continue with deletion even if storage cleanup fails
       }
 
-      // 6. Finally, delete the user document
+      // 6. Delete email verification data
+      try {
+        // Delete verification code document
+        final verificationDoc = _firestore
+            .collection('email_verifications')
+            .doc(uid);
+        batch.delete(verificationDoc);
+
+        if (kDebugMode) {
+          print('Deleted email verification data');
+        }
+
+        // Note: Mail collection documents are managed by Cloud Functions
+        // and have restricted permissions. They will be cleaned up automatically.
+      } catch (e) {
+        if (kDebugMode) {
+          print('Error deleting email verification data: $e');
+        }
+        // Continue with deletion even if email cleanup fails
+      }
+
+      // 7. Finally, delete the user document
       batch.delete(_usersCollection.doc(uid));
 
       // Commit all deletions

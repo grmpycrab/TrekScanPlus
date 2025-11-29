@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'login_screen.dart';
+import 'email_verification_screen.dart';
 import 'additional_information.dart';
 import '../../theme/color.dart';
 import '../../services/firebase_auth_service.dart';
@@ -59,21 +60,15 @@ class _SignUpScreenState extends State<SignUpScreen> {
         email: _emailController.text.trim(),
         password: _passwordController.text.trim(),
       );
-
-      print(
-        '✅ Sign up successful, navigating to Additional Information Screen',
-      );
-
       if (mounted) {
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(
-            builder: (context) => const AdditionalInformationScreen(),
+            builder: (context) => const EmailVerificationScreen(),
           ),
         );
       }
     } catch (e) {
-      print('❌ Sign up error: $e');
       final errorMessage = ErrorHandler.getErrorMessage(e.toString());
       setState(() {
         _errorMessage = errorMessage;
@@ -122,7 +117,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                       ],
                     ),
                     child: Image.asset(
-                      'assets/images/trek_logo.png',
+                      'assets/images/app_logo.png',
                       height: 80,
                       width: 80,
                     ),

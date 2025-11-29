@@ -80,17 +80,19 @@ class _ProfileScreenState extends State<ProfileScreen> {
       if (_firebaseUser != null) {
         await _certificateService.init(userId: _firebaseUser!.uid);
 
-        final stationService = await StationService.init(
-          userId: _firebaseUser!.uid,
-        );
-        await stationService.loadStations();
-        final visitedStations = stationService.getVisitedStations();
+        // Use singleton instance and ensure loaded
+        StationService.instance.setCurrentUser(_firebaseUser!.uid);
+        if (!StationService.instance.isLoaded) {
+          await StationService.instance.loadStations();
+        }
+        final visitedStations = StationService.instance.getVisitedStations();
 
         if (visitedStations.isNotEmpty) {
-          final totalDistance = stationService.getTotalDistance();
-          final totalTimeMinutes = stationService.getTotalTimeMinutes();
-          final trekStartDate = stationService.getTrekStartDate();
-          final trekEndDate = stationService.getTrekEndDate();
+          final totalDistance = StationService.instance.getTotalDistance();
+          final totalTimeMinutes = StationService.instance
+              .getTotalTimeMinutes();
+          final trekStartDate = StationService.instance.getTrekStartDate();
+          final trekEndDate = StationService.instance.getTrekEndDate();
 
           await _certificateService.checkAndAwardCertificate(
             visitedStations,

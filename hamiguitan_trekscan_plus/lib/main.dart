@@ -6,9 +6,11 @@ import 'package:app_links/app_links.dart';
 import 'firebase_options.dart';
 import 'screens/auth/login_screen.dart';
 import 'screens/auth/signup_screen.dart';
+import 'screens/auth/email_verification_screen.dart';
 import 'screens/main/main_screen.dart';
 import 'screens/main/book_a_climb.dart';
 import 'screens/social/post_detail_screen.dart';
+import 'screens/splash_screen.dart';
 import 'services/firebase_auth_service.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'services/station_service.dart';
@@ -33,11 +35,21 @@ void main() async {
   // Initialize Firebase
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 
+  // Initialize StationService (but don't wait for loading)
   final stationService = await StationService.init();
-  await stationService.loadStations();
 
   // Start connectivity monitoring
   ConnectivityService.instance.start();
+
+  // Load stations asynchronously in the background (non-blocking)
+  stationService
+      .loadStations()
+      .then((_) {
+        debugPrint('✅ Stations loaded successfully');
+      })
+      .catchError((error) {
+        debugPrint('❌ Failed to load stations: $error');
+      });
 
   runApp(const MyApp());
 }
@@ -51,11 +63,22 @@ class MyApp extends StatefulWidget {
 
 class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
   bool _permissionsRequested = false;
+  bool _servicesInitialized = false;
+  bool _showSplash = true;
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+
+    // Hide splash screen after a delay
+    Future.delayed(const Duration(milliseconds: 2500), () {
+      if (mounted) {
+        setState(() {
+          _showSplash = false;
+        });
+      }
+    });
 
     // Handle deep links
     _handleInitialDeepLink();
@@ -68,23 +91,23 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
     PresenceService.instance.initialize();
 
     // Listen to auth changes and start booking status listener when user logs in
-    FirebaseAuthService.instance.authStateChanges.listen((user) {
+    FirebaseAuthService.instance.authStateChanges.listen((user) async {
       if (user != null) {
-        BookingService.instance.startBookingStatusListener(user.uid);
-        _initializeFCM();
+        // Check if user is verified before starting services
+        final isVerified = await FirebaseAuthService.instance.isEmailVerified();
 
-        // Setup booking update notifications
-        NotificationService().listenToBookingUpdates();
-
-        // Request permissions once user is authenticated
-        if (!_permissionsRequested) {
-          _permissionsRequested = true;
-          WidgetsBinding.instance.addPostFrameCallback((_) {
-            _requestPermissions();
-          });
+        if (isVerified) {
+          // Only start these services for verified users
+          await _initializeVerifiedUserServices(user.uid);
+        } else {
+          debugPrint(
+            '⏳ User not verified yet, skipping service initialization',
+          );
         }
       } else {
-        // User logged out, mark as offline handled by PresenceService
+        // User logged out, reset flags
+        _servicesInitialized = false;
+        _permissionsRequested = false;
       }
     });
   }
@@ -111,6 +134,26 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
         PresenceService.instance.initialize();
       }
     }
+  }
+
+  /// Initialize services for verified users
+  Future<void> _initializeVerifiedUserServices(String userId) async {
+    if (_servicesInitialized) return;
+
+    debugPrint('🚀 Initializing services for verified user: $userId');
+
+    BookingService.instance.startBookingStatusListener(userId);
+    _initializeFCM();
+    NotificationService().listenToBookingUpdates();
+
+    if (!_permissionsRequested) {
+      _permissionsRequested = true;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _requestPermissions();
+      });
+    }
+
+    _servicesInitialized = true;
   }
 
   Future<void> _initializeFCM() async {
@@ -248,60 +291,123 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
 
   @override
   Widget build(BuildContext context) {
+    // Show splash screen on initial load
+    if (_showSplash) {
+      return const MaterialApp(
+        debugShowCheckedModeBanner: false,
+        home: SplashScreen(),
+      );
+    }
+
+    return _buildMainApp();
+  }
+
+  Widget _buildMainApp() {
     return StreamBuilder<User?>(
       stream: FirebaseAuthService.instance.authStateChanges,
       initialData: FirebaseAuthService.instance.currentUser,
       builder: (context, snapshot) {
         final user = snapshot.data;
 
-        return MaterialApp(
-          debugShowCheckedModeBanner: false,
-          title: 'Hamiguitan TrekScan+',
-          navigatorKey: navigatorKey,
-          theme: ThemeData(
-            primaryColor: const Color(0xFF252B30),
-            colorScheme: ColorScheme.fromSeed(
-              seedColor: const Color(0xFF252B30),
+        // Show loading screen while checking auth state
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return MaterialApp(
+            debugShowCheckedModeBanner: false,
+            home: const Scaffold(
+              body: Center(child: CircularProgressIndicator()),
             ),
-            useMaterial3: true,
-          ),
-          builder: (context, child) => Stack(
-            children: [
-              child!,
-              NotificationBannerOverlay(key: NotificationManager.overlayKey),
-            ],
-          ),
-          home: snapshot.connectionState == ConnectionState.waiting
-              ? const Scaffold(body: Center(child: CircularProgressIndicator()))
-              : (user != null ? const MainScreen() : const LoginScreen()),
-          routes: {
-            '/login': (context) => const LoginScreen(),
-            '/signup': (context) => const SignUpScreen(),
-            '/main': (context) => const MainScreen(),
-          },
-          onGenerateRoute: (settings) {
-            // Handle routes with arguments
-            if (settings.name == '/post-detail') {
-              final postId = settings.arguments as String?;
-              if (postId != null) {
-                return MaterialPageRoute(
-                  builder: (context) => PostDetailScreen(postId: postId),
-                );
-              }
-            }
+          );
+        }
 
-            // Handle book-climb route with optional bookingId argument
-            if (settings.name == '/book-climb') {
-              final bookingId = settings.arguments as String?;
-              return MaterialPageRoute(
-                builder: (context) =>
-                    BookAClimbScreen(highlightBookingId: bookingId),
+        // No user logged in
+        if (user == null) {
+          return _buildApp(const LoginScreen());
+        }
+
+        // User logged in, check verification status
+        return FutureBuilder<bool>(
+          future: FirebaseAuthService.instance.isEmailVerified(),
+          builder: (context, verificationSnapshot) {
+            if (verificationSnapshot.connectionState ==
+                ConnectionState.waiting) {
+              return _buildApp(
+                const Scaffold(
+                  body: Center(child: CircularProgressIndicator()),
+                ),
               );
             }
 
-            return null;
+            final isVerified = verificationSnapshot.data ?? false;
+            final isEmailPasswordUser = user.providerData.any(
+              (info) => info.providerId == 'password',
+            );
+
+            Widget initialScreen;
+            if (isEmailPasswordUser && !isVerified) {
+              // Email not verified, show verification screen
+              initialScreen = const EmailVerificationScreen();
+            } else {
+              // Email verified or Google user, show main screen
+              // Initialize services for verified users
+              if (isVerified) {
+                WidgetsBinding.instance.addPostFrameCallback((_) {
+                  _initializeVerifiedUserServices(user.uid);
+                });
+              }
+              initialScreen = const MainScreen();
+            }
+
+            return _buildApp(initialScreen);
           },
         );
+      },
+    );
+  }
+
+  MaterialApp _buildApp(Widget home) {
+    return MaterialApp(
+      debugShowCheckedModeBanner: false,
+      title: 'Hamiguitan TrekScan+',
+      navigatorKey: navigatorKey,
+      theme: ThemeData(
+        primaryColor: const Color(0xFF252B30),
+        colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF252B30)),
+        useMaterial3: true,
+      ),
+      builder: (context, child) => Stack(
+        children: [
+          child!,
+          NotificationBannerOverlay(key: NotificationManager.overlayKey),
+        ],
+      ),
+      home: home,
+      routes: {
+        '/login': (context) => const LoginScreen(),
+        '/signup': (context) => const SignUpScreen(),
+        '/verify-email': (context) => const EmailVerificationScreen(),
+        '/main': (context) => const MainScreen(),
+      },
+      onGenerateRoute: (settings) {
+        // Handle routes with arguments
+        if (settings.name == '/post-detail') {
+          final postId = settings.arguments as String?;
+          if (postId != null) {
+            return MaterialPageRoute(
+              builder: (context) => PostDetailScreen(postId: postId),
+            );
+          }
+        }
+
+        // Handle book-climb route with optional bookingId argument
+        if (settings.name == '/book-climb') {
+          final bookingId = settings.arguments as String?;
+          return MaterialPageRoute(
+            builder: (context) =>
+                BookAClimbScreen(highlightBookingId: bookingId),
+          );
+        }
+
+        return null;
       },
     );
   }

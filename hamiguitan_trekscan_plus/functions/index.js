@@ -8,6 +8,7 @@
 
 const functions = require('firebase-functions');
 const admin = require('firebase-admin');
+const sgMail = require('@sendgrid/mail');
 
 // Set timezone to Philippine Time to match app behavior
 process.env.TZ = 'Asia/Manila';
@@ -17,6 +18,12 @@ const db = admin.firestore();
 
 // Set region to match Firestore location
 const region = 'asia-southeast1';
+
+// Initialize SendGrid
+const sendgridKey = functions.config().sendgrid?.key;
+if (sendgridKey) {
+    sgMail.setApiKey(sendgridKey);
+}
 
 /**
  * Format date as YYYY-MM-DD in Philippine timezone
@@ -406,6 +413,123 @@ exports.sendBookingStatusNotification = functions.region(region).firestore
 
         } catch (error) {
             console.error(`❌ [FCM] Error sending notification for booking ${bookingId}:`, error);
+            return { success: false, error: error.message };
+        }
+    });
+
+/**
+ * Send verification code emails
+ * Listens to the /mail collection and sends emails with verification codes
+ */
+exports.sendVerificationEmail = functions.region(region).firestore
+    .document('mail/{mailId}')
+    .onCreate(async (snap, context) => {
+        const mailData = snap.data();
+        const mailId = context.params.mailId;
+
+        console.log(`📧 Processing email ${mailId}`);
+        console.log(`📦 Mail data:`, JSON.stringify(mailData, null, 2));
+
+        try {
+            if (!sendgridKey) {
+                console.warn('⚠️ SendGrid API key not configured. Email not sent.');
+                console.log(`📧 Would send to: ${mailData.to}, Code: ${mailData.code}`);
+
+                await snap.ref.update({
+                    processed: true,
+                    processedAt: admin.firestore.FieldValue.serverTimestamp(),
+                    status: 'no_api_key'
+                });
+                return { success: false, reason: 'no_api_key' };
+            }
+
+            // Send email with SendGrid
+            const msg = {
+                to: mailData.to,
+                from: 'keyntharly@gmail.com', // Use your verified sender email
+                subject: mailData.subject || 'TrekScan Plus - Email Verification Code',
+                text: `Your verification code is: ${mailData.code}\n\nThis code will expire in 15 minutes.\n\nIf you didn't request this code, please ignore this email.`,
+                html: `
+                    <!DOCTYPE html>
+                    <html>
+                    <head>
+                        <meta charset="UTF-8">
+                        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                    </head>
+                    <body style="margin: 0; padding: 0; background-color: #f4f4f4; font-family: Arial, sans-serif;">
+                        <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f4f4f4; padding: 20px;">
+                            <tr>
+                                <td align="center">
+                                    <table width="600" cellpadding="0" cellspacing="0" style="background-color: #ffffff; border-radius: 8px; overflow: hidden;">
+                                        <tr>
+                                            <td style="background-color: #252B30; padding: 30px; text-align: center;">
+                                                <h1 style="color: #ffffff; margin: 0; font-size: 24px;">TrekScan Plus</h1>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td style="padding: 40px 30px;">
+                                                <h2 style="color: #252B30; margin: 0 0 20px; font-size: 20px;">Email Verification</h2>
+                                                <p style="color: #666; margin: 0 0 20px; font-size: 16px; line-height: 1.5;">
+                                                    Thank you for signing up! Please use the verification code below to complete your registration:
+                                                </p>
+                                                <div style="background-color: #f8f9fa; border: 2px solid #252B30; border-radius: 8px; padding: 30px; text-align: center; margin: 30px 0;">
+                                                    <p style="color: #666; margin: 0 0 10px; font-size: 14px; text-transform: uppercase; letter-spacing: 1px;">Verification Code</p>
+                                                    <p style="color: #252B30; margin: 0; font-size: 36px; font-weight: bold; letter-spacing: 8px; font-family: 'Courier New', monospace;">
+                                                        ${mailData.code}
+                                                    </p>
+                                                </div>
+                                                <p style="color: #666; margin: 20px 0; font-size: 14px; line-height: 1.5;">
+                                                    ⏱️ <strong>This code will expire in 15 minutes.</strong>
+                                                </p>
+                                                <p style="color: #666; margin: 20px 0; font-size: 14px; line-height: 1.5;">
+                                                    If you didn't request this code, please ignore this email.
+                                                </p>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td style="background-color: #f8f9fa; padding: 20px 30px; text-align: center; border-top: 1px solid #e0e0e0;">
+                                                <p style="color: #999; margin: 0; font-size: 12px;">
+                                                    © 2025 TrekScan Plus - Hamiguitan Mountain Range
+                                                </p>
+                                            </td>
+                                        </tr>
+                                    </table>
+                                </td>
+                            </tr>
+                        </table>
+                    </body>
+                    </html>
+                `,
+            };
+
+            await sgMail.send(msg);
+            console.log(`✅ Email sent successfully to ${mailData.to}`);
+
+            // Mark as sent
+            await snap.ref.update({
+                processed: true,
+                processedAt: admin.firestore.FieldValue.serverTimestamp(),
+                status: 'sent'
+            });
+
+            return { success: true };
+
+        } catch (error) {
+            console.error(`❌ Error sending email ${mailId}:`, error);
+
+            // Log detailed error information
+            if (error.response) {
+                console.error('SendGrid Error Response:', JSON.stringify(error.response.body, null, 2));
+            }
+
+            await snap.ref.update({
+                processed: true,
+                processedAt: admin.firestore.FieldValue.serverTimestamp(),
+                status: 'error',
+                error: error.message,
+                errorDetails: error.response?.body || error.message
+            });
+
             return { success: false, error: error.message };
         }
     });
