@@ -199,7 +199,7 @@ class _StationDetailScreenState extends State<StationDetailScreen> {
         style: const TextStyle(
           fontSize: 16,
           fontWeight: FontWeight.w600,
-          color: Colors.black,
+          color: AppColors.textPrimary,
         ),
       ),
       flexibleSpace: FlexibleSpaceBar(

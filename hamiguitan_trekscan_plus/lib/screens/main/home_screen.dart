@@ -237,103 +237,165 @@ class _HomeScreenState extends State<HomeScreen> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.end,
           children: [
-            // Calendar button
-            if (_isFabExpanded)
-              Container(
-                margin: const EdgeInsets.only(bottom: 16),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 6,
-                      ),
-                      decoration: BoxDecoration(
-                        color: AppColors.white,
-                        borderRadius: BorderRadius.circular(8),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withValues(alpha: 0.1),
-                            blurRadius: 8,
-                            offset: const Offset(0, 2),
+            // Calendar button (animated)
+            AnimatedSwitcher(
+              duration: const Duration(milliseconds: 200),
+              switchInCurve: Curves.easeOut,
+              switchOutCurve: Curves.easeIn,
+              transitionBuilder: (child, animation) {
+                final offsetAnim = Tween<Offset>(
+                  begin: const Offset(0, 0.2),
+                  end: Offset.zero,
+                ).animate(animation);
+                return FadeTransition(
+                  opacity: animation,
+                  child: SlideTransition(position: offsetAnim, child: child),
+                );
+              },
+              child: _isFabExpanded
+                  ? Container(
+                      key: const ValueKey('calendar_row'),
+                      margin: const EdgeInsets.only(bottom: 16),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          AnimatedSlide(
+                            duration: const Duration(milliseconds: 220),
+                            curve: Curves.easeOut,
+                            offset: _isFabExpanded
+                                ? Offset.zero
+                                : const Offset(0.25, 0),
+                            child: AnimatedOpacity(
+                              duration: const Duration(milliseconds: 220),
+                              curve: Curves.easeOut,
+                              opacity: _isFabExpanded ? 1 : 0,
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 12,
+                                  vertical: 6,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: AppColors.white,
+                                  borderRadius: BorderRadius.circular(8),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.black.withValues(
+                                        alpha: 0.1,
+                                      ),
+                                      blurRadius: 8,
+                                      offset: const Offset(0, 2),
+                                    ),
+                                  ],
+                                ),
+                                child: const Text(
+                                  'View Calendar',
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          FloatingActionButton(
+                            heroTag: 'calendar_fab',
+                            onPressed: () {
+                              setFabState(() {
+                                _isFabExpanded = false;
+                              });
+                              _showCalendarOverlay();
+                            },
+                            backgroundColor: AppColors.primary,
+                            child: Image.asset(
+                              'assets/icons/calendar.png',
+                              width: 24,
+                              height: 24,
+                              color: Colors.white,
+                            ),
                           ),
                         ],
                       ),
-                      child: const Text(
-                        'View Calendar',
-                        style: TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    FloatingActionButton(
-                      heroTag: 'calendar_fab',
-                      onPressed: () {
-                        setFabState(() {
-                          _isFabExpanded = false;
-                        });
-                        _showCalendarOverlay();
-                      },
-                      backgroundColor: AppColors.primary,
-                      child: Image.asset(
-                        'assets/icons/calendar.png',
-                        width: 24,
-                        height: 24,
-                        color: Colors.white,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            // Create post button
-            if (_isFabExpanded)
-              Container(
-                margin: const EdgeInsets.only(bottom: 16),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 6,
-                      ),
-                      decoration: BoxDecoration(
-                        color: AppColors.white,
-                        borderRadius: BorderRadius.circular(8),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withValues(alpha: 0.1),
-                            blurRadius: 8,
-                            offset: const Offset(0, 2),
+                    )
+                  : const SizedBox.shrink(key: ValueKey('calendar_row_empty')),
+            ),
+            // Create post button (animated)
+            AnimatedSwitcher(
+              duration: const Duration(milliseconds: 200),
+              switchInCurve: Curves.easeOut,
+              switchOutCurve: Curves.easeIn,
+              transitionBuilder: (child, animation) {
+                final offsetAnim = Tween<Offset>(
+                  begin: const Offset(0, 0.2),
+                  end: Offset.zero,
+                ).animate(animation);
+                return FadeTransition(
+                  opacity: animation,
+                  child: SlideTransition(position: offsetAnim, child: child),
+                );
+              },
+              child: _isFabExpanded
+                  ? Container(
+                      key: const ValueKey('create_row'),
+                      margin: const EdgeInsets.only(bottom: 16),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          AnimatedSlide(
+                            duration: const Duration(milliseconds: 220),
+                            curve: Curves.easeOut,
+                            offset: _isFabExpanded
+                                ? Offset.zero
+                                : const Offset(0.25, 0),
+                            child: AnimatedOpacity(
+                              duration: const Duration(milliseconds: 220),
+                              curve: Curves.easeOut,
+                              opacity: _isFabExpanded ? 1 : 0,
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 12,
+                                  vertical: 6,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: AppColors.white,
+                                  borderRadius: BorderRadius.circular(8),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.black.withValues(
+                                        alpha: 0.1,
+                                      ),
+                                      blurRadius: 8,
+                                      offset: const Offset(0, 2),
+                                    ),
+                                  ],
+                                ),
+                                child: const Text(
+                                  'Create Post',
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          FloatingActionButton(
+                            heroTag: 'create_post_fab',
+                            onPressed: () {
+                              setFabState(() {
+                                _isFabExpanded = false;
+                              });
+                              _showCreatePostDialog();
+                            },
+                            backgroundColor: AppColors.primary,
+                            child: const Icon(Icons.edit, color: Colors.white),
                           ),
                         ],
                       ),
-                      child: const Text(
-                        'Create Post',
-                        style: TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    FloatingActionButton(
-                      heroTag: 'create_post_fab',
-                      onPressed: () {
-                        setFabState(() {
-                          _isFabExpanded = false;
-                        });
-                        _showCreatePostDialog();
-                      },
-                      backgroundColor: AppColors.primary,
-                      child: const Icon(Icons.edit, color: Colors.white),
-                    ),
-                  ],
-                ),
-              ),
+                    )
+                  : const SizedBox.shrink(key: ValueKey('create_row_empty')),
+            ),
             // Main FAB
             FloatingActionButton(
               heroTag: 'main_fab',
