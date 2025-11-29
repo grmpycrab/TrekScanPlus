@@ -46,6 +46,9 @@ class _HomeScreenState extends State<HomeScreen> {
   final FocusNode _searchFocusNode = FocusNode();
   String _searchQuery = '';
 
+  // FAB expansion
+  bool _isFabExpanded = false;
+
   @override
   void initState() {
     super.initState();
@@ -222,265 +225,409 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
       ),
       floatingActionButton: _firebaseUser != null
-          ? FloatingActionButton(
-              onPressed: _showCreatePostDialog,
-              backgroundColor: AppColors.primary,
-              child: const Icon(Icons.add, color: Colors.white),
-            )
+          ? _buildExpandableFab()
           : null,
     );
   }
 
-  Widget _buildHeader() {
-    return Column(
-      children: [
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
-          color: Colors.white,
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              if (!_isSearchExpanded)
-                Expanded(
-                  child: GestureDetector(
-                    onTap: () {
-                      Navigator.of(context).push(
-                        MaterialPageRoute(
-                          builder: (context) => const ProfileScreen(),
-                        ),
-                      );
-                    },
-                    child: _firebaseUser != null
-                        ? StreamBuilder<DocumentSnapshot<Map<String, dynamic>>>(
-                            stream: _userService.streamUser(_firebaseUser!.uid),
-                            builder: (context, snapshot) {
-                              String firstName = '';
-                              String lastName = '';
-
-                              if (snapshot.hasData && snapshot.data != null) {
-                                final userData = snapshot.data!.data() ?? {};
-                                firstName = userData['firstName'] ?? '';
-                                lastName = userData['lastName'] ?? '';
-                              }
-
-                              // Fallback to Firebase displayName if no Firestore data
-                              if (firstName.isEmpty && lastName.isEmpty) {
-                                firstName =
-                                    _firebaseUser!.displayName ??
-                                    _firebaseUser!.email?.split('@').first ??
-                                    'Traveler';
-                              }
-
-                              return Row(
-                                children: [
-                                  ProfileAvatarWithStatus(
-                                    userId: _firebaseUser!.uid,
-                                    photoUrl: _firebaseUser?.photoURL,
-                                    radius: 20,
-                                  ),
-                                  const SizedBox(width: 4),
-                                  Expanded(
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        const Text(
-                                          'Welcome,',
-                                          style: TextStyle(
-                                            color: AppColors.textSecondary,
-                                            fontSize: 14,
-                                          ),
-                                        ),
-                                        Text(
-                                          firstName.isNotEmpty
-                                              ? '$firstName ${lastName.isNotEmpty ? lastName : ''}'
-                                                    .trim()
-                                              : 'Traveler!',
-                                          style: const TextStyle(
-                                            fontWeight: FontWeight.w600,
-                                            fontSize: 16,
-                                          ),
-                                          maxLines: 1,
-                                          overflow: TextOverflow.ellipsis,
-                                        ),
-                                        StreamBuilder<bool>(
-                                          stream: PresenceService.instance
-                                              .userOnlineStatus(
-                                                _firebaseUser!.uid,
-                                              ),
-                                          builder: (context, snapshot) {
-                                            final isOnline =
-                                                snapshot.data ?? false;
-                                            return Text(
-                                              isOnline ? 'Online' : 'Offline',
-                                              style: TextStyle(
-                                                color: isOnline
-                                                    ? Colors.green
-                                                    : Colors.red,
-                                                fontSize: 10,
-                                                fontWeight: FontWeight.w500,
-                                              ),
-                                            );
-                                          },
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                ],
-                              );
-                            },
-                          )
-                        : Row(
-                            children: [
-                              CircleAvatar(
-                                backgroundColor: AppColors.primary,
-                                child: const Icon(
-                                  Icons.person,
-                                  color: AppColors.iconPrimary,
-                                ),
-                              ),
-                              const SizedBox(width: 12),
-                              Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: const [
-                                  Text(
-                                    'Welcome,',
-                                    style: TextStyle(
-                                      color: AppColors.textSecondary,
-                                      fontSize: 14,
-                                    ),
-                                  ),
-                                  Text(
-                                    'Traveler!',
-                                    style: TextStyle(
-                                      fontWeight: FontWeight.w600,
-                                      fontSize: 16,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ],
-                          ),
-                  ),
-                ),
-              if (_isSearchExpanded)
-                Expanded(
-                  child: TextField(
-                    controller: _searchController,
-                    focusNode: _searchFocusNode,
-                    decoration: InputDecoration(
-                      hintText: 'Search posts and users...',
-                      hintStyle: TextStyle(color: AppColors.textSecondary),
-                      border: InputBorder.none,
-                      contentPadding: const EdgeInsets.symmetric(
+  Widget _buildExpandableFab() {
+    return StatefulBuilder(
+      builder: (context, setFabState) {
+        return Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.end,
+          children: [
+            // Calendar button
+            if (_isFabExpanded)
+              Container(
+                margin: const EdgeInsets.only(bottom: 16),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.symmetric(
                         horizontal: 12,
+                        vertical: 6,
                       ),
-                    ),
-                    style: const TextStyle(fontSize: 16),
-                  ),
-                ),
-              Row(
-                children: [
-                  IconButton(
-                    icon: Icon(
-                      _isSearchExpanded ? Icons.close : Icons.search,
-                      size: 24,
-                      color: _searchQuery.isNotEmpty
-                          ? AppColors.primary
-                          : Colors.black,
-                    ),
-                    tooltip: _isSearchExpanded
-                        ? 'Close search'
-                        : 'Search posts',
-                    onPressed: _toggleSearch,
-                  ),
-                  if (!_isSearchExpanded)
-                    IconButton(
-                      icon: const Icon(Icons.calendar_today, size: 24),
-                      tooltip: 'View calendar',
-                      onPressed: _showCalendarOverlay,
-                    ),
-                  if (!_isSearchExpanded)
-                    if (!_isSearchExpanded)
-                      Stack(
-                        children: [
-                          IconButton(
-                            icon: Image.asset(
-                              'assets/icons/bell.png',
-                              width: 28,
-                              height: 28,
-                              color: Colors.black,
-                            ),
-                            onPressed: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) =>
-                                      const NotificationScreen(),
-                                ),
-                              );
-                            },
+                      decoration: BoxDecoration(
+                        color: AppColors.white,
+                        borderRadius: BorderRadius.circular(8),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.1),
+                            blurRadius: 8,
+                            offset: const Offset(0, 2),
                           ),
-                          // Show red dot only when there are unread notifications for the signed-in user
-                          if (_firebaseUser != null)
-                            StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
-                              stream: FirebaseFirestore.instance
-                                  .collection('users')
-                                  .doc(_firebaseUser!.uid)
-                                  .collection('notifications')
-                                  .where('isRead', isEqualTo: false)
-                                  .limit(1)
-                                  .snapshots(),
-                              builder: (context, snapshot) {
-                                if (_firebaseUser == null) {
-                                  return const SizedBox.shrink();
-                                }
-                                final hasUnread =
-                                    snapshot.hasData &&
-                                    snapshot.data!.docs.isNotEmpty;
-                                return hasUnread
-                                    ? const Positioned(
-                                        right: 12,
-                                        top: 12,
-                                        child: SizedBox(
-                                          width: 8,
-                                          height: 8,
-                                          child: DecoratedBox(
-                                            decoration: BoxDecoration(
-                                              color: AppColors.notificationDot,
-                                              shape: BoxShape.circle,
-                                            ),
-                                          ),
-                                        ),
-                                      )
-                                    : const SizedBox.shrink();
-                              },
-                            ),
                         ],
                       ),
+                      child: const Text(
+                        'View Calendar',
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    FloatingActionButton(
+                      heroTag: 'calendar_fab',
+                      onPressed: () {
+                        setFabState(() {
+                          _isFabExpanded = false;
+                        });
+                        _showCalendarOverlay();
+                      },
+                      backgroundColor: AppColors.primary,
+                      child: Image.asset(
+                        'assets/icons/calendar.png',
+                        width: 24,
+                        height: 24,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            // Create post button
+            if (_isFabExpanded)
+              Container(
+                margin: const EdgeInsets.only(bottom: 16),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 6,
+                      ),
+                      decoration: BoxDecoration(
+                        color: AppColors.white,
+                        borderRadius: BorderRadius.circular(8),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.1),
+                            blurRadius: 8,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
+                      ),
+                      child: const Text(
+                        'Create Post',
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    FloatingActionButton(
+                      heroTag: 'create_post_fab',
+                      onPressed: () {
+                        setFabState(() {
+                          _isFabExpanded = false;
+                        });
+                        _showCreatePostDialog();
+                      },
+                      backgroundColor: AppColors.primary,
+                      child: const Icon(Icons.edit, color: Colors.white),
+                    ),
+                  ],
+                ),
+              ),
+            // Main FAB
+            FloatingActionButton(
+              heroTag: 'main_fab',
+              onPressed: () {
+                setFabState(() {
+                  _isFabExpanded = !_isFabExpanded;
+                });
+              },
+              backgroundColor: AppColors.primary,
+              child: AnimatedRotation(
+                turns: _isFabExpanded ? 0.125 : 0.0,
+                duration: const Duration(milliseconds: 200),
+                child: Icon(
+                  _isFabExpanded ? Icons.close : Icons.add,
+                  color: Colors.white,
+                ),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _buildHeader() {
+    return StatefulBuilder(
+      builder: (context, setHeaderState) {
+        return Column(
+          children: [
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
+              color: Colors.white,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  if (!_isSearchExpanded)
+                    Expanded(
+                      child: GestureDetector(
+                        onTap: () {
+                          Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (context) => const ProfileScreen(),
+                            ),
+                          );
+                        },
+                        child: _firebaseUser != null
+                            ? StreamBuilder<
+                                DocumentSnapshot<Map<String, dynamic>>
+                              >(
+                                stream: _userService.streamUser(
+                                  _firebaseUser!.uid,
+                                ),
+                                builder: (context, snapshot) {
+                                  String firstName = '';
+                                  String lastName = '';
+
+                                  if (snapshot.hasData &&
+                                      snapshot.data != null) {
+                                    final userData =
+                                        snapshot.data!.data() ?? {};
+                                    firstName = userData['firstName'] ?? '';
+                                    lastName = userData['lastName'] ?? '';
+                                  }
+
+                                  // Fallback to Firebase displayName if no Firestore data
+                                  if (firstName.isEmpty && lastName.isEmpty) {
+                                    firstName =
+                                        _firebaseUser!.displayName ??
+                                        _firebaseUser!.email
+                                            ?.split('@')
+                                            .first ??
+                                        'Traveler';
+                                  }
+
+                                  return Row(
+                                    children: [
+                                      ProfileAvatarWithStatus(
+                                        userId: _firebaseUser!.uid,
+                                        photoUrl: _firebaseUser?.photoURL,
+                                        radius: 20,
+                                      ),
+                                      const SizedBox(width: 4),
+                                      Expanded(
+                                        child: Column(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
+                                          children: [
+                                            const Text(
+                                              'Welcome,',
+                                              style: TextStyle(
+                                                color: AppColors.textSecondary,
+                                                fontSize: 14,
+                                              ),
+                                            ),
+                                            Text(
+                                              firstName.isNotEmpty
+                                                  ? '$firstName ${lastName.isNotEmpty ? lastName : ''}'
+                                                        .trim()
+                                                  : 'Traveler!',
+                                              style: const TextStyle(
+                                                fontWeight: FontWeight.w600,
+                                                fontSize: 16,
+                                              ),
+                                              maxLines: 1,
+                                              overflow: TextOverflow.ellipsis,
+                                            ),
+                                            StreamBuilder<bool>(
+                                              stream: PresenceService.instance
+                                                  .userOnlineStatus(
+                                                    _firebaseUser!.uid,
+                                                  ),
+                                              builder: (context, snapshot) {
+                                                final isOnline =
+                                                    snapshot.data ?? false;
+                                                return Text(
+                                                  isOnline
+                                                      ? 'Online'
+                                                      : 'Offline',
+                                                  style: TextStyle(
+                                                    color: isOnline
+                                                        ? Colors.green
+                                                        : Colors.red,
+                                                    fontSize: 10,
+                                                    fontWeight: FontWeight.w500,
+                                                  ),
+                                                );
+                                              },
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ],
+                                  );
+                                },
+                              )
+                            : Row(
+                                children: [
+                                  CircleAvatar(
+                                    backgroundColor: AppColors.primary,
+                                    child: const Icon(
+                                      Icons.person,
+                                      color: AppColors.iconPrimary,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 12),
+                                  Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: const [
+                                      Text(
+                                        'Welcome,',
+                                        style: TextStyle(
+                                          color: AppColors.textSecondary,
+                                          fontSize: 14,
+                                        ),
+                                      ),
+                                      Text(
+                                        'Traveler!',
+                                        style: TextStyle(
+                                          fontWeight: FontWeight.w600,
+                                          fontSize: 16,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ],
+                              ),
+                      ),
+                    ),
+                  if (_isSearchExpanded)
+                    Expanded(
+                      child: TextField(
+                        controller: _searchController,
+                        focusNode: _searchFocusNode,
+                        decoration: InputDecoration(
+                          hintText: 'Search posts and users...',
+                          hintStyle: TextStyle(color: AppColors.textSecondary),
+                          border: InputBorder.none,
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                          ),
+                        ),
+                        style: const TextStyle(fontSize: 16),
+                      ),
+                    ),
+                  Row(
+                    children: [
+                      IconButton(
+                        icon: _isSearchExpanded
+                            ? Icon(
+                                Icons.close,
+                                size: 24,
+                                color: AppColors.primary,
+                              )
+                            : Image.asset(
+                                'assets/icons/search.png',
+                                width: 24,
+                                height: 24,
+                                color: _searchQuery.isNotEmpty
+                                    ? AppColors.primary
+                                    : Colors.black,
+                              ),
+                        tooltip: _isSearchExpanded
+                            ? 'Close search'
+                            : 'Search posts',
+                        onPressed: _toggleSearch,
+                      ),
+                      if (!_isSearchExpanded)
+                        Stack(
+                          children: [
+                            IconButton(
+                              icon: Image.asset(
+                                'assets/icons/bell.png',
+                                width: 28,
+                                height: 28,
+                                color: Colors.black,
+                              ),
+                              onPressed: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) =>
+                                        const NotificationScreen(),
+                                  ),
+                                );
+                              },
+                            ),
+                            // Show red dot only when there are unread notifications for the signed-in user
+                            if (_firebaseUser != null)
+                              StreamBuilder<
+                                QuerySnapshot<Map<String, dynamic>>
+                              >(
+                                stream: FirebaseFirestore.instance
+                                    .collection('users')
+                                    .doc(_firebaseUser!.uid)
+                                    .collection('notifications')
+                                    .where('isRead', isEqualTo: false)
+                                    .limit(1)
+                                    .snapshots(),
+                                builder: (context, snapshot) {
+                                  if (_firebaseUser == null) {
+                                    return const SizedBox.shrink();
+                                  }
+                                  final hasUnread =
+                                      snapshot.hasData &&
+                                      snapshot.data!.docs.isNotEmpty;
+                                  return hasUnread
+                                      ? const Positioned(
+                                          right: 12,
+                                          top: 12,
+                                          child: SizedBox(
+                                            width: 8,
+                                            height: 8,
+                                            child: DecoratedBox(
+                                              decoration: BoxDecoration(
+                                                color:
+                                                    AppColors.notificationDot,
+                                                shape: BoxShape.circle,
+                                              ),
+                                            ),
+                                          ),
+                                        )
+                                      : const SizedBox.shrink();
+                                },
+                              ),
+                          ],
+                        ),
+                    ],
+                  ),
                 ],
               ),
-            ],
-          ),
-        ),
-      ],
+            ),
+          ],
+        );
+      },
     );
   }
 
   void _toggleSearch() {
-    setState(() {
-      _isSearchExpanded = !_isSearchExpanded;
-      if (_isSearchExpanded) {
-        Future.delayed(const Duration(milliseconds: 100), () {
-          if (mounted) {
-            _searchFocusNode.requestFocus();
-          }
-        });
-      } else {
-        _searchController.clear();
-        _searchFocusNode.unfocus();
-      }
-    });
+    _isSearchExpanded = !_isSearchExpanded;
+    if (_isSearchExpanded) {
+      Future.delayed(const Duration(milliseconds: 100), () {
+        if (mounted) {
+          _searchFocusNode.requestFocus();
+        }
+      });
+    } else {
+      _searchController.clear();
+      _searchFocusNode.unfocus();
+    }
+    // Force header rebuild only
+    if (mounted) {
+      setState(() {});
+    }
   }
 
   void _showCalendarOverlay() {

@@ -10,6 +10,7 @@ import 'screens/auth/email_verification_screen.dart';
 import 'screens/main/main_screen.dart';
 import 'screens/main/book_a_climb.dart';
 import 'screens/social/post_detail_screen.dart';
+import 'screens/splash_screen.dart';
 import 'services/firebase_auth_service.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'services/station_service.dart';
@@ -63,11 +64,21 @@ class MyApp extends StatefulWidget {
 class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
   bool _permissionsRequested = false;
   bool _servicesInitialized = false;
+  bool _showSplash = true;
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+
+    // Hide splash screen after a delay
+    Future.delayed(const Duration(milliseconds: 2500), () {
+      if (mounted) {
+        setState(() {
+          _showSplash = false;
+        });
+      }
+    });
 
     // Handle deep links
     _handleInitialDeepLink();
@@ -280,6 +291,18 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
 
   @override
   Widget build(BuildContext context) {
+    // Show splash screen on initial load
+    if (_showSplash) {
+      return const MaterialApp(
+        debugShowCheckedModeBanner: false,
+        home: SplashScreen(),
+      );
+    }
+
+    return _buildMainApp();
+  }
+
+  Widget _buildMainApp() {
     return StreamBuilder<User?>(
       stream: FirebaseAuthService.instance.authStateChanges,
       initialData: FirebaseAuthService.instance.currentUser,

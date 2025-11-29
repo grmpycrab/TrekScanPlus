@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../models/badge.dart';
+import '../../theme/color.dart';
 
 class BadgeCard extends StatelessWidget {
   final UserBadge badge;
@@ -17,83 +18,105 @@ class BadgeCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(12),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.08),
-              blurRadius: 8,
-              offset: const Offset(0, 2),
-            ),
-          ],
-        ),
-        child: Stack(
-          alignment: Alignment.center,
-          children: [
-            // Badge content
-            Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Container(
-                  width: 60,
-                  height: 60,
-                  decoration: BoxDecoration(
-                    color: badge.getColor().withValues(alpha: 0.2),
-                    shape: BoxShape.circle,
-                  ),
-                  child: Icon(
-                    badge.getIconData(),
-                    color: badge.getColor(),
-                    size: 28,
-                  ),
-                ),
-                const SizedBox(height: 12),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                  child: Text(
-                    badge.name,
-                    textAlign: TextAlign.center,
-                    style: const TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w600,
-                    ),
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
-                const SizedBox(height: 6),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                  child: Text(
-                    badge.rarity,
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontSize: 11,
-                      color: badge.getColor(),
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        // Calculate responsive sizes based on available width
+        final cardWidth = constraints.maxWidth;
+        final iconSize = (cardWidth * 0.35).clamp(40.0, 70.0);
+        final lockIconSize = (cardWidth * 0.25).clamp(30.0, 50.0);
+        final nameFontSize = (cardWidth * 0.11).clamp(11.0, 14.0);
+        final rarityFontSize = (cardWidth * 0.09).clamp(9.0, 12.0);
+        final spacing = (cardWidth * 0.08).clamp(6.0, 12.0);
+
+        return GestureDetector(
+          onTap: onTap,
+          child: Container(
+            decoration: BoxDecoration(
+              color: AppColors.cardBackground,
+              borderRadius: BorderRadius.circular(12),
+              boxShadow: [
+                BoxShadow(
+                  color: AppColors.shadowLight,
+                  blurRadius: 8,
+                  offset: const Offset(0, 2),
                 ),
               ],
             ),
-            // Lock overlay if not acquired
-            if (!isAcquired)
-              Container(
-                decoration: BoxDecoration(
-                  color: Colors.black.withValues(alpha: 0.4),
-                  borderRadius: BorderRadius.circular(12),
+            child: Stack(
+              alignment: Alignment.center,
+              children: [
+                // Badge content
+                Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Container(
+                      width: iconSize,
+                      height: iconSize,
+                      decoration: BoxDecoration(
+                        color: badge.getColor().withValues(alpha: 0.2),
+                        shape: BoxShape.circle,
+                      ),
+                      child: Icon(
+                        badge.getIconData(),
+                        color: badge.getColor(),
+                        size: iconSize * 0.5,
+                      ),
+                    ),
+                    SizedBox(height: spacing),
+                    Flexible(
+                      child: Padding(
+                        padding: EdgeInsets.symmetric(
+                          horizontal: cardWidth * 0.06,
+                        ),
+                        child: Text(
+                          badge.name,
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            fontSize: nameFontSize,
+                            fontWeight: FontWeight.w600,
+                          ),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ),
+                    SizedBox(height: spacing * 0.5),
+                    Padding(
+                      padding: EdgeInsets.symmetric(
+                        horizontal: cardWidth * 0.06,
+                      ),
+                      child: Text(
+                        badge.rarity,
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          fontSize: rarityFontSize,
+                          color: badge.getColor(),
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
-                child: Center(
-                  child: Icon(Icons.lock, color: Colors.white, size: 40),
-                ),
-              ),
-          ],
-        ),
-      ),
+                // Lock overlay if not acquired
+                if (!isAcquired)
+                  Container(
+                    decoration: BoxDecoration(
+                      color: AppColors.shadowOverlay,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Center(
+                      child: Icon(
+                        Icons.lock,
+                        color: AppColors.white,
+                        size: lockIconSize,
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 }
@@ -113,7 +136,7 @@ class BadgeDetailScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.grey[100],
+      backgroundColor: AppColors.background,
       body: SafeArea(
         child: Column(
           children: [
@@ -145,19 +168,19 @@ class BadgeDetailScreen extends StatelessWidget {
   Widget _buildHeader(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(16),
-      color: const Color(0xFF252B30),
+      color: AppColors.primary,
       child: Row(
         children: [
           IconButton(
-            icon: const Icon(Icons.arrow_back, color: Colors.white),
+            icon: Icon(Icons.arrow_back, color: AppColors.white),
             onPressed: () => Navigator.pop(context),
           ),
-          const Expanded(
+          Expanded(
             child: Center(
               child: Text(
                 'Badge Details',
                 style: TextStyle(
-                  color: Colors.white,
+                  color: AppColors.white,
                   fontSize: 20,
                   fontWeight: FontWeight.bold,
                 ),
@@ -171,87 +194,112 @@ class BadgeDetailScreen extends StatelessWidget {
   }
 
   Widget _buildBadgeDisplay() {
-    return Column(
-      children: [
-        Container(
-          width: 120,
-          height: 120,
-          decoration: BoxDecoration(
-            color: badge.getColor().withValues(alpha: 0.2),
-            shape: BoxShape.circle,
-            border: Border.all(color: badge.getColor(), width: 3),
-          ),
-          child: Stack(
-            alignment: Alignment.center,
-            children: [
-              Icon(badge.getIconData(), color: badge.getColor(), size: 60),
-              if (!isAcquired)
-                Container(
-                  decoration: BoxDecoration(
-                    color: Colors.black.withValues(alpha: 0.5),
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Icon(Icons.lock, color: Colors.white, size: 40),
-                ),
-            ],
-          ),
-        ),
-        const SizedBox(height: 20),
-        Text(
-          badge.name,
-          textAlign: TextAlign.center,
-          style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-        ),
-        const SizedBox(height: 8),
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-          decoration: BoxDecoration(
-            color: badge.getColor().withValues(alpha: 0.2),
-            borderRadius: BorderRadius.circular(20),
-          ),
-          child: Text(
-            badge.rarity.toUpperCase(),
-            style: TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.w600,
-              color: badge.getColor(),
-            ),
-          ),
-        ),
-        const SizedBox(height: 12),
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-          decoration: BoxDecoration(
-            color: isAcquired
-                ? Colors.green.withValues(alpha: 0.2)
-                : Colors.grey.withValues(alpha: 0.2),
-            borderRadius: BorderRadius.circular(20),
-            border: Border.all(
-              color: isAcquired ? Colors.green : Colors.grey,
-              width: 1,
-            ),
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(
-                isAcquired ? Icons.check_circle : Icons.lock_outline,
-                color: isAcquired ? Colors.green : Colors.grey,
-                size: 16,
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final screenWidth = MediaQuery.of(context).size.width;
+        final badgeSize = (screenWidth * 0.3).clamp(100.0, 150.0);
+        final iconSize = badgeSize * 0.5;
+        final lockIconSize = badgeSize * 0.33;
+        final titleFontSize = (screenWidth * 0.06).clamp(20.0, 28.0);
+
+        return Column(
+          children: [
+            Container(
+              width: badgeSize,
+              height: badgeSize,
+              decoration: BoxDecoration(
+                color: badge.getColor().withValues(alpha: 0.2),
+                shape: BoxShape.circle,
+                border: Border.all(color: badge.getColor(), width: 3),
               ),
-              const SizedBox(width: 6),
-              Text(
-                isAcquired ? 'ACQUIRED' : 'NOT ACQUIRED',
+              child: Stack(
+                alignment: Alignment.center,
+                children: [
+                  Icon(
+                    badge.getIconData(),
+                    color: badge.getColor(),
+                    size: iconSize,
+                  ),
+                  if (!isAcquired)
+                    Container(
+                      decoration: BoxDecoration(
+                        color: AppColors.shadowOverlay,
+                        shape: BoxShape.circle,
+                      ),
+                      child: Icon(
+                        Icons.lock,
+                        color: AppColors.white,
+                        size: lockIconSize,
+                      ),
+                    ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 20),
+            Text(
+              badge.name,
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: titleFontSize,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              decoration: BoxDecoration(
+                color: badge.getColor().withValues(alpha: 0.2),
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: Text(
+                badge.rarity.toUpperCase(),
                 style: TextStyle(
                   fontSize: 12,
                   fontWeight: FontWeight.w600,
-                  color: isAcquired ? Colors.green : Colors.grey,
+                  color: badge.getColor(),
                 ),
               ),
-            ],
-          ),
-        ),
-      ],
+            ),
+            const SizedBox(height: 12),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              decoration: BoxDecoration(
+                color: isAcquired
+                    ? AppColors.statusApproved.withValues(alpha: 0.2)
+                    : AppColors.grey200,
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(
+                  color: isAcquired ? AppColors.statusApproved : AppColors.grey,
+                  width: 1,
+                ),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    isAcquired ? Icons.check_circle : Icons.lock_outline,
+                    color: isAcquired
+                        ? AppColors.statusApproved
+                        : AppColors.grey,
+                    size: 16,
+                  ),
+                  const SizedBox(width: 6),
+                  Text(
+                    isAcquired ? 'ACQUIRED' : 'NOT ACQUIRED',
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      color: isAcquired
+                          ? AppColors.statusApproved
+                          : AppColors.grey,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        );
+      },
     );
   }
 
@@ -259,11 +307,11 @@ class BadgeDetailScreen extends StatelessWidget {
     return Container(
       width: double.infinity,
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppColors.cardBackground,
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.08),
+            color: AppColors.shadowLight,
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -283,7 +331,7 @@ class BadgeDetailScreen extends StatelessWidget {
               badge.description,
               style: TextStyle(
                 fontSize: 14,
-                color: Colors.grey[700],
+                color: AppColors.textGrey700,
                 height: 1.5,
               ),
             ),
@@ -295,7 +343,7 @@ class BadgeDetailScreen extends StatelessWidget {
             const SizedBox(height: 8),
             Text(
               badge.category.replaceAll('_', ' ').toUpperCase(),
-              style: TextStyle(fontSize: 14, color: Colors.grey[600]),
+              style: TextStyle(fontSize: 14, color: AppColors.grey600),
             ),
             const SizedBox(height: 20),
             const Text(
@@ -305,7 +353,7 @@ class BadgeDetailScreen extends StatelessWidget {
             const SizedBox(height: 8),
             Text(
               '${badge.requirement['type']}: ${badge.requirement['value']}',
-              style: TextStyle(fontSize: 14, color: Colors.grey[600]),
+              style: TextStyle(fontSize: 14, color: AppColors.grey600),
             ),
           ],
         ),
@@ -322,11 +370,11 @@ class BadgeDetailScreen extends StatelessWidget {
     return Container(
       width: double.infinity,
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppColors.cardBackground,
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.08),
+            color: AppColors.shadowLight,
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -344,7 +392,7 @@ class BadgeDetailScreen extends StatelessWidget {
             const SizedBox(height: 12),
             Row(
               children: [
-                Icon(Icons.calendar_today, color: Colors.grey[600], size: 20),
+                Icon(Icons.calendar_today, color: AppColors.grey600, size: 20),
                 const SizedBox(width: 12),
                 Text(
                   formattedDate,
@@ -358,7 +406,7 @@ class BadgeDetailScreen extends StatelessWidget {
             const SizedBox(height: 12),
             Row(
               children: [
-                Icon(Icons.access_time, color: Colors.grey[600], size: 20),
+                Icon(Icons.access_time, color: AppColors.grey600, size: 20),
                 const SizedBox(width: 12),
                 Text(
                   formattedTime,

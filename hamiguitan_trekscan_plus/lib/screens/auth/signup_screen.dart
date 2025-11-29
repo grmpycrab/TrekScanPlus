@@ -60,9 +60,6 @@ class _SignUpScreenState extends State<SignUpScreen> {
         email: _emailController.text.trim(),
         password: _passwordController.text.trim(),
       );
-
-      print('✅ Sign up successful, navigating to Email Verification Screen');
-
       if (mounted) {
         Navigator.pushReplacement(
           context,
@@ -72,7 +69,6 @@ class _SignUpScreenState extends State<SignUpScreen> {
         );
       }
     } catch (e) {
-      print('❌ Sign up error: $e');
       final errorMessage = ErrorHandler.getErrorMessage(e.toString());
       setState(() {
         _errorMessage = errorMessage;
@@ -121,7 +117,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                       ],
                     ),
                     child: Image.asset(
-                      'assets/images/trek_logo.png',
+                      'assets/images/app_logo.png',
                       height: 80,
                       width: 80,
                     ),

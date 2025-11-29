@@ -130,7 +130,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       ],
                     ),
                     child: Image.asset(
-                      'assets/images/trek_logo.png',
+                      'assets/images/app_logo.png',
                       height: 80,
                       width: 80,
                     ),
