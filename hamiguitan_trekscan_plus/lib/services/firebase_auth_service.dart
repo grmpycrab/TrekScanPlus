@@ -2,6 +2,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'user_service.dart';
+import 'email_verification_service.dart';
 
 class FirebaseAuthService {
   FirebaseAuthService._internal();
@@ -23,6 +24,15 @@ class FirebaseAuthService {
         email: email,
         password: password,
       );
+
+      // Send 6-digit verification code instead of email link
+      if (userCredential.user != null) {
+        await EmailVerificationService.instance.sendVerificationCode(email);
+        if (kDebugMode) {
+          print('✉️ Verification code sent to $email');
+        }
+      }
+
       // Ensure the user document exists in Firestore for newly created users
       if (userCredential.user != null) {
         try {
@@ -189,6 +199,31 @@ class FirebaseAuthService {
       }
       rethrow;
     }
+  }
+
+  /// Send email verification code
+  Future<void> sendEmailVerification() async {
+    try {
+      final user = _firebaseAuth.currentUser;
+      if (user != null) {
+        await EmailVerificationService.instance.sendVerificationCode(
+          user.email!,
+        );
+        if (kDebugMode) {
+          print('✉️ Verification code sent to ${user.email}');
+        }
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        print('Send verification code error: $e');
+      }
+      rethrow;
+    }
+  }
+
+  /// Check if current user's email is verified (from Firestore)
+  Future<bool> isEmailVerified() async {
+    return await EmailVerificationService.instance.isEmailVerified();
   }
 
   /// Check if user is logged in

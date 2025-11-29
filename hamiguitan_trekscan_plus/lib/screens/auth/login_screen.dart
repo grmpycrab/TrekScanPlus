@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'signup_screen.dart';
 import 'forgot_password_screen.dart';
+import 'email_verification_screen.dart';
 import '../main/main_screen.dart';
 import '../../theme/color.dart';
 import '../../services/firebase_auth_service.dart';
@@ -44,6 +45,27 @@ class _LoginScreenState extends State<LoginScreen> {
           userCredential?.user ?? FirebaseAuthService.instance.currentUser;
 
       if (user != null && mounted) {
+        // Check if email is verified (from Firestore)
+        final isVerified = await FirebaseAuthService.instance.isEmailVerified();
+
+        // Check if using email/password (not Google)
+        final isEmailPasswordUser = user.providerData.any(
+          (info) => info.providerId == 'password',
+        );
+
+        if (!isVerified && isEmailPasswordUser) {
+          // Email not verified and using email/password (not Google)
+          if (mounted) {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(
+                builder: (context) => const EmailVerificationScreen(),
+              ),
+            );
+          }
+          return;
+        }
+
         // Wait a moment for the auth state stream to update
         await Future.delayed(const Duration(milliseconds: 500));
 

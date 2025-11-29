@@ -207,5 +207,20 @@ service cloud.firestore {
       allow read, write, delete: if false;
     }
 
+    // Email verification codes collection
+    match /email_verifications/{userId} {
+      // Users can only read/write their own verification data
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+
+    // Mail collection (for sending emails via Cloud Functions)
+    match /mail/{mailId} {
+      // Only Cloud Functions can read/write
+      allow read, write: if false;
+      
+      // Allow users to create mail documents (verification codes)
+      allow create: if request.auth != null;
+    }
+
   }
 }

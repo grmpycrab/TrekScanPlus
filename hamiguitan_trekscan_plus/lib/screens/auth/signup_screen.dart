@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'login_screen.dart';
+import 'email_verification_screen.dart';
 import 'additional_information.dart';
 import '../../theme/color.dart';
 import '../../services/firebase_auth_service.dart';
@@ -60,15 +61,13 @@ class _SignUpScreenState extends State<SignUpScreen> {
         password: _passwordController.text.trim(),
       );
 
-      print(
-        '✅ Sign up successful, navigating to Additional Information Screen',
-      );
+      print('✅ Sign up successful, navigating to Email Verification Screen');
 
       if (mounted) {
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(
-            builder: (context) => const AdditionalInformationScreen(),
+            builder: (context) => const EmailVerificationScreen(),
           ),
         );
       }

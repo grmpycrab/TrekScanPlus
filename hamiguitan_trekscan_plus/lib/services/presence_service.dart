@@ -49,10 +49,11 @@ class PresenceService {
   /// Update user's online status in Firestore
   Future<void> _updatePresence(String userId, {required bool isOnline}) async {
     try {
-      await _firestore.collection('users').doc(userId).update({
+      // Use set with merge to avoid error if document doesn't exist yet
+      await _firestore.collection('users').doc(userId).set({
         'isOnline': isOnline,
         'lastSeen': FieldValue.serverTimestamp(),
-      });
+      }, SetOptions(merge: true));
     } catch (e) {
       if (kDebugMode) {
         print('Error updating presence: $e');
@@ -63,10 +64,11 @@ class PresenceService {
   /// Mark user as offline (call when app is closing or user logs out)
   Future<void> markOffline(String userId) async {
     try {
-      await _firestore.collection('users').doc(userId).update({
+      // Use set with merge to avoid error if document doesn't exist yet
+      await _firestore.collection('users').doc(userId).set({
         'isOnline': false,
         'lastSeen': FieldValue.serverTimestamp(),
-      });
+      }, SetOptions(merge: true));
     } catch (e) {
       if (kDebugMode) {
         print('Error marking offline: $e');

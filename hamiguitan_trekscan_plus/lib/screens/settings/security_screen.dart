@@ -560,41 +560,66 @@ class _SecurityScreenState extends State<SecurityScreen> {
                 // Reauthenticate based on provider
                 if (_isGoogleUser) {
                   // Reauthenticate with Google
-                  final GoogleSignIn googleSignIn = GoogleSignIn();
-                  final GoogleSignInAccount? googleUser = await googleSignIn
-                      .signIn();
+                  try {
+                    final GoogleSignIn googleSignIn = GoogleSignIn();
+                    final GoogleSignInAccount? googleUser = await googleSignIn
+                        .signIn();
 
-                  if (googleUser == null) {
-                    throw Exception('Google sign-in cancelled');
+                    if (googleUser == null) {
+                      throw Exception('Google sign-in cancelled');
+                    }
+
+                    final GoogleSignInAuthentication googleAuth =
+                        await googleUser.authentication;
+                    final credential = GoogleAuthProvider.credential(
+                      accessToken: googleAuth.accessToken,
+                      idToken: googleAuth.idToken,
+                    );
+                    await currentUser.reauthenticateWithCredential(credential);
+                  } catch (e) {
+                    // Ignore Pigeon casting errors - they're harmless
+                    if (!e.toString().contains('PigeonUserDetails')) {
+                      rethrow;
+                    }
+                    print('⚠️ Ignoring Pigeon error: $e');
                   }
-
-                  final GoogleSignInAuthentication googleAuth =
-                      await googleUser.authentication;
-                  final credential = GoogleAuthProvider.credential(
-                    accessToken: googleAuth.accessToken,
-                    idToken: googleAuth.idToken,
-                  );
-                  await currentUser.reauthenticateWithCredential(credential);
                 } else {
                   // Reauthenticate with email/password
                   if (currentUser.email == null) {
                     throw Exception('Email not found');
                   }
-                  final credential = EmailAuthProvider.credential(
-                    email: currentUser.email!,
-                    password: passwordController.text,
-                  );
-                  await currentUser.reauthenticateWithCredential(credential);
+                  try {
+                    final credential = EmailAuthProvider.credential(
+                      email: currentUser.email!,
+                      password: passwordController.text,
+                    );
+                    await currentUser.reauthenticateWithCredential(credential);
+                  } catch (e) {
+                    // Ignore Pigeon casting errors - they're harmless
+                    if (!e.toString().contains('PigeonUserDetails')) {
+                      rethrow;
+                    }
+                    print('⚠️ Ignoring Pigeon error: $e');
+                  }
                 }
 
                 // Delete user data from Firestore (with cascade deletion)
                 await _userService.deleteUser(currentUser.uid);
 
                 // Delete Firebase Auth account
-                await currentUser.delete();
+                try {
+                  await currentUser.delete();
+                } catch (e) {
+                  // Ignore Pigeon casting errors - they're harmless
+                  if (!e.toString().contains('PigeonUserDetails')) {
+                    rethrow;
+                  }
+                  print('⚠️ Ignoring Pigeon error during account deletion: $e');
+                }
 
                 Navigator.pop(context, true);
               } catch (e) {
+                print('❌ Delete account error: $e');
                 if (context.mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
