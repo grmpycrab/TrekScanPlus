@@ -197,7 +197,7 @@ class BookingDetailsModal extends StatelessWidget {
                                 icon: const Icon(Icons.edit),
                                 label: const Text('Edit Details'),
                                 style: OutlinedButton.styleFrom(
-                                  disabledForegroundColor: AppColors.textLight,
+                                  disabledForegroundColor: AppColors.grey400,
                                   disabledBackgroundColor: AppColors.background,
                                 ),
                               ),

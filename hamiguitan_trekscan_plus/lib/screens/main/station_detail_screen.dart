@@ -17,7 +17,6 @@ class StationDetailScreen extends StatefulWidget {
 class _StationDetailScreenState extends State<StationDetailScreen> {
   StationData get station => widget.station;
   StationData? nextStationData;
-  late StationService _stationService;
   List<StationData> allStations = [];
 
   @override
@@ -28,15 +27,19 @@ class _StationDetailScreenState extends State<StationDetailScreen> {
 
   Future<void> _loadStationData() async {
     try {
-      _stationService = await StationService.init();
-      await _stationService.loadStations();
+      // Ensure stations are loaded
+      if (!StationService.instance.isLoaded) {
+        await StationService.instance.loadStations();
+      }
 
       if (mounted) {
-        final allStationsLoaded = _stationService.getAllStations();
+        final allStationsLoaded = StationService.instance.getAllStations();
         StationData? nextStation;
 
         if (station.nextStationId != null) {
-          nextStation = _stationService.getStationById(station.nextStationId!);
+          nextStation = StationService.instance.getStationById(
+            station.nextStationId!,
+          );
         }
 
         setState(() {

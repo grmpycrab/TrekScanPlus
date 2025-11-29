@@ -153,6 +153,10 @@ class _HomeScreenState extends State<HomeScreen> {
           // Use ValueNotifier instead of setState to avoid rebuilding social feed
           final now = month;
           final daysInMonth = DateTime(now.year, now.month + 1, 0).day;
+
+          // Check if widget is still mounted before updating notifier
+          if (!mounted) return;
+
           _trekDaysNotifier.value = List.generate(daysInMonth, (index) {
             final date = DateTime(now.year, now.month, index + 1);
             final key =

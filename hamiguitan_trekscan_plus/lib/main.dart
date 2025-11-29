@@ -33,11 +33,21 @@ void main() async {
   // Initialize Firebase
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 
+  // Initialize StationService (but don't wait for loading)
   final stationService = await StationService.init();
-  await stationService.loadStations();
 
   // Start connectivity monitoring
   ConnectivityService.instance.start();
+
+  // Load stations asynchronously in the background (non-blocking)
+  stationService
+      .loadStations()
+      .then((_) {
+        debugPrint('✅ Stations loaded successfully');
+      })
+      .catchError((error) {
+        debugPrint('❌ Failed to load stations: $error');
+      });
 
   runApp(const MyApp());
 }

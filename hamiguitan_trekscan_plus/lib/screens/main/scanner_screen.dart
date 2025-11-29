@@ -20,7 +20,6 @@ class _ScannerScreenState extends State<ScannerScreen>
   MobileScannerController? controller;
   bool isFlashOn = false;
   bool hasPermission = false;
-  late StationService stationService;
   late AchievementService achievementService;
   bool _isLoading = true;
   String? _lastScannedCode;
@@ -43,10 +42,13 @@ class _ScannerScreenState extends State<ScannerScreen>
 
     if (hasPermission) {
       controller = MobileScannerController();
-      stationService = await StationService.init();
       achievementService = AchievementService();
 
-      await stationService.loadStations(); // Load station data
+      // Ensure StationService is loaded
+      if (!StationService.instance.isLoaded) {
+        await StationService.instance.loadStations();
+      }
+
       await achievementService.init(); // Initialize achievements
 
       if (mounted) {
@@ -269,7 +271,7 @@ class _ScannerScreenState extends State<ScannerScreen>
               _lastScannedCode = code;
               _lastScanTime = now;
 
-              final station = stationService.getStationById(code);
+              final station = StationService.instance.getStationById(code);
 
               if (station != null) {
                 // Check geofence before allowing scan completion (if enabled)
@@ -328,11 +330,12 @@ class _ScannerScreenState extends State<ScannerScreen>
                 }
 
                 // Mark station as visited and save
-                await stationService.updateStationVisited(code, true);
+                await StationService.instance.updateStationVisited(code, true);
 
                 // Check and unlock achievements
-                final visitedStations = stationService.getVisitedStations();
-                final allStations = stationService.getAllStations();
+                final visitedStations = StationService.instance
+                    .getVisitedStations();
+                final allStations = StationService.instance.getAllStations();
 
                 // Get the index of this station (0-based) for achievement matching
                 final stationIndex = allStations.indexWhere(

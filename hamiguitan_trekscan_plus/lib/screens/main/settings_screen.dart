@@ -146,7 +146,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   Widget build(BuildContext context) {
     if (widget.showBadgesOnly) {
       return Scaffold(
-        backgroundColor: AppColors.shadowMedium,
+        backgroundColor: AppColors.shadowLight,
         body: SafeArea(
           child: Column(
             children: [

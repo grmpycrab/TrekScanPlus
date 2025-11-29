@@ -342,12 +342,15 @@ class BookingService {
   /// Check and award certificates when a booking is approved
   Future<void> _checkCertificatesOnBookingApproval(String userId) async {
     try {
-      // Initialize StationService if not already done
-      final stationService = await StationService.init(userId: userId);
+      // Use singleton instance and set user
+      StationService.instance.setCurrentUser(userId);
 
-      // Load stations and check certificate eligibility
-      await stationService.loadStations();
-      final visitedStations = stationService.getVisitedStations();
+      // Ensure stations are loaded
+      if (!StationService.instance.isLoaded) {
+        await StationService.instance.loadStations();
+      }
+
+      final visitedStations = StationService.instance.getVisitedStations();
 
       if (visitedStations.isNotEmpty) {
         // Check if user is eligible for any certificates
