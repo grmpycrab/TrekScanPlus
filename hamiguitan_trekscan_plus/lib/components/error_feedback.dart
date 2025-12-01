@@ -164,7 +164,12 @@ class ErrorHandler {
     }
 
     if (errorLower.contains('email-already-in-use')) {
-      return 'Email already registered. Please log in or use another email.';
+      if (errorLower.contains('google')) {
+        return 'This email is already registered with Google. Please sign in using Google instead.';
+      } else if (errorLower.contains('email and password')) {
+        return 'This email is already registered with email and password. Please sign in using that method instead.';
+      }
+      return 'This email is already registered with another method. Please sign in using the original method or use a different email address.';
     }
 
     if (errorLower.contains('weak-password')) {
@@ -176,7 +181,10 @@ class ErrorHandler {
     }
 
     if (errorLower.contains('account-exists-with-different-credential')) {
-      return 'An account exists with this email using different sign-in method.';
+      if (errorLower.contains('email and password')) {
+        return 'An account already exists with this email address but was registered using email and password. Please sign in using your email and password instead.';
+      }
+      return 'An account exists with this email using a different sign-in method. Please use the original sign-in method.';
     }
 
     if (errorLower.contains('operation-not-allowed')) {

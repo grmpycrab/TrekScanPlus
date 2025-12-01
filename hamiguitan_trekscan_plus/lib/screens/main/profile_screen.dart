@@ -11,6 +11,9 @@ import '../../models/social_model.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../../components/social_card.dart';
 import '../../components/e_certificate_badge.dart';
+import '../../components/app_dialogue_handler.dart';
+import '../../theme/color.dart';
+import 'favorites_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
   final String? userId; // If null, shows current user's profile
@@ -46,8 +49,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
         'ðŸ‘¤ ProfileScreen: Initializing achievements for userId: $userId',
       );
 
-      // CRITICAL: Reset and reinitialize for the specific user
-      achievementService.resetInitialization();
+      // Determine if viewing own profile or someone else's
+      final isOwnProfile = userId == _firebaseUser?.uid || userId == null;
+
+      // Create appropriate instance based on profile type
+      if (isOwnProfile) {
+        // Use singleton for own profile to maintain consistency
+        achievementService = AchievementService();
+      } else {
+        // Create new instance for other profiles to avoid conflicts
+        achievementService = AchievementService.forUser();
+      }
 
       // Initialize with the specific userId - this will load their achievements from Firebase
       await achievementService.init(userId: userId);
@@ -116,8 +128,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
   @override
   void initState() {
     super.initState();
-    // Create a new instance of AchievementService for this profile view
-    achievementService = AchievementService();
     _firebaseUser = FirebaseAuthService.instance.currentUser;
 
     // Determine if viewing own profile or someone else's
@@ -279,12 +289,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     padding: const EdgeInsets.symmetric(horizontal: 24.0),
                     child: Column(
                       children: [
-                        _buildProfileSection(displayUser),
+                        _buildNewProfileLayout(displayUser),
+                        const SizedBox(height: 20),
+                        _buildActionButtons(),
                         const SizedBox(height: 24),
-                        _buildStatsSection(displayUser),
-                        const SizedBox(height: 32),
-                        if (displayUser.badges.isNotEmpty)
-                          _buildBadgesSection(displayUser),
+                        _buildBadgesSection(displayUser),
                       ],
                     ),
                   ),
@@ -297,131 +306,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
           );
         },
       ),
-    );
-  }
-
-  Widget _buildProfileSection(UserModel user) {
-    return Column(
-      children: [
-        Container(
-          width: 80,
-          height: 80,
-          decoration: BoxDecoration(
-            color: Colors.grey[200],
-            shape: BoxShape.circle,
-            border: Border.all(color: Colors.grey.shade300, width: 1),
-          ),
-          child: ClipOval(
-            child: user.profileImage != null
-                ? Image.network(user.profileImage!, fit: BoxFit.cover)
-                : CircleAvatar(
-                    radius: 40,
-                    backgroundColor: Colors.grey[100],
-                    child: Icon(
-                      Icons.person_outline_rounded,
-                      size: 40,
-                      color: Colors.grey[400],
-                    ),
-                  ),
-          ),
-        ),
-        const SizedBox(height: 12),
-        Text(
-          _getDisplayName(user),
-          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-        ),
-        const SizedBox(height: 4),
-        Text(
-          user.email,
-          style: TextStyle(fontSize: 14, color: Colors.grey[600]),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildStatsSection(UserModel user) {
-    final unlockedCount = achievementService.getUnlockedCount();
-    final totalCount = achievementService.getTotalCount();
-
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceAround,
-      children: [
-        GestureDetector(
-          onTap: () => _showFollowingModal(),
-          child: Column(
-            children: [
-              Text(
-                user.followingCount.toString().padLeft(2, '0'),
-                style: const TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                'Following',
-                style: TextStyle(fontSize: 12, color: Colors.grey[600]),
-              ),
-            ],
-          ),
-        ),
-        GestureDetector(
-          onTap: () => _showFollowersModal(),
-          child: Column(
-            children: [
-              Text(
-                user.followersCount.toString().padLeft(2, '0'),
-                style: const TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                'Followers',
-                style: TextStyle(fontSize: 12, color: Colors.grey[600]),
-              ),
-            ],
-          ),
-        ),
-        StreamBuilder<List<SocialPost>>(
-          stream: _socialService.streamUserPosts(
-            widget.userId ?? _firebaseUser!.uid,
-          ),
-          builder: (context, snapshot) {
-            final postsCount = snapshot.data?.length ?? 0;
-            return Column(
-              children: [
-                Text(
-                  postsCount.toString().padLeft(2, '0'),
-                  style: const TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  'Posts',
-                  style: TextStyle(fontSize: 12, color: Colors.grey[600]),
-                ),
-              ],
-            );
-          },
-        ),
-        Column(
-          children: [
-            Text(
-              '$unlockedCount/$totalCount',
-              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              'Achievements',
-              style: TextStyle(fontSize: 12, color: Colors.grey[600]),
-            ),
-          ],
-        ),
-      ],
     );
   }
 
@@ -945,6 +829,442 @@ class _ProfileScreenState extends State<ProfileScreen> {
     return ECertificateBadge(certificateService: _certificateService);
   }
 
+  void _navigateToUserProfile(BuildContext context, String targetUserId) async {
+    final currentUser = FirebaseAuth.instance.currentUser;
+
+    // Don't navigate if clicking own profile
+    if (currentUser?.uid == targetUserId) {
+      return;
+    }
+
+    // Check if current user follows this person
+    if (currentUser?.uid != null) {
+      try {
+        final isFollowing = await _userService.isFollowing(
+          currentUser!.uid,
+          targetUserId,
+        );
+
+        if (!isFollowing) {
+          // Show dialogue if not following
+          if (mounted) {
+            AppDialogueHandler.showAlert(
+              context: context,
+              title: 'Profile Access Restricted',
+              message:
+                  'You and this person don\'t follow each other. You can only view profiles of people you follow.',
+              buttonText: 'OK',
+            );
+          }
+          return;
+        }
+
+        // Navigate to profile if following
+        if (mounted) {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => ProfileScreen(userId: targetUserId),
+            ),
+          );
+        }
+      } catch (e) {
+        if (mounted) {
+          AppDialogueHandler.showAlert(
+            context: context,
+            title: 'Error',
+            message: 'Unable to verify follow status. Please try again.',
+            buttonText: 'OK',
+          );
+        }
+      }
+    }
+  }
+
+  Widget _buildNewProfileLayout(UserModel user) {
+    return Column(
+      children: [
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            // Profile picture
+            Container(
+              width: 90,
+              height: 90,
+              decoration: BoxDecoration(
+                color: AppColors.background,
+                shape: BoxShape.circle,
+                border: Border.all(color: AppColors.borderColor, width: 2),
+              ),
+              child: ClipOval(
+                child: user.profileImage != null
+                    ? Image.network(user.profileImage!, fit: BoxFit.cover)
+                    : CircleAvatar(
+                        radius: 45,
+                        backgroundColor: AppColors.background,
+                        child: Icon(
+                          Icons.person_outline_rounded,
+                          size: 45,
+                          color: AppColors.iconGrey400,
+                        ),
+                      ),
+              ),
+            ),
+            const SizedBox(width: 24),
+            // Right side: Name and stats
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // User name at the top
+                  Text(
+                    _getDisplayName(user),
+                    style: const TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.textPrimary,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  // User email under the name
+                  Text(
+                    user.email,
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: AppColors.textTertiary,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  // Stats row below the name
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      // Posts count
+                      StreamBuilder<List<SocialPost>>(
+                        stream: _socialService.streamUserPosts(
+                          widget.userId ?? _firebaseUser!.uid,
+                        ),
+                        builder: (context, snapshot) {
+                          final postsCount = snapshot.data?.length ?? 0;
+                          return _buildStatColumn(
+                            postsCount.toString(),
+                            'posts',
+                            () {}, // No action for posts
+                          );
+                        },
+                      ),
+                      // Followers count
+                      _buildStatColumn(
+                        user.followersCount.toString(),
+                        'followers',
+                        () => _showFollowersModal(),
+                      ),
+                      // Following count
+                      _buildStatColumn(
+                        user.followingCount.toString(),
+                        'following',
+                        () => _showFollowingModal(),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _buildStatColumn(String count, String label, VoidCallback onTap) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Column(
+        children: [
+          Text(
+            count,
+            style: const TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: AppColors.textPrimary,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            label,
+            style: TextStyle(fontSize: 13, color: AppColors.textTertiary),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildActionButtons() {
+    if (_isOwnProfile) {
+      // Own profile: Edit Profile and Logout buttons
+      return Row(
+        children: [
+          // Edit Profile button
+          Expanded(
+            child: ElevatedButton(
+              onPressed: () {
+                // Navigate to settings/edit profile
+                // You can implement this navigation later
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Navigate to Settings/Edit Profile'),
+                  ),
+                );
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.background,
+                foregroundColor: AppColors.textPrimary,
+                elevation: 0,
+                side: BorderSide(color: AppColors.borderColor),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                padding: const EdgeInsets.symmetric(vertical: 10),
+              ),
+              child: const Text(
+                'Edit profile',
+                style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+              ),
+            ),
+          ),
+          const SizedBox(width: 8),
+          // Logout button
+          Expanded(
+            child: ElevatedButton(
+              onPressed: () => _handleLogout(),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.background,
+                foregroundColor: Colors.red,
+                elevation: 0,
+                side: BorderSide(color: AppColors.borderColor),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                padding: const EdgeInsets.symmetric(vertical: 10),
+              ),
+              child: const Text(
+                'Logout',
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.red,
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(width: 8),
+          // Favorites button
+          Container(
+            width: 48,
+            child: ElevatedButton(
+              onPressed: () => _navigateToFavorites(),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.background,
+                foregroundColor: AppColors.textPrimary,
+                elevation: 0,
+                side: BorderSide(color: AppColors.borderColor),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                padding: const EdgeInsets.symmetric(vertical: 10),
+              ),
+              child: Icon(
+                Icons.bookmark,
+                size: 18,
+                color: AppColors.textPrimary,
+              ),
+            ),
+          ),
+        ],
+      );
+    } else {
+      // Other user's profile: Follow button
+      return FutureBuilder<bool>(
+        future: _userService.isFollowing(_firebaseUser!.uid, widget.userId!),
+        builder: (context, snapshot) {
+          final isFollowing = snapshot.data ?? false;
+          return SizedBox(
+            width: double.infinity,
+            child: ElevatedButton(
+              onPressed: () => _showFollowOptionsModal(isFollowing),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: isFollowing
+                    ? AppColors.background
+                    : AppColors.primary,
+                foregroundColor: isFollowing
+                    ? AppColors.textPrimary
+                    : Colors.white,
+                elevation: 0,
+                side: BorderSide(
+                  color: isFollowing
+                      ? AppColors.borderColor
+                      : AppColors.primary,
+                ),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                padding: const EdgeInsets.symmetric(vertical: 10),
+              ),
+              child: Text(
+                isFollowing ? 'Following' : 'Follow',
+                style: const TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          );
+        },
+      );
+    }
+  }
+
+  void _showFollowOptionsModal(bool isCurrentlyFollowing) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (context) => Container(
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.only(
+            topLeft: Radius.circular(20),
+            topRight: Radius.circular(20),
+          ),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Handle bar
+            Container(
+              margin: const EdgeInsets.symmetric(vertical: 12),
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: Colors.grey[300],
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            // Option
+            ListTile(
+              leading: Icon(
+                isCurrentlyFollowing ? Icons.person_remove : Icons.person_add,
+                color: isCurrentlyFollowing ? Colors.red : AppColors.primary,
+              ),
+              title: Text(
+                isCurrentlyFollowing ? 'Unfollow' : 'Follow',
+                style: TextStyle(
+                  fontWeight: FontWeight.w500,
+                  color: isCurrentlyFollowing
+                      ? Colors.red
+                      : AppColors.textPrimary,
+                ),
+              ),
+              onTap: () async {
+                Navigator.pop(context);
+                await _handleFollowAction(isCurrentlyFollowing);
+              },
+            ),
+            // Cancel option
+            ListTile(
+              leading: Icon(Icons.close, color: AppColors.iconGrey600),
+              title: Text(
+                'Cancel',
+                style: TextStyle(
+                  fontWeight: FontWeight.w500,
+                  color: AppColors.textTertiary,
+                ),
+              ),
+              onTap: () => Navigator.pop(context),
+            ),
+            const SizedBox(height: 16),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<void> _handleFollowAction(bool isCurrentlyFollowing) async {
+    try {
+      if (isCurrentlyFollowing) {
+        await _userService.unfollow(_firebaseUser!.uid, widget.userId!);
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Unfollowed successfully')),
+          );
+        }
+      } else {
+        await _userService.toggleFollow(widget.userId!, _firebaseUser!.uid);
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Following successfully')),
+          );
+        }
+      }
+      // Trigger UI update
+      if (mounted) {
+        setState(() {});
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to update follow status: $e')),
+        );
+      }
+    }
+  }
+
+  void _navigateToFavorites() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => FavoritesScreen()),
+    );
+  }
+
+  Future<void> _handleLogout() async {
+    try {
+      // Show confirmation dialog
+      final confirmed = await showDialog<bool>(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text('Confirm Logout'),
+          content: const Text('Are you sure you want to logout?'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: Text(
+                'Cancel',
+                style: TextStyle(color: AppColors.textTertiary),
+              ),
+            ),
+            TextButton(
+              onPressed: () => Navigator.pop(context, true),
+              child: Text('Logout', style: TextStyle(color: AppColors.primary)),
+            ),
+          ],
+        ),
+      );
+
+      if (confirmed == true) {
+        await FirebaseAuthService.instance.signOut();
+        if (mounted) {
+          // Navigate to login screen or initial route
+          Navigator.of(context).pushNamedAndRemoveUntil('/', (route) => false);
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Logout failed: $e')));
+      }
+    }
+  }
+
   void _showFollowersModal() async {
     if (_firebaseUser == null) return;
 
@@ -1255,6 +1575,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         : email.split('@').first;
 
     return ListTile(
+      onTap: () => _navigateToUserProfile(context, uid),
       leading: CircleAvatar(
         radius: 24,
         backgroundColor: Colors.blueGrey[100],
@@ -1344,6 +1665,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         : email.split('@').first;
 
     return ListTile(
+      onTap: () => _navigateToUserProfile(context, uid),
       leading: CircleAvatar(
         radius: 24,
         backgroundColor: Colors.blueGrey[100],

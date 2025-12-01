@@ -11,6 +11,7 @@ import 'comments_sheet.dart';
 import 'post_options_sheet.dart';
 import 'image_viewer.dart';
 import 'profile_avatar_with_status.dart';
+import 'app_dialogue_handler.dart';
 
 class SocialCard extends StatefulWidget {
   final SocialPost post;
@@ -169,7 +170,7 @@ class _SocialCardState extends State<SocialCard> {
     }
   }
 
-  void _navigateToUserProfile(BuildContext context) {
+  void _navigateToUserProfile(BuildContext context) async {
     final currentUser = FirebaseAuth.instance.currentUser;
 
     // Don't navigate if clicking own profile in post (already on profile tab)
@@ -177,12 +178,48 @@ class _SocialCardState extends State<SocialCard> {
       return;
     }
 
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => ProfileScreen(userId: widget.post.userId),
-      ),
-    );
+    // Check if current user follows this person
+    if (currentUser?.uid != null) {
+      try {
+        final isFollowing = await _userService.isFollowing(
+          currentUser!.uid,
+          widget.post.userId,
+        );
+
+        if (!isFollowing) {
+          // Show dialogue if not following
+          if (mounted) {
+            AppDialogueHandler.showAlert(
+              context: context,
+              title: 'Profile Access Restricted',
+              message:
+                  'You and this person don\'t follow each other. You can only view profiles of people you follow.',
+              buttonText: 'OK',
+            );
+          }
+          return;
+        }
+
+        // Navigate to profile if following
+        if (mounted) {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => ProfileScreen(userId: widget.post.userId),
+            ),
+          );
+        }
+      } catch (e) {
+        if (mounted) {
+          AppDialogueHandler.showAlert(
+            context: context,
+            title: 'Error',
+            message: 'Unable to verify follow status. Please try again.',
+            buttonText: 'OK',
+          );
+        }
+      }
+    }
   }
 
   Future<void> _handleLike() async {

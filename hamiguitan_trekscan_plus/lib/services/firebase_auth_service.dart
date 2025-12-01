@@ -17,9 +17,62 @@ class FirebaseAuthService {
   // Stream of auth state changes
   Stream<User?> get authStateChanges => _firebaseAuth.authStateChanges();
 
+  /// Check if email is already used by a different auth provider
+  Future<bool> isEmailAlreadyUsed(String email) async {
+    try {
+      final signInMethods = await _firebaseAuth.fetchSignInMethodsForEmail(
+        email,
+      );
+      return signInMethods.isNotEmpty;
+    } catch (e) {
+      if (kDebugMode) {
+        print('Error checking email availability: $e');
+      }
+      return false;
+    }
+  }
+
+  /// Get existing sign-in methods for an email
+  Future<List<String>> getSignInMethodsForEmail(String email) async {
+    try {
+      return await _firebaseAuth.fetchSignInMethodsForEmail(email);
+    } catch (e) {
+      if (kDebugMode) {
+        print('Error fetching sign-in methods: $e');
+      }
+      return [];
+    }
+  }
+
+  /// Get user-friendly provider name from sign-in methods
+  String getProviderName(List<String> signInMethods) {
+    if (signInMethods.contains('google.com')) {
+      return 'Google';
+    } else if (signInMethods.contains('password')) {
+      return 'email and password';
+    } else if (signInMethods.contains('facebook.com')) {
+      return 'Facebook';
+    } else if (signInMethods.contains('apple.com')) {
+      return 'Apple';
+    }
+    return 'another method';
+  }
+
   /// Sign up with email and password
   Future<void> signUp({required String email, required String password}) async {
     try {
+      // Check if email is already used
+      final isEmailUsed = await isEmailAlreadyUsed(email);
+      if (isEmailUsed) {
+        final signInMethods = await getSignInMethodsForEmail(email);
+        final providerName = getProviderName(signInMethods);
+        throw FirebaseAuthException(
+          code: 'email-already-in-use',
+          message:
+              'This email is already registered with $providerName. Please sign in using that method or use a different email address.',
+        );
+      }
+
       final userCredential = await _firebaseAuth.createUserWithEmailAndPassword(
         email: email,
         password: password,
@@ -267,6 +320,18 @@ class FirebaseAuthService {
       if (kDebugMode) {
         print('Google user signed in: ${googleUser.email}');
         print('Google display name: ${googleUser.displayName}');
+      }
+
+      // Check if this email is already used with email/password authentication
+      final signInMethods = await getSignInMethodsForEmail(googleUser.email);
+      if (signInMethods.contains('password') &&
+          !signInMethods.contains('google.com')) {
+        // Email is already registered with email/password, not Google
+        throw FirebaseAuthException(
+          code: 'account-exists-with-different-credential',
+          message:
+              'An account already exists with this email address but was registered using email and password. Please sign in using your email and password instead.',
+        );
       }
 
       final GoogleSignInAuthentication googleAuth =

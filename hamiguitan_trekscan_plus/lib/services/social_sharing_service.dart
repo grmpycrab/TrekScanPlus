@@ -717,6 +717,55 @@ class SocialSharingService {
     return bookmarkDoc.exists;
   }
 
+  /// Stream bookmarked posts for a user
+  Stream<List<SocialPost>> streamBookmarkedPosts(String userId) {
+    return _firestore
+        .collection('users')
+        .doc(userId)
+        .collection('bookmarks')
+        .orderBy('createdAt', descending: true)
+        .snapshots()
+        .asyncMap((bookmarkSnapshot) async {
+          final List<SocialPost> bookmarkedPosts = [];
+
+          for (final bookmarkDoc in bookmarkSnapshot.docs) {
+            try {
+              final postId = bookmarkDoc.id;
+              final postDoc = await _firestore
+                  .collection('posts')
+                  .doc(postId)
+                  .get();
+
+              if (postDoc.exists) {
+                final post = SocialPost.fromDoc(postDoc);
+                // Mark as bookmarked since we're getting it from bookmarks collection
+                final bookmarkedPost = SocialPost(
+                  id: post.id,
+                  userId: post.userId,
+                  userName: post.userName,
+                  userPhotoUrl: post.userPhotoUrl,
+                  caption: post.caption,
+                  imageUrls: post.imageUrls,
+                  createdAt: post.createdAt,
+                  likesCount: post.likesCount,
+                  commentsCount: post.commentsCount,
+                  sharesCount: post.sharesCount,
+                  privacy: post.privacy,
+                  isBookmarked: true, // Always true since it's from bookmarks
+                );
+                bookmarkedPosts.add(bookmarkedPost);
+              }
+            } catch (e) {
+              debugPrint('Error loading bookmarked post: $e');
+              // Continue to next post if one fails
+              continue;
+            }
+          }
+
+          return bookmarkedPosts;
+        });
+  }
+
   /// Update post caption and privacy
   Future<void> updatePost({
     required String postId,
