@@ -284,17 +284,67 @@ class _SocialCardState extends State<SocialCard> {
   Future<void> _handleBookmark() async {
     if (widget.post.id == null) return;
 
+    final wasBookmarked = _isBookmarked;
     setState(() => _isBookmarked = !_isBookmarked);
 
     try {
       await _socialService.toggleBookmark(widget.post.id!);
+
+      // Show success feedback
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Row(
+              children: [
+                Icon(
+                  _isBookmarked ? Icons.bookmark : Icons.bookmark_border,
+                  color: Colors.white,
+                  size: 20,
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  _isBookmarked
+                      ? 'Added to favorites'
+                      : 'Removed from favorites',
+                  style: const TextStyle(fontSize: 14),
+                ),
+              ],
+            ),
+            backgroundColor: _isBookmarked ? Colors.green : Colors.orange,
+            duration: const Duration(seconds: 2),
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(8),
+            ),
+          ),
+        );
+      }
     } catch (e) {
       // Revert on error
-      setState(() => _isBookmarked = !_isBookmarked);
+      setState(() => _isBookmarked = wasBookmarked);
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Failed to bookmark: $e')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Row(
+              children: [
+                const Icon(Icons.error_outline, color: Colors.white, size: 20),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    'Failed to bookmark: $e',
+                    style: const TextStyle(fontSize: 14),
+                  ),
+                ),
+              ],
+            ),
+            backgroundColor: Colors.red,
+            duration: const Duration(seconds: 3),
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(8),
+            ),
+          ),
+        );
       }
     }
   }

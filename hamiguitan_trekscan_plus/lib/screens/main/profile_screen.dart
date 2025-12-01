@@ -14,6 +14,7 @@ import '../../components/e_certificate_badge.dart';
 import '../../components/app_dialogue_handler.dart';
 import '../../theme/color.dart';
 import 'favorites_screen.dart';
+import 'settings_screen.dart';
 import '../settings/account_settings.dart';
 
 class ProfileScreen extends StatefulWidget {
@@ -880,7 +881,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     return Column(
       children: [
         Row(
-          crossAxisAlignment: CrossAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // Profile picture
             Container(
@@ -1028,34 +1029,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ),
           ),
           const SizedBox(width: 8),
-          // Logout button
-          Expanded(
-            child: ElevatedButton(
-              onPressed: () => _handleLogout(),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.background,
-                foregroundColor: Colors.red,
-                elevation: 0,
-                side: BorderSide(color: AppColors.borderColor),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                padding: const EdgeInsets.symmetric(vertical: 10),
-              ),
-              child: const Text(
-                'Logout',
-                style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
-                  color: Colors.red,
-                ),
-              ),
-            ),
-          ),
-          const SizedBox(width: 8),
           // Favorites button
-          Container(
-            width: 48,
+          Expanded(
             child: ElevatedButton(
               onPressed: () => _navigateToFavorites(),
               style: ElevatedButton.styleFrom(
@@ -1068,8 +1043,30 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 ),
                 padding: const EdgeInsets.symmetric(vertical: 10),
               ),
+              child: const Text(
+                'Favorites',
+                style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+              ),
+            ),
+          ),
+          const SizedBox(width: 8),
+          // Settings button (three dots)
+          Container(
+            width: 48,
+            child: ElevatedButton(
+              onPressed: () => _navigateToSettings(),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.background,
+                foregroundColor: AppColors.textPrimary,
+                elevation: 0,
+                side: BorderSide(color: AppColors.borderColor),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                padding: const EdgeInsets.symmetric(vertical: 10),
+              ),
               child: Icon(
-                Icons.bookmark,
+                Icons.more_vert,
                 size: 18,
                 color: AppColors.textPrimary,
               ),
@@ -1220,32 +1217,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  Future<void> _handleLogout() async {
-    try {
-      // Show confirmation dialog using AppDialogueHandler
-      final confirmed = await AppDialogueHandler.showConfirmation(
-        context: context,
-        title: 'Confirm Logout',
-        message: 'Are you sure you want to logout?',
-        confirmText: 'Logout',
-        cancelText: 'Cancel',
-        isDestructive: true,
-      );
-
-      if (confirmed == true) {
-        await FirebaseAuthService.instance.signOut();
-        if (mounted) {
-          // Navigate to login screen or initial route
-          Navigator.of(context).pushNamedAndRemoveUntil('/', (route) => false);
-        }
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Logout failed: $e')));
-      }
-    }
+  void _navigateToSettings() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => const SettingsScreen()),
+    );
   }
 
   void _showFollowersModal() async {
@@ -1492,7 +1468,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
     if (_firebaseUser == null) return [];
 
     try {
-      final userData = await _userService.getUserOnce(_firebaseUser!.uid);
+      // Use the profile being viewed, not the current user
+      final profileUserId = widget.userId ?? _firebaseUser!.uid;
+      final userData = await _userService.getUserOnce(profileUserId);
       final followerIds =
           (userData?['followers'] as List<dynamic>?)?.cast<String>() ?? [];
 
@@ -1519,7 +1497,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
     if (_firebaseUser == null) return [];
 
     try {
-      final userData = await _userService.getUserOnce(_firebaseUser!.uid);
+      // Use the profile being viewed, not the current user
+      final profileUserId = widget.userId ?? _firebaseUser!.uid;
+      final userData = await _userService.getUserOnce(profileUserId);
       final followingIds =
           (userData?['following'] as List<dynamic>?)?.cast<String>() ?? [];
 

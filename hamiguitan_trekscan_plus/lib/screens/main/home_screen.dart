@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'notification_screen.dart';
 import '../../components/event_calendar.dart';
 import '../../components/connectivity_banner.dart';
@@ -54,6 +55,9 @@ class _HomeScreenState extends State<HomeScreen>
   // Banner animation
   late AnimationController _bannerAnimationController;
   late Animation<double> _bannerSlideAnimation;
+
+  // Collapsible sections
+  bool _areSectionsVisible = true;
 
   @override
   void initState() {
@@ -213,6 +217,15 @@ class _HomeScreenState extends State<HomeScreen>
 
   @override
   Widget build(BuildContext context) {
+    // Set status bar color to match header
+    SystemChrome.setSystemUIOverlayStyle(
+      SystemUiOverlayStyle(
+        statusBarColor: Colors.white,
+        statusBarIconBrightness: Brightness.dark,
+        statusBarBrightness: Brightness.light,
+      ),
+    );
+
     return Scaffold(
       backgroundColor: AppColors.background,
       body: SafeArea(
@@ -220,9 +233,8 @@ class _HomeScreenState extends State<HomeScreen>
           children: [
             const ConnectivityBanner(),
             _buildHeader(),
-            _buildWelcomeBanner(),
-            _buildInfoButtons(),
-            const SizedBox(height: 10),
+            _buildCollapsibleSections(),
+            _buildSectionToggle(),
             Expanded(
               child: RefreshIndicator(
                 onRefresh: _refreshAll,
@@ -697,7 +709,7 @@ class _HomeScreenState extends State<HomeScreen>
   void _toggleSearch() {
     _isSearchExpanded = !_isSearchExpanded;
     if (_isSearchExpanded) {
-      // Hide banner with slide up animation
+      // Hide banner with slide up animation (FAB remains independent)
       _bannerAnimationController.forward();
       Future.delayed(const Duration(milliseconds: 100), () {
         if (mounted) {
@@ -705,12 +717,12 @@ class _HomeScreenState extends State<HomeScreen>
         }
       });
     } else {
-      // Show banner with slide down animation
+      // Show banner with slide down animation (FAB remains independent)
       _bannerAnimationController.reverse();
       _searchController.clear();
       _searchFocusNode.unfocus();
     }
-    // Force header rebuild only
+    // Force header rebuild only - FAB state remains unchanged
     if (mounted) {
       setState(() {});
     }
@@ -831,26 +843,83 @@ class _HomeScreenState extends State<HomeScreen>
     _subscribeBookingsForMonth(month);
   }
 
-  Widget _buildWelcomeBanner() {
-    return AnimatedBuilder(
-      animation: _bannerSlideAnimation,
-      builder: (context, child) {
-        return ClipRect(
-          child: AnimatedContainer(
-            duration: const Duration(milliseconds: 300),
-            curve: Curves.easeInOut,
-            height: _isSearchExpanded ? 0 : null,
-            child: Transform.translate(
+  Widget _buildCollapsibleSections() {
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 300),
+      curve: Curves.easeInOut,
+      height: (_areSectionsVisible && !_isSearchExpanded) ? null : 0,
+      child: ClipRect(
+        child: AnimatedBuilder(
+          animation: _bannerSlideAnimation,
+          builder: (context, child) {
+            return Transform.translate(
               offset: Offset(0, _bannerSlideAnimation.value * 200),
               child: AnimatedOpacity(
                 duration: const Duration(milliseconds: 200),
-                opacity: _isSearchExpanded ? 0.0 : 1.0,
-                child: const BannerSlideshow(),
+                opacity: (_areSectionsVisible && !_isSearchExpanded)
+                    ? 1.0
+                    : 0.0,
+                child: Column(
+                  children: [const BannerSlideshow(), _buildInfoButtons()],
+                ),
               ),
-            ),
+            );
+          },
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSectionToggle() {
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 300),
+      curve: Curves.easeInOut,
+      height: _areSectionsVisible ? 40 : 24,
+      color: AppColors.background,
+      child: Center(
+        child: InkWell(
+          onTap: () =>
+              setState(() => _areSectionsVisible = !_areSectionsVisible),
+          borderRadius: BorderRadius.circular(16),
+          child: AnimatedSwitcher(
+            duration: const Duration(milliseconds: 200),
+            child: _areSectionsVisible
+                ? Container(
+                    key: const ValueKey('expanded_toggle'),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 4,
+                    ),
+                    decoration: BoxDecoration(
+                      color: Colors.grey[50],
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: Colors.grey[200]!, width: 1),
+                    ),
+                    child: Icon(
+                      Icons.keyboard_arrow_up,
+                      color: Colors.grey[600],
+                      size: 20,
+                    ),
+                  )
+                : Container(
+                    key: const ValueKey('collapsed_toggle'),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 2,
+                    ),
+                    decoration: BoxDecoration(
+                      color: Colors.grey[100],
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Icon(
+                      Icons.keyboard_arrow_down,
+                      color: Colors.grey[500],
+                      size: 30,
+                    ),
+                  ),
           ),
-        );
-      },
+        ),
+      ),
     );
   }
 
