@@ -14,6 +14,7 @@ import '../../components/e_certificate_badge.dart';
 import '../../components/app_dialogue_handler.dart';
 import '../../theme/color.dart';
 import 'favorites_screen.dart';
+import '../settings/account_settings.dart';
 
 class ProfileScreen extends StatefulWidget {
   final String? userId; // If null, shows current user's profile
@@ -820,12 +821,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   Widget _buildCertificatesBadge() {
-    final certificates = _certificateService.getAllCertificates();
-
-    if (certificates.isEmpty) {
-      return const SizedBox(width: 48);
-    }
-
     return ECertificateBadge(certificateService: _certificateService);
   }
 
@@ -1008,11 +1003,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
           Expanded(
             child: ElevatedButton(
               onPressed: () {
-                // Navigate to settings/edit profile
-                // You can implement this navigation later
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Navigate to Settings/Edit Profile'),
+                // Navigate to account settings
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const AccountSettingsScreen(),
                   ),
                 );
               },
@@ -1227,26 +1222,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   Future<void> _handleLogout() async {
     try {
-      // Show confirmation dialog
-      final confirmed = await showDialog<bool>(
+      // Show confirmation dialog using AppDialogueHandler
+      final confirmed = await AppDialogueHandler.showConfirmation(
         context: context,
-        builder: (context) => AlertDialog(
-          title: const Text('Confirm Logout'),
-          content: const Text('Are you sure you want to logout?'),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context, false),
-              child: Text(
-                'Cancel',
-                style: TextStyle(color: AppColors.textTertiary),
-              ),
-            ),
-            TextButton(
-              onPressed: () => Navigator.pop(context, true),
-              child: Text('Logout', style: TextStyle(color: AppColors.primary)),
-            ),
-          ],
-        ),
+        title: 'Confirm Logout',
+        message: 'Are you sure you want to logout?',
+        confirmText: 'Logout',
+        cancelText: 'Cancel',
+        isDestructive: true,
       );
 
       if (confirmed == true) {

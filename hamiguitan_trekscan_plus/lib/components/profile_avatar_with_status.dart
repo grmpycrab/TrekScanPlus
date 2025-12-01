@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import '../services/presence_service.dart';
 import '../theme/color.dart';
 
@@ -22,18 +23,46 @@ class ProfileAvatarWithStatus extends StatelessWidget {
     return Stack(
       children: [
         // Profile avatar
-        CircleAvatar(
-          radius: radius,
-          backgroundColor: AppColors.primary,
-          backgroundImage: photoUrl != null ? NetworkImage(photoUrl!) : null,
-          child: photoUrl == null
-              ? Icon(
+        photoUrl != null
+            ? CircleAvatar(
+                radius: radius,
+                backgroundColor: AppColors.primary,
+                child: ClipOval(
+                  child: CachedNetworkImage(
+                    imageUrl: photoUrl!,
+                    width: radius * 2,
+                    height: radius * 2,
+                    fit: BoxFit.cover,
+                    placeholder: (context, url) => Container(
+                      color: AppColors.primary,
+                      child: Icon(
+                        Icons.person,
+                        color: AppColors.iconPrimary,
+                        size: radius * 0.9,
+                      ),
+                    ),
+                    errorWidget: (context, url, error) => Container(
+                      color: AppColors.primary,
+                      child: Icon(
+                        Icons.person,
+                        color: AppColors.iconPrimary,
+                        size: radius * 0.9,
+                      ),
+                    ),
+                    memCacheWidth: (radius * 4).round(),
+                    memCacheHeight: (radius * 4).round(),
+                  ),
+                ),
+              )
+            : CircleAvatar(
+                radius: radius,
+                backgroundColor: AppColors.primary,
+                child: Icon(
                   Icons.person,
                   color: AppColors.iconPrimary,
                   size: radius * 0.9,
-                )
-              : null,
-        ),
+                ),
+              ),
         // Status indicator
         if (showStatus)
           Positioned(

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:intl/intl.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import '../models/social_model.dart';
 import '../services/social_sharing_service.dart';
 import '../services/user_service.dart';
@@ -675,13 +676,24 @@ class _SocialCardState extends State<SocialCard> {
       onTap: () => _openImageViewer(0),
       child: AspectRatio(
         aspectRatio: 4 / 3,
-        child: Image.network(
-          url,
+        child: CachedNetworkImage(
+          imageUrl: url,
           fit: BoxFit.cover,
-          errorBuilder: (context, error, stack) => Container(
-            color: Colors.grey[200],
-            child: const Icon(Icons.broken_image, size: 48),
+          placeholder: (context, url) => Container(
+            color: Colors.grey[100],
+            child: const Center(
+              child: CircularProgressIndicator(
+                strokeWidth: 2,
+                valueColor: AlwaysStoppedAnimation<Color>(Colors.grey),
+              ),
+            ),
           ),
+          errorWidget: (context, url, error) => Container(
+            color: Colors.grey[200],
+            child: const Icon(Icons.broken_image, size: 48, color: Colors.grey),
+          ),
+          memCacheWidth: 800,
+          memCacheHeight: 600,
         ),
       ),
     );
@@ -808,13 +820,28 @@ class _SocialCardState extends State<SocialCard> {
   Widget _buildImageTile(String url, int index) {
     return GestureDetector(
       onTap: () => _openImageViewer(index),
-      child: Image.network(
-        url,
+      child: CachedNetworkImage(
+        imageUrl: url,
         fit: BoxFit.cover,
-        errorBuilder: (context, error, stack) => Container(
-          color: Colors.grey[200],
-          child: const Icon(Icons.broken_image, size: 32),
+        placeholder: (context, url) => Container(
+          color: Colors.grey[100],
+          child: const Center(
+            child: SizedBox(
+              width: 20,
+              height: 20,
+              child: CircularProgressIndicator(
+                strokeWidth: 1.5,
+                valueColor: AlwaysStoppedAnimation<Color>(Colors.grey),
+              ),
+            ),
+          ),
         ),
+        errorWidget: (context, url, error) => Container(
+          color: Colors.grey[200],
+          child: const Icon(Icons.broken_image, size: 32, color: Colors.grey),
+        ),
+        memCacheWidth: 400,
+        memCacheHeight: 400,
       ),
     );
   }

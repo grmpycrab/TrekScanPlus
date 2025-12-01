@@ -22,6 +22,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'dart:async';
 import 'profile_screen.dart';
+import '../../utils/image_cache_manager.dart';
 
 class HomeScreen extends StatefulWidget {
   final Function(DateTime)? onNavigateToBooking;
@@ -32,7 +33,8 @@ class HomeScreen extends StatefulWidget {
   State<HomeScreen> createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> {
+class _HomeScreenState extends State<HomeScreen>
+    with SingleTickerProviderStateMixin {
   //int _selectedNavIndex = 0;
   late ValueNotifier<List<TrekDay>> _trekDaysNotifier;
   User? _firebaseUser;
@@ -49,11 +51,27 @@ class _HomeScreenState extends State<HomeScreen> {
   // FAB expansion
   bool _isFabExpanded = false;
 
+  // Banner animation
+  late AnimationController _bannerAnimationController;
+  late Animation<double> _bannerSlideAnimation;
+
   @override
   void initState() {
     super.initState();
     _initializeTrekDays();
     _firebaseUser = FirebaseAuthService.instance.currentUser;
+
+    // Initialize banner animation controller
+    _bannerAnimationController = AnimationController(
+      duration: const Duration(milliseconds: 300),
+      vsync: this,
+    );
+    _bannerSlideAnimation = Tween<double>(begin: 0.0, end: -1.0).animate(
+      CurvedAnimation(
+        parent: _bannerAnimationController,
+        curve: Curves.easeInOut,
+      ),
+    );
     _authSubscription = FirebaseAuthService.instance.authStateChanges.listen((
       user,
     ) {
@@ -78,6 +96,8 @@ class _HomeScreenState extends State<HomeScreen> {
     _trekDaysNotifier.dispose();
     _searchController.dispose();
     _searchFocusNode.dispose();
+    _bannerAnimationController.dispose();
+
     super.dispose();
   }
 
@@ -677,12 +697,16 @@ class _HomeScreenState extends State<HomeScreen> {
   void _toggleSearch() {
     _isSearchExpanded = !_isSearchExpanded;
     if (_isSearchExpanded) {
+      // Hide banner with slide up animation
+      _bannerAnimationController.forward();
       Future.delayed(const Duration(milliseconds: 100), () {
         if (mounted) {
           _searchFocusNode.requestFocus();
         }
       });
     } else {
+      // Show banner with slide down animation
+      _bannerAnimationController.reverse();
       _searchController.clear();
       _searchFocusNode.unfocus();
     }
@@ -808,7 +832,26 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildWelcomeBanner() {
-    return const BannerSlideshow();
+    return AnimatedBuilder(
+      animation: _bannerSlideAnimation,
+      builder: (context, child) {
+        return ClipRect(
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 300),
+            curve: Curves.easeInOut,
+            height: _isSearchExpanded ? 0 : null,
+            child: Transform.translate(
+              offset: Offset(0, _bannerSlideAnimation.value * 200),
+              child: AnimatedOpacity(
+                duration: const Duration(milliseconds: 200),
+                opacity: _isSearchExpanded ? 0.0 : 1.0,
+                child: const BannerSlideshow(),
+              ),
+            ),
+          ),
+        );
+      },
+    );
   }
 
   Widget _buildInfoButtons() {
@@ -927,7 +970,9 @@ class _HomeScreenState extends State<HomeScreen> {
     return StreamBuilder<List<SocialPost>>(
       stream: SocialSharingService.instance.streamPublicPosts(),
       builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
+        // Show existing data while loading new updates to prevent UI jumps
+        if (snapshot.connectionState == ConnectionState.waiting &&
+            !snapshot.hasData) {
           return const Padding(
             padding: EdgeInsets.all(16),
             child: Center(child: CircularProgressIndicator()),
@@ -939,7 +984,22 @@ class _HomeScreenState extends State<HomeScreen> {
           if (error is FirebaseException && error.message != null) {
             debugPrint('Firestore index error: ${error.message}');
           }
-          return Text('Error loading posts');
+          return const Padding(
+            padding: EdgeInsets.all(16),
+            child: Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.error_outline, size: 48, color: Colors.grey),
+                  SizedBox(height: 16),
+                  Text(
+                    'Error loading posts',
+                    style: TextStyle(color: Colors.grey),
+                  ),
+                ],
+              ),
+            ),
+          );
         }
 
         final posts = snapshot.data ?? [];
@@ -971,11 +1031,30 @@ class _HomeScreenState extends State<HomeScreen> {
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Padding(
-              padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              child: Text(
-                'Community Feed',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              child: Row(
+                children: [
+                  const Text(
+                    'Community Feed',
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  ),
+                  if (snapshot.connectionState == ConnectionState.waiting &&
+                      snapshot.hasData)
+                    const Padding(
+                      padding: EdgeInsets.only(left: 12),
+                      child: SizedBox(
+                        width: 16,
+                        height: 16,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          valueColor: AlwaysStoppedAnimation<Color>(
+                            Colors.grey,
+                          ),
+                        ),
+                      ),
+                    ),
+                ],
               ),
             ),
             if (_searchQuery.isNotEmpty && filteredPosts.isEmpty)
@@ -988,16 +1067,29 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                 ),
               ),
-            ...filteredPosts.map(
-              (post) => Padding(
+            // Use ListView.builder for better performance with large lists
+            ...filteredPosts.asMap().entries.map((entry) {
+              final post = entry.value;
+
+              // Preload images for better UX (do this asynchronously for first 3 posts)
+              if (post.imageUrls.isNotEmpty && entry.key < 3) {
+                WidgetsBinding.instance.addPostFrameCallback((_) {
+                  ImageCacheManager.preloadImages(post.imageUrls, context);
+                });
+              }
+
+              return Padding(
+                key: ValueKey(
+                  post.id ?? entry.key,
+                ), // Add key for better widget recycling
                 padding: const EdgeInsets.symmetric(horizontal: 16),
                 child: SocialCard(
                   post: post,
                   onCommentTap: () => _showCommentsDialog(post),
                   onDelete: () => _handleDeletePost(post),
                 ),
-              ),
-            ),
+              );
+            }),
           ],
         );
       },

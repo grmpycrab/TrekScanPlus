@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import '../../components/bottom_navigation.dart';
 import '../../services/achievement_service.dart';
+import '../../services/onboarding_service.dart';
 import 'home_screen.dart';
 import 'station_screen.dart';
 import 'scanner_screen.dart';
@@ -52,6 +54,7 @@ class _MainScreenState extends State<MainScreen> {
     super.initState();
     _currentIndex = widget.initialTabIndex;
     _initializeAchievements();
+    _checkAndShowOnboarding();
   }
 
   Future<void> _initializeAchievements() async {
@@ -59,6 +62,22 @@ class _MainScreenState extends State<MainScreen> {
       await _achievementService.init();
     } catch (e) {
       // Silent fail - non-critical
+    }
+  }
+
+  Future<void> _checkAndShowOnboarding() async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) return;
+
+    // Wait a bit to ensure the UI is fully rendered
+    await Future.delayed(const Duration(milliseconds: 500));
+
+    final hasSeenOnboarding = await OnboardingService.hasSeenOnboarding(
+      user.uid,
+    );
+
+    if (!hasSeenOnboarding && mounted) {
+      await OnboardingService.showOnboarding(context, user.uid);
     }
   }
 

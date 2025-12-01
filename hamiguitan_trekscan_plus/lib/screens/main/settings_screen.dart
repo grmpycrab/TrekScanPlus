@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import '../../theme/color.dart';
 import '../settings/badges_screen.dart';
 import '../settings/about_screen.dart';
@@ -8,6 +9,7 @@ import '../settings/notification_settings.dart';
 import '../settings/security_screen.dart';
 import '../settings/appearance_settings.dart';
 import '../../services/firebase_auth_service.dart';
+import '../../services/onboarding_service.dart';
 import '../auth/login_screen.dart';
 import '../../components/app_dialogue_handler.dart';
 
@@ -142,6 +144,47 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         ),
                       );
                     },
+                  ),
+                  GestureDetector(
+                    onLongPress: () async {
+                      // Debug feature: Reset onboarding (long press)
+                      final reset = await AppDialogueHandler.showConfirmation(
+                        context: context,
+                        title: 'Reset Tutorial',
+                        message:
+                            'This will reset the tutorial so it shows again on next app start. This is for testing purposes.',
+                        confirmText: 'Reset',
+                        cancelText: 'Cancel',
+                      );
+
+                      if (reset == true) {
+                        await OnboardingService.resetOnboarding();
+                        if (context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text(
+                                'Tutorial reset! It will show on next app start.',
+                              ),
+                              backgroundColor: AppColors.primary,
+                            ),
+                          );
+                        }
+                      }
+                    },
+                    child: _buildSettingItem(
+                      icon: Icons.play_circle_outline,
+                      title: 'App Tutorial',
+                      subtitle: 'Replay the welcome tutorial',
+                      onTap: () async {
+                        final user = FirebaseAuth.instance.currentUser;
+                        if (user != null) {
+                          await OnboardingService.showOnboarding(
+                            context,
+                            user.uid,
+                          );
+                        }
+                      },
+                    ),
                   ),
                   _buildSettingItem(
                     icon: Icons.info_outline,

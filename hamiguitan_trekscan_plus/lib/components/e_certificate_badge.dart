@@ -28,9 +28,7 @@ class ECertificateBadge extends StatelessWidget {
         final certificateCount = certificates.length;
 
         return GestureDetector(
-          onTap: certificateCount > 0
-              ? () => _showCertificatesModal(context, certificates)
-              : null,
+          onTap: () => _showCertificatesModal(context, certificates),
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
             decoration: BoxDecoration(
@@ -117,13 +115,18 @@ class ECertificateBadge extends StatelessWidget {
             ),
             // Certificates list
             Expanded(
-              child: ListView.builder(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                itemCount: certificates.length,
-                itemBuilder: (context, index) {
-                  return _buildCertificateCard(context, certificates[index]);
-                },
-              ),
+              child: certificates.isEmpty
+                  ? _buildEmptyState()
+                  : ListView.builder(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      itemCount: certificates.length,
+                      itemBuilder: (context, index) {
+                        return _buildCertificateCard(
+                          context,
+                          certificates[index],
+                        );
+                      },
+                    ),
             ),
           ],
         ),
@@ -620,5 +623,36 @@ class ECertificateBadge extends StatelessWidget {
         ),
       );
     }
+  }
+
+  Widget _buildEmptyState() {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(
+            Icons.card_membership_outlined,
+            size: 48,
+            color: Colors.grey[400],
+          ),
+          const SizedBox(height: 16),
+          Text(
+            'No certificates yet',
+            style: TextStyle(
+              fontSize: 16,
+              color: Colors.grey[600],
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Complete adventures to earn certificates',
+            style: TextStyle(fontSize: 14, color: Colors.grey[500]),
+            textAlign: TextAlign.center,
+          ),
+        ],
+      ),
+    );
   }
 }

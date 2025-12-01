@@ -167,7 +167,7 @@ class Climb {
     if (st == 'cancelled') return 'Cancelled';
     final today = DateTime.now();
     final todayDate = DateTime(today.year, today.month, today.day);
-    if (date.isBefore(todayDate)) return 'Expired';
+    if (date.isBefore(todayDate)) return 'Completed';
     // Handle status formatting (e.g. 'changes_required' -> 'Changes Required')
     if (st.isEmpty) return status;
     // Replace underscores with spaces and capitalize each word

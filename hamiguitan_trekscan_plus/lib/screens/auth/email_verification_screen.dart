@@ -36,6 +36,7 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
     super.initState();
     _loadVerificationStatus();
     _startExpiryTimer();
+    _sendInitialVerificationCode();
   }
 
   @override
@@ -61,6 +62,74 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
         _attempts = attempts;
         _timeRemaining = remaining;
       });
+    }
+  }
+
+  Future<void> _sendInitialVerificationCode() async {
+    // Wait a bit for the screen to settle
+    await Future.delayed(const Duration(milliseconds: 500));
+
+    if (mounted) {
+      setState(() {
+        _isResendingCode = true;
+      });
+
+      try {
+        await FirebaseAuthService.instance.sendEmailVerification();
+        await _loadVerificationStatus();
+
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Row(
+                children: [
+                  const Icon(Icons.check_circle, color: Colors.white, size: 20),
+                  const SizedBox(width: 8),
+                  const Expanded(
+                    child: Text(
+                      'Verification code sent! Check your inbox and spam folder.',
+                      style: TextStyle(fontSize: 14),
+                    ),
+                  ),
+                ],
+              ),
+              backgroundColor: AppColors.green700,
+              duration: const Duration(seconds: 4),
+            ),
+          );
+
+          // Start countdown
+          setState(() {
+            _resendCountdown = 60;
+          });
+
+          _countdownTimer?.cancel();
+          _countdownTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
+            if (_resendCountdown > 0) {
+              setState(() {
+                _resendCountdown--;
+              });
+            } else {
+              timer.cancel();
+            }
+          });
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Error sending code: ${e.toString()}'),
+              backgroundColor: AppColors.red700,
+            ),
+          );
+        }
+      } finally {
+        if (mounted) {
+          setState(() {
+            _isResendingCode = false;
+          });
+        }
+      }
     }
   }
 
@@ -152,10 +221,20 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(
-              'New verification code sent! Please check your inbox.',
+            content: Row(
+              children: [
+                const Icon(Icons.check_circle, color: Colors.white, size: 20),
+                const SizedBox(width: 8),
+                const Expanded(
+                  child: Text(
+                    'New code sent! Check inbox and spam folder.',
+                    style: TextStyle(fontSize: 14),
+                  ),
+                ),
+              ],
             ),
             backgroundColor: AppColors.green700,
+            duration: const Duration(seconds: 4),
           ),
         );
 
@@ -284,7 +363,38 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
                       color: AppColors.primary,
                     ),
                   ),
-                  const SizedBox(height: 32),
+                  const SizedBox(height: 16),
+
+                  // Spam folder reminder
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: AppColors.orange50,
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: AppColors.orange200),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(
+                          Icons.info_outline,
+                          color: AppColors.orange700,
+                          size: 20,
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            'Check your spam/junk folder if you don\'t see the email in your inbox',
+                            style: TextStyle(
+                              color: AppColors.orange800,
+                              fontSize: 13,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 24),
 
                   // 6-digit code input
                   Row(
@@ -495,27 +605,54 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
                         backgroundColor: AppColors.white,
                       ),
                       child: _isResendingCode
-                          ? const SizedBox(
-                              height: 20,
-                              width: 20,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                valueColor: AlwaysStoppedAnimation<Color>(
-                                  AppColors.primary,
+                          ? Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                const SizedBox(
+                                  height: 16,
+                                  width: 16,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    valueColor: AlwaysStoppedAnimation<Color>(
+                                      AppColors.primary,
+                                    ),
+                                  ),
                                 ),
-                              ),
+                                const SizedBox(width: 8),
+                                Text(
+                                  'Sending Code...',
+                                  style: TextStyle(
+                                    color: AppColors.primary,
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ],
                             )
-                          : Text(
-                              _resendCountdown > 0
-                                  ? 'Resend Code ($_resendCountdown s)'
-                                  : 'Resend Code',
-                              style: TextStyle(
-                                color: _resendCountdown > 0
-                                    ? AppColors.grey600
-                                    : AppColors.primary,
-                                fontSize: 16,
-                                fontWeight: FontWeight.w600,
-                              ),
+                          : Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(
+                                  Icons.refresh,
+                                  size: 18,
+                                  color: _resendCountdown > 0
+                                      ? AppColors.grey600
+                                      : AppColors.primary,
+                                ),
+                                const SizedBox(width: 8),
+                                Text(
+                                  _resendCountdown > 0
+                                      ? 'Resend Code ($_resendCountdown s)'
+                                      : 'Resend Code',
+                                  style: TextStyle(
+                                    color: _resendCountdown > 0
+                                        ? AppColors.grey600
+                                        : AppColors.primary,
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ],
                             ),
                     ),
                   ),

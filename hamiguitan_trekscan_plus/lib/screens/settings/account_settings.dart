@@ -113,6 +113,26 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
     }
   }
 
+  bool _isValidPhoneNumber(String phoneNumber) {
+    // Remove all non-digit characters for validation
+    final digitsOnly = phoneNumber.replaceAll(RegExp(r'[^\d]'), '');
+
+    // Philippine mobile numbers: 09XXXXXXXXX (11 digits) or +639XXXXXXXXX (13 digits with country code)
+    // Also accept landline numbers: (02)XXXXXXX or similar format
+    if (digitsOnly.length == 11) {
+      // Mobile number format: 09XXXXXXXXX
+      return digitsOnly.startsWith('09');
+    } else if (digitsOnly.length == 13) {
+      // International format: +639XXXXXXXXX
+      return digitsOnly.startsWith('639');
+    } else if (digitsOnly.length >= 7 && digitsOnly.length <= 10) {
+      // Landline numbers (flexible length for different area codes)
+      return true;
+    }
+
+    return false;
+  }
+
   Future<void> _saveChanges() async {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) {
@@ -138,6 +158,14 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
       if (firstName.isEmpty || lastName.isEmpty) {
         setState(() {
           _errorMessage = 'First name and last name are required';
+        });
+        return;
+      }
+
+      // Validate phone number if provided
+      if (phoneNumber.isNotEmpty && !_isValidPhoneNumber(phoneNumber)) {
+        setState(() {
+          _errorMessage = 'Please enter a valid phone number';
         });
         return;
       }
@@ -414,11 +442,37 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
                   ),
 
                   // Phone Number
-                  _buildTextField(
-                    controller: _phoneController,
-                    label: 'Phone Number',
-                    hint: 'Enter your phone number',
-                    keyboardType: TextInputType.phone,
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 16),
+                    child: TextFormField(
+                      controller: _phoneController,
+                      enabled: !_isLoading,
+                      keyboardType: TextInputType.phone,
+                      decoration: InputDecoration(
+                        labelText: 'Phone Number',
+                        hintText: 'e.g., 09123456789 or (02)1234567',
+                        helperText: 'Philippine mobile or landline number',
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8),
+                          borderSide: BorderSide(color: AppColors.primary),
+                        ),
+                        filled: true,
+                        fillColor: AppColors.grey50,
+                        prefixIcon: const Icon(Icons.phone),
+                      ),
+                      onChanged: (value) {
+                        // Clear error message when user starts typing
+                        if (_errorMessage != null &&
+                            _errorMessage!.contains('phone')) {
+                          setState(() {
+                            _errorMessage = null;
+                          });
+                        }
+                      },
+                    ),
                   ),
 
                   // Birth Date

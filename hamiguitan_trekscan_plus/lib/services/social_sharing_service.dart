@@ -15,6 +15,9 @@ class SocialSharingService {
   final _storage = FirebaseStorage.instance;
   final _auth = FirebaseAuth.instance;
 
+  // Performance optimization flag
+  static const int maxPostsLimit = 50;
+
   /// Generate a new post ID (without creating the post yet)
   String generatePostId() {
     return _firestore.collection('posts').doc().id;
@@ -155,7 +158,7 @@ class SocialSharingService {
       return Stream.value([]);
     }
 
-    // Query for public and followers-only posts
+    // Query for public and followers-only posts with optimized settings
     return _firestore
         .collection('posts')
         .where(
@@ -163,7 +166,10 @@ class SocialSharingService {
           whereIn: [PostPrivacy.public.name, PostPrivacy.followers.name],
         )
         .orderBy('createdAt', descending: true)
-        .snapshots()
+        .limit(50) // Limit initial load to 50 posts for better performance
+        .snapshots(
+          includeMetadataChanges: false,
+        ) // Ignore metadata changes to reduce updates
         .asyncMap((snapshot) async {
           try {
             // Get current user's following list
@@ -210,6 +216,22 @@ class SocialSharingService {
             // Return empty list on error to prevent stream from breaking
             return <SocialPost>[];
           }
+        })
+        .handleError((error) {
+          debugPrint('Stream error in streamPublicPosts: $error');
+          // Return empty list to keep stream alive
+          return <SocialPost>[];
+        })
+        .distinct((previous, next) {
+          // Only emit if the number of posts changed or content actually changed
+          if (previous.length != next.length) return false;
+
+          // Check if any post IDs are different (indicating new/removed posts)
+          final prevIds = previous.map((p) => p.id).toSet();
+          final nextIds = next.map((p) => p.id).toSet();
+
+          return prevIds.difference(nextIds).isEmpty &&
+              nextIds.difference(prevIds).isEmpty;
         });
   }
 
