@@ -128,7 +128,7 @@ class ClimbCard extends StatelessWidget {
               children: [
                 // Show Cancel button for pending/approved bookings
                 if (status != 'Cancelled' &&
-                    status != 'Expired' &&
+                    status != 'Completed' &&
                     status != 'Declined' &&
                     status != 'Rejected')
                   Expanded(
@@ -143,7 +143,7 @@ class ClimbCard extends StatelessWidget {
                     ),
                   ),
                 if (status != 'Cancelled' &&
-                    status != 'Expired' &&
+                    status != 'Completed' &&
                     status != 'Declined' &&
                     status != 'Rejected')
                   const SizedBox(width: 12),
@@ -220,8 +220,8 @@ class ClimbCard extends StatelessWidget {
         return AppColors.difficultyHard;
       case 'Cancelled':
         return Colors.grey;
-      case 'Expired':
-        return const Color.fromARGB(255, 212, 137, 137);
+      case 'Completed':
+        return const Color.fromARGB(255, 100, 149, 237);
       case 'Pending':
         return const Color.fromARGB(255, 247, 201, 104);
       default:
@@ -238,7 +238,7 @@ class ClimbCard extends StatelessWidget {
         return AppColors.textLight;
       case 'Cancelled':
         return AppColors.textLight;
-      case 'Expired':
+      case 'Completed':
         return AppColors.textLight;
       default:
         return AppColors.textLight;

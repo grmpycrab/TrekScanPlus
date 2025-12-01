@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:intl/intl.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import '../models/social_model.dart';
 import '../services/social_sharing_service.dart';
 import '../services/user_service.dart';
@@ -11,6 +12,7 @@ import 'comments_sheet.dart';
 import 'post_options_sheet.dart';
 import 'image_viewer.dart';
 import 'profile_avatar_with_status.dart';
+import 'app_dialogue_handler.dart';
 
 class SocialCard extends StatefulWidget {
   final SocialPost post;
@@ -169,7 +171,7 @@ class _SocialCardState extends State<SocialCard> {
     }
   }
 
-  void _navigateToUserProfile(BuildContext context) {
+  void _navigateToUserProfile(BuildContext context) async {
     final currentUser = FirebaseAuth.instance.currentUser;
 
     // Don't navigate if clicking own profile in post (already on profile tab)
@@ -177,12 +179,48 @@ class _SocialCardState extends State<SocialCard> {
       return;
     }
 
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => ProfileScreen(userId: widget.post.userId),
-      ),
-    );
+    // Check if current user follows this person
+    if (currentUser?.uid != null) {
+      try {
+        final isFollowing = await _userService.isFollowing(
+          currentUser!.uid,
+          widget.post.userId,
+        );
+
+        if (!isFollowing) {
+          // Show dialogue if not following
+          if (mounted) {
+            AppDialogueHandler.showAlert(
+              context: context,
+              title: 'Profile Access Restricted',
+              message:
+                  'You and this person don\'t follow each other. You can only view profiles of people you follow.',
+              buttonText: 'OK',
+            );
+          }
+          return;
+        }
+
+        // Navigate to profile if following
+        if (mounted) {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => ProfileScreen(userId: widget.post.userId),
+            ),
+          );
+        }
+      } catch (e) {
+        if (mounted) {
+          AppDialogueHandler.showAlert(
+            context: context,
+            title: 'Error',
+            message: 'Unable to verify follow status. Please try again.',
+            buttonText: 'OK',
+          );
+        }
+      }
+    }
   }
 
   Future<void> _handleLike() async {
@@ -246,17 +284,67 @@ class _SocialCardState extends State<SocialCard> {
   Future<void> _handleBookmark() async {
     if (widget.post.id == null) return;
 
+    final wasBookmarked = _isBookmarked;
     setState(() => _isBookmarked = !_isBookmarked);
 
     try {
       await _socialService.toggleBookmark(widget.post.id!);
+
+      // Show success feedback
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Row(
+              children: [
+                Icon(
+                  _isBookmarked ? Icons.bookmark : Icons.bookmark_border,
+                  color: Colors.white,
+                  size: 20,
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  _isBookmarked
+                      ? 'Added to favorites'
+                      : 'Removed from favorites',
+                  style: const TextStyle(fontSize: 14),
+                ),
+              ],
+            ),
+            backgroundColor: _isBookmarked ? Colors.green : Colors.orange,
+            duration: const Duration(seconds: 2),
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(8),
+            ),
+          ),
+        );
+      }
     } catch (e) {
       // Revert on error
-      setState(() => _isBookmarked = !_isBookmarked);
+      setState(() => _isBookmarked = wasBookmarked);
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Failed to bookmark: $e')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Row(
+              children: [
+                const Icon(Icons.error_outline, color: Colors.white, size: 20),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    'Failed to bookmark: $e',
+                    style: const TextStyle(fontSize: 14),
+                  ),
+                ),
+              ],
+            ),
+            backgroundColor: Colors.red,
+            duration: const Duration(seconds: 3),
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(8),
+            ),
+          ),
+        );
       }
     }
   }
@@ -638,13 +726,24 @@ class _SocialCardState extends State<SocialCard> {
       onTap: () => _openImageViewer(0),
       child: AspectRatio(
         aspectRatio: 4 / 3,
-        child: Image.network(
-          url,
+        child: CachedNetworkImage(
+          imageUrl: url,
           fit: BoxFit.cover,
-          errorBuilder: (context, error, stack) => Container(
-            color: Colors.grey[200],
-            child: const Icon(Icons.broken_image, size: 48),
+          placeholder: (context, url) => Container(
+            color: Colors.grey[100],
+            child: const Center(
+              child: CircularProgressIndicator(
+                strokeWidth: 2,
+                valueColor: AlwaysStoppedAnimation<Color>(Colors.grey),
+              ),
+            ),
           ),
+          errorWidget: (context, url, error) => Container(
+            color: Colors.grey[200],
+            child: const Icon(Icons.broken_image, size: 48, color: Colors.grey),
+          ),
+          memCacheWidth: 800,
+          memCacheHeight: 600,
         ),
       ),
     );
@@ -771,13 +870,28 @@ class _SocialCardState extends State<SocialCard> {
   Widget _buildImageTile(String url, int index) {
     return GestureDetector(
       onTap: () => _openImageViewer(index),
-      child: Image.network(
-        url,
+      child: CachedNetworkImage(
+        imageUrl: url,
         fit: BoxFit.cover,
-        errorBuilder: (context, error, stack) => Container(
-          color: Colors.grey[200],
-          child: const Icon(Icons.broken_image, size: 32),
+        placeholder: (context, url) => Container(
+          color: Colors.grey[100],
+          child: const Center(
+            child: SizedBox(
+              width: 20,
+              height: 20,
+              child: CircularProgressIndicator(
+                strokeWidth: 1.5,
+                valueColor: AlwaysStoppedAnimation<Color>(Colors.grey),
+              ),
+            ),
+          ),
         ),
+        errorWidget: (context, url, error) => Container(
+          color: Colors.grey[200],
+          child: const Icon(Icons.broken_image, size: 32, color: Colors.grey),
+        ),
+        memCacheWidth: 400,
+        memCacheHeight: 400,
       ),
     );
   }

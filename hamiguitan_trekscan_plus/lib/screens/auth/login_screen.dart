@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'signup_screen.dart';
 import 'forgot_password_screen.dart';
 import 'email_verification_screen.dart';
@@ -363,6 +364,21 @@ class _LoginScreenState extends State<LoginScreen> {
                                     } else if (mounted) {
                                       setState(() {
                                         _isLoading = false;
+                                      });
+                                    }
+                                  } on FirebaseAuthException catch (e) {
+                                    if (mounted) {
+                                      setState(() {
+                                        if (e.code ==
+                                            'account-exists-with-different-credential') {
+                                          _errorMessage =
+                                              e.message ??
+                                              'This email is already registered with email and password. Please sign in using your email and password instead.';
+                                        } else {
+                                          _errorMessage =
+                                              e.message ??
+                                              'Google sign-in failed. Please try again.';
+                                        }
                                       });
                                     }
                                   } catch (e) {

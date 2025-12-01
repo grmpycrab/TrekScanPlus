@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'notification_screen.dart';
 import '../../components/event_calendar.dart';
 import '../../components/connectivity_banner.dart';
@@ -22,6 +23,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'dart:async';
 import 'profile_screen.dart';
+import '../../utils/image_cache_manager.dart';
 
 class HomeScreen extends StatefulWidget {
   final Function(DateTime)? onNavigateToBooking;
@@ -32,7 +34,8 @@ class HomeScreen extends StatefulWidget {
   State<HomeScreen> createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> {
+class _HomeScreenState extends State<HomeScreen>
+    with SingleTickerProviderStateMixin {
   //int _selectedNavIndex = 0;
   late ValueNotifier<List<TrekDay>> _trekDaysNotifier;
   User? _firebaseUser;
@@ -49,11 +52,30 @@ class _HomeScreenState extends State<HomeScreen> {
   // FAB expansion
   bool _isFabExpanded = false;
 
+  // Banner animation
+  late AnimationController _bannerAnimationController;
+  late Animation<double> _bannerSlideAnimation;
+
+  // Collapsible sections
+  bool _areSectionsVisible = true;
+
   @override
   void initState() {
     super.initState();
     _initializeTrekDays();
     _firebaseUser = FirebaseAuthService.instance.currentUser;
+
+    // Initialize banner animation controller
+    _bannerAnimationController = AnimationController(
+      duration: const Duration(milliseconds: 300),
+      vsync: this,
+    );
+    _bannerSlideAnimation = Tween<double>(begin: 0.0, end: -1.0).animate(
+      CurvedAnimation(
+        parent: _bannerAnimationController,
+        curve: Curves.easeInOut,
+      ),
+    );
     _authSubscription = FirebaseAuthService.instance.authStateChanges.listen((
       user,
     ) {
@@ -78,6 +100,8 @@ class _HomeScreenState extends State<HomeScreen> {
     _trekDaysNotifier.dispose();
     _searchController.dispose();
     _searchFocusNode.dispose();
+    _bannerAnimationController.dispose();
+
     super.dispose();
   }
 
@@ -193,6 +217,15 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // Set status bar color to match header
+    SystemChrome.setSystemUIOverlayStyle(
+      SystemUiOverlayStyle(
+        statusBarColor: Colors.white,
+        statusBarIconBrightness: Brightness.dark,
+        statusBarBrightness: Brightness.light,
+      ),
+    );
+
     return Scaffold(
       backgroundColor: AppColors.background,
       body: SafeArea(
@@ -200,9 +233,8 @@ class _HomeScreenState extends State<HomeScreen> {
           children: [
             const ConnectivityBanner(),
             _buildHeader(),
-            _buildWelcomeBanner(),
-            _buildInfoButtons(),
-            const SizedBox(height: 10),
+            _buildCollapsibleSections(),
+            _buildSectionToggle(),
             Expanded(
               child: RefreshIndicator(
                 onRefresh: _refreshAll,
@@ -677,16 +709,20 @@ class _HomeScreenState extends State<HomeScreen> {
   void _toggleSearch() {
     _isSearchExpanded = !_isSearchExpanded;
     if (_isSearchExpanded) {
+      // Hide banner with slide up animation (FAB remains independent)
+      _bannerAnimationController.forward();
       Future.delayed(const Duration(milliseconds: 100), () {
         if (mounted) {
           _searchFocusNode.requestFocus();
         }
       });
     } else {
+      // Show banner with slide down animation (FAB remains independent)
+      _bannerAnimationController.reverse();
       _searchController.clear();
       _searchFocusNode.unfocus();
     }
-    // Force header rebuild only
+    // Force header rebuild only - FAB state remains unchanged
     if (mounted) {
       setState(() {});
     }
@@ -807,8 +843,84 @@ class _HomeScreenState extends State<HomeScreen> {
     _subscribeBookingsForMonth(month);
   }
 
-  Widget _buildWelcomeBanner() {
-    return const BannerSlideshow();
+  Widget _buildCollapsibleSections() {
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 300),
+      curve: Curves.easeInOut,
+      height: (_areSectionsVisible && !_isSearchExpanded) ? null : 0,
+      child: ClipRect(
+        child: AnimatedBuilder(
+          animation: _bannerSlideAnimation,
+          builder: (context, child) {
+            return Transform.translate(
+              offset: Offset(0, _bannerSlideAnimation.value * 200),
+              child: AnimatedOpacity(
+                duration: const Duration(milliseconds: 200),
+                opacity: (_areSectionsVisible && !_isSearchExpanded)
+                    ? 1.0
+                    : 0.0,
+                child: Column(
+                  children: [const BannerSlideshow(), _buildInfoButtons()],
+                ),
+              ),
+            );
+          },
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSectionToggle() {
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 300),
+      curve: Curves.easeInOut,
+      height: _areSectionsVisible ? 40 : 24,
+      color: AppColors.background,
+      child: Center(
+        child: InkWell(
+          onTap: () =>
+              setState(() => _areSectionsVisible = !_areSectionsVisible),
+          borderRadius: BorderRadius.circular(16),
+          child: AnimatedSwitcher(
+            duration: const Duration(milliseconds: 200),
+            child: _areSectionsVisible
+                ? Container(
+                    key: const ValueKey('expanded_toggle'),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 4,
+                    ),
+                    decoration: BoxDecoration(
+                      color: Colors.grey[50],
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: Colors.grey[200]!, width: 1),
+                    ),
+                    child: Icon(
+                      Icons.keyboard_arrow_up,
+                      color: Colors.grey[600],
+                      size: 20,
+                    ),
+                  )
+                : Container(
+                    key: const ValueKey('collapsed_toggle'),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 2,
+                    ),
+                    decoration: BoxDecoration(
+                      color: Colors.grey[100],
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Icon(
+                      Icons.keyboard_arrow_down,
+                      color: Colors.grey[500],
+                      size: 30,
+                    ),
+                  ),
+          ),
+        ),
+      ),
+    );
   }
 
   Widget _buildInfoButtons() {
@@ -927,7 +1039,9 @@ class _HomeScreenState extends State<HomeScreen> {
     return StreamBuilder<List<SocialPost>>(
       stream: SocialSharingService.instance.streamPublicPosts(),
       builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
+        // Show existing data while loading new updates to prevent UI jumps
+        if (snapshot.connectionState == ConnectionState.waiting &&
+            !snapshot.hasData) {
           return const Padding(
             padding: EdgeInsets.all(16),
             child: Center(child: CircularProgressIndicator()),
@@ -939,7 +1053,22 @@ class _HomeScreenState extends State<HomeScreen> {
           if (error is FirebaseException && error.message != null) {
             debugPrint('Firestore index error: ${error.message}');
           }
-          return Text('Error loading posts');
+          return const Padding(
+            padding: EdgeInsets.all(16),
+            child: Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.error_outline, size: 48, color: Colors.grey),
+                  SizedBox(height: 16),
+                  Text(
+                    'Error loading posts',
+                    style: TextStyle(color: Colors.grey),
+                  ),
+                ],
+              ),
+            ),
+          );
         }
 
         final posts = snapshot.data ?? [];
@@ -971,11 +1100,30 @@ class _HomeScreenState extends State<HomeScreen> {
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Padding(
-              padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              child: Text(
-                'Community Feed',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              child: Row(
+                children: [
+                  const Text(
+                    'Community Feed',
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  ),
+                  if (snapshot.connectionState == ConnectionState.waiting &&
+                      snapshot.hasData)
+                    const Padding(
+                      padding: EdgeInsets.only(left: 12),
+                      child: SizedBox(
+                        width: 16,
+                        height: 16,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          valueColor: AlwaysStoppedAnimation<Color>(
+                            Colors.grey,
+                          ),
+                        ),
+                      ),
+                    ),
+                ],
               ),
             ),
             if (_searchQuery.isNotEmpty && filteredPosts.isEmpty)
@@ -988,16 +1136,29 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                 ),
               ),
-            ...filteredPosts.map(
-              (post) => Padding(
+            // Use ListView.builder for better performance with large lists
+            ...filteredPosts.asMap().entries.map((entry) {
+              final post = entry.value;
+
+              // Preload images for better UX (do this asynchronously for first 3 posts)
+              if (post.imageUrls.isNotEmpty && entry.key < 3) {
+                WidgetsBinding.instance.addPostFrameCallback((_) {
+                  ImageCacheManager.preloadImages(post.imageUrls, context);
+                });
+              }
+
+              return Padding(
+                key: ValueKey(
+                  post.id ?? entry.key,
+                ), // Add key for better widget recycling
                 padding: const EdgeInsets.symmetric(horizontal: 16),
                 child: SocialCard(
                   post: post,
                   onCommentTap: () => _showCommentsDialog(post),
                   onDelete: () => _handleDeletePost(post),
                 ),
-              ),
-            ),
+              );
+            }),
           ],
         );
       },

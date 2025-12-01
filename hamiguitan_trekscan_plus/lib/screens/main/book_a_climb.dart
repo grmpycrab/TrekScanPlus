@@ -38,6 +38,10 @@ class _BookAClimbScreenState extends State<BookAClimbScreen> {
   bool _isSenior = false;
   bool _hasScrolledToBooking = false;
 
+  // Filter states
+  String _selectedStatusFilter = 'All';
+  String _selectedTypeFilter = 'All';
+
   // Store picked PlatformFile objects so we can upload bytes/paths to Firebase
   List<PlatformFile> _pickedFiles = [];
 
@@ -454,6 +458,13 @@ class _BookAClimbScreenState extends State<BookAClimbScreen> {
           'Book a Climb',
           style: TextStyle(color: AppColors.white, fontWeight: FontWeight.bold),
         ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.filter_list, color: AppColors.white),
+            onPressed: _showFilterDialog,
+            tooltip: 'Filter bookings',
+          ),
+        ],
         shape: const RoundedRectangleBorder(
           borderRadius: BorderRadius.vertical(top: Radius.circular(8)),
         ),
@@ -500,8 +511,10 @@ class _BookAClimbScreenState extends State<BookAClimbScreen> {
     final today = DateTime.now();
     final todayDate = DateTime(today.year, today.month, today.day);
 
+    List<dynamic> filteredList;
+
     if (type == 'upcoming') {
-      return _bookings.where((item) {
+      filteredList = _bookings.where((item) {
         if (item is Map<String, dynamic> && item.containsKey('climb')) {
           final climb = item['climb'] as Climb;
           return !climb.date.isBefore(todayDate);
@@ -509,15 +522,45 @@ class _BookAClimbScreenState extends State<BookAClimbScreen> {
         return false;
       }).toList();
     } else if (type == 'previous') {
-      return _bookings.where((item) {
+      filteredList = _bookings.where((item) {
         if (item is Map<String, dynamic> && item.containsKey('climb')) {
           final climb = item['climb'] as Climb;
           return climb.date.isBefore(todayDate);
         }
         return false;
       }).toList();
+    } else {
+      filteredList = _bookings;
     }
-    return _bookings;
+
+    // Apply additional filters
+    return _applyFilters(filteredList);
+  }
+
+  List<dynamic> _applyFilters(List<dynamic> bookings) {
+    return bookings.where((item) {
+      if (item is Map<String, dynamic> && item.containsKey('climb')) {
+        final climb = item['climb'] as Climb;
+        final booking = item['booking'] as BookingModel;
+
+        // Status filter
+        if (_selectedStatusFilter != 'All') {
+          final status = climb.status.toLowerCase();
+          final filterStatus = _selectedStatusFilter.toLowerCase();
+          if (status != filterStatus) return false;
+        }
+
+        // Type filter
+        if (_selectedTypeFilter != 'All') {
+          final trekType = booking.trekType.toLowerCase();
+          final filterType = _selectedTypeFilter.toLowerCase();
+          if (trekType != filterType) return false;
+        }
+
+        return true;
+      }
+      return false;
+    }).toList();
   }
 
   Widget _buildBookingsList(List<dynamic> bookings) {
@@ -698,12 +741,129 @@ class _BookAClimbScreenState extends State<BookAClimbScreen> {
     return list;
   }
 
+  void _showFilterDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: const Text(
+          'Filter Bookings',
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            color: AppColors.darkGreen,
+          ),
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Status',
+              style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16),
+            ),
+            const SizedBox(height: 8),
+            DropdownButtonFormField<String>(
+              value: _selectedStatusFilter,
+              decoration: InputDecoration(
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 8,
+                ),
+              ),
+              items: const [
+                DropdownMenuItem(value: 'All', child: Text('All Statuses')),
+                DropdownMenuItem(value: 'pending', child: Text('Pending')),
+                DropdownMenuItem(value: 'approved', child: Text('Approved')),
+                DropdownMenuItem(value: 'declined', child: Text('Declined')),
+                DropdownMenuItem(value: 'cancelled', child: Text('Cancelled')),
+                DropdownMenuItem(
+                  value: 'changes required',
+                  child: Text('Changes Required'),
+                ),
+                DropdownMenuItem(value: 'completed', child: Text('Completed')),
+              ],
+              onChanged: (value) {
+                if (value != null) {
+                  setState(() {
+                    _selectedStatusFilter = value;
+                  });
+                }
+              },
+            ),
+            const SizedBox(height: 16),
+            const Text(
+              'Trek Type',
+              style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16),
+            ),
+            const SizedBox(height: 8),
+            DropdownButtonFormField<String>(
+              value: _selectedTypeFilter,
+              decoration: InputDecoration(
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 8,
+                ),
+              ),
+              items: const [
+                DropdownMenuItem(value: 'All', child: Text('All Types')),
+                DropdownMenuItem(value: 'general', child: Text('General')),
+                DropdownMenuItem(value: 'research', child: Text('Research')),
+              ],
+              onChanged: (value) {
+                if (value != null) {
+                  setState(() {
+                    _selectedTypeFilter = value;
+                  });
+                }
+              },
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () {
+              setState(() {
+                _selectedStatusFilter = 'All';
+                _selectedTypeFilter = 'All';
+              });
+            },
+            child: const Text(
+              'Clear All',
+              style: TextStyle(color: AppColors.grey),
+            ),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.primary,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+            ),
+            onPressed: () {
+              Navigator.of(context).pop();
+            },
+            child: const Text(
+              'Apply',
+              style: TextStyle(color: AppColors.white),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   void _confirmCancelModel(Climb booking) async {
     final confirmed = await AppDialogueHandler.showConfirmation(
       context: context,
       title: 'Cancel Booking',
       message: 'Are you sure you want to cancel this booking?',
-      confirmText: 'Cancel Booking',
+      confirmText: 'Yes',
       cancelText: 'No',
       isDestructive: true,
     );
@@ -1870,7 +2030,7 @@ class _BookAClimbScreenState extends State<BookAClimbScreen> {
 
       if (!mounted) return;
 
-      await AppDialogueHandler.showError(
+      await AppDialogueHandler.showAlert(
         context: context,
         title: 'Date Fully Booked',
         message:
@@ -1987,7 +2147,7 @@ class _BookAClimbScreenState extends State<BookAClimbScreen> {
 
                             if (hasDuplicate) {
                               if (mounted) {
-                                await AppDialogueHandler.showError(
+                                await AppDialogueHandler.showAlert(
                                   context: context,
                                   title: 'Duplicate Booking',
                                   message:

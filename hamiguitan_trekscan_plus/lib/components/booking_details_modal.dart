@@ -423,8 +423,8 @@ class BookingDetailsModal extends StatelessWidget {
         return Colors.green[100]!;
       case 'Cancelled':
         return Colors.grey[200]!;
-      case 'Expired':
-        return Colors.red[100]!;
+      case 'Completed':
+        return Colors.blue[100]!;
       default:
         return Colors.orange[100]!;
     }
@@ -436,8 +436,8 @@ class BookingDetailsModal extends StatelessWidget {
         return Colors.green[800]!;
       case 'Cancelled':
         return Colors.grey[700]!;
-      case 'Expired':
-        return Colors.red[800]!;
+      case 'Completed':
+        return Colors.blue[800]!;
       default:
         return Colors.orange[800]!;
     }
@@ -449,8 +449,8 @@ class BookingDetailsModal extends StatelessWidget {
         return Icons.check_circle;
       case 'Cancelled':
         return Icons.cancel;
-      case 'Expired':
-        return Icons.schedule;
+      case 'Completed':
+        return Icons.check_circle;
       default:
         return Icons.schedule;
     }

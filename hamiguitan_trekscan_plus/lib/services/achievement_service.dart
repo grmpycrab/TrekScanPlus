@@ -10,31 +10,46 @@ import 'local_achievement_service.dart';
 class AchievementService {
   static final AchievementService _instance = AchievementService._internal();
 
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
-  final FirebaseAuth _auth = FirebaseAuth.instance;
+  final FirebaseFirestore _firestore;
+  final FirebaseAuth _auth;
   late LocalAchievementService _localService;
 
   List<Achievement> _allAchievements = [];
   bool _isInitialized = false;
+  String? _currentUserId; // Track which user this instance is for
 
-  AchievementService._internal();
+  AchievementService._internal()
+    : _firestore = FirebaseFirestore.instance,
+      _auth = FirebaseAuth.instance;
 
+  /// Factory constructor - creates singleton for default use
   factory AchievementService() {
     return _instance;
   }
 
+  /// Create a new instance for specific user (used in profile views)
+  AchievementService.forUser()
+    : _firestore = FirebaseFirestore.instance,
+      _auth = FirebaseAuth.instance;
+
   /// Initialize the service - load achievements from JSON and local cache
   /// Pass userId to scope local storage to current user
   Future<void> init({String? userId}) async {
-    if (_isInitialized) return;
+    final targetUserId = userId ?? _auth.currentUser?.uid;
+
+    // If already initialized for this user, return
+    if (_isInitialized && _currentUserId == targetUserId) return;
+
+    // If initializing for a different user, reset first
+    if (_currentUserId != targetUserId) {
+      resetInitialization();
+    }
 
     try {
       // Use current user ID if not provided
-      final currentUserId = userId ?? _auth.currentUser?.uid;
+      final currentUserId = targetUserId;
       final isOwnProfile = currentUserId == _auth.currentUser?.uid;
-      print(
-        '🎯 AchievementService: Initializing for userId: $currentUserId (isOwnProfile: $isOwnProfile)',
-      );
+      _currentUserId = currentUserId;
 
       // Initialize local service with user ID
       _localService = await LocalAchievementService.init(userId: currentUserId);
@@ -62,7 +77,7 @@ class AchievementService {
 
       _isInitialized = true;
     } catch (e) {
-      print('Error initializing AchievementService: $e');
+      e.toString();
       rethrow;
     }
   }
@@ -72,6 +87,7 @@ class AchievementService {
   void resetInitialization() {
     _isInitialized = false;
     _allAchievements = [];
+    _currentUserId = null;
   }
 
   /// Force refresh from Firebase (useful for profile screen)
@@ -82,7 +98,7 @@ class AchievementService {
 
       await _mergeWithFirebaseAchievements(userId);
     } catch (e) {
-      print('Error refreshing from Firebase: $e');
+      e.toString();
     }
   }
 
@@ -130,7 +146,7 @@ class AchievementService {
       // Save merged list locally
       await _localService.saveAchievements(_allAchievements);
     } catch (e) {
-      print('Error merging with local achievements: $e');
+      e.toString();
     }
   }
 
