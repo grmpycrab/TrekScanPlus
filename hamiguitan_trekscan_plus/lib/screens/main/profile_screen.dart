@@ -1227,6 +1227,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
   void _showFollowersModal() async {
     if (_firebaseUser == null) return;
 
+    // Get the correct user ID for the profile being viewed
+    final profileUserId = widget.userId ?? _firebaseUser!.uid;
+
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -1284,7 +1287,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   // Followers list
                   Expanded(
                     child: FutureBuilder<List<Map<String, dynamic>>>(
-                      future: _getFollowersList(),
+                      future: _getFollowersListForUser(profileUserId),
                       builder: (context, snapshot) {
                         if (snapshot.connectionState ==
                             ConnectionState.waiting) {
@@ -1347,6 +1350,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
   void _showFollowingModal() async {
     if (_firebaseUser == null) return;
 
+    // Get the correct user ID for the profile being viewed
+    final profileUserId = widget.userId ?? _firebaseUser!.uid;
+
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -1404,7 +1410,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   // Following list
                   Expanded(
                     child: FutureBuilder<List<Map<String, dynamic>>>(
-                      future: _getFollowingList(),
+                      future: _getFollowingListForUser(profileUserId),
                       builder: (context, snapshot) {
                         if (snapshot.connectionState ==
                             ConnectionState.waiting) {
@@ -1464,13 +1470,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  Future<List<Map<String, dynamic>>> _getFollowersList() async {
+  Future<List<Map<String, dynamic>>> _getFollowersListForUser(
+    String userId,
+  ) async {
     if (_firebaseUser == null) return [];
 
     try {
-      // Use the profile being viewed, not the current user
-      final profileUserId = widget.userId ?? _firebaseUser!.uid;
-      final userData = await _userService.getUserOnce(profileUserId);
+      final userData = await _userService.getUserOnce(userId);
       final followerIds =
           (userData?['followers'] as List<dynamic>?)?.cast<String>() ?? [];
 
@@ -1488,18 +1494,18 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
       return followers;
     } catch (e) {
-      debugPrint('Error fetching followers: $e');
+      debugPrint('Error fetching followers for user $userId: $e');
       return [];
     }
   }
 
-  Future<List<Map<String, dynamic>>> _getFollowingList() async {
+  Future<List<Map<String, dynamic>>> _getFollowingListForUser(
+    String userId,
+  ) async {
     if (_firebaseUser == null) return [];
 
     try {
-      // Use the profile being viewed, not the current user
-      final profileUserId = widget.userId ?? _firebaseUser!.uid;
-      final userData = await _userService.getUserOnce(profileUserId);
+      final userData = await _userService.getUserOnce(userId);
       final followingIds =
           (userData?['following'] as List<dynamic>?)?.cast<String>() ?? [];
 
@@ -1517,7 +1523,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
       return following;
     } catch (e) {
-      debugPrint('Error fetching following: $e');
+      debugPrint('Error fetching following for user $userId: $e');
       return [];
     }
   }

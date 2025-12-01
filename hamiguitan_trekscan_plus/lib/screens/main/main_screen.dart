@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'dart:async';
 import '../../components/bottom_navigation.dart';
 import '../../services/achievement_service.dart';
 import '../../services/onboarding_service.dart';
@@ -53,32 +54,44 @@ class _MainScreenState extends State<MainScreen> {
   void initState() {
     super.initState();
     _currentIndex = widget.initialTabIndex;
-    _initializeAchievements();
-    _checkAndShowOnboarding();
+
+    // Initialize non-critical services asynchronously
+    _initializeServicesAsync();
   }
 
-  Future<void> _initializeAchievements() async {
-    try {
-      await _achievementService.init();
-    } catch (e) {
-      // Silent fail - non-critical
-    }
-  }
-
-  Future<void> _checkAndShowOnboarding() async {
-    final user = FirebaseAuth.instance.currentUser;
-    if (user == null) return;
-
-    // Wait a bit to ensure the UI is fully rendered
-    await Future.delayed(const Duration(milliseconds: 500));
-
-    final hasSeenOnboarding = await OnboardingService.hasSeenOnboarding(
-      user.uid,
+  Future<void> _initializeServicesAsync() async {
+    // Run achievement initialization in background
+    unawaited(
+      Future.microtask(() async {
+        try {
+          await _achievementService.init();
+        } catch (e) {
+          // Silent fail - non-critical
+        }
+      }),
     );
 
-    if (!hasSeenOnboarding && mounted) {
-      await OnboardingService.showOnboarding(context, user.uid);
-    }
+    // Check and show onboarding with reduced delay
+    unawaited(
+      Future.delayed(const Duration(milliseconds: 300), () async {
+        if (!mounted) return;
+
+        final user = FirebaseAuth.instance.currentUser;
+        if (user == null) return;
+
+        try {
+          final hasSeenOnboarding = await OnboardingService.hasSeenOnboarding(
+            user.uid,
+          );
+
+          if (!hasSeenOnboarding && mounted) {
+            await OnboardingService.showOnboarding(context, user.uid);
+          }
+        } catch (e) {
+          debugPrint('Onboarding check error: $e');
+        }
+      }),
+    );
   }
 
   @override
