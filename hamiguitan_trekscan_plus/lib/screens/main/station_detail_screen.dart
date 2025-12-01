@@ -18,11 +18,28 @@ class _StationDetailScreenState extends State<StationDetailScreen> {
   StationData get station => widget.station;
   StationData? nextStationData;
   List<StationData> allStations = [];
+  late ScrollController _scrollController;
+  double _scrollOffset = 0.0;
 
   @override
   void initState() {
     super.initState();
+    _scrollController = ScrollController();
+    _scrollController.addListener(_onScroll);
     _loadStationData();
+  }
+
+  @override
+  void dispose() {
+    _scrollController.removeListener(_onScroll);
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  void _onScroll() {
+    setState(() {
+      _scrollOffset = _scrollController.offset;
+    });
   }
 
   Future<void> _loadStationData() async {
@@ -74,12 +91,31 @@ class _StationDetailScreenState extends State<StationDetailScreen> {
     return endStationIds.contains(stationId);
   }
 
+  Color _getAppBarIconColor() {
+    // Start white over photo, transition to black as user scrolls
+    final progress = (_scrollOffset / 100).clamp(0.0, 1.0);
+    return Color.lerp(Colors.white, Colors.black, progress)!;
+  }
+
+  Color _getAppBarTextColor() {
+    // Same transition for text
+    final progress = (_scrollOffset / 100).clamp(0.0, 1.0);
+    return Color.lerp(Colors.white, AppColors.textPrimary, progress)!;
+  }
+
+  Color _getAppBarBackgroundColor() {
+    // Gradually show white background as user scrolls
+    final progress = (_scrollOffset / 150).clamp(0.0, 1.0);
+    return Color.lerp(Colors.transparent, Colors.white, progress)!;
+  }
+
   @override
   Widget build(BuildContext context) {
     try {
       return Scaffold(
         backgroundColor: Colors.white,
         body: CustomScrollView(
+          controller: _scrollController,
           slivers: [
             _buildAppBar(),
             SliverToBoxAdapter(
@@ -185,10 +221,11 @@ class _StationDetailScreenState extends State<StationDetailScreen> {
     return SliverAppBar(
       expandedHeight: 400.0,
       pinned: true,
-      backgroundColor: Colors.white,
-      elevation: 0,
+      backgroundColor: _getAppBarBackgroundColor(),
+      elevation: _scrollOffset > 50 ? 4 : 0,
+      shadowColor: Colors.black.withOpacity(0.1),
       leading: IconButton(
-        icon: const Icon(Icons.arrow_back, color: Colors.black),
+        icon: Icon(Icons.arrow_back, color: _getAppBarIconColor()),
         onPressed: () {
           // Pop with the station data so parent can update
           Navigator.pop(context, widget.station);
@@ -196,10 +233,10 @@ class _StationDetailScreenState extends State<StationDetailScreen> {
       ),
       title: Text(
         " ${station.name}",
-        style: const TextStyle(
+        style: TextStyle(
           fontSize: 16,
           fontWeight: FontWeight.w600,
-          color: AppColors.textPrimary,
+          color: _getAppBarTextColor(),
         ),
       ),
       flexibleSpace: FlexibleSpaceBar(

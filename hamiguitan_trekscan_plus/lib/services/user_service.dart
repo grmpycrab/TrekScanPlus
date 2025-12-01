@@ -21,6 +21,7 @@ class UserService {
   ///
   /// [firstName] and [lastName] can be provided to override extraction from displayName.
   /// If not provided and user is new, will attempt to extract from displayName.
+  /// it should check for existing values to avoid overwriting.
   Future<void> createOrUpdateUserFromFirebase(
     User user, {
     String? firstName,

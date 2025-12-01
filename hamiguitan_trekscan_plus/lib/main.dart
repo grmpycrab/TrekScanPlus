@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'dart:async';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:app_links/app_links.dart';
@@ -35,21 +36,22 @@ void main() async {
   // Initialize Firebase
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 
-  // Initialize StationService (but don't wait for loading)
-  final stationService = await StationService.init();
-
-  // Start connectivity monitoring
-  ConnectivityService.instance.start();
-
-  // Load stations asynchronously in the background (non-blocking)
-  stationService
-      .loadStations()
-      .then((_) {
+  // Initialize services asynchronously without blocking app startup
+  unawaited(
+    Future.microtask(() async {
+      try {
+        // Initialize StationService and load stations in background
+        final stationService = await StationService.init();
+        await stationService.loadStations();
         debugPrint('✅ Stations loaded successfully');
-      })
-      .catchError((error) {
+      } catch (error) {
         debugPrint('❌ Failed to load stations: $error');
-      });
+      }
+    }),
+  );
+
+  // Start connectivity monitoring (lightweight)
+  ConnectivityService.instance.start();
 
   runApp(const MyApp());
 }
@@ -71,8 +73,8 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
 
-    // Hide splash screen after a delay
-    Future.delayed(const Duration(milliseconds: 2500), () {
+    // Hide splash screen after a shorter delay for faster startup
+    Future.delayed(const Duration(milliseconds: 1500), () {
       if (mounted) {
         setState(() {
           _showSplash = false;
@@ -80,15 +82,12 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
       }
     });
 
+    // Initialize critical services asynchronously
+    _initializeCriticalServices();
+
     // Handle deep links
     _handleInitialDeepLink();
     _listenToDeepLinks();
-
-    // Initialize notification service
-    NotificationService().initialize();
-
-    // Initialize presence service
-    PresenceService.instance.initialize();
 
     // Listen to auth changes and start booking status listener when user logs in
     FirebaseAuthService.instance.authStateChanges.listen((user) async {
@@ -136,21 +135,44 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
     }
   }
 
+  /// Initialize critical services asynchronously
+  Future<void> _initializeCriticalServices() async {
+    // Run these in background without blocking UI
+    unawaited(
+      Future.microtask(() async {
+        try {
+          await NotificationService().initialize();
+          PresenceService.instance.initialize();
+        } catch (e) {
+          debugPrint('Non-critical service initialization error: $e');
+        }
+      }),
+    );
+  }
+
   /// Initialize services for verified users
   Future<void> _initializeVerifiedUserServices(String userId) async {
     if (_servicesInitialized) return;
 
     debugPrint('🚀 Initializing services for verified user: $userId');
 
+    // Start critical services immediately
     BookingService.instance.startBookingStatusListener(userId);
-    _initializeFCM();
-    NotificationService().listenToBookingUpdates();
+
+    // Initialize FCM and notification listening in background
+    unawaited(_initializeFCM());
+    unawaited(
+      Future.microtask(() => NotificationService().listenToBookingUpdates()),
+    );
 
     if (!_permissionsRequested) {
       _permissionsRequested = true;
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        _requestPermissions();
-      });
+      // Defer permission requests to avoid blocking startup
+      unawaited(
+        Future.delayed(const Duration(milliseconds: 1000), () {
+          if (mounted) _requestPermissions();
+        }),
+      );
     }
 
     _servicesInitialized = true;
@@ -281,11 +303,12 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
   }
 
   Future<void> _requestPermissions() async {
-    // Wait a bit for UI to settle after login
-    await Future.delayed(const Duration(milliseconds: 800));
-
     if (mounted) {
-      await PermissionService.instance.requestInitialPermissions(context);
+      try {
+        await PermissionService.instance.requestInitialPermissions(context);
+      } catch (e) {
+        debugPrint('Permission request error: $e');
+      }
     }
   }
 
