@@ -150,7 +150,7 @@ class AppColors {
   static const Color text = Color(0xFF252B30);
   static const Color textSecondary = Colors.grey;
   static const Color textLight = Colors.white70;
-  
+
   // Legacy Text Color Variants (for backwards compatibility)
   static Color textBlack87 = Colors.black87;
   static Color textBlack54 = Colors.black54;
@@ -163,7 +163,7 @@ class AppColors {
   // Border Colors
   static const Color border = Color(0xFFE0E0E0);
   static const Color borderLight = Color(0xFFF0F0F0);
-  
+
   // Legacy Border Variants (for backwards compatibility)
   static Color borderBlack12 = Colors.black12;
   static Color borderBlack26 = Colors.black26;
@@ -171,42 +171,42 @@ class AppColors {
   // Overlay Colors
   static Color overlayLight = Colors.white.withValues(alpha: 0.1);
   static Color overlayMedium = Colors.white.withValues(alpha: 0.2);
-  
+
   // Color Variants (for backwards compatibility)
   static const Color green50 = Color(0xFFF1F8E9);
   static const Color green200 = Color(0xFFC8E6C9);
   static const Color green700 = Color(0xFF558B2F);
   static const Color green = Colors.green;
-  
+
   static const Color red200 = Color(0xFFEF9A9A);
-  
+
   // Notification Colors
   static const Color notificationToggle = Color(0xFFFF9800); // Orange
   static const Color notificationBooking = Color(0xFF2196F3); // Blue
   static const Color notificationDot = Colors.red;
-  
+
   // Additional Text Variant
   static const Color textTertiary = Color(0xFF999999);
   static const Color textGrey700 = Color(0xFF616161);
-  
+
   // Icon Colors
   static const Color iconGrey400 = Color(0xFFBDBDBD);
   static const Color iconGrey600 = Color(0xFF757575);
-  
+
   // Border Colors (aliases)
   static const Color borderColor = Color(0xFFE0E0E0);
-  
+
   // Segment Background
   static const Color segmentBackground = Color(0xFFF5F5F5);
-  
+
   // Shadow Overlay (for dialogs/overlays)
   static Color shadowOverlay = Colors.black.withValues(alpha: 0.3);
-  
+
   // Status Colors (should come from SharedColors but mapped here for compatibility)
   static const Color statusApproved = Colors.green;
   static const Color statusPending = Colors.orange;
   static const Color statusRejected = Colors.red;
-  
+
   // Difficulty Colors (should come from SharedColors but mapped here for compatibility)
   static const Color difficultyEasy = Colors.green;
   static const Color difficultyModerate = Colors.orange;
@@ -227,7 +227,7 @@ class AppColorsDark {
   static const Color text = Color(0xFFF0F0F0);
   static const Color textSecondary = Color(0xFFB0B0B0);
   static const Color textLight = Colors.white70;
-  
+
   // Legacy Text Color Variants (for backwards compatibility)
   static Color textBlack87 = Colors.white;
   static Color textBlack54 = Color(0xFFC0C0C0);
@@ -240,7 +240,7 @@ class AppColorsDark {
   // Border Colors
   static const Color border = Color(0xFF333333);
   static const Color borderLight = Color(0xFF2A2A2A);
-  
+
   // Legacy Border Variants (for backwards compatibility)
   static Color borderBlack12 = Color(0xFF424242);
   static Color borderBlack26 = Color(0xFF616161);
@@ -248,42 +248,42 @@ class AppColorsDark {
   // Overlay Colors (lower opacity for dark)
   static Color overlayLight = Colors.white.withValues(alpha: 0.05);
   static Color overlayMedium = Colors.white.withValues(alpha: 0.1);
-  
+
   // Color Variants (for backwards compatibility)
   static const Color green50 = Color(0xFF1B5E20);
   static const Color green200 = Color(0xFF81C784);
   static const Color green700 = Color(0xFF388E3C);
   static const Color green = Colors.green;
-  
+
   static const Color red200 = Color(0xFFEF9A9A);
-  
+
   // Notification Colors
   static const Color notificationToggle = Color(0xFFFF9800); // Orange
   static const Color notificationBooking = Color(0xFF2196F3); // Blue
   static const Color notificationDot = Colors.red;
-  
+
   // Additional Text Variant
   static const Color textTertiary = Color(0xFF999999);
   static const Color textGrey700 = Color(0xFF9E9E9E);
-  
+
   // Icon Colors
   static const Color iconGrey400 = Color(0xFF424242);
   static const Color iconGrey600 = Color(0xFF212121);
-  
+
   // Border Colors (aliases)
   static const Color borderColor = Color(0xFF333333);
-  
+
   // Segment Background
   static const Color segmentBackground = Color(0xFF1E1E1E);
-  
+
   // Shadow Overlay (for dialogs/overlays)
   static Color shadowOverlay = Colors.black.withValues(alpha: 0.5);
-  
+
   // Status Colors (should come from SharedColors but mapped here for compatibility)
   static const Color statusApproved = Colors.green;
   static const Color statusPending = Colors.orange;
   static const Color statusRejected = Colors.red;
-  
+
   // Difficulty Colors (should come from SharedColors but mapped here for compatibility)
   static const Color difficultyEasy = Colors.green;
   static const Color difficultyModerate = Colors.orange;

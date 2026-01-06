@@ -112,7 +112,9 @@ void main() async {
       .get();
 
   // Calculate slots used (only count trekkers, not porters)
-  int totalSlotsUsed = querySnapshot.docs.length; // 1 trekker per booking (porters excluded from count)
+  int totalSlotsUsed = querySnapshot
+      .docs
+      .length; // 1 trekker per booking (porters excluded from count)
 
   print('📈 Current Status for ${targetDate.toString().split(' ')[0]}:');
   print('   📋 Total bookings: ${querySnapshot.docs.length}');
