@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../../services/onboarding_service.dart';
+import '../../theme/new_color.dart';
 
 class HelpAndSupportScreen extends StatelessWidget {
   const HelpAndSupportScreen({super.key});
@@ -8,9 +9,9 @@ class HelpAndSupportScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.grey[100],
+      backgroundColor: AppColors.background,
       appBar: AppBar(
-        backgroundColor: const Color(0xFF252B30),
+        backgroundColor: AppColors.primary,
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Colors.white),
@@ -37,7 +38,7 @@ class HelpAndSupportScreen extends StatelessWidget {
                 style: TextStyle(
                   fontSize: 24,
                   fontWeight: FontWeight.bold,
-                  color: Color(0xFF252B30),
+                  color: AppColors.text,
                 ),
               ),
               const SizedBox(height: 12),
@@ -45,7 +46,7 @@ class HelpAndSupportScreen extends StatelessWidget {
                 'Have questions or need assistance? Our dedicated support team is ready to help you make the most of Trek Scan Plus.',
                 style: TextStyle(
                   fontSize: 14,
-                  color: Colors.grey[700],
+                  color: AppColors.textSecondary,
                   height: 1.6,
                 ),
               ),
@@ -55,7 +56,7 @@ class HelpAndSupportScreen extends StatelessWidget {
                 style: TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
-                  color: Color(0xFF252B30),
+                  color: AppColors.primary,
                 ),
               ),
               const SizedBox(height: 16),
@@ -87,13 +88,13 @@ class HelpAndSupportScreen extends StatelessWidget {
                 style: TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
-                  color: Color(0xFF252B30),
+                  color: AppColors.primary,
                 ),
               ),
               const SizedBox(height: 16),
               Text(
                 'Reach out to our support team through any of these channels:',
-                style: TextStyle(fontSize: 14, color: Colors.grey[700]),
+                style: TextStyle(fontSize: 14, color: AppColors.textSecondary),
               ),
               const SizedBox(height: 16),
               _buildContactItem(
@@ -116,10 +117,10 @@ class HelpAndSupportScreen extends StatelessWidget {
                 width: double.infinity,
                 padding: const EdgeInsets.all(20.0),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF252B30).withValues(alpha: 0.1),
+                  color: AppColors.primary.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(12),
                   border: Border.all(
-                    color: const Color(0xFF252B30).withValues(alpha: 0.2),
+                    color: AppColors.primary.withValues(alpha: 0.2),
                   ),
                 ),
                 child: Column(
@@ -130,7 +131,7 @@ class HelpAndSupportScreen extends StatelessWidget {
                       style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
-                        color: Color(0xFF252B30),
+                        color: AppColors.primary,
                       ),
                     ),
                     const SizedBox(height: 12),
@@ -138,7 +139,7 @@ class HelpAndSupportScreen extends StatelessWidget {
                       'Monday - Friday: 9:00 AM - 5:00 PM (PST)\nWeekends: 10:00 AM - 3:00 PM (PST)\n\nWe typically respond to inquiries within 24 business hours.',
                       style: TextStyle(
                         fontSize: 14,
-                        color: Colors.grey[700],
+                        color: AppColors.textSecondary,
                         height: 1.6,
                       ),
                     ),
@@ -168,7 +169,7 @@ class HelpAndSupportScreen extends StatelessWidget {
                       style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
-                        color: Color(0xFF252B30),
+                        color: AppColors.primary,
                       ),
                     ),
                     const SizedBox(height: 16),
@@ -176,7 +177,7 @@ class HelpAndSupportScreen extends StatelessWidget {
                       'Visit our website and documentation for additional guides, tutorials, and resources to help you get the most out of Trek Scan Plus.',
                       style: TextStyle(
                         fontSize: 14,
-                        color: Colors.grey[700],
+                        color: AppColors.textSecondary,
                         height: 1.6,
                       ),
                     ),
@@ -215,7 +216,7 @@ class HelpAndSupportScreen extends StatelessWidget {
               style: const TextStyle(
                 fontSize: 14,
                 fontWeight: FontWeight.bold,
-                color: Color(0xFF252B30),
+                color: AppColors.primary,
               ),
             ),
             const SizedBox(height: 8),
@@ -223,7 +224,7 @@ class HelpAndSupportScreen extends StatelessWidget {
               answer,
               style: TextStyle(
                 fontSize: 13,
-                color: Colors.grey[700],
+                color: AppColors.textSecondary,
                 height: 1.5,
               ),
             ),
@@ -258,10 +259,10 @@ class HelpAndSupportScreen extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(
-                color: const Color(0xFF252B30).withValues(alpha: 0.1),
+                color: AppColors.primary.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(8),
               ),
-              child: Icon(icon, color: const Color(0xFF252B30), size: 20),
+              child: Icon(icon, color: AppColors.primary, size: 20),
             ),
             const SizedBox(width: 16),
             Expanded(
@@ -282,7 +283,7 @@ class HelpAndSupportScreen extends StatelessWidget {
                     style: const TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.bold,
-                      color: Color(0xFF252B30),
+                      color: AppColors.primary,
                     ),
                     overflow: TextOverflow.ellipsis,
                   ),
@@ -301,10 +302,10 @@ class HelpAndSupportScreen extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.all(20.0),
       decoration: BoxDecoration(
-        gradient: const LinearGradient(
+        gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [Color(0xFF252B30), Color(0xFF3A424B)],
+          colors: [AppColors.primary, AppColors.primary.withValues(alpha: 0.7)],
         ),
         borderRadius: BorderRadius.circular(16),
         boxShadow: [

@@ -160,11 +160,11 @@ class _AdditionalInformationScreenState
               );
             },
             style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.buttonPrimary,
+              backgroundColor: AppColors.primary,
             ),
             child: const Text(
               'Confirm & Continue',
-              style: TextStyle(color: AppColors.buttonText),
+              style: TextStyle(color: SharedColors.white),
             ),
           ),
         ],
@@ -309,9 +309,9 @@ class _AdditionalInformationScreenState
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.grey[100],
+      backgroundColor: AppColors.background,
       appBar: AppBar(
-        backgroundColor: const Color(0xFF252B30),
+        backgroundColor: AppColors.primary,
         title: const Text(
           'Complete Your Profile',
           style: TextStyle(color: Colors.white),
@@ -490,7 +490,7 @@ class _AdditionalInformationScreenState
               child: ElevatedButton(
                 onPressed: _isLoading ? null : _showConfirmationDialog,
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.buttonPrimary,
+                  backgroundColor: AppColors.primary,
                   padding: const EdgeInsets.symmetric(vertical: 16),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(8),
@@ -510,7 +510,7 @@ class _AdditionalInformationScreenState
                     : const Text(
                         'Review & Confirm',
                         style: TextStyle(
-                          color: AppColors.buttonText,
+                          color: SharedColors.white,
                           fontSize: 16,
                           fontWeight: FontWeight.w600,
                         ),

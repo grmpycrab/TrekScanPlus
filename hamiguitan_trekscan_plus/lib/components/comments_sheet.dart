@@ -213,7 +213,7 @@ class _CommentsSheetState extends State<CommentsSheet> {
                             child: Icon(
                               Icons.close,
                               size: 16,
-                              color: Colors.grey[600],
+                              color: AppColors.textSecondary,
                             ),
                           ),
                         ],
@@ -233,11 +233,11 @@ class _CommentsSheetState extends State<CommentsSheet> {
                                 : 'Write a comment...',
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(24),
-                              borderSide: BorderSide(color: Colors.grey[300]!),
+                              borderSide: BorderSide(color: AppColors.border),
                             ),
                             enabledBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(24),
-                              borderSide: BorderSide(color: Colors.grey[300]!),
+                              borderSide: BorderSide(color: AppColors.border),
                             ),
                             focusedBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(24),
@@ -287,7 +287,7 @@ class _CommentsSheetState extends State<CommentsSheet> {
                 child: Text(
                   'You cannot comment on this post',
                   style: TextStyle(
-                    color: Colors.grey[600],
+                    color: AppColors.textSecondary,
                     fontStyle: FontStyle.italic,
                   ),
                 ),

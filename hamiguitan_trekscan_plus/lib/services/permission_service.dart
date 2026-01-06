@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../../theme/new_color.dart';
 
 /// Service to handle app permissions (notifications, storage, etc.)
 class PermissionService {
@@ -219,7 +220,7 @@ class PermissionService {
                 message,
                 style: TextStyle(
                   fontSize: 14,
-                  color: Colors.grey[700],
+                  color: AppColors.textSecondary,
                   height: 1.5,
                 ),
               ),
@@ -228,7 +229,7 @@ class PermissionService {
                   onPressed: () => Navigator.of(context).pop(false),
                   child: Text(
                     'Not Now',
-                    style: TextStyle(color: Colors.grey[600]),
+                    style: TextStyle(color: AppColors.textSecondary),
                   ),
                 ),
                 ElevatedButton(

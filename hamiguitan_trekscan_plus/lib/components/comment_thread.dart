@@ -188,7 +188,7 @@ class _CommentThreadState extends State<CommentThread> {
                                 timeAgo,
                                 style: TextStyle(
                                   fontSize: 12,
-                                  color: Colors.grey[600],
+                                  color: AppColors.textSecondary,
                                 ),
                               ),
                             ],
@@ -203,7 +203,7 @@ class _CommentThreadState extends State<CommentThread> {
                               child: Icon(
                                 Icons.more_horiz,
                                 size: 20,
-                                color: Colors.grey[700],
+                                color: AppColors.textSecondary,
                               ),
                             ),
                           ),
@@ -214,7 +214,7 @@ class _CommentThreadState extends State<CommentThread> {
                     Container(
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
-                        color: Colors.grey[100],
+                        color: AppColors.background,
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: Text(
@@ -243,7 +243,7 @@ class _CommentThreadState extends State<CommentThread> {
                                   size: 18,
                                   color: _isLiked
                                       ? Colors.red
-                                      : Colors.grey[600],
+                                      : AppColors.textSecondary,
                                 ),
                                 if (_likesCount > 0) ...[
                                   const SizedBox(width: 6),
@@ -251,7 +251,7 @@ class _CommentThreadState extends State<CommentThread> {
                                     '$_likesCount',
                                     style: TextStyle(
                                       fontSize: 13,
-                                      color: Colors.grey[700],
+                                      color: AppColors.textSecondary,
                                       fontWeight: FontWeight.w500,
                                     ),
                                   ),
@@ -278,7 +278,7 @@ class _CommentThreadState extends State<CommentThread> {
                               'Reply',
                               style: TextStyle(
                                 fontSize: 13,
-                                color: Colors.grey[700],
+                                color: AppColors.textSecondary,
                                 fontWeight: FontWeight.w600,
                               ),
                             ),
@@ -555,7 +555,7 @@ class _ReplyTileState extends State<ReplyTile> {
                             timeAgo,
                             style: TextStyle(
                               fontSize: 11,
-                              color: Colors.grey[600],
+                              color: AppColors.textSecondary,
                             ),
                           ),
                         ],
@@ -570,7 +570,7 @@ class _ReplyTileState extends State<ReplyTile> {
                           child: Icon(
                             Icons.more_horiz,
                             size: 18,
-                            color: Colors.grey[700],
+                            color: AppColors.textSecondary,
                           ),
                         ),
                       ),
@@ -581,7 +581,7 @@ class _ReplyTileState extends State<ReplyTile> {
                 Container(
                   padding: const EdgeInsets.all(11),
                   decoration: BoxDecoration(
-                    color: Colors.grey[100],
+                    color: AppColors.background,
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Text(
@@ -605,7 +605,7 @@ class _ReplyTileState extends State<ReplyTile> {
                         Icon(
                           _isLiked ? Icons.favorite : Icons.favorite_border,
                           size: 16,
-                          color: _isLiked ? Colors.red : Colors.grey[600],
+                          color: _isLiked ? Colors.red : AppColors.textSecondary,
                         ),
                         if (_likesCount > 0) ...[
                           const SizedBox(width: 6),
@@ -613,7 +613,7 @@ class _ReplyTileState extends State<ReplyTile> {
                             '$_likesCount',
                             style: TextStyle(
                               fontSize: 12,
-                              color: Colors.grey[700],
+                              color: AppColors.textSecondary,
                               fontWeight: FontWeight.w500,
                             ),
                           ),

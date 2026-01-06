@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../theme/new_color.dart';
 
 class AboutScreen extends StatelessWidget {
   const AboutScreen({super.key});
@@ -6,9 +7,9 @@ class AboutScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.grey[100],
+      backgroundColor: AppColors.background,
       appBar: AppBar(
-        backgroundColor: const Color(0xFF252B30),
+        backgroundColor: AppColors.primary,
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Colors.white),
@@ -35,13 +36,13 @@ class AboutScreen extends StatelessWidget {
                   width: 100,
                   height: 100,
                   decoration: BoxDecoration(
-                    color: const Color(0xFF252B30).withValues(alpha: 0.1),
+                    color: AppColors.primary.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(20),
                   ),
                   child: const Icon(
                     Icons.landscape,
                     size: 60,
-                    color: Color(0xFF252B30),
+                    color: AppColors.primary,
                   ),
                 ),
               ),
@@ -51,7 +52,7 @@ class AboutScreen extends StatelessWidget {
                 style: TextStyle(
                   fontSize: 24,
                   fontWeight: FontWeight.bold,
-                  color: Color(0xFF252B30),
+                  color: AppColors.primary,
                 ),
               ),
               const SizedBox(height: 12),
@@ -82,7 +83,7 @@ class AboutScreen extends StatelessWidget {
                       style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
-                        color: Color(0xFF252B30),
+                        color: AppColors.primary,
                       ),
                     ),
                     const SizedBox(height: 16),
@@ -92,7 +93,7 @@ class AboutScreen extends StatelessWidget {
                       'Trek Scan Plus features real-time trek scheduling, interactive QR code scanning for educational insights, achievement tracking through our badge system, and comprehensive trek information to inspire and inform every adventurer who chooses to explore the mountain\'s wonders.',
                       style: TextStyle(
                         fontSize: 14,
-                        color: Colors.grey[700],
+                        color: AppColors.textSecondary,
                         height: 1.6,
                       ),
                     ),
@@ -122,7 +123,7 @@ class AboutScreen extends StatelessWidget {
                       style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
-                        color: Color(0xFF252B30),
+                        color: AppColors.primary,
                       ),
                     ),
                     const SizedBox(height: 16),
@@ -130,7 +131,7 @@ class AboutScreen extends StatelessWidget {
                       'Developed with passion and dedication by BSIT students at Davao Oriental State University.',
                       style: TextStyle(
                         fontSize: 14,
-                        color: Colors.grey[700],
+                        color: AppColors.textSecondary,
                         height: 1.6,
                       ),
                     ),
@@ -160,7 +161,7 @@ class AboutScreen extends StatelessWidget {
                       style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
-                        color: Color(0xFF252B30),
+                        color: AppColors.primary,
                       ),
                     ),
                     const SizedBox(height: 16),
@@ -168,7 +169,7 @@ class AboutScreen extends StatelessWidget {
                       'Mt. Hamiguitan stands as a testament to nature\'s grandeur and biodiversity. As a UNESCO World Heritage Site, it represents a unique ecosystem that deserves our respect, protection, and appreciation. Every trek contributes to our understanding and preservation of this natural wonder.',
                       style: TextStyle(
                         fontSize: 14,
-                        color: Colors.grey[700],
+                        color: AppColors.textSecondary,
                         height: 1.6,
                       ),
                     ),

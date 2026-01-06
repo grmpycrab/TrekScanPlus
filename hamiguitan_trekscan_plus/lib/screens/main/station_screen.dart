@@ -72,7 +72,7 @@ class _StationScreenState extends State<StationScreen> {
               child: const Text(
                 'Stations',
                 style: TextStyle(
-                  color: AppColors.buttonText,
+                  color: SharedColors.white,
                   fontSize: 20,
                   fontWeight: FontWeight.bold,
                 ),
@@ -250,7 +250,7 @@ class _StationScreenState extends State<StationScreen> {
             style: TextStyle(
               fontSize: 22,
               fontWeight: FontWeight.bold,
-              color: Colors.grey[700],
+              color: AppColors.textSecondary,
             ),
           ),
           const SizedBox(height: 12),
@@ -261,7 +261,7 @@ class _StationScreenState extends State<StationScreen> {
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontSize: 16,
-                color: Colors.grey[600],
+                color: AppColors.textSecondary,
                 height: 1.5,
               ),
             ),
@@ -317,7 +317,7 @@ class _StationScreenState extends State<StationScreen> {
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontSize: 16,
-                color: Colors.grey[600],
+                color: AppColors.textSecondary,
                 height: 1.5,
               ),
             ),

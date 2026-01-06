@@ -24,6 +24,7 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
   bool _isInitializing = true;
   String? _successMessage;
   String? _errorMessage;
+  String? _phoneValidationError;
   int _nameChangeCooldownDays = 0;
   final UserService _userService = UserService.instance;
 
@@ -113,24 +114,37 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
     }
   }
 
-  bool _isValidPhoneNumber(String phoneNumber) {
-    // Remove all non-digit characters for validation
-    final digitsOnly = phoneNumber.replaceAll(RegExp(r'[^\d]'), '');
-
-    // Philippine mobile numbers: 09XXXXXXXXX (11 digits) or +639XXXXXXXXX (13 digits with country code)
-    // Also accept landline numbers: (02)XXXXXXX or similar format
-    if (digitsOnly.length == 11) {
-      // Mobile number format: 09XXXXXXXXX
-      return digitsOnly.startsWith('09');
-    } else if (digitsOnly.length == 13) {
-      // International format: +639XXXXXXXXX
-      return digitsOnly.startsWith('639');
-    } else if (digitsOnly.length >= 7 && digitsOnly.length <= 10) {
-      // Landline numbers (flexible length for different area codes)
-      return true;
+  String? _validatePhoneNumber(String phoneNumber) {
+    if (phoneNumber.isEmpty) {
+      return null; // Phone number is optional
     }
 
-    return false;
+    final digitsOnly = phoneNumber.replaceAll(RegExp(r'[^\d]'), '');
+
+    if (digitsOnly.length < 7) {
+      return 'Phone number is too short';
+    }
+
+    if (digitsOnly.length > 13) {
+      return 'Phone number is too long';
+    }
+
+    if (digitsOnly.length == 11) {
+      if (!digitsOnly.startsWith('09')) {
+        return 'Mobile number must start with 09';
+      }
+    } else if (digitsOnly.length == 13) {
+      if (!digitsOnly.startsWith('639')) {
+        return 'International format must start with +639';
+      }
+    } else if (digitsOnly.length >= 7 && digitsOnly.length <= 10) {
+      // Landline - accept various formats
+      return null;
+    } else {
+      return 'Invalid phone number format';
+    }
+
+    return null;
   }
 
   Future<void> _saveChanges() async {
@@ -163,11 +177,15 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
       }
 
       // Validate phone number if provided
-      if (phoneNumber.isNotEmpty && !_isValidPhoneNumber(phoneNumber)) {
-        setState(() {
-          _errorMessage = 'Please enter a valid phone number';
-        });
-        return;
+      if (phoneNumber.isNotEmpty) {
+        final phoneError = _validatePhoneNumber(phoneNumber);
+        if (phoneError != null) {
+          setState(() {
+            _errorMessage = phoneError;
+            _phoneValidationError = phoneError;
+          });
+          return;
+        }
       }
 
       // Get current data to check if name changed
@@ -262,7 +280,7 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
             borderSide: BorderSide(color: AppColors.primary),
           ),
           filled: true,
-          fillColor: AppColors.grey50,
+          fillColor: Color(0xFFFAFAFA),
         ),
       ),
     );
@@ -278,12 +296,12 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
           title: const Text(
             'Account Settings',
             style: TextStyle(
-              color: AppColors.white,
+              color: SharedColors.white,
               fontWeight: FontWeight.bold,
             ),
           ),
           leading: IconButton(
-            icon: const Icon(Icons.arrow_back, color: AppColors.white),
+            icon: const Icon(Icons.arrow_back, color: SharedColors.white),
             onPressed: () => Navigator.pop(context),
           ),
           elevation: 0,
@@ -298,10 +316,10 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
         backgroundColor: AppColors.primary,
         title: const Text(
           'Account Settings',
-          style: TextStyle(color: AppColors.white, fontWeight: FontWeight.bold),
+          style: TextStyle(color: SharedColors.white, fontWeight: FontWeight.bold),
         ),
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: AppColors.white),
+          icon: const Icon(Icons.arrow_back, color: SharedColors.white),
           onPressed: () => Navigator.pop(context),
         ),
         elevation: 0,
@@ -317,18 +335,18 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
                 padding: const EdgeInsets.all(12),
                 margin: const EdgeInsets.only(bottom: 16),
                 decoration: BoxDecoration(
-                  color: AppColors.red50,
+                  color: Color(0xFFFFEBEE),
                   border: Border.all(color: AppColors.red200),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Row(
                   children: [
-                    Icon(Icons.error_outline, color: AppColors.red700),
+                    Icon(Icons.error_outline, color: Colors.red.shade700),
                     const SizedBox(width: 12),
                     Expanded(
                       child: Text(
                         _errorMessage!,
-                        style: TextStyle(color: AppColors.red700),
+                        style: TextStyle(color: Colors.red.shade700),
                       ),
                     ),
                   ],
@@ -365,18 +383,18 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
                 padding: const EdgeInsets.all(12),
                 margin: const EdgeInsets.only(bottom: 16),
                 decoration: BoxDecoration(
-                  color: AppColors.orange50,
-                  border: Border.all(color: AppColors.orange200),
+                  color: Color(0xFFFFE0B2),
+                  border: Border.all(color: Color(0xFFFFCC80)),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Row(
                   children: [
-                    Icon(Icons.info_outline, color: AppColors.orange700),
+                    Icon(Icons.info_outline, color: Color(0xFFF57C00)),
                     const SizedBox(width: 12),
                     Expanded(
                       child: Text(
                         'You can change your name in $_nameChangeCooldownDays days',
-                        style: TextStyle(color: AppColors.orange700),
+                        style: TextStyle(color: Color(0xFFF57C00)),
                       ),
                     ),
                   ],
@@ -387,7 +405,7 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: AppColors.white,
+                color: SharedColors.white,
                 borderRadius: BorderRadius.circular(12),
                 boxShadow: [
                   BoxShadow(
@@ -420,7 +438,7 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
                         style: TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
-                          color: AppColors.textPrimary,
+                          color: AppColors.text,
                         ),
                       ),
                     ],
@@ -451,20 +469,50 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
                       decoration: InputDecoration(
                         labelText: 'Phone Number',
                         hintText: 'e.g., 09123456789 or (02)1234567',
-                        helperText: 'Philippine mobile or landline number',
+                        helperText: _phoneValidationError == null
+                            ? 'Philippine mobile or landline number'
+                            : null,
+                        errorText: _phoneValidationError,
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(8),
+                          borderSide: BorderSide(
+                            color: _phoneValidationError != null
+                                ? Colors.red
+                                : Colors.grey,
+                          ),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8),
+                          borderSide: BorderSide(
+                            color: _phoneValidationError != null
+                                ? Colors.red
+                                : Colors.grey.shade300,
+                          ),
                         ),
                         focusedBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(8),
-                          borderSide: BorderSide(color: AppColors.primary),
+                          borderSide: BorderSide(
+                            color: _phoneValidationError != null
+                                ? Colors.red
+                                : AppColors.primary,
+                          ),
                         ),
                         filled: true,
-                        fillColor: AppColors.grey50,
-                        prefixIcon: const Icon(Icons.phone),
+                        fillColor: Color(0xFFFAFAFA),
+                        prefixIcon: Icon(
+                          Icons.phone,
+                          color: _phoneValidationError != null
+                              ? Colors.red
+                              : null,
+                        ),
                       ),
                       onChanged: (value) {
-                        // Clear error message when user starts typing
+                        // Real-time validation
+                        setState(() {
+                          _phoneValidationError = _validatePhoneNumber(value);
+                        });
+
+                        // Clear general error message when user starts typing
                         if (_errorMessage != null &&
                             _errorMessage!.contains('phone')) {
                           setState(() {
@@ -494,7 +542,7 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
                           borderSide: BorderSide(color: AppColors.primary),
                         ),
                         filled: true,
-                        fillColor: AppColors.grey50,
+                        fillColor: Color(0xFFFAFAFA),
                         suffixIcon: const Icon(Icons.calendar_today),
                       ),
                     ),
@@ -516,7 +564,7 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
                           borderSide: BorderSide(color: AppColors.primary),
                         ),
                         filled: true,
-                        fillColor: AppColors.grey50,
+                        fillColor: Color(0xFFFAFAFA),
                       ),
                       items: const [
                         DropdownMenuItem(value: 'Male', child: Text('Male')),
@@ -561,19 +609,19 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
                         child: CircularProgressIndicator(
                           strokeWidth: 2,
                           valueColor: AlwaysStoppedAnimation<Color>(
-                            AppColors.white,
+                            SharedColors.white,
                           ),
                         ),
                       )
                     : const Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Icon(Icons.save, color: AppColors.white, size: 20),
+                          Icon(Icons.save, color: SharedColors.white, size: 20),
                           SizedBox(width: 8),
                           Text(
                             'Save Changes',
                             style: TextStyle(
-                              color: AppColors.white,
+                              color: SharedColors.white,
                               fontSize: 16,
                               fontWeight: FontWeight.bold,
                             ),

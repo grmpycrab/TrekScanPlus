@@ -30,7 +30,7 @@ class BookingDetailsModal extends StatelessWidget {
     return GestureDetector(
       onTap: onClose,
       child: Container(
-        color: AppColors.black.withValues(alpha: 0.5),
+        color: SharedColors.black.withValues(alpha: 0.5),
         child: GestureDetector(
           onTap: () {},
           child: Center(
@@ -42,11 +42,11 @@ class BookingDetailsModal extends StatelessWidget {
                   maxWidth: MediaQuery.of(context).size.width * 0.95,
                 ),
                 decoration: BoxDecoration(
-                  color: AppColors.white,
+                  color: SharedColors.white,
                   borderRadius: BorderRadius.circular(20),
                   boxShadow: [
                     BoxShadow(
-                      color: AppColors.black.withValues(alpha: 0.3),
+                      color: SharedColors.black.withValues(alpha: 0.3),
                       blurRadius: 10,
                       offset: const Offset(0, 5),
                     ),
@@ -74,7 +74,7 @@ class BookingDetailsModal extends StatelessWidget {
                                 Text(
                                   'Booking Details',
                                   style: const TextStyle(
-                                    color: AppColors.white,
+                                    color: SharedColors.white,
                                     fontSize: 20,
                                     fontWeight: FontWeight.bold,
                                   ),
@@ -93,7 +93,7 @@ class BookingDetailsModal extends StatelessWidget {
                           IconButton(
                             icon: const Icon(
                               Icons.close,
-                              color: AppColors.white,
+                              color: SharedColors.white,
                             ),
                             onPressed: onClose,
                           ),
@@ -197,7 +197,7 @@ class BookingDetailsModal extends StatelessWidget {
                                 icon: const Icon(Icons.edit),
                                 label: const Text('Edit Details'),
                                 style: OutlinedButton.styleFrom(
-                                  disabledForegroundColor: AppColors.grey400,
+                                  disabledForegroundColor: Colors.grey.shade400,
                                   disabledBackgroundColor: AppColors.background,
                                 ),
                               ),
@@ -348,7 +348,7 @@ class BookingDetailsModal extends StatelessWidget {
           decoration: BoxDecoration(
             color: Colors.grey[50],
             borderRadius: BorderRadius.circular(8),
-            border: Border.all(color: Colors.grey[300]!),
+            border: Border.all(color: AppColors.border),
           ),
           child: Row(
             children: [
@@ -370,7 +370,7 @@ class BookingDetailsModal extends StatelessWidget {
                     const SizedBox(height: 2),
                     Text(
                       '${_formatBytes(attachment.size)} • ${DateFormat('MMM dd, yyyy').format(attachment.uploadedAt.toDate())}',
-                      style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                      style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
                     ),
                   ],
                 ),
@@ -422,7 +422,7 @@ class BookingDetailsModal extends StatelessWidget {
       case 'Approved':
         return Colors.green[100]!;
       case 'Cancelled':
-        return Colors.grey[200]!;
+        return AppColors.borderLight;
       case 'Completed':
         return Colors.blue[100]!;
       default:
@@ -435,7 +435,7 @@ class BookingDetailsModal extends StatelessWidget {
       case 'Approved':
         return Colors.green[800]!;
       case 'Cancelled':
-        return Colors.grey[700]!;
+        return AppColors.textSecondary;
       case 'Completed':
         return Colors.blue[800]!;
       default:

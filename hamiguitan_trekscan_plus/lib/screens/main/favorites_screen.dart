@@ -25,7 +25,7 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
           title: const Text('Favorites'),
           backgroundColor: Colors.white,
           elevation: 0,
-          foregroundColor: AppColors.textPrimary,
+          foregroundColor: AppColors.text,
         ),
         body: const Center(child: Text('Please login to view favorites')),
       );
@@ -39,14 +39,14 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
           style: TextStyle(
             fontSize: 18,
             fontWeight: FontWeight.bold,
-            color: AppColors.textPrimary,
+            color: AppColors.text,
           ),
         ),
         backgroundColor: Colors.white,
         elevation: 0,
-        foregroundColor: AppColors.textPrimary,
+        foregroundColor: AppColors.text,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: AppColors.textPrimary),
+          icon: const Icon(Icons.arrow_back, color: AppColors.text),
           onPressed: () => Navigator.pop(context),
         ),
       ),
@@ -108,7 +108,7 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
                     style: TextStyle(
                       fontSize: 20,
                       fontWeight: FontWeight.w600,
-                      color: AppColors.textPrimary,
+                      color: AppColors.text,
                     ),
                   ),
                   const SizedBox(height: 8),

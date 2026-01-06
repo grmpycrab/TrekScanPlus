@@ -356,7 +356,7 @@ class _EventCalendarState extends State<EventCalendar> {
         badgeColor = Colors.orange;
       } else if (bookedSlots > 0) {
         // Has bookings - show green badge
-        badgeColor = const Color(0xFF06402B);
+        badgeColor = AppColors.accent;
       }
 
       // Show booked count if there are bookings
@@ -498,7 +498,7 @@ class _EventCalendarState extends State<EventCalendar> {
       spacing: 12,
       runSpacing: 8,
       children: [
-        _buildLegendItem('Available', const Color(0xFF06402B)),
+        _buildLegendItem('Available', AppColors.accent),
         _buildLegendItem('Limited Slots', Colors.orange),
         _buildLegendItem('Full', Colors.red),
         _buildLegendItem('Closed', Colors.grey.shade600),

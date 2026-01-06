@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
+import '../../theme/new_color.dart';
 import '../../models/station_data.dart';
 
 class TrailMap extends StatefulWidget {
@@ -232,7 +233,7 @@ class _TrailMapState extends State<TrailMap> {
       height: widget.height,
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey[300]!),
+        border: Border.all(color: AppColors.border),
       ),
       clipBehavior: Clip.antiAlias,
       child: Stack(
@@ -313,7 +314,7 @@ class _TrailMapState extends State<TrailMap> {
                             style: TextStyle(
                               fontSize: 14,
                               fontWeight: FontWeight.bold,
-                              color: Colors.grey[700],
+                              color: AppColors.textSecondary,
                             ),
                           ),
                           const SizedBox(height: 12),
@@ -329,11 +330,11 @@ class _TrailMapState extends State<TrailMap> {
                               decoration: BoxDecoration(
                                 color: isCurrentStation
                                     ? Colors.red.withValues(alpha: 0.1)
-                                    : Colors.grey[100],
+                                    : AppColors.background,
                                 border: Border.all(
                                   color: isCurrentStation
                                       ? Colors.red
-                                      : Colors.grey[300]!,
+                                      : AppColors.border,
                                   width: isCurrentStation ? 2 : 1,
                                 ),
                                 borderRadius: BorderRadius.circular(8),
@@ -389,7 +390,7 @@ class _TrailMapState extends State<TrailMap> {
                                                 '${station.latitude!.toStringAsFixed(4)}, ${station.longitude!.toStringAsFixed(4)}',
                                                 style: TextStyle(
                                                   fontSize: 11,
-                                                  color: Colors.grey[600],
+                                                  color: AppColors.textSecondary,
                                                   fontFamily: 'monospace',
                                                 ),
                                               ),

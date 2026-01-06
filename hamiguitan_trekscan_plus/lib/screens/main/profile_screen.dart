@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import '../../models/user_model.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../services/firebase_auth_service.dart';
@@ -48,7 +48,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Future<void> _initializeAchievements({String? userId}) async {
     try {
       debugPrint(
-        'ðŸ‘¤ ProfileScreen: Initializing achievements for userId: $userId',
+        '👤 ProfileScreen: Initializing achievements for userId: $userId',
       );
 
       // Determine if viewing own profile or someone else's
@@ -69,7 +69,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       final unlockedCount = achievementService.getUnlockedAchievements().length;
       final totalCount = achievementService.getAllAchievements().length;
       debugPrint(
-        'âœ… ProfileScreen: Loaded $unlockedCount/$totalCount achievements for userId: $userId',
+        '✅ ProfileScreen: Loaded $unlockedCount/$totalCount achievements for userId: $userId',
       );
 
       if (mounted) {
@@ -352,7 +352,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 const SizedBox(height: 4),
                 Text(
                   '${unlockedAchievements.length} of $totalAchievements unlocked',
-                  style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                  style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
                 ),
               ],
             ),
@@ -384,7 +384,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             padding: const EdgeInsets.all(16.0),
             margin: const EdgeInsets.symmetric(vertical: 8.0),
             decoration: BoxDecoration(
-              color: Colors.grey[100],
+              color: AppColors.background,
               borderRadius: BorderRadius.circular(12),
               border: Border.all(color: Colors.grey.shade300),
             ),
@@ -401,7 +401,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     _isOwnProfile
                         ? 'No achievements unlocked yet. Start scanning stations to earn achievements!'
                         : 'No achievements unlocked yet.',
-                    style: TextStyle(fontSize: 14, color: Colors.grey[600]),
+                    style: TextStyle(fontSize: 14, color: AppColors.textSecondary),
                   ),
                 ),
               ],
@@ -460,7 +460,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                   'Unlocked ${_formatDate(achievement.unlockedAt!)}',
                                   style: TextStyle(
                                     fontSize: 12,
-                                    color: Colors.grey[600],
+                                    color: AppColors.textSecondary,
                                   ),
                                 ),
                             ],
@@ -575,12 +575,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       decoration: BoxDecoration(
                         color: isUnlocked
                             ? achievement.getColor().withValues(alpha: 0.1)
-                            : Colors.grey[100],
+                            : AppColors.background,
                         borderRadius: BorderRadius.circular(12),
                         border: Border.all(
                           color: isUnlocked
                               ? achievement.getColor().withValues(alpha: 0.3)
-                              : Colors.grey[300]!,
+                              : AppColors.border,
                         ),
                       ),
                       child: Row(
@@ -594,7 +594,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                   ? achievement.getColor().withValues(
                                       alpha: 0.2,
                                     )
-                                  : Colors.grey[300],
+                                  : AppColors.border,
                             ),
                             child: isUnlocked
                                 ? Icon(
@@ -604,7 +604,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                   )
                                 : Icon(
                                     Icons.lock,
-                                    color: Colors.grey[600],
+                                    color: AppColors.textSecondary,
                                     size: 24,
                                   ),
                           ),
@@ -620,7 +620,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                     fontWeight: FontWeight.bold,
                                     color: isUnlocked
                                         ? Colors.black
-                                        : Colors.grey[600],
+                                        : AppColors.textSecondary,
                                   ),
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
@@ -632,7 +632,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                     'Unlocked ${_formatDate(achievement.unlockedAt!)}',
                                     style: TextStyle(
                                       fontSize: 12,
-                                      color: Colors.grey[600],
+                                      color: AppColors.textSecondary,
                                     ),
                                   )
                                 else if (!isUnlocked)
@@ -640,7 +640,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                     achievement.description,
                                     style: TextStyle(
                                       fontSize: 12,
-                                      color: Colors.grey[600],
+                                      color: AppColors.textSecondary,
                                     ),
                                     maxLines: 1,
                                     overflow: TextOverflow.ellipsis,
@@ -709,7 +709,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.w600,
-                      color: Colors.grey[600],
+                      color: AppColors.textSecondary,
                     ),
                   );
                 },
@@ -746,7 +746,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     const SizedBox(height: 8),
                     Text(
                       '${snapshot.error}',
-                      style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                      style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
                       textAlign: TextAlign.center,
                     ),
                   ],
@@ -771,7 +771,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       'No posts yet',
                       style: TextStyle(
                         fontSize: 14,
-                        color: Colors.grey[600],
+                        color: AppColors.textSecondary,
                         fontWeight: FontWeight.w500,
                       ),
                     ),
@@ -918,7 +918,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     style: const TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
-                      color: AppColors.textPrimary,
+                      color: AppColors.text,
                     ),
                   ),
                   const SizedBox(height: 4),
@@ -982,7 +982,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             style: const TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.bold,
-              color: AppColors.textPrimary,
+              color: AppColors.text,
             ),
           ),
           const SizedBox(height: 4),
@@ -1014,7 +1014,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppColors.background,
-                foregroundColor: AppColors.textPrimary,
+                foregroundColor: AppColors.text,
                 elevation: 0,
                 side: BorderSide(color: AppColors.borderColor),
                 shape: RoundedRectangleBorder(
@@ -1035,7 +1035,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               onPressed: () => _navigateToFavorites(),
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppColors.background,
-                foregroundColor: AppColors.textPrimary,
+                foregroundColor: AppColors.text,
                 elevation: 0,
                 side: BorderSide(color: AppColors.borderColor),
                 shape: RoundedRectangleBorder(
@@ -1057,7 +1057,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               onPressed: () => _navigateToSettings(),
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppColors.background,
-                foregroundColor: AppColors.textPrimary,
+                foregroundColor: AppColors.text,
                 elevation: 0,
                 side: BorderSide(color: AppColors.borderColor),
                 shape: RoundedRectangleBorder(
@@ -1068,7 +1068,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               child: Icon(
                 Icons.more_vert,
                 size: 18,
-                color: AppColors.textPrimary,
+                color: AppColors.text,
               ),
             ),
           ),
@@ -1089,7 +1089,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     ? AppColors.background
                     : AppColors.primary,
                 foregroundColor: isFollowing
-                    ? AppColors.textPrimary
+                    ? AppColors.text
                     : Colors.white,
                 elevation: 0,
                 side: BorderSide(
@@ -1137,7 +1137,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               width: 40,
               height: 4,
               decoration: BoxDecoration(
-                color: Colors.grey[300],
+                color: AppColors.border,
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
@@ -1153,7 +1153,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   fontWeight: FontWeight.w500,
                   color: isCurrentlyFollowing
                       ? Colors.red
-                      : AppColors.textPrimary,
+                      : AppColors.text,
                 ),
               ),
               onTap: () async {
@@ -1256,7 +1256,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     width: 40,
                     height: 4,
                     decoration: BoxDecoration(
-                      color: Colors.grey[300],
+                      color: AppColors.border,
                       borderRadius: BorderRadius.circular(2),
                     ),
                   ),
@@ -1319,7 +1319,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                   'No followers yet',
                                   style: TextStyle(
                                     fontSize: 16,
-                                    color: Colors.grey[600],
+                                    color: AppColors.textSecondary,
                                   ),
                                 ),
                               ],
@@ -1379,7 +1379,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     width: 40,
                     height: 4,
                     decoration: BoxDecoration(
-                      color: Colors.grey[300],
+                      color: AppColors.border,
                       borderRadius: BorderRadius.circular(2),
                     ),
                   ),
@@ -1442,7 +1442,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                   'Not following anyone yet',
                                   style: TextStyle(
                                     fontSize: 16,
-                                    color: Colors.grey[600],
+                                    color: AppColors.textSecondary,
                                   ),
                                 ),
                               ],
@@ -1565,7 +1565,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       ),
       subtitle: Text(
         email,
-        style: TextStyle(fontSize: 13, color: Colors.grey[600]),
+        style: TextStyle(fontSize: 13, color: AppColors.textSecondary),
       ),
       trailing: uid != _firebaseUser?.uid
           ? FutureBuilder<bool>(
@@ -1655,7 +1655,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       ),
       subtitle: Text(
         email,
-        style: TextStyle(fontSize: 13, color: Colors.grey[600]),
+        style: TextStyle(fontSize: 13, color: AppColors.textSecondary),
       ),
       trailing: uid != _firebaseUser?.uid
           ? OutlinedButton(

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../theme/new_color.dart';
 import '../services/e_certificate_service.dart';
 import '../services/certificate_pdf_service.dart';
 import '../services/permission_service.dart';
@@ -91,7 +92,7 @@ class ECertificateBadge extends StatelessWidget {
                 width: 40,
                 height: 4,
                 decoration: BoxDecoration(
-                  color: Colors.grey[300],
+                  color: AppColors.border,
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
@@ -292,7 +293,7 @@ class ECertificateBadge extends StatelessWidget {
               // Description
               Text(
                 certificate.getDescription(),
-                style: TextStyle(fontSize: 14, color: Colors.grey[600]),
+                style: TextStyle(fontSize: 14, color: AppColors.textSecondary),
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 24),
@@ -419,7 +420,7 @@ class ECertificateBadge extends StatelessWidget {
           label,
           style: TextStyle(
             fontSize: 12,
-            color: Colors.grey[600],
+            color: AppColors.textSecondary,
             fontWeight: FontWeight.w500,
           ),
         ),
@@ -641,7 +642,7 @@ class ECertificateBadge extends StatelessWidget {
             'No certificates yet',
             style: TextStyle(
               fontSize: 16,
-              color: Colors.grey[600],
+              color: AppColors.textSecondary,
               fontWeight: FontWeight.w500,
             ),
           ),

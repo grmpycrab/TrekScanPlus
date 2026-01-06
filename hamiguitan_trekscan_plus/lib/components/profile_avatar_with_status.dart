@@ -37,7 +37,7 @@ class ProfileAvatarWithStatus extends StatelessWidget {
                       color: AppColors.primary,
                       child: Icon(
                         Icons.person,
-                        color: AppColors.iconPrimary,
+                        color: AppColors.primary,
                         size: radius * 0.9,
                       ),
                     ),
@@ -45,7 +45,7 @@ class ProfileAvatarWithStatus extends StatelessWidget {
                       color: AppColors.primary,
                       child: Icon(
                         Icons.person,
-                        color: AppColors.iconPrimary,
+                        color: AppColors.primary,
                         size: radius * 0.9,
                       ),
                     ),
@@ -59,7 +59,7 @@ class ProfileAvatarWithStatus extends StatelessWidget {
                 backgroundColor: AppColors.primary,
                 child: Icon(
                   Icons.person,
-                  color: AppColors.iconPrimary,
+                  color: AppColors.primary,
                   size: radius * 0.9,
                 ),
               ),

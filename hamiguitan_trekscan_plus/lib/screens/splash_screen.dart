@@ -43,7 +43,7 @@ class _SplashScreenState extends State<SplashScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.white, // Using your app's primary color
+      backgroundColor: SharedColors.white, // Using your app's primary color
       body: Center(
         child: AnimatedBuilder(
           animation: _animationController,
@@ -84,7 +84,7 @@ class _SplashScreenState extends State<SplashScreen>
                               child: Icon(
                                 Icons.terrain,
                                 size: 100,
-                                color: AppColors.white,
+                                color: SharedColors.white,
                               ),
                             );
                           },
@@ -120,7 +120,7 @@ class _SplashScreenState extends State<SplashScreen>
                       height: 40,
                       child: CircularProgressIndicator(
                         valueColor: AlwaysStoppedAnimation<Color>(
-                          AppColors.white,
+                          SharedColors.white,
                         ),
                         strokeWidth: 3,
                       ),

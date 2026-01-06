@@ -56,13 +56,13 @@ class BottomNavigation extends StatelessWidget {
               iconPath,
               width: 24,
               height: 24,
-              color: isSelected ? AppColors.white : AppColors.textSecondary,
+              color: isSelected ? SharedColors.white : AppColors.textSecondary,
             ),
             const SizedBox(height: 4),
             Text(
               label,
               style: TextStyle(
-                color: isSelected ? AppColors.white : AppColors.textSecondary,
+                color: isSelected ? SharedColors.white : AppColors.textSecondary,
                 fontSize: 12,
               ),
             ),

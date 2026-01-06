@@ -129,7 +129,7 @@ class _NotificationScreenState extends State<NotificationScreen> {
             style: TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.w500,
-              color: Colors.grey[600],
+              color: AppColors.textSecondary,
             ),
           ),
           const SizedBox(height: 8),
@@ -234,7 +234,7 @@ class _NotificationScreenState extends State<NotificationScreen> {
                             Text(
                               notification.message,
                               style: TextStyle(
-                                color: Colors.grey[600],
+                                color: AppColors.textSecondary,
                                 fontSize: 14,
                               ),
                             ),

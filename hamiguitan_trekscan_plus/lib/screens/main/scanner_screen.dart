@@ -118,7 +118,7 @@ class _ScannerScreenState extends State<ScannerScreen>
                           'Required: ${GeofencingService.formatDistance(GeofencingService.GEOFENCE_RADIUS_METERS)}',
                           style: TextStyle(
                             fontSize: 12,
-                            color: Colors.grey[600],
+                            color: AppColors.textSecondary,
                           ),
                         ),
                       ],
@@ -132,7 +132,7 @@ class _ScannerScreenState extends State<ScannerScreen>
               'This geofence requirement ensures you are physically at the station location to verify authentic visits.',
               style: TextStyle(
                 fontSize: 12,
-                color: Colors.grey[600],
+                color: AppColors.textSecondary,
                 fontStyle: FontStyle.italic,
               ),
             ),
@@ -421,7 +421,7 @@ class _ScannerScreenState extends State<ScannerScreen>
                   },
                   child: Icon(
                     Icons.arrow_back,
-                    color: AppColors.iconPrimary,
+                    color: AppColors.primary,
                     size: 28,
                   ),
                 ),
@@ -439,7 +439,7 @@ class _ScannerScreenState extends State<ScannerScreen>
                               ? Icons.location_on
                               : Icons.location_off,
                           color: _geofencingEnabled
-                              ? AppColors.iconPrimary
+                              ? AppColors.primary
                               : Colors.orange,
                         ),
                         onPressed: () {
@@ -462,7 +462,7 @@ class _ScannerScreenState extends State<ScannerScreen>
                         'assets/icons/switch-camera.png',
                         width: 24,
                         height: 24,
-                        color: AppColors.iconPrimary,
+                        color: AppColors.primary,
                       ),
                       onPressed: () {
                         // handle siwtch camera
@@ -472,7 +472,7 @@ class _ScannerScreenState extends State<ScannerScreen>
                     IconButton(
                       icon: Icon(
                         isFlashOn ? Icons.flash_on : Icons.flash_off,
-                        color: AppColors.iconPrimary,
+                        color: AppColors.primary,
                       ),
                       onPressed: () {
                         controller?.toggleTorch();
@@ -498,7 +498,7 @@ class _ScannerScreenState extends State<ScannerScreen>
                   width: 64,
                   height: 64,
                   decoration: BoxDecoration(
-                    color: AppColors.buttonText,
+                    color: SharedColors.white,
                     borderRadius: BorderRadius.circular(32),
                   ),
                 ),

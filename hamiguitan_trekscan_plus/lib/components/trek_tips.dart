@@ -106,7 +106,7 @@ class _TrekTipsState extends State<TrekTips> {
                               style: TextStyle(
                                 fontSize: isSmallScreen ? 16 : 18,
                                 fontWeight: FontWeight.bold,
-                                color: AppColors.textPrimary,
+                                color: AppColors.text,
                               ),
                             ),
                           ),
@@ -248,7 +248,7 @@ class _TrekTipsState extends State<TrekTips> {
               text,
               style: TextStyle(
                 fontSize: isSmallScreen ? 13 : 14,
-                color: AppColors.textPrimary,
+                color: AppColors.text,
                 height: 1.5,
               ),
             ),
@@ -344,7 +344,7 @@ class _TrekTipsOverlayState extends State<TrekTipsOverlay> {
               padding: const EdgeInsets.all(20),
               decoration: const BoxDecoration(
                 gradient: LinearGradient(
-                  colors: [Color(0xFF06402B), Color(0xFF053821)],
+                  colors: [AppColors.accent, Color(0xFF053821)],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                 ),
@@ -433,7 +433,7 @@ class _TrekTipsOverlayState extends State<TrekTipsOverlay> {
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: const Color(0xFF06402B).withValues(alpha: 0.3),
+          color: AppColors.accent.withValues(alpha: 0.3),
           width: 1.5,
         ),
         boxShadow: [
@@ -451,8 +451,8 @@ class _TrekTipsOverlayState extends State<TrekTipsOverlay> {
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 colors: [
-                  const Color(0xFF06402B).withValues(alpha: 0.1),
-                  const Color(0xFF06402B).withValues(alpha: 0.05),
+                  AppColors.accent.withValues(alpha: 0.1),
+                  AppColors.accent.withValues(alpha: 0.05),
                 ],
               ),
               borderRadius: const BorderRadius.vertical(
@@ -464,10 +464,10 @@ class _TrekTipsOverlayState extends State<TrekTipsOverlay> {
                 Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: const Color(0xFF06402B).withValues(alpha: 0.15),
+                    color: AppColors.accent.withValues(alpha: 0.15),
                     borderRadius: BorderRadius.circular(8),
                   ),
-                  child: Icon(icon, color: const Color(0xFF06402B), size: 20),
+                  child: Icon(icon, color: AppColors.accent, size: 20),
                 ),
                 SizedBox(width: isSmallScreen ? 10 : 12),
                 Expanded(
@@ -476,7 +476,7 @@ class _TrekTipsOverlayState extends State<TrekTipsOverlay> {
                     style: TextStyle(
                       fontSize: isSmallScreen ? 15 : 16,
                       fontWeight: FontWeight.bold,
-                      color: AppColors.textPrimary,
+                      color: AppColors.text,
                     ),
                   ),
                 ),
@@ -504,7 +504,7 @@ class _TrekTipsOverlayState extends State<TrekTipsOverlay> {
         color: Colors.white,
         borderRadius: BorderRadius.circular(10),
         border: Border.all(
-          color: const Color(0xFF06402B).withValues(alpha: 0.2),
+          color: AppColors.accent.withValues(alpha: 0.2),
         ),
         boxShadow: [
           BoxShadow(
@@ -540,7 +540,7 @@ class _TrekTipsOverlayState extends State<TrekTipsOverlay> {
               tip,
               style: TextStyle(
                 fontSize: isSmallScreen ? 12 : 13,
-                color: AppColors.textPrimary,
+                color: AppColors.text,
                 height: 1.4,
               ),
             ),
