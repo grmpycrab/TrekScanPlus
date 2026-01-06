@@ -613,7 +613,7 @@ class _SocialCardState extends State<SocialCard> {
                     children: [
                       Text(
                         _getTimeAgo(),
-                        style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                        style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
                       ),
                       Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 6),
@@ -628,7 +628,7 @@ class _SocialCardState extends State<SocialCard> {
                       Icon(
                         _getVisibilityIcon(),
                         size: 14,
-                        color: Colors.grey[600],
+                        color: AppColors.textSecondary,
                       ),
                     ],
                   ),
@@ -647,7 +647,7 @@ class _SocialCardState extends State<SocialCard> {
                 ),
                 decoration: BoxDecoration(
                   color: _isFollowing
-                      ? Colors.grey[100]
+                      ? AppColors.background
                       : _isPending
                       ? Colors.orange[50]
                       : AppColors.primary,
@@ -663,7 +663,7 @@ class _SocialCardState extends State<SocialCard> {
                     fontSize: 13,
                     fontWeight: FontWeight.w600,
                     color: _isFollowing
-                        ? Colors.grey[700]
+                        ? AppColors.textSecondary
                         : _isPending
                         ? Colors.orange[700]
                         : Colors.white,
@@ -673,7 +673,7 @@ class _SocialCardState extends State<SocialCard> {
             ),
           const SizedBox(width: 8),
           IconButton(
-            icon: Icon(Icons.more_horiz, size: 22, color: Colors.grey[600]),
+            icon: Icon(Icons.more_horiz, size: 22, color: AppColors.textSecondary),
             onPressed: _showOptionsMenu,
             padding: EdgeInsets.zero,
             constraints: const BoxConstraints(),
@@ -730,7 +730,7 @@ class _SocialCardState extends State<SocialCard> {
           imageUrl: url,
           fit: BoxFit.cover,
           placeholder: (context, url) => Container(
-            color: Colors.grey[100],
+            color: AppColors.background,
             child: const Center(
               child: CircularProgressIndicator(
                 strokeWidth: 2,
@@ -739,7 +739,7 @@ class _SocialCardState extends State<SocialCard> {
             ),
           ),
           errorWidget: (context, url, error) => Container(
-            color: Colors.grey[200],
+            color: AppColors.borderLight,
             child: const Icon(Icons.broken_image, size: 48, color: Colors.grey),
           ),
           memCacheWidth: 800,
@@ -874,7 +874,7 @@ class _SocialCardState extends State<SocialCard> {
         imageUrl: url,
         fit: BoxFit.cover,
         placeholder: (context, url) => Container(
-          color: Colors.grey[100],
+          color: AppColors.background,
           child: const Center(
             child: SizedBox(
               width: 20,
@@ -887,7 +887,7 @@ class _SocialCardState extends State<SocialCard> {
           ),
         ),
         errorWidget: (context, url, error) => Container(
-          color: Colors.grey[200],
+          color: AppColors.borderLight,
           child: const Icon(Icons.broken_image, size: 32, color: Colors.grey),
         ),
         memCacheWidth: 400,
@@ -917,7 +917,7 @@ class _SocialCardState extends State<SocialCard> {
           IconButton(
             icon: Icon(
               _isLiked ? Icons.favorite : Icons.favorite_border,
-              color: _isLiked ? Colors.red : Colors.grey[600],
+              color: _isLiked ? Colors.red : AppColors.textSecondary,
               size: 24,
             ),
             onPressed: _handleLike,
@@ -929,7 +929,7 @@ class _SocialCardState extends State<SocialCard> {
             Text(
               '$_likesCount',
               style: TextStyle(
-                color: Colors.grey[700],
+                color: AppColors.textSecondary,
                 fontWeight: FontWeight.w500,
                 fontSize: 14,
               ),
@@ -945,7 +945,7 @@ class _SocialCardState extends State<SocialCard> {
                 children: [
                   Icon(
                     Icons.chat_bubble_outline_rounded,
-                    color: Colors.grey[600],
+                    color: AppColors.textSecondary,
                     size: 23,
                   ),
                   if (_commentsCount > 0) ...[
@@ -953,7 +953,7 @@ class _SocialCardState extends State<SocialCard> {
                     Text(
                       '$_commentsCount',
                       style: TextStyle(
-                        color: Colors.grey[700],
+                        color: AppColors.textSecondary,
                         fontWeight: FontWeight.w500,
                         fontSize: 14,
                       ),
@@ -971,13 +971,13 @@ class _SocialCardState extends State<SocialCard> {
               padding: const EdgeInsets.all(8),
               child: Row(
                 children: [
-                  Icon(Icons.share_outlined, color: Colors.grey[600], size: 22),
+                  Icon(Icons.share_outlined, color: AppColors.textSecondary, size: 22),
                   if (_sharesCount > 0) ...[
                     const SizedBox(width: 6),
                     Text(
                       '$_sharesCount',
                       style: TextStyle(
-                        color: Colors.grey[700],
+                        color: AppColors.textSecondary,
                         fontWeight: FontWeight.w500,
                         fontSize: 14,
                       ),
@@ -992,7 +992,7 @@ class _SocialCardState extends State<SocialCard> {
           IconButton(
             icon: Icon(
               _isBookmarked ? Icons.bookmark : Icons.bookmark_border,
-              color: _isBookmarked ? AppColors.primary : Colors.grey[600],
+              color: _isBookmarked ? AppColors.primary : AppColors.textSecondary,
               size: 24,
             ),
             onPressed: _handleBookmark,

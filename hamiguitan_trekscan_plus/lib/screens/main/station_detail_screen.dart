@@ -100,7 +100,7 @@ class _StationDetailScreenState extends State<StationDetailScreen> {
   Color _getAppBarTextColor() {
     // Same transition for text
     final progress = (_scrollOffset / 100).clamp(0.0, 1.0);
-    return Color.lerp(Colors.white, AppColors.textPrimary, progress)!;
+    return Color.lerp(Colors.white, AppColors.text, progress)!;
   }
 
   Color _getAppBarBackgroundColor() {
@@ -250,7 +250,7 @@ class _StationDetailScreenState extends State<StationDetailScreen> {
               fit: BoxFit.cover,
               errorBuilder: (context, error, stackTrace) {
                 return Container(
-                  decoration: BoxDecoration(color: Colors.grey[300]),
+                  decoration: BoxDecoration(color: AppColors.border),
                   child: const Icon(Icons.image_not_supported, size: 50),
                 );
               },
@@ -632,7 +632,7 @@ class _StationDetailScreenState extends State<StationDetailScreen> {
                         child: Text(
                           warning.value,
                           style: TextStyle(
-                            color: AppColors.textPrimary,
+                            color: AppColors.text,
                             height: 1.5,
                           ),
                         ),
@@ -978,7 +978,7 @@ class _StationDetailScreenState extends State<StationDetailScreen> {
                 width: double.infinity,
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: Colors.grey[100],
+                  color: AppColors.background,
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Column(
@@ -1056,7 +1056,7 @@ class _StationDetailScreenState extends State<StationDetailScreen> {
                   width: double.infinity,
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
-                    color: Colors.grey[100],
+                    color: AppColors.background,
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: const Text(

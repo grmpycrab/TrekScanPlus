@@ -72,13 +72,13 @@ class _NotificationSettingsScreenState
         backgroundColor: AppColors.notificationToggle,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: AppColors.white),
+          icon: const Icon(Icons.arrow_back, color: SharedColors.white),
           onPressed: () => Navigator.pop(context),
         ),
         title: const Text(
           'Notification Settings',
           style: TextStyle(
-            color: AppColors.white,
+            color: SharedColors.white,
             fontSize: 20,
             fontWeight: FontWeight.bold,
           ),
@@ -217,7 +217,7 @@ class _NotificationSettingsScreenState
         gradient: LinearGradient(
           colors: _pushNotificationsEnabled
               ? [AppColors.notificationBooking, AppColors.primary]
-              : [AppColors.grey300, AppColors.grey400],
+              : [AppColors.border, Colors.grey.shade400],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
@@ -237,14 +237,14 @@ class _NotificationSettingsScreenState
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: AppColors.white.withOpacity(0.3),
+              color: SharedColors.white.withOpacity(0.3),
               borderRadius: BorderRadius.circular(12),
             ),
             child: Icon(
               _pushNotificationsEnabled
                   ? Icons.notifications_active
                   : Icons.notifications_off,
-              color: AppColors.white,
+              color: SharedColors.white,
               size: 32,
             ),
           ),
@@ -256,7 +256,7 @@ class _NotificationSettingsScreenState
                 const Text(
                   'Push Notifications',
                   style: TextStyle(
-                    color: AppColors.white,
+                    color: SharedColors.white,
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
                   ),
@@ -267,7 +267,7 @@ class _NotificationSettingsScreenState
                       ? 'Notifications are enabled'
                       : 'Notifications are disabled',
                   style: TextStyle(
-                    color: AppColors.white.withOpacity(0.9),
+                    color: SharedColors.white.withOpacity(0.9),
                     fontSize: 14,
                   ),
                 ),
@@ -293,10 +293,10 @@ class _NotificationSettingsScreenState
                 _savePreference('push_notifications_enabled', value);
               }
             },
-            activeColor: AppColors.white,
-            activeTrackColor: AppColors.white.withOpacity(0.5),
-            inactiveThumbColor: AppColors.white.withOpacity(0.7),
-            inactiveTrackColor: AppColors.white.withOpacity(0.3),
+            activeColor: SharedColors.white,
+            activeTrackColor: SharedColors.white.withOpacity(0.5),
+            inactiveThumbColor: SharedColors.white.withOpacity(0.7),
+            inactiveTrackColor: SharedColors.white.withOpacity(0.3),
           ),
         ],
       ),
@@ -311,7 +311,7 @@ class _NotificationSettingsScreenState
         style: const TextStyle(
           fontSize: 16,
           fontWeight: FontWeight.bold,
-          color: AppColors.textPrimary,
+          color: AppColors.text,
         ),
       ),
     );
@@ -354,7 +354,7 @@ class _NotificationSettingsScreenState
           style: TextStyle(
             fontWeight: FontWeight.w600,
             fontSize: 15,
-            color: enabled ? AppColors.textPrimary : AppColors.textSecondary,
+            color: enabled ? AppColors.text : AppColors.textSecondary,
           ),
         ),
         subtitle: Text(

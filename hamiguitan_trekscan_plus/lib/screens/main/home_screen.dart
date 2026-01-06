@@ -307,7 +307,7 @@ class _HomeScreenState extends State<HomeScreen>
                                   vertical: 6,
                                 ),
                                 decoration: BoxDecoration(
-                                  color: AppColors.white,
+                                  color: SharedColors.white,
                                   borderRadius: BorderRadius.circular(8),
                                   boxShadow: [
                                     BoxShadow(
@@ -389,7 +389,7 @@ class _HomeScreenState extends State<HomeScreen>
                                   vertical: 6,
                                 ),
                                 decoration: BoxDecoration(
-                                  color: AppColors.white,
+                                  color: SharedColors.white,
                                   borderRadius: BorderRadius.circular(8),
                                   boxShadow: [
                                     BoxShadow(
@@ -569,7 +569,7 @@ class _HomeScreenState extends State<HomeScreen>
                                     backgroundColor: AppColors.primary,
                                     child: const Icon(
                                       Icons.person,
-                                      color: AppColors.iconPrimary,
+                                      color: AppColors.primary,
                                     ),
                                   ),
                                   const SizedBox(width: 12),
@@ -893,11 +893,11 @@ class _HomeScreenState extends State<HomeScreen>
                     decoration: BoxDecoration(
                       color: Colors.grey[50],
                       borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: Colors.grey[200]!, width: 1),
+                      border: Border.all(color: AppColors.borderLight, width: 1),
                     ),
                     child: Icon(
                       Icons.keyboard_arrow_up,
-                      color: Colors.grey[600],
+                      color: AppColors.textSecondary,
                       size: 20,
                     ),
                   )
@@ -908,7 +908,7 @@ class _HomeScreenState extends State<HomeScreen>
                       vertical: 2,
                     ),
                     decoration: BoxDecoration(
-                      color: Colors.grey[100],
+                      color: AppColors.background,
                       borderRadius: BorderRadius.circular(10),
                     ),
                     child: Icon(
@@ -952,7 +952,7 @@ class _HomeScreenState extends State<HomeScreen>
               title: 'Tips & Tricks',
               icon: Icons.lightbulb_outline,
               gradient: LinearGradient(
-                colors: [const Color(0xFF06402B), const Color(0xFF053821)],
+                colors: [AppColors.accent, const Color(0xFF053821)],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
               ),

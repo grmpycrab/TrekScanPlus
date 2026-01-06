@@ -83,7 +83,7 @@ class _BannerSlideshowState extends State<BannerSlideshow> {
                 width: double.infinity,
                 height: double.infinity,
                 errorBuilder: (context, error, stack) =>
-                    Container(color: const Color(0xFF252B30)),
+                    Container(color: AppColors.primary),
               );
             },
           ),

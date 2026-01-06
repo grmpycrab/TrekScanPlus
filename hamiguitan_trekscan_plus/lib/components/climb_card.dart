@@ -76,14 +76,14 @@ class ClimbCard extends StatelessWidget {
                           Icon(
                             Icons.trending_up,
                             size: 16,
-                            color: Colors.grey[600],
+                            color: AppColors.textSecondary,
                           ),
                           const SizedBox(width: 4),
                           Text(
                             climb.type,
                             style: TextStyle(
                               fontSize: 14,
-                              color: Colors.grey[600],
+                              color: AppColors.textSecondary,
                             ),
                           ),
                         ],

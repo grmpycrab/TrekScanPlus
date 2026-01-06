@@ -106,7 +106,7 @@ class StationCard extends StatelessWidget {
           Text(
             stationName,
             style: const TextStyle(
-              color: AppColors.buttonText,
+              color: SharedColors.white,
               fontSize: 20,
               fontWeight: FontWeight.bold,
             ),

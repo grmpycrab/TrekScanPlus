@@ -80,7 +80,7 @@ class _BadgesScreenState extends State<BadgesScreen> {
   void _showFilterBottomSheet() {
     showModalBottomSheet(
       context: context,
-      backgroundColor: AppColors.white,
+      backgroundColor: SharedColors.white,
       builder: (context) => BadgeFilterBottomSheet(
         selectedRarities: _selectedRarities,
         selectedCategories: _selectedCategories,
@@ -204,7 +204,7 @@ class _BadgesScreenState extends State<BadgesScreen> {
       child: Row(
         children: [
           IconButton(
-            icon: const Icon(Icons.arrow_back, color: AppColors.white),
+            icon: const Icon(Icons.arrow_back, color: SharedColors.white),
             onPressed: () => Navigator.pop(context),
           ),
           const SizedBox(width: 8),
@@ -213,7 +213,7 @@ class _BadgesScreenState extends State<BadgesScreen> {
               child: Text(
                 'All Badges',
                 style: TextStyle(
-                  color: AppColors.white,
+                  color: SharedColors.white,
                   fontSize: 20,
                   fontWeight: FontWeight.bold,
                 ),
@@ -221,7 +221,7 @@ class _BadgesScreenState extends State<BadgesScreen> {
             ),
           ),
           IconButton(
-            icon: const Icon(Icons.filter_list, color: AppColors.white),
+            icon: const Icon(Icons.filter_list, color: SharedColors.white),
             onPressed: _showFilterBottomSheet,
           ),
         ],

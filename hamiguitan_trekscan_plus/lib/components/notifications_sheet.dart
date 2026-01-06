@@ -390,7 +390,7 @@ class _NotificationTile extends StatelessWidget {
           border: Border.all(
             color: isSelected
                 ? AppColors.primary
-                : (notification.isRead ? Colors.grey[300]! : _getIconColor()),
+                : (notification.isRead ? AppColors.border : _getIconColor()),
             width: isSelected ? 2 : (notification.isRead ? 0.5 : 1.5),
           ),
         ),
@@ -426,7 +426,7 @@ class _NotificationTile extends StatelessWidget {
               const SizedBox(height: 4),
               Text(
                 timeAgo,
-                style: TextStyle(fontSize: 11, color: Colors.grey[600]),
+                style: TextStyle(fontSize: 11, color: AppColors.textSecondary),
               ),
             ],
           ),

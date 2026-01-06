@@ -53,7 +53,7 @@ class _DoAndDontState extends State<DoAndDont> {
           Container(
             padding: const EdgeInsets.all(4),
             decoration: BoxDecoration(
-              color: Colors.grey[100],
+              color: AppColors.background,
               borderRadius: BorderRadius.circular(12),
               boxShadow: [
                 BoxShadow(
@@ -120,7 +120,7 @@ class _DoAndDontState extends State<DoAndDont> {
                 icon,
                 size: isSmallScreen ? 16 : 18,
                 color: isSelected
-                    ? AppColors.buttonText
+                    ? SharedColors.white
                     : AppColors.textSecondary,
               ),
               SizedBox(width: isSmallScreen ? 6 : 8),
@@ -131,8 +131,8 @@ class _DoAndDontState extends State<DoAndDont> {
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(
                     color: isSelected
-                        ? AppColors.buttonText
-                        : AppColors.textPrimary,
+                        ? SharedColors.white
+                        : AppColors.text,
                     fontWeight: isSelected ? FontWeight.bold : FontWeight.w600,
                     fontSize: isSmallScreen ? 13 : 14,
                   ),
@@ -217,7 +217,7 @@ class _DoAndDontState extends State<DoAndDont> {
                             style: TextStyle(
                               fontSize: isSmallScreen ? 18 : 20,
                               fontWeight: FontWeight.bold,
-                              color: AppColors.textPrimary,
+                              color: AppColors.text,
                             ),
                           ),
                         ],
@@ -315,7 +315,7 @@ class _DoAndDontState extends State<DoAndDont> {
                             style: TextStyle(
                               fontSize: isSmallScreen ? 18 : 20,
                               fontWeight: FontWeight.bold,
-                              color: AppColors.textPrimary,
+                              color: AppColors.text,
                             ),
                           ),
                         ],
@@ -434,7 +434,7 @@ class _DoAndDontState extends State<DoAndDont> {
                   style: TextStyle(
                     fontSize: isSmallScreen ? 14 : 16,
                     fontWeight: FontWeight.bold,
-                    color: AppColors.textPrimary,
+                    color: AppColors.text,
                   ),
                 ),
                 const SizedBox(height: 6),
@@ -680,7 +680,7 @@ class _DoAndDontOverlayState extends State<DoAndDontOverlay> {
                     style: TextStyle(
                       fontSize: isSmallScreen ? 18 : 20,
                       fontWeight: FontWeight.bold,
-                      color: AppColors.textPrimary,
+                      color: AppColors.text,
                     ),
                   ),
                 ),
@@ -737,7 +737,7 @@ class _DoAndDontOverlayState extends State<DoAndDontOverlay> {
                   style: TextStyle(
                     fontSize: isSmallScreen ? 14 : 15,
                     fontWeight: FontWeight.bold,
-                    color: AppColors.textPrimary,
+                    color: AppColors.text,
                   ),
                 ),
                 const SizedBox(height: 4),

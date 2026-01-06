@@ -120,7 +120,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   Container(
                     padding: const EdgeInsets.all(20),
                     decoration: BoxDecoration(
-                      color: AppColors.white,
+                      color: SharedColors.white,
                       shape: BoxShape.circle,
                       boxShadow: [
                         BoxShadow(
@@ -144,7 +144,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     style: TextStyle(
                       fontSize: 32,
                       fontWeight: FontWeight.bold,
-                      color: AppColors.textPrimary,
+                      color: AppColors.text,
                     ),
                   ),
                   const SizedBox(height: 8),
@@ -174,7 +174,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   Container(
                     padding: const EdgeInsets.all(24),
                     decoration: BoxDecoration(
-                      color: AppColors.white,
+                      color: SharedColors.white,
                       borderRadius: BorderRadius.circular(20),
                       boxShadow: [
                         BoxShadow(
@@ -197,14 +197,14 @@ class _LoginScreenState extends State<LoginScreen> {
                             labelText: 'Email',
                             prefixIcon: const Icon(Icons.email_outlined),
                             filled: true,
-                            fillColor: AppColors.grey50,
+                            fillColor: Color(0xFFFAFAFA),
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(12),
                               borderSide: BorderSide.none,
                             ),
                             enabledBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(12),
-                              borderSide: BorderSide(color: AppColors.grey200),
+                              borderSide: BorderSide(color: AppColors.borderLight),
                             ),
                             focusedBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(12),
@@ -227,14 +227,14 @@ class _LoginScreenState extends State<LoginScreen> {
                             labelText: 'Password',
                             prefixIcon: const Icon(Icons.lock_outline),
                             filled: true,
-                            fillColor: AppColors.grey50,
+                            fillColor: Color(0xFFFAFAFA),
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(12),
                               borderSide: BorderSide.none,
                             ),
                             enabledBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(12),
-                              borderSide: BorderSide(color: AppColors.grey200),
+                              borderSide: BorderSide(color: AppColors.borderLight),
                             ),
                             focusedBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(12),
@@ -248,7 +248,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                 _obscurePassword
                                     ? Icons.visibility_off_outlined
                                     : Icons.visibility_outlined,
-                                color: AppColors.grey600,
+                                color: AppColors.textSecondary,
                               ),
                               onPressed: () {
                                 setState(() {
@@ -289,7 +289,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         ElevatedButton(
                           onPressed: _isLoading ? null : _handleLogin,
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: AppColors.buttonPrimary,
+                            backgroundColor: AppColors.primary,
                             padding: const EdgeInsets.symmetric(vertical: 16),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(12),
@@ -303,14 +303,14 @@ class _LoginScreenState extends State<LoginScreen> {
                                   child: CircularProgressIndicator(
                                     strokeWidth: 2,
                                     valueColor: AlwaysStoppedAnimation<Color>(
-                                      AppColors.white,
+                                      SharedColors.white,
                                     ),
                                   ),
                                 )
                               : const Text(
                                   'Login',
                                   style: TextStyle(
-                                    color: AppColors.buttonText,
+                                    color: SharedColors.white,
                                     fontSize: 16,
                                     fontWeight: FontWeight.bold,
                                   ),
@@ -321,7 +321,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         // Divider
                         Row(
                           children: [
-                            Expanded(child: Divider(color: AppColors.grey300)),
+                            Expanded(child: Divider(color: AppColors.border)),
                             Padding(
                               padding: const EdgeInsets.symmetric(
                                 horizontal: 16.0,
@@ -329,12 +329,12 @@ class _LoginScreenState extends State<LoginScreen> {
                               child: Text(
                                 'OR',
                                 style: TextStyle(
-                                  color: AppColors.grey600,
+                                  color: AppColors.textSecondary,
                                   fontWeight: FontWeight.w600,
                                 ),
                               ),
                             ),
-                            Expanded(child: Divider(color: AppColors.grey300)),
+                            Expanded(child: Divider(color: AppColors.border)),
                           ],
                         ),
                         const SizedBox(height: 24),
@@ -398,11 +398,11 @@ class _LoginScreenState extends State<LoginScreen> {
                                 },
                           style: OutlinedButton.styleFrom(
                             padding: const EdgeInsets.symmetric(vertical: 16),
-                            side: BorderSide(color: AppColors.grey300),
+                            side: BorderSide(color: AppColors.border),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(12),
                             ),
-                            backgroundColor: AppColors.white,
+                            backgroundColor: SharedColors.white,
                           ),
                           icon: Image.asset(
                             'assets/icons/google_icon.png',
@@ -411,7 +411,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           label: const Text(
                             'Continue with Google',
                             style: TextStyle(
-                              color: AppColors.textPrimary,
+                              color: AppColors.text,
                               fontSize: 16,
                               fontWeight: FontWeight.w600,
                             ),
@@ -428,7 +428,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     children: [
                       Text(
                         "Don't have an account? ",
-                        style: TextStyle(color: AppColors.grey700),
+                        style: TextStyle(color: AppColors.textSecondary),
                       ),
                       TextButton(
                         onPressed: _isLoading

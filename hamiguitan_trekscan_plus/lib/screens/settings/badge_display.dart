@@ -107,7 +107,7 @@ class BadgeCard extends StatelessWidget {
                     child: Center(
                       child: Icon(
                         Icons.lock,
-                        color: AppColors.white,
+                        color: SharedColors.white,
                         size: lockIconSize,
                       ),
                     ),
@@ -172,7 +172,7 @@ class BadgeDetailScreen extends StatelessWidget {
       child: Row(
         children: [
           IconButton(
-            icon: Icon(Icons.arrow_back, color: AppColors.white),
+            icon: Icon(Icons.arrow_back, color: SharedColors.white),
             onPressed: () => Navigator.pop(context),
           ),
           Expanded(
@@ -180,7 +180,7 @@ class BadgeDetailScreen extends StatelessWidget {
               child: Text(
                 'Badge Details',
                 style: TextStyle(
-                  color: AppColors.white,
+                  color: SharedColors.white,
                   fontSize: 20,
                   fontWeight: FontWeight.bold,
                 ),
@@ -228,7 +228,7 @@ class BadgeDetailScreen extends StatelessWidget {
                       ),
                       child: Icon(
                         Icons.lock,
-                        color: AppColors.white,
+                        color: SharedColors.white,
                         size: lockIconSize,
                       ),
                     ),
@@ -266,10 +266,10 @@ class BadgeDetailScreen extends StatelessWidget {
               decoration: BoxDecoration(
                 color: isAcquired
                     ? AppColors.statusApproved.withValues(alpha: 0.2)
-                    : AppColors.grey200,
+                    : AppColors.borderLight,
                 borderRadius: BorderRadius.circular(20),
                 border: Border.all(
-                  color: isAcquired ? AppColors.statusApproved : AppColors.grey,
+                  color: isAcquired ? AppColors.statusApproved : Colors.grey,
                   width: 1,
                 ),
               ),
@@ -280,7 +280,7 @@ class BadgeDetailScreen extends StatelessWidget {
                     isAcquired ? Icons.check_circle : Icons.lock_outline,
                     color: isAcquired
                         ? AppColors.statusApproved
-                        : AppColors.grey,
+                        : Colors.grey,
                     size: 16,
                   ),
                   const SizedBox(width: 6),
@@ -291,7 +291,7 @@ class BadgeDetailScreen extends StatelessWidget {
                       fontWeight: FontWeight.w600,
                       color: isAcquired
                           ? AppColors.statusApproved
-                          : AppColors.grey,
+                          : Colors.grey,
                     ),
                   ),
                 ],
@@ -343,7 +343,7 @@ class BadgeDetailScreen extends StatelessWidget {
             const SizedBox(height: 8),
             Text(
               badge.category.replaceAll('_', ' ').toUpperCase(),
-              style: TextStyle(fontSize: 14, color: AppColors.grey600),
+              style: TextStyle(fontSize: 14, color: AppColors.textSecondary),
             ),
             const SizedBox(height: 20),
             const Text(
@@ -353,7 +353,7 @@ class BadgeDetailScreen extends StatelessWidget {
             const SizedBox(height: 8),
             Text(
               '${badge.requirement['type']}: ${badge.requirement['value']}',
-              style: TextStyle(fontSize: 14, color: AppColors.grey600),
+              style: TextStyle(fontSize: 14, color: AppColors.textSecondary),
             ),
           ],
         ),
@@ -392,7 +392,7 @@ class BadgeDetailScreen extends StatelessWidget {
             const SizedBox(height: 12),
             Row(
               children: [
-                Icon(Icons.calendar_today, color: AppColors.grey600, size: 20),
+                Icon(Icons.calendar_today, color: AppColors.textSecondary, size: 20),
                 const SizedBox(width: 12),
                 Text(
                   formattedDate,
@@ -406,7 +406,7 @@ class BadgeDetailScreen extends StatelessWidget {
             const SizedBox(height: 12),
             Row(
               children: [
-                Icon(Icons.access_time, color: AppColors.grey600, size: 20),
+                Icon(Icons.access_time, color: AppColors.textSecondary, size: 20),
                 const SizedBox(width: 12),
                 Text(
                   formattedTime,

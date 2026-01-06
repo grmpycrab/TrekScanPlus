@@ -1,18 +1,30 @@
+// This file is a wrapper that re-exports the new simplified color system
+// The main color definitions are now in new_color.dart
+// This maintains backwards compatibility with existing code
+
+export 'new_color.dart'
+    show
+        AppColors,
+        AppColorsDark,
+        SharedColors,
+        OriginalColors,
+        OriginalColorsDark;
+
+// Deprecated: Use new_color.dart classes directly
+// This class is kept for backwards compatibility during migration
 import 'package:flutter/material.dart';
 
-class AppColors {
-  // Primary Colors
+class AppColorsLegacy {
+  // Map old names to new simplified colors
   static const Color primary = Color(0xFF252B30);
-  static const Color darkGreen = Color(0xFF252B30); // Same as primary
+  static const Color darkGreen = Color(0xFF252B30);
   static const Color white = Colors.white;
   static const Color black = Colors.black;
-
-  // Background Colors
   static Color background = Colors.grey[100]!;
   static const Color cardBackground = Colors.white;
   static const Color transparent = Colors.transparent;
 
-  // Text Colors
+  // Text Colors - mapped to AppColors
   static const Color textPrimary = Color(0xFF252B30);
   static const Color textSecondary = Colors.grey;
   static Color textTertiary = Colors.grey[600]!;
@@ -21,7 +33,7 @@ class AppColors {
   static const Color textBlack87 = Colors.black87;
   static const Color textBlack54 = Colors.black54;
 
-  // Station Difficulty Colors
+  // Station Difficulty Colors - use SharedColors instead
   static const Color difficultyEasy = Colors.green;
   static const Color difficultyModerate = Colors.orange;
   static const Color difficultyHard = Colors.red;
@@ -105,7 +117,7 @@ class AppColors {
   static Color blue900 = Colors.blue[900]!;
   static const Color blueAccent = Colors.blueAccent;
 
-  // Status Colors (for booking states, notifications, etc.)
+  // Status Colors
   static const Color statusApproved = Colors.green;
   static const Color statusPending = Colors.orange;
   static const Color statusRejected = Colors.red;

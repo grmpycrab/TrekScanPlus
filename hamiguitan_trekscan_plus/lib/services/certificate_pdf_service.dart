@@ -282,9 +282,9 @@ class CertificatePdfService {
       case CertificateType.camp3:
         return PdfColors.green700; // Green for Camp 3
       case CertificateType.fullTrek:
-        return PdfColors.blue700; // Blue for Full Trek
+        return PdfColor.fromInt(0xFF1976D2); // Blue for Full Trek
       case CertificateType.peakConqueror:
-        return PdfColors.orange700; // Orange for Peak Conqueror
+        return PdfColor.fromInt(0xFFF57C00); // Orange for Peak Conqueror
     }
   }
 

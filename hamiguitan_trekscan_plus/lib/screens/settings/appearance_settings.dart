@@ -7,19 +7,19 @@ class AppearanceSettingsScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.white,
+      backgroundColor: SharedColors.white,
       appBar: AppBar(
         backgroundColor: AppColors.primary,
         elevation: 0,
         centerTitle: true,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: AppColors.white),
+          icon: const Icon(Icons.arrow_back, color: SharedColors.white),
           onPressed: () => Navigator.pop(context),
         ),
         title: const Text(
           'Appearance Settings',
           style: TextStyle(
-            color: AppColors.white,
+            color: SharedColors.white,
             fontWeight: FontWeight.bold,
             fontSize: 18,
           ),
@@ -42,14 +42,14 @@ class AppearanceSettingsScreen extends StatelessWidget {
                     vertical: 6,
                   ),
                   decoration: BoxDecoration(
-                    color: AppColors.orange100,
+                    color: Color(0xFFFFE0B2),
                     borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: AppColors.orange300),
+                    border: Border.all(color: Color(0xFFFFB74D)),
                   ),
                   child: Text(
                     'Coming Soon',
                     style: TextStyle(
-                      color: AppColors.orange800,
+                      color: Color(0xFFE65100),
                       fontSize: 12,
                       fontWeight: FontWeight.w600,
                     ),
@@ -59,7 +59,7 @@ class AppearanceSettingsScreen extends StatelessWidget {
                 Switch(
                   value: false,
                   onChanged: null, // Disabled
-                  activeColor: AppColors.grey400,
+                  activeColor: Colors.grey.shade400,
                 ),
               ],
             ),
@@ -80,7 +80,7 @@ class AppearanceSettingsScreen extends StatelessWidget {
       elevation: 1,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
-        side: BorderSide(color: AppColors.grey200),
+        side: BorderSide(color: AppColors.borderLight),
       ),
       child: ListTile(
         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -90,7 +90,7 @@ class AppearanceSettingsScreen extends StatelessWidget {
             color: AppColors.primary,
             borderRadius: BorderRadius.circular(10),
           ),
-          child: Icon(icon, color: AppColors.white, size: 24),
+          child: Icon(icon, color: SharedColors.white, size: 24),
         ),
         title: Text(
           title,
@@ -100,7 +100,7 @@ class AppearanceSettingsScreen extends StatelessWidget {
           padding: const EdgeInsets.only(top: 4),
           child: Text(
             subtitle,
-            style: TextStyle(color: AppColors.grey600, fontSize: 13),
+            style: TextStyle(color: AppColors.textSecondary, fontSize: 13),
           ),
         ),
         trailing: trailing,

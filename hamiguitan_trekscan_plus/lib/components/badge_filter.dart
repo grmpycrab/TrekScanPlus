@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../theme/new_color.dart';
 
 class BadgeFilterBottomSheet extends StatefulWidget {
   final Set<String> selectedRarities;
@@ -191,13 +192,13 @@ class _BadgeFilterBottomSheetState extends State<BadgeFilterBottomSheet> {
                       fontSize: 12,
                       color: selectedItems.contains(item)
                           ? Colors.white
-                          : Colors.grey[700],
+                          : AppColors.textSecondary,
                     ),
                   ),
                   selected: selectedItems.contains(item),
                   onSelected: (isSelected) => onChanged(item, isSelected),
-                  backgroundColor: Colors.grey[200],
-                  selectedColor: const Color(0xFF252B30),
+                  backgroundColor: AppColors.borderLight,
+                  selectedColor: AppColors.primary,
                 ),
               )
               .toList(),

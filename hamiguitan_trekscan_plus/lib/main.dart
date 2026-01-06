@@ -14,6 +14,7 @@ import 'screens/social/post_detail_screen.dart';
 import 'screens/splash_screen.dart';
 import 'services/firebase_auth_service.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import '../../theme/new_color.dart';
 import 'services/station_service.dart';
 import 'services/connectivity_service.dart';
 import 'services/booking_service.dart';
@@ -393,8 +394,8 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
       title: 'Hamiguitan TrekScan+',
       navigatorKey: navigatorKey,
       theme: ThemeData(
-        primaryColor: const Color(0xFF252B30),
-        colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF252B30)),
+        primaryColor: AppColors.primary,
+        colorScheme: ColorScheme.fromSeed(seedColor: AppColors.primary),
         useMaterial3: true,
       ),
       builder: (context, child) => Stack(

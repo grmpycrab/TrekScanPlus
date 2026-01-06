@@ -227,7 +227,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               child: Text(
                 'Settings',
                 style: TextStyle(
-                  color: AppColors.white,
+                  color: SharedColors.white,
                   fontSize: 20,
                   fontWeight: FontWeight.bold,
                 ),
@@ -251,7 +251,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       child: Container(
         margin: const EdgeInsets.only(bottom: 16),
         decoration: BoxDecoration(
-          color: AppColors.white,
+          color: SharedColors.white,
           borderRadius: BorderRadius.circular(12),
           boxShadow: [
             BoxShadow(
