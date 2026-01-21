@@ -3,6 +3,7 @@ import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:permission_handler/permission_handler.dart';
 import '../../theme/color.dart';
 import '../../services/station_service.dart';
+import '../../services/climb_session_service.dart';
 import '../../services/geofencing_service.dart';
 import '../../services/achievement_service.dart';
 import '../../components/achievement_notification.dart';
@@ -331,6 +332,33 @@ class _ScannerScreenState extends State<ScannerScreen>
 
                 // Mark station as visited and save
                 await StationService.instance.updateStationVisited(code, true);
+
+                // Auto-start climb session on first station scan if none exists
+                final climbSessionService = ClimbSessionService.instance;
+                var activeSession = climbSessionService.getActiveSession();
+
+                // If no active session exists, create one automatically
+                if (activeSession == null) {
+                  activeSession = await climbSessionService.createClimbSession(
+                    name:
+                        'Trek Session - ${DateTime.now().toString().split('.')[0]}',
+                    description: 'Auto-created when scanning ${station.name}',
+                    trekType: 'regular_trek',
+                  );
+                }
+
+                // Add station to the active climb session
+                // Only add to the ONE active session (not all ongoing sessions)
+                if (activeSession.status == 'ongoing') {
+                  if (!activeSession.isStationVisited(station.id)) {
+                    activeSession.addVisitedStation(station);
+                    // Call startClimb() on first station scan
+                    if (activeSession.startedAt == null) {
+                      activeSession.startClimb();
+                    }
+                    await climbSessionService.updateSession(activeSession);
+                  }
+                }
 
                 // Check and unlock achievements
                 final visitedStations = StationService.instance

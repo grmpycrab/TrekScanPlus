@@ -390,7 +390,8 @@ class _TrailMapState extends State<TrailMap> {
                                                 '${station.latitude!.toStringAsFixed(4)}, ${station.longitude!.toStringAsFixed(4)}',
                                                 style: TextStyle(
                                                   fontSize: 11,
-                                                  color: AppColors.textSecondary,
+                                                  color:
+                                                      AppColors.textSecondary,
                                                   fontFamily: 'monospace',
                                                 ),
                                               ),
@@ -442,7 +443,7 @@ class _TrailMapState extends State<TrailMap> {
                     const SizedBox(height: 8),
                     _buildLegendItem(Colors.green, 'Completed'),
                     const SizedBox(height: 8),
-                    _buildLegendItem(Colors.blue, 'Upcoming'),
+                    _buildLegendItem(Colors.blue, 'Not Visited'),
                   ],
                 ),
               ),
