@@ -26,19 +26,46 @@ class _StationScreenState extends State<StationScreen> {
     _initializeServices();
   }
 
+  @override
+  void dispose() {
+    // Stop listening when screen is disposed
+    if (ClimbSessionService.isInitialized) {
+      ClimbSessionService.instance.removeListener(_onClimbSessionsChanged);
+    }
+    super.dispose();
+  }
+
+  void _onClimbSessionsChanged() {
+    if (mounted) {
+      setState(() {
+        _updateActiveSession();
+      });
+    }
+  }
+
   Future<void> _initializeServices() async {
     // Ensure stations are loaded
     if (!StationService.instance.isLoaded) {
       await StationService.instance.loadStations();
     }
 
-    // Initialize climb session service if needed
+    // ClimbSessionService should already be initialized by main.dart
+    // If not initialized yet, it means init() failed - show error but don't block
     if (!ClimbSessionService.isInitialized) {
-      await ClimbSessionService.init();
+      debugPrint(
+        '⚠️ ClimbSessionService not yet initialized (waiting for postFrameCallback)',
+      );
+    } else {
+      // Add listener for updates
+      try {
+        ClimbSessionService.instance.addListener(_onClimbSessionsChanged);
+        _updateActiveSession();
+      } catch (e) {
+        debugPrint('⚠️ Error setting up climb service listener: $e');
+      }
     }
 
     if (mounted) {
-      _updateActiveSession();
       setState(() {
         _isLoading = false;
       });
@@ -46,7 +73,14 @@ class _StationScreenState extends State<StationScreen> {
   }
 
   void _updateActiveSession() {
-    _activeSession = ClimbSessionService.instance.getActiveSession();
+    try {
+      if (ClimbSessionService.isInitialized) {
+        _activeSession = ClimbSessionService.instance.getActiveSession();
+      }
+    } catch (e) {
+      debugPrint('⚠️ Error updating active session: $e');
+      _activeSession = null;
+    }
   }
 
   Future<void> _deleteClimbSession(ClimbSession session) async {
@@ -186,6 +220,12 @@ class _StationScreenState extends State<StationScreen> {
   }
 
   Widget _buildTabs() {
+    // Get climb count safely, default to 0 if not initialized
+    int climbCount = 0;
+    if (ClimbSessionService.isInitialized) {
+      climbCount = ClimbSessionService.instance.getAllSessions().length;
+    }
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
       child: Row(
@@ -198,10 +238,7 @@ class _StationScreenState extends State<StationScreen> {
             1,
             'Not Visited (${StationService.instance.getUnvisitedStations().length})',
           ),
-          _buildTab(
-            2,
-            'Climbs (${ClimbSessionService.instance.getAllSessions().length})',
-          ),
+          _buildTab(2, 'Climbs ($climbCount)'),
         ],
       ),
     );
@@ -341,6 +378,50 @@ class _StationScreenState extends State<StationScreen> {
   }
 
   Widget _buildClimbsTab() {
+    // If still loading stations
+    if (_isLoading) {
+      return const Padding(
+        padding: EdgeInsets.symmetric(horizontal: 16),
+        child: Center(child: CircularProgressIndicator()),
+      );
+    }
+
+    // If service is not initialized yet (rare edge case)
+    if (!ClimbSessionService.isInitialized) {
+      return Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        child: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Icon(Icons.hourglass_empty, size: 48, color: Colors.grey),
+              const SizedBox(height: 16),
+              const Text(
+                'Initializing Climbs feature...',
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+              ),
+              const SizedBox(height: 8),
+              const Text(
+                'This should only take a moment',
+                style: TextStyle(fontSize: 12, color: Colors.grey),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 16),
+              FilledButton.tonal(
+                onPressed: () {
+                  setState(() {
+                    _isLoading = true;
+                  });
+                  _initializeServices();
+                },
+                child: const Text('Retry'),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
     final allSessions = ClimbSessionService.instance.getAllSessions();
 
     return Padding(

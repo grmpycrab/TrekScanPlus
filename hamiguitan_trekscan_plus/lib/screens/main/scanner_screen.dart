@@ -4,9 +4,10 @@ import 'package:permission_handler/permission_handler.dart';
 import '../../theme/color.dart';
 import '../../services/station_service.dart';
 import '../../services/climb_session_service.dart';
-import '../../services/geofencing_service.dart';
+//import '../../services/geofencing_service.dart';
 import '../../services/achievement_service.dart';
-import '../../components/achievement_notification.dart';
+import '../../models/station_data.dart';
+//import '../../components/achievement_notification.dart';
 import 'station_detail_screen.dart';
 
 class ScannerScreen extends StatefulWidget {
@@ -23,10 +24,7 @@ class _ScannerScreenState extends State<ScannerScreen>
   bool hasPermission = false;
   late AchievementService achievementService;
   bool _isLoading = true;
-  String? _lastScannedCode;
-  DateTime? _lastScanTime;
-  bool _geofencingEnabled = true; // Toggle for testing
-  bool _isProcessingScan = false; // Prevent concurrent scan processing
+  bool _geofencingEnabled = true; // Tap location icon to toggle
 
   @override
   void initState() {
@@ -72,124 +70,6 @@ class _ScannerScreenState extends State<ScannerScreen>
     controller?.dispose();
     WidgetsBinding.instance.removeObserver(this);
     super.dispose();
-  }
-
-  void _showGeofenceFailureDialog(
-    BuildContext context,
-    dynamic station,
-    GeofenceCheckResult result,
-  ) {
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (context) => AlertDialog(
-        title: const Text('Location Verification Failed'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'You are too far from ${station.name} to scan this QR code.',
-              style: const TextStyle(fontSize: 14),
-            ),
-            const SizedBox(height: 16),
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: Colors.orange[50],
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: Colors.orange),
-              ),
-              child: Row(
-                children: [
-                  Icon(Icons.location_on, color: Colors.orange[700], size: 20),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Distance: ${GeofencingService.formatDistance(result.distanceMeters ?? 0)}',
-                          style: const TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 13,
-                          ),
-                        ),
-                        Text(
-                          'Required: ${GeofencingService.formatDistance(GeofencingService.GEOFENCE_RADIUS_METERS)}',
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: AppColors.textSecondary,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 12),
-            Text(
-              'This geofence requirement ensures you are physically at the station location to verify authentic visits.',
-              style: TextStyle(
-                fontSize: 12,
-                color: AppColors.textSecondary,
-                fontStyle: FontStyle.italic,
-              ),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Dismiss'),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              Navigator.pop(context);
-              // Continue scanning
-            },
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.orange),
-            child: const Text(
-              'Try Again',
-              style: TextStyle(color: Colors.white),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _showAchievementNotification(dynamic achievement) {
-    // Mark notification as shown to prevent duplicate notifications
-    achievementService.markNotificationAsShown(achievement.id);
-
-    // Show achievement as overlay on the scanner screen
-    _showAchievementOverlay(achievement);
-  }
-
-  void _showAchievementOverlay(dynamic achievement) {
-    if (!mounted) return;
-
-    final overlay = Overlay.of(context);
-    late OverlayEntry overlayEntry;
-
-    overlayEntry = OverlayEntry(
-      builder: (context) => Positioned(
-        top: MediaQuery.of(context).padding.top + 10,
-        left: 10,
-        right: 10,
-        child: AchievementUnlockOverlay(
-          achievement: achievement,
-          displayDuration: const Duration(seconds: 5),
-          onDismiss: () {
-            overlayEntry.remove();
-          },
-        ),
-      ),
-    );
-
-    overlay.insert(overlayEntry);
   }
 
   @override
@@ -244,178 +124,90 @@ class _ScannerScreenState extends State<ScannerScreen>
               debugPrint('Scanner started successfully');
             },
             onDetect: (capture) async {
-              if (capture.barcodes.isEmpty) return;
+              try {
+                final List<Barcode> barcodes = capture.barcodes;
 
-              final code = capture.barcodes.first.rawValue;
-              if (code == null) return;
+                for (final barcode in barcodes) {
+                  final String? rawValue = barcode.rawValue;
 
-              // Prevent processing if already handling a scan
-              if (_isProcessingScan) {
-                return;
-              }
-
-              // Debounce: Ignore if same code scanned within 3 seconds
-              final now = DateTime.now();
-              if (_lastScannedCode == code &&
-                  _lastScanTime != null &&
-                  now.difference(_lastScanTime!).inSeconds < 3) {
-                return;
-              }
-
-              // Mark as processing to prevent concurrent scans
-              _isProcessingScan = true;
-
-              // STOP scanner immediately to prevent further detections
-              await controller?.stop();
-
-              // Update last scanned info
-              _lastScannedCode = code;
-              _lastScanTime = now;
-
-              final station = StationService.instance.getStationById(code);
-
-              if (station != null) {
-                // Check geofence before allowing scan completion (if enabled)
-                if (_geofencingEnabled &&
-                    station.latitude != null &&
-                    station.longitude != null) {
-                  // Show loading indicator while checking location
-                  if (mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Row(
-                          children: [
-                            SizedBox(
-                              width: 20,
-                              height: 20,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                valueColor: AlwaysStoppedAnimation<Color>(
-                                  Colors.white,
-                                ),
-                              ),
-                            ),
-                            SizedBox(width: 12),
-                            Text('Verifying location...'),
-                          ],
-                        ),
-                        duration: Duration(seconds: 2),
-                      ),
-                    );
+                  if (rawValue == null || rawValue.isEmpty) {
+                    continue;
                   }
 
-                  final geofenceResult = await GeofencingService.checkGeofence(
-                    stationLat: station.latitude!,
-                    stationLng: station.longitude!,
-                    radiusMeters: GeofencingService.GEOFENCE_RADIUS_METERS,
-                  );
+                  final StationData? station = StationService.instance
+                      .getStationById(rawValue);
 
-                  if (!mounted) return;
+                  if (station != null) {
+                    try {
+                      await StationService.instance.updateStationVisited(
+                        station.id,
+                        true,
+                      );
+                    } catch (e) {
+                      // Station marking failed but continue
+                    }
 
-                  if (!geofenceResult.isWithinGeofence) {
-                    // User is outside geofence - show warning dialog
-                    _showGeofenceFailureDialog(
-                      context,
-                      station,
-                      geofenceResult,
-                    );
-                    // Reset scan tracking to allow retry
-                    _lastScannedCode = null;
-                    _lastScanTime = null;
-                    _isProcessingScan = false;
+                    if (!ClimbSessionService.isInitialized) {
+                      if (mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text(
+                              'Service not initialized. Please restart.',
+                            ),
+                          ),
+                        );
+                      }
+                      return;
+                    }
 
-                    // Restart scanner for retry
-                    await controller?.start();
+                    final activeSession = ClimbSessionService.instance
+                        .getActiveSession();
+
+                    if (activeSession != null &&
+                        activeSession.status == 'ongoing') {
+                      final isStationInSession = activeSession.visitedStations
+                          .any((visit) => visit.stationId == station.id);
+
+                      if (!isStationInSession) {
+                        activeSession.addVisitedStation(station);
+                      }
+
+                      if (mounted) {
+                        Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (context) =>
+                                StationDetailScreen(station: station),
+                          ),
+                        );
+                      }
+                    } else {
+                      final newSession = await ClimbSessionService.instance
+                          .createClimbSession(
+                            name: station.name,
+                            description: station.description,
+                            trekType: 'regular_trek',
+                          );
+                      newSession.addVisitedStation(station);
+
+                      if (mounted) {
+                        Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (context) =>
+                                StationDetailScreen(station: station),
+                          ),
+                        );
+                      }
+                    }
+
                     return;
                   }
                 }
-
-                // Mark station as visited and save
-                await StationService.instance.updateStationVisited(code, true);
-
-                // Auto-start climb session on first station scan if none exists
-                final climbSessionService = ClimbSessionService.instance;
-                var activeSession = climbSessionService.getActiveSession();
-
-                // If no active session exists, create one automatically
-                if (activeSession == null) {
-                  activeSession = await climbSessionService.createClimbSession(
-                    name:
-                        'Trek Session - ${DateTime.now().toString().split('.')[0]}',
-                    description: 'Auto-created when scanning ${station.name}',
-                    trekType: 'regular_trek',
-                  );
+              } catch (e) {
+                try {
+                  await controller?.start();
+                } catch (e2) {
+                  // Camera restart failed
                 }
-
-                // Add station to the active climb session
-                // Only add to the ONE active session (not all ongoing sessions)
-                if (activeSession.status == 'ongoing') {
-                  if (!activeSession.isStationVisited(station.id)) {
-                    activeSession.addVisitedStation(station);
-                    // Call startClimb() on first station scan
-                    if (activeSession.startedAt == null) {
-                      activeSession.startClimb();
-                    }
-                    await climbSessionService.updateSession(activeSession);
-                  }
-                }
-
-                // Check and unlock achievements
-                final visitedStations = StationService.instance
-                    .getVisitedStations();
-                final allStations = StationService.instance.getAllStations();
-
-                // Get the index of this station (0-based) for achievement matching
-                final stationIndex = allStations.indexWhere(
-                  (s) => s.id == station.id,
-                );
-
-                final newlyUnlocked = await achievementService
-                    .checkAndUnlockAchievements(
-                      visitedStations.length,
-                      visitedStations.map((s) => s.id).toList(),
-                      currentStationId: station.id,
-                      currentStationIndex: stationIndex >= 0
-                          ? stationIndex + 1
-                          : null,
-                    );
-
-                if (!mounted) return;
-
-                // Show achievement notification if newly unlocked
-                if (newlyUnlocked != null) {
-                  _showAchievementNotification(newlyUnlocked);
-                }
-
-                await Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => StationDetailScreen(station: station),
-                  ),
-                );
-
-                // Reset scan tracking after successful navigation
-                _lastScannedCode = null;
-                _lastScanTime = null;
-                _isProcessingScan = false;
-
-                // Restart scanner after returning from detail screen
-                await controller?.start();
-              } else {
-                if (!mounted) return;
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Invalid QR code - Station not found'),
-                    backgroundColor: Colors.red,
-                    duration: Duration(seconds: 2),
-                  ),
-                );
-                // Reset processing flag for invalid codes
-                _isProcessingScan = false;
-
-                // Restart scanner for retry
-                await controller?.start();
-                // Only allow retry after 3 seconds for invalid codes
               }
             },
           ),

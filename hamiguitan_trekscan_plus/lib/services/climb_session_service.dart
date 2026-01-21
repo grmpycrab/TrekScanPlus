@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'dart:async';
 import 'dart:convert';
 import '../models/climb_session.dart';
 import '../models/station_data.dart';
@@ -74,14 +75,44 @@ class ClimbSessionService extends ChangeNotifier {
       return _instance!;
     }
 
-    final prefs = await SharedPreferences.getInstance();
-    _instance = ClimbSessionService._(
-      prefs,
-      userId: userId,
-      firestore: FirebaseFirestore.instance,
-    );
-    await _instance!._loadSessions();
-    return _instance!;
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      _instance = ClimbSessionService._(
+        prefs,
+        userId: userId,
+        firestore: FirebaseFirestore.instance,
+      );
+      debugPrint(
+        '🚀 ClimbSessionService: Initializing for userId: $userId (offline-first)',
+      );
+
+      // Load from local cache immediately (synchronous, non-blocking)
+      try {
+        _instance!._loadLocalSessions();
+        debugPrint(
+          '✅ ClimbSessionService: Local sessions loaded (${_instance!._climbSessions.length} sessions)',
+        );
+      } catch (loadError) {
+        debugPrint('⚠️ Error loading local sessions: $loadError');
+        _instance!._climbSessions = [];
+        _instance!._activeSession = null;
+      }
+
+      // Sync with Firebase in background (fire-and-forget, non-blocking)
+      if (_instance!._isFirebaseEnabled) {
+        debugPrint(
+          '🔄 ClimbSessionService: Starting background Firebase sync (non-blocking)',
+        );
+        _instance!._syncWithFirebaseBackground();
+      } else {
+        debugPrint('🔌 ClimbSessionService: Offline mode (no userId)');
+      }
+
+      return _instance!;
+    } catch (e) {
+      debugPrint('❌ ClimbSessionService init error: $e');
+      rethrow;
+    }
   }
 
   void setCurrentUser(String? userId) {
@@ -90,27 +121,23 @@ class ClimbSessionService extends ChangeNotifier {
     _climbSessions.clear();
     _activeSession = null;
     // Reload sessions for new user
-    _loadSessions();
+    _loadLocalSessions();
+    if (_isFirebaseEnabled) {
+      _syncWithFirebaseBackground();
+    }
   }
 
-  Future<void> _loadSessions() async {
+  /// Load sessions from local cache (synchronous, fast)
+  void _loadLocalSessions() {
     try {
-      // Load from local cache first (instant access)
       final jsonString = prefs.getString(_userClimbSessionsKey);
       if (jsonString != null && jsonString.isNotEmpty) {
-        try {
-          final List<dynamic> jsonList = json.decode(jsonString);
-          _climbSessions = jsonList
-              .map((item) => ClimbSession.fromMap(item as Map<String, dynamic>))
-              .toList();
-        } catch (e) {
-          if (kDebugMode) print('Error loading local climb sessions: $e');
-        }
-      }
-
-      // Sync with Firebase if user is logged in
-      if (_isFirebaseEnabled && _userClimbsRef != null) {
-        await _syncWithFirebase();
+        final List<dynamic> jsonList = json.decode(jsonString);
+        _climbSessions = jsonList
+            .map((item) => ClimbSession.fromMap(item as Map<String, dynamic>))
+            .toList();
+      } else {
+        _climbSessions = [];
       }
 
       // Set the most recent ongoing session as active
@@ -125,8 +152,24 @@ class ClimbSessionService extends ChangeNotifier {
 
       notifyListeners();
     } catch (e) {
-      if (kDebugMode) print('Error in _loadSessions: $e');
+      if (kDebugMode) print('Error in _loadLocalSessions: $e');
     }
+  }
+
+  /// Sync with Firebase in background without blocking initialization
+  void _syncWithFirebaseBackground() {
+    // Fire and forget - don't await
+    _syncWithFirebase()
+        .timeout(
+          const Duration(seconds: 3),
+          onTimeout: () {
+            debugPrint('⚠️ Firebase sync timeout');
+          },
+        )
+        .catchError(
+          (e) => debugPrint('⚠️ Background Firebase sync error: $e'),
+          test: (_) => true,
+        );
   }
 
   /// Sync local sessions with Firebase
@@ -202,9 +245,9 @@ class ClimbSessionService extends ChangeNotifier {
     _activeSession = session;
     await _saveSessions();
 
-    // Sync to Firebase
+    // Sync to Firebase in background (fire-and-forget, non-blocking)
     if (_isFirebaseEnabled && _userClimbsRef != null) {
-      _syncSessionToFirebase(session, isNew: true);
+      unawaited(_syncSessionToFirebase(session, isNew: true));
     }
 
     return session;
@@ -316,7 +359,16 @@ class ClimbSessionService extends ChangeNotifier {
 
       await _userClimbsRef!
           .doc(session.id)
-          .set(session.toMap(), SetOptions(merge: true));
+          .set(session.toMap(), SetOptions(merge: true))
+          .timeout(
+            const Duration(seconds: 3),
+            onTimeout: () {
+              if (kDebugMode) {
+                print('⚠️ Firebase sync timeout for session ${session.id}');
+              }
+              throw TimeoutException('Firebase sync timed out');
+            },
+          );
 
       if (kDebugMode) {
         final action = isNew ? 'created' : 'updated';
@@ -391,9 +443,9 @@ class ClimbSessionService extends ChangeNotifier {
       _climbSessions[index] = session;
       await _saveSessions();
 
-      // Sync to Firebase
+      // Sync to Firebase in background (fire-and-forget, non-blocking)
       if (_isFirebaseEnabled && _userClimbsRef != null) {
-        await _syncSessionToFirebase(session, isNew: false);
+        unawaited(_syncSessionToFirebase(session, isNew: false));
       }
     }
   }

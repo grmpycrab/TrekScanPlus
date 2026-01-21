@@ -25,6 +25,7 @@ import 'services/presence_service.dart';
 import 'services/notification_service.dart';
 import 'services/theme_service.dart';
 import 'services/app_theme_builder.dart';
+import 'services/climb_session_service.dart';
 import 'components/notification_banner.dart';
 
 // Global navigator key for deep linking
@@ -33,32 +34,28 @@ final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Initialize theme service
-  await ThemeService().initialize();
+  // Initialize only essential services (parallel operations)
+  await Future.wait([
+    ThemeService().initialize(),
+    dotenv.load(fileName: ".env"),
+  ]);
 
-  // Load environment variables
-  await dotenv.load(fileName: ".env");
-
-  // Initialize Firebase
-  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
-
-  // Initialize services asynchronously without blocking app startup
-  unawaited(
-    Future.microtask(() async {
-      try {
-        // Initialize StationService and load stations in background
-        final stationService = await StationService.init();
-        await stationService.loadStations();
-        debugPrint('✅ Stations loaded successfully');
-      } catch (error) {
-        debugPrint('❌ Failed to load stations: $error');
-      }
-    }),
-  );
-
-  // Start connectivity monitoring (lightweight)
+  // Start lightweight connectivity monitoring
   ConnectivityService.instance.start();
 
+  // Initialize Firebase (MUST complete before running app)
+  try {
+    await Firebase.initializeApp(
+      options: DefaultFirebaseOptions.currentPlatform,
+    );
+    debugPrint('✅ Firebase initialized successfully');
+  } catch (e) {
+    debugPrint('❌ Firebase init error: $e');
+    // Don't continue if Firebase fails - it's critical for auth
+    rethrow;
+  }
+
+  // Run app - Firebase is guaranteed to be ready
   runApp(
     ChangeNotifierProvider(create: (_) => ThemeService(), child: const MyApp()),
   );
@@ -81,8 +78,8 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
 
-    // Hide splash screen after a shorter delay for faster startup
-    Future.delayed(const Duration(milliseconds: 1500), () {
+    // Hide splash screen quickly
+    Future.delayed(const Duration(milliseconds: 1200), () {
       if (mounted) {
         setState(() {
           _showSplash = false;
@@ -90,32 +87,59 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
       }
     });
 
-    // Initialize critical services asynchronously
-    _initializeCriticalServices();
+    // Listen to auth changes (Firebase is ready)
+    try {
+      FirebaseAuthService.instance.authStateChanges.listen((user) async {
+        if (user != null) {
+          // Initialize ClimbSessionService for any authenticated user (verified or not)
+          // This allows app to work even if email verification is pending
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            _initializeVerifiedUserServices(user.uid);
+          });
 
-    // Handle deep links
-    _handleInitialDeepLink();
-    _listenToDeepLinks();
-
-    // Listen to auth changes and start booking status listener when user logs in
-    FirebaseAuthService.instance.authStateChanges.listen((user) async {
-      if (user != null) {
-        // Check if user is verified before starting services
-        final isVerified = await FirebaseAuthService.instance.isEmailVerified();
-
-        if (isVerified) {
-          // Only start these services for verified users
-          await _initializeVerifiedUserServices(user.uid);
+          // Check if user is verified for additional verification-only services
+          final isVerified = await FirebaseAuthService.instance
+              .isEmailVerified();
+          if (isVerified) {
+            // Additional services for verified users can go here if needed
+            debugPrint('✅ User email verified');
+          } else {
+            debugPrint('⏳ User email not yet verified');
+          }
         } else {
-          debugPrint(
-            '⏳ User not verified yet, skipping service initialization',
+          // User logged out, reset flags
+          _servicesInitialized = false;
+          _permissionsRequested = false;
+        }
+      });
+    } catch (e) {
+      debugPrint('⚠️ Auth listener error: $e');
+    }
+
+    // Also check for existing user synchronously
+    final currentUser = FirebaseAuth.instance.currentUser;
+    if (currentUser != null) {
+      debugPrint('👤 Found existing user: ${currentUser.email}');
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _initializeVerifiedUserServices(currentUser.uid);
+      });
+    } else {
+      // Initialize in offline mode anyway for the app to work
+      debugPrint('🔌 No user logged in, initializing in offline mode');
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!ClimbSessionService.isInitialized) {
+          _initializeVerifiedUserServices(
+            'offline_${DateTime.now().millisecondsSinceEpoch}',
           );
         }
-      } else {
-        // User logged out, reset flags
-        _servicesInitialized = false;
-        _permissionsRequested = false;
-      }
+      });
+    }
+
+    // Defer all heavy initialization to after frame is rendered
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _initializeCriticalServices();
+      _deferredInitializeStations();
+      _deferredHandleDeepLinks();
     });
   }
 
@@ -147,12 +171,14 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
   Future<void> _initializeCriticalServices() async {
     // Run these in background without blocking UI
     unawaited(
-      Future.microtask(() async {
+      Future.delayed(const Duration(milliseconds: 500), () async {
         try {
           await NotificationService().initialize();
           PresenceService.instance.initialize();
         } catch (e) {
-          debugPrint('Non-critical service initialization error: $e');
+          debugPrint(
+            '⚠️ Non-critical service initialization: $e (offline mode)',
+          );
         }
       }),
     );
@@ -164,10 +190,26 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
 
     debugPrint('🚀 Initializing services for verified user: $userId');
 
-    // Start critical services immediately
-    BookingService.instance.startBookingStatusListener(userId);
+    // Initialize ClimbSessionService with user ID (offline-first)
+    try {
+      await ClimbSessionService.init(userId: userId);
+      debugPrint('✅ ClimbSessionService initialized (offline-first)');
+    } catch (e) {
+      debugPrint('⚠️ ClimbSessionService: $e (offline mode available)');
+    }
 
-    // Initialize FCM and notification listening in background
+    // Start booking listener in background (non-blocking)
+    unawaited(
+      Future.delayed(const Duration(milliseconds: 300), () async {
+        try {
+          BookingService.instance.startBookingStatusListener(userId);
+        } catch (e) {
+          debugPrint('⚠️ Booking service: $e');
+        }
+      }),
+    );
+
+    // Initialize FCM and notifications in background
     unawaited(_initializeFCM());
     unawaited(
       Future.microtask(() => NotificationService().listenToBookingUpdates()),
@@ -446,5 +488,27 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
         );
       },
     );
+  }
+
+  /// Deferred station initialization (happens after UI is rendered)
+  void _deferredInitializeStations() {
+    unawaited(
+      Future.microtask(() async {
+        try {
+          debugPrint('🔄 Loading stations in background...');
+          final stationService = await StationService.init();
+          await stationService.loadStations();
+          debugPrint('✅ Stations loaded successfully');
+        } catch (error) {
+          debugPrint('❌ Failed to load stations: $error');
+        }
+      }),
+    );
+  }
+
+  /// Deferred deep link initialization (happens after UI is rendered)
+  void _deferredHandleDeepLinks() {
+    unawaited(_handleInitialDeepLink());
+    _listenToDeepLinks();
   }
 }

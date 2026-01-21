@@ -9,20 +9,27 @@ class FirebaseAuthService {
 
   static final FirebaseAuthService instance = FirebaseAuthService._internal();
 
-  final FirebaseAuth _firebaseAuth = FirebaseAuth.instance;
+  // Lazy-initialize FirebaseAuth to ensure Firebase is initialized first
+  late final FirebaseAuth _firebaseAuth = FirebaseAuth.instance;
+
+  FirebaseAuth get _auth {
+    try {
+      return _firebaseAuth;
+    } catch (e) {
+      throw Exception('Firebase not initialized: $e');
+    }
+  }
 
   // Get current user
-  User? get currentUser => _firebaseAuth.currentUser;
+  User? get currentUser => _auth.currentUser;
 
   // Stream of auth state changes
-  Stream<User?> get authStateChanges => _firebaseAuth.authStateChanges();
+  Stream<User?> get authStateChanges => _auth.authStateChanges();
 
   /// Check if email is already used by a different auth provider
   Future<bool> isEmailAlreadyUsed(String email) async {
     try {
-      final signInMethods = await _firebaseAuth.fetchSignInMethodsForEmail(
-        email,
-      );
+      final signInMethods = await _auth.fetchSignInMethodsForEmail(email);
       return signInMethods.isNotEmpty;
     } catch (e) {
       if (kDebugMode) {
@@ -35,7 +42,7 @@ class FirebaseAuthService {
   /// Get existing sign-in methods for an email
   Future<List<String>> getSignInMethodsForEmail(String email) async {
     try {
-      return await _firebaseAuth.fetchSignInMethodsForEmail(email);
+      return await _auth.fetchSignInMethodsForEmail(email);
     } catch (e) {
       if (kDebugMode) {
         print('Error fetching sign-in methods: $e');
@@ -73,7 +80,7 @@ class FirebaseAuthService {
         );
       }
 
-      final userCredential = await _firebaseAuth.createUserWithEmailAndPassword(
+      final userCredential = await _auth.createUserWithEmailAndPassword(
         email: email,
         password: password,
       );
@@ -120,7 +127,7 @@ class FirebaseAuthService {
         print(st);
       }
 
-      final fallbackUser = _firebaseAuth.currentUser;
+      final fallbackUser = _auth.currentUser;
       if (fallbackUser != null) {
         if (kDebugMode) {
           print(
@@ -156,7 +163,7 @@ class FirebaseAuthService {
     required String password,
   }) async {
     try {
-      final userCredential = await _firebaseAuth.signInWithEmailAndPassword(
+      final userCredential = await _auth.signInWithEmailAndPassword(
         email: email,
         password: password,
       );
@@ -198,7 +205,7 @@ class FirebaseAuthService {
         print(st);
       }
 
-      final fallbackUser = _firebaseAuth.currentUser;
+      final fallbackUser = _auth.currentUser;
       if (fallbackUser != null) {
         if (kDebugMode) {
           print(
@@ -230,7 +237,7 @@ class FirebaseAuthService {
   /// Sign out
   Future<void> signOut() async {
     try {
-      await _firebaseAuth.signOut();
+      await _auth.signOut();
       if (kDebugMode) {
         print('✅ User signed out successfully');
       }
@@ -245,7 +252,7 @@ class FirebaseAuthService {
   /// Reset password
   Future<void> resetPassword({required String email}) async {
     try {
-      await _firebaseAuth.sendPasswordResetEmail(email: email);
+      await _auth.sendPasswordResetEmail(email: email);
     } on FirebaseAuthException catch (e) {
       if (kDebugMode) {
         print('Reset password error: ${e.code} - ${e.message}');
@@ -257,7 +264,7 @@ class FirebaseAuthService {
   /// Send email verification code
   Future<void> sendEmailVerification() async {
     try {
-      final user = _firebaseAuth.currentUser;
+      final user = _auth.currentUser;
       if (user != null) {
         await EmailVerificationService.instance.sendVerificationCode(
           user.email!,
@@ -281,7 +288,7 @@ class FirebaseAuthService {
 
   /// Check if user is logged in
   bool isLoggedIn() {
-    return _firebaseAuth.currentUser != null;
+    return _auth.currentUser != null;
   }
 
   /// Sign in with Google
@@ -353,9 +360,7 @@ class FirebaseAuthService {
       // Pigeon-related type error, fall back to the current user reported by
       // the Firebase SDK).
       try {
-        final userCredential = await _firebaseAuth.signInWithCredential(
-          credential,
-        );
+        final userCredential = await _auth.signInWithCredential(credential);
 
         // Ensure Firestore has a user document for this account
         if (userCredential.user != null) {
@@ -415,7 +420,7 @@ class FirebaseAuthService {
           print(st);
         }
 
-        final fallbackUser = _firebaseAuth.currentUser;
+        final fallbackUser = _auth.currentUser;
         if (fallbackUser != null) {
           if (kDebugMode) {
             print('Returning fallback currentUser: ${fallbackUser.email}');
