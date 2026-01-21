@@ -4,6 +4,7 @@ import 'dart:async';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:app_links/app_links.dart';
+import 'package:provider/provider.dart';
 import 'firebase_options.dart';
 import 'screens/auth/login_screen.dart';
 import 'screens/auth/signup_screen.dart';
@@ -14,7 +15,6 @@ import 'screens/social/post_detail_screen.dart';
 import 'screens/splash_screen.dart';
 import 'services/firebase_auth_service.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import '../../theme/new_color.dart';
 import 'services/station_service.dart';
 import 'services/connectivity_service.dart';
 import 'services/booking_service.dart';
@@ -23,6 +23,8 @@ import 'services/fcm_service.dart';
 import 'services/notification_manager.dart';
 import 'services/presence_service.dart';
 import 'services/notification_service.dart';
+import 'services/theme_service.dart';
+import 'services/app_theme_builder.dart';
 import 'components/notification_banner.dart';
 
 // Global navigator key for deep linking
@@ -30,6 +32,9 @@ final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Initialize theme service
+  await ThemeService().initialize();
 
   // Load environment variables
   await dotenv.load(fileName: ".env");
@@ -54,7 +59,9 @@ void main() async {
   // Start connectivity monitoring (lightweight)
   ConnectivityService.instance.start();
 
-  runApp(const MyApp());
+  runApp(
+    ChangeNotifierProvider(create: (_) => ThemeService(), child: const MyApp()),
+  );
 }
 
 class MyApp extends StatefulWidget {
@@ -388,50 +395,55 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
     );
   }
 
-  MaterialApp _buildApp(Widget home) {
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      title: 'Hamiguitan TrekScan+',
-      navigatorKey: navigatorKey,
-      theme: ThemeData(
-        primaryColor: AppColors.primary,
-        colorScheme: ColorScheme.fromSeed(seedColor: AppColors.primary),
-        useMaterial3: true,
-      ),
-      builder: (context, child) => Stack(
-        children: [
-          child!,
-          NotificationBannerOverlay(key: NotificationManager.overlayKey),
-        ],
-      ),
-      home: home,
-      routes: {
-        '/login': (context) => const LoginScreen(),
-        '/signup': (context) => const SignUpScreen(),
-        '/verify-email': (context) => const EmailVerificationScreen(),
-        '/main': (context) => const MainScreen(),
-      },
-      onGenerateRoute: (settings) {
-        // Handle routes with arguments
-        if (settings.name == '/post-detail') {
-          final postId = settings.arguments as String?;
-          if (postId != null) {
-            return MaterialPageRoute(
-              builder: (context) => PostDetailScreen(postId: postId),
-            );
-          }
-        }
+  Widget _buildApp(Widget home) {
+    return Consumer<ThemeService>(
+      builder: (context, themeService, _) {
+        final themeData = AppThemeBuilder.getThemeData(
+          themeService.selectedTheme,
+          themeService.selectedMode,
+        );
 
-        // Handle book-climb route with optional bookingId argument
-        if (settings.name == '/book-climb') {
-          final bookingId = settings.arguments as String?;
-          return MaterialPageRoute(
-            builder: (context) =>
-                BookAClimbScreen(highlightBookingId: bookingId),
-          );
-        }
+        return MaterialApp(
+          debugShowCheckedModeBanner: false,
+          title: 'Hamiguitan TrekScan+',
+          navigatorKey: navigatorKey,
+          theme: themeData,
+          builder: (context, child) => Stack(
+            children: [
+              child!,
+              NotificationBannerOverlay(key: NotificationManager.overlayKey),
+            ],
+          ),
+          home: home,
+          routes: {
+            '/login': (context) => const LoginScreen(),
+            '/signup': (context) => const SignUpScreen(),
+            '/verify-email': (context) => const EmailVerificationScreen(),
+            '/main': (context) => const MainScreen(),
+          },
+          onGenerateRoute: (settings) {
+            // Handle routes with arguments
+            if (settings.name == '/post-detail') {
+              final postId = settings.arguments as String?;
+              if (postId != null) {
+                return MaterialPageRoute(
+                  builder: (context) => PostDetailScreen(postId: postId),
+                );
+              }
+            }
 
-        return null;
+            // Handle book-climb route with optional bookingId argument
+            if (settings.name == '/book-climb') {
+              final bookingId = settings.arguments as String?;
+              return MaterialPageRoute(
+                builder: (context) =>
+                    BookAClimbScreen(highlightBookingId: bookingId),
+              );
+            }
+
+            return null;
+          },
+        );
       },
     );
   }

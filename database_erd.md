@@ -55,25 +55,96 @@ This Entity-Relationship Diagram (ERD) illustrates the database structure for th
 ### 2. BOOKINGS Collection
 **Path:** `/bookings/{bookingId}`
 
-**Purpose:** Stores trek booking information and verification documents
+**Purpose:** Group booking container for multiple trek participants. Represents one booking session containing one or more members.
 
 | Field Name | Data Type | Constraints | Description |
 |------------|-----------|-------------|-------------|
 | **bookingId (PK)** | String | Auto-generated | Firestore document ID |
-| **userId (FK)** | String | Required | Reference to users collection |
+| **userId (FK)** | String | Required | Reference to authenticated user (primary contact/booker only) |
+| bookingType | String | Required | Trek category selected by booker |
 | affiliation | String | Required | Organization/school affiliation |
 | trekDate | Timestamp | Required | Scheduled trek date |
-| numberOfPorters | Number | Required | Number of porters needed |
-| trekType | String | Required | "recreational" or "research" |
-| hometown | String | Optional | User's hometown/city |
-| isSenior | Boolean | Default: false | Senior citizen status |
-| phoneNumber | String | Required | Contact phone number |
-| notes | String | Optional | User notes/special requests |
-| adminNotes | String | Optional | Admin comments |
-| attachments | Array\<Attachment\> | Default: [] | Uploaded verification documents |
+| hometown | String | Optional | Primary contact's hometown/city |
+| notes | String | Optional | Special requests/notes |
+| adminNotes | String | Optional | Admin comments on booking |
+| primaryContact | Object | Required | Auto-filled from USERS collection |
+| totalMembers | Number | Auto-calculated | Total participants in this booking (from members subcollection) |
 | status | String | Default: "pending" | "pending", "approved", "declined", "cancelled" |
 | createdAt | Timestamp | Auto-generated | Booking creation timestamp |
 | updatedAt | Timestamp | Auto-updated | Last modification timestamp |
+
+**bookingType Values:**
+- "special_trekking" - Special trekking category
+- "benchmarking_trek" - Benchmarking trek
+- "research_trek" - Research trek
+- "regular_trek" - Regular recreational trek
+
+**primaryContact Object Structure:**
+```json
+{
+  "userId": "String - Firebase Auth UID",
+  "firstName": "String - User's first name",
+  "lastName": "String - User's last name",
+  "email": "String - User's email",
+  "phoneNumber": "String - User's phone",
+  "birthDate": "String - YYYY-MM-DD format",
+  "gender": "String - User's gender"
+}
+```
+
+**Relationships:**
+- N:1 with USERS (many bookings belong to one authenticated user)
+- 1:N with MEMBERS (one booking contains many members - subcollection)
+- 1:1 with CALENDAR_CONFIG (booking date references calendar config)
+
+---
+
+### 2.1 MEMBERS Subcollection (New)
+**Path:** `/bookings/{bookingId}/members/{memberId}`
+
+**Purpose:** Stores individual participant information for a booking. Each person in the group (including the primary contact) has their own member record. All data entered by the authenticated user.
+
+| Field Name | Data Type | Constraints | Description |
+|------------|-----------|-------------|-------------|
+| **memberId (PK)** | String | Auto-generated | Firestore document ID |
+| **bookingId (FK)** | String | Required | Reference to parent booking |
+| **userId (FK)** | String or null | Optional | Firebase Auth UID if member has account; null for non-account members |
+| lastName | String | Required | Member's last name |
+| firstName | String | Required | Member's first name |
+| middleName | String | Optional | Member's middle name |
+| suffix | String | Optional | Name suffix (e.g., "Jr.", "Sr.") |
+| gender | String | Required | "male", "female", or "other" |
+| birthDate | String | Required | Date of birth (YYYY-MM-DD format) |
+| contactNumber | String | Required | Member's contact phone number |
+| facebookAccount | String | Optional | Member's Facebook account/URL |
+| nationality | String | Required | Member's nationality |
+| homeAddress | String | Required | Member's home address |
+| category | String | Required | Participant category |
+| isPrimaryContact | Boolean | Default: false | true if member is the booking creator |
+| hasAccount | Boolean | Default: false | true if member has Firebase account; false if added as guest |
+| fileRequirements | Object | Required | Dynamic category-specific file requirements |
+| attachments | Array\<Attachment\> | Default: [] | Category-specific uploaded documents |
+| memberStatus | String | Default: "pending" | "pending", "incomplete", "complete", "verified", "rejected" |
+| createdAt | Timestamp | Auto-generated | Member record creation timestamp |
+| updatedAt | Timestamp | Auto-updated | Last modification timestamp |
+
+**category Values:**
+- "student" - Student participant
+- "senior_citizen" - Senior citizen (60+ years old)
+- "davao_oriental_resident" - Davao Oriental resident
+- "ocfdo" - OCFDO member
+- "outside_davao_oriental" - Outside Davao Oriental resident
+- "children_8_15" - Children aged 8-15 years
+- "mfsm" - MFSM member
+
+**fileRequirements Object Structure:**
+```json
+{
+  "requiredFiles": [
+    "Array of required file type identifiers based on selected category"
+  ]
+}
+```
 
 **Attachment Object Structure:**
 ```json
@@ -83,15 +154,14 @@ This Entity-Relationship Diagram (ERD) illustrates the database structure for th
   "fileName": "String - Original file name",
   "mimeType": "String - File MIME type",
   "size": "Number - File size in bytes",
-  "uploadedAt": "Timestamp - Upload timestamp"
+  "uploadedAt": "Timestamp - Upload timestamp",
+  "uploadedBy": "String - User ID of uploader (always primary contact)"
 }
 ```
 
 **Relationships:**
-- N:1 with USERS (many bookings belong to one user)
-- 1:1 with CALENDAR_CONFIG (booking date references calendar config)
-
----
+- N:1 with BOOKINGS (many members belong to one booking)
+- N:1 with USERS (member references user if hasAccount=true)
 
 ### 3. POSTS Collection
 **Path:** `/posts/{postId}`
@@ -314,7 +384,73 @@ This Entity-Relationship Diagram (ERD) illustrates the database structure for th
 
 ---
 
-### 12. SYSTEM_SETTINGS Collection
+### 12. FILE_REQUIREMENTS Reference Document (New)
+**Path:** `/system_settings/file_requirements`
+
+**Purpose:** Global configuration defining category-specific file requirements for member verification. Updated by admins, read by app for dynamic form rendering.
+
+| Field Name | Data Type | Constraints | Description |
+|------------|-----------|-------------|-------------|
+| student | Object | Required | Requirements for student participants |
+| senior_citizen | Object | Required | Requirements for senior citizens |
+| davao_oriental_resident | Object | Required | Requirements for Davao Oriental residents |
+| ocfdo | Object | Required | Requirements for OCFDO members |
+| outside_davao_oriental | Object | Required | Requirements for outside residents |
+| children_8_15 | Object | Required | Requirements for children (8-15 years) |
+| mfsm | Object | Required | Requirements for MFSM members |
+| lastUpdated | Timestamp | Auto-updated | Last modification timestamp |
+
+**Category Object Structure:**
+```json
+{
+  "files": [
+    "Array of required file type identifiers (e.g., 'school_id', 'birth_certificate')"
+  ],
+  "description": "String - Human-readable description"
+}
+```
+
+**Example Structure:**
+```json
+{
+  "student": {
+    "files": ["school_id", "school_clearance", "birth_certificate", "valid_id"],
+    "description": "Requirements for student participants"
+  },
+  "senior_citizen": {
+    "files": ["senior_id", "birth_certificate", "valid_id", "medical_clearance"],
+    "description": "Requirements for senior citizens"
+  },
+  "davao_oriental_resident": {
+    "files": ["proof_of_residency", "valid_id", "birth_certificate"],
+    "description": "Requirements for Davao Oriental residents"
+  },
+  "ocfdo": {
+    "files": ["ocfdo_certificate", "valid_id", "birth_certificate"],
+    "description": "Requirements for OCFDO members"
+  },
+  "outside_davao_oriental": {
+    "files": ["valid_id", "birth_certificate", "proof_of_travel"],
+    "description": "Requirements for outside residents"
+  },
+  "children_8_15": {
+    "files": ["birth_certificate", "parental_consent", "medical_clearance", "school_id"],
+    "description": "Requirements for children (8-15 years)"
+  },
+  "mfsm": {
+    "files": ["mfsm_certificate", "valid_id", "birth_certificate"],
+    "description": "Requirements for MFSM members"
+  }
+}
+```
+
+**Access Control:**
+- Read: Public (used by app for form rendering)
+- Write: Admin only
+
+---
+
+### 13. SYSTEM_SETTINGS Collection
 **Path:** `/system_settings/{settingId}`
 
 **Purpose:** Global system configuration settings
@@ -333,7 +469,7 @@ This Entity-Relationship Diagram (ERD) illustrates the database structure for th
 
 ---
 
-### 13. CALENDAR_CONFIG Collection
+### 14. CALENDAR_CONFIG Collection
 **Path:** `/calendar_config/{dateKey}`
 
 **Purpose:** Date-specific booking configuration (capacity, closures)
@@ -361,7 +497,73 @@ This Entity-Relationship Diagram (ERD) illustrates the database structure for th
 
 ---
 
-## Entity-Relationship Diagram (Visual)
+### 15. CLIMBS Subcollection (New)
+**Path:** `/users/{userId}/climbs/{climbId}`
+
+**Purpose:** Track individual trek/climb sessions. Users can have multiple climbs over time. Each climb is a separate trek instance with its own station visits and duration tracking.
+
+| Field Name | Data Type | Constraints | Description |
+|------------|-----------|-------------|-------------|
+| **climbId (PK)** | String | Auto-generated | Firestore document ID |
+| **userId (FK)** | String | Required | Reference to parent user |
+| climbName | String | Optional | User-given name for this climb (e.g., "January 2026 Summit Attempt") |
+| description | String | Optional | User notes/details about this climb (e.g., "Weather was great, many photo ops") |
+| trekType | String | Required | Trek classification: "special_trek", "benchmarking_trek", "research_trek", "regular_trek" |
+| trekStartDate | Timestamp | Required | Planned/scheduled trek start date |
+| trekEndDate | Timestamp | Optional | Planned/scheduled trek end date (usually 3 days after start for normal trek) |
+| startDate | Timestamp | Required | Trek/climb session actual start timestamp (when first station is scanned) |
+| endDate | Timestamp | Optional | Trek/climb session actual end timestamp (null if in-progress) |
+| status | String | Default: "in_progress" | "in_progress", "completed", "abandoned" |
+| totalDuration | Number | Optional | Total trek duration in minutes |
+| highestStationReached | Number | Default: 0 | Highest station number visited in this climb (1-14) |
+| stationsVisited | Array\<Number\> | Default: [] | Array of station numbers visited [1, 3, 5, 8, ...] |
+| totalDistance | Number | Optional | Total distance covered (km) |
+| createdAt | Timestamp | Auto-generated | Climb record creation timestamp |
+| updatedAt | Timestamp | Auto-updated | Last modification timestamp |
+
+**trekType Values:**
+- "special_trek" - Special trekking category
+- "benchmarking_trek" - Benchmarking trek
+- "research_trek" - Research trek
+- "regular_trek" - Regular recreational trek (default)
+
+**status Values:**
+- "in_progress" - Currently active trek session
+- "completed" - Trek finished (endDate set)
+- "abandoned" - Trek stopped before completion
+
+**Relationships:**
+- N:1 with USERS (many climbs belong to one user)
+- 1:N with CLIMB_STATIONS (one climb has many station visits - subcollection)
+
+---
+
+### 15.1 CLIMB_STATIONS Subcollection (New)
+**Path:** `/users/{userId}/climbs/{climbId}/stations/{climbStationId}`
+
+**Purpose:** Individual station tracking within a specific climb/trek session. Records when user visits each station during this climb.
+
+| Field Name | Data Type | Constraints | Description |
+|------------|-----------|-------------|-------------|
+| **climbStationId (PK)** | String | Auto-generated | Firestore document ID |
+| **climbId (FK)** | String | Required | Reference to parent climb |
+| **stationId** | Number | Required | Station number (1-14) |
+| stationName | String | Required | Station name (e.g., "Station 1: Base Camp") |
+| visitedAt | Timestamp | Required | When station was visited/scanned |
+| durationFromPrevious | Number | Optional | Minutes since previous station visit |
+| latitude | Number | Optional | GPS latitude at scan |
+| longitude | Number | Optional | GPS longitude at scan |
+| isGeofenced | Boolean | Default: true | Location verified flag |
+| isCheckpoint | Boolean | Default: false | true = major checkpoint (1, 5, 8, 11, 14) |
+| order | Number | Required | Visit order in this climb (1st, 2nd, 3rd station visited) |
+
+**Relationships:**
+- N:1 with CLIMBS (many station visits in one climb)
+- Reference to static station data (stations_test.json)
+
+---
+
+## Data Model Diagram (NoSQL - Firestore)
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────┐
@@ -377,51 +579,62 @@ This Entity-Relationship Diagram (ERD) illustrates the database structure for th
       ├──────────────────────────────────────────────────────────────┐    
       │                                                              │    
       ▼                                                              ▼    
-┌──────────────────────────────┐                    ┌──────────────────────────┐
-│  BOOKINGS (Top-level)        │                    │  POSTS (Top-level)       │
-├──────────────────────────────┤                    ├──────────────────────────┤
-│ PK: bookingId                │                    │ PK: postId               │
-│ FK: userId                   │                    │ FK: userId               │
-│ • affiliation, trekDate      │                    │ • caption, imageUrls[]   │
-│ • numberOfPorters, trekType  │                    │ • privacy, likesCount    │
-│ • hometown, isSenior         │                    │ • commentsCount          │
-│ • phoneNumber, notes         │                    │ • createdAt, updatedAt   │
-│ • attachments[], status      │                    └──────────────────────────┘
-│ • createdAt, updatedAt       │                              │
-└──────────────────────────────┘                              │ 1:N
-      │                                                        │
-      │ N:1                                                    ▼
-      │                                    ┌───────────────────────────────────┐
-      ▼                                    │  COMMENTS (Subcollection)         │
-┌────────────────────────────┐            ├───────────────────────────────────┤
-│  CALENDAR_CONFIG           │            │ PK: commentId                     │
-├────────────────────────────┤            │ FK: postId, userId                │
-│ PK: dateKey (YYYY-MM-DD)   │            │ • userName, userPhotoUrl          │
-│ • date, isClosed           │            │ • text, likesCount, repliesCount  │
-│ • maxSlots, currentBookings│            │ • createdAt                       │
-│ • lastUpdated, notes       │            └───────────────────────────────────┘
-└────────────────────────────┘                          │
-                                                        │ 1:N
-                                                        ▼
-                                        ┌───────────────────────────────────┐
-                                        │  REPLIES (Nested Subcollection)   │
-                                        ├───────────────────────────────────┤
-                                        │ PK: replyId                       │
-                                        │ FK: postId, commentId, userId     │
-                                        │ • userName, userPhotoUrl          │
-                                        │ • text, likesCount, createdAt     │
-                                        └───────────────────────────────────┘
+┌──────────────────────────────────────┐              ┌──────────────────────────┐
+│  BOOKINGS (Group Booking) ★ UPDATED  │              │  POSTS (Top-level)       │
+├──────────────────────────────────────┤              ├──────────────────────────┤
+│ PK: bookingId                        │              │ PK: postId               │
+│ FK: userId (booker only)             │              │ FK: userId               │
+│ • bookingType                        │              │ • caption, imageUrls[]   │
+│ • primaryContact {object}            │              │ • privacy, likesCount    │
+│ • affiliation, trekDate              │              │ • commentsCount          │
+│ • hometown, notes                    │              │ • createdAt, updatedAt   │
+│ • totalMembers (calculated)          │              └──────────────────────────┘
+│ • status, createdAt, updatedAt       │                       │
+└──────────────────────────────────────┘                       │ 1:N
+      │                                                         │
+      │ 1:N (contains multiple members) ★ NEW                  ▼
+      ▼                                  ┌───────────────────────────────────┐
+┌──────────────────────────────────────┐ │  COMMENTS (Subcollection)         │
+│  MEMBERS (Subcollection) ★ NEW       │ ├───────────────────────────────────┤
+├──────────────────────────────────────┤ │ PK: commentId                     │
+│ PK: memberId                         │ │ FK: postId, userId                │
+│ FK: bookingId, userId (nullable)     │ │ • userName, userPhotoUrl          │
+│ • firstName, lastName, middleName    │ │ • text, likesCount, repliesCount  │
+│ • gender, birthDate, category        │ │ • createdAt                       │
+│ • isPrimaryContact                   │ └───────────────────────────────────┘
+│ • hasAccount (Boolean) ★ NEW         │           │
+│ • fileRequirements {}                │           │ 1:N
+│ • attachments[]                      │           ▼
+│ • memberStatus, createdAt, updatedAt │ ┌───────────────────────────────────┐
+└──────────────────────────────────────┘ │  REPLIES (Nested Subcollection)   │
+                                          ├───────────────────────────────────┤
+                                          │ PK: replyId                       │
+                                          │ FK: postId, commentId, userId     │
+                                          │ • userName, userPhotoUrl          │
+                                          │ • text, likesCount, createdAt     │
+                                          └───────────────────────────────────┘
 
 
-┌──────────────────────────────────────────────────────────────────────────┐
-│                    USER SUBCOLLECTIONS (Nested in /users/{userId})       │
-└──────────────────────────────────────────────────────────────────────────┘
+┌────────────────────────────────┐         ┌───────────────────────────────────┐
+│  CALENDAR_CONFIG (Top-level)   │         │ FILE_REQUIREMENTS ★ NEW (Ref)     │
+├────────────────────────────────┤         ├───────────────────────────────────┤
+│ PK: dateKey (YYYY-MM-DD)       │         │ Path: /system_settings            │
+│ • date, isClosed               │         │ • student {}                      │
+│ • maxSlots, currentBookings    │         │ • senior_citizen {}               │
+│ • lastUpdated, notes           │         │ • davao_oriental_resident {}      │
+└────────────────────────────────┘         │ • ocfdo {}                        │
+                                           │ • outside_davao_oriental {}       │
+                                           │ • children_8_15 {}                │
+                                           │ • mfsm {}                         │
+                                           │ (For dynamic member file setup)   │
+                                           └───────────────────────────────────┘
+```
 
-    /users/{userId}/notifications                /users/{userId}/visitedStations
-    ┌─────────────────────────────┐             ┌──────────────────────────┐
-    │ NOTIFICATIONS               │             │ VISITED_STATIONS         │
-    ├─────────────────────────────┤             ├──────────────────────────┤
-    │ PK: notificationId          │             │ PK: stationId            │
+---
+
+## USER SUBCOLLECTIONS (Nested in /users/{userId})
+
+```
     │ FK: userId                  │             │ FK: userId               │
     │ • title, message, type      │             │ • stationName, visitedAt │
     │ • timestamp, isRead         │             │ • latitude, longitude    │
@@ -451,6 +664,27 @@ This Entity-Relationship Diagram (ERD) illustrates the database structure for th
     │ FK: userId, postId          │
     │ • createdAt                 │
     └─────────────────────────────┘
+
+    /users/{userId}/climbs ★ NEW                /users/{userId}/climbs/{climbId}/stations ★ NEW
+    ┌─────────────────────────────┐             ┌──────────────────────────┐
+    │ CLIMBS                      │             │ CLIMB_STATIONS           │
+    ├─────────────────────────────┤             ├──────────────────────────┤
+    │ PK: climbId                 │             │ PK: climbStationId       │
+    │ FK: userId                  │             │ FK: climbId              │
+    │ • climbName, description ★  │             │ • stationId, stationName │
+    │ • trekType ★ NEW            │             │ • visitedAt              │
+    │ • trekStartDate ★ NEW       │             │ • durationFromPrevious   │
+    │ • trekEndDate ★ NEW         │             │ • latitude, longitude    │
+    │ • startDate, endDate        │             │ • isGeofenced            │
+    │ • status (in progress...)   │             │ • isCheckpoint, order    │
+    │ • stationsVisited []        │             └──────────────────────────┘
+    │ • highestStationReached     │
+    │ • totalDuration, totalDist  │
+    └─────────────────────────────┘
+              ▲                                            ▲
+              │                                            │
+              └────────────────────────────────────────────┘
+              1:N (one climb contains many station visits)
 
 
 ┌──────────────────────────────────────────────────────────────────────────┐
@@ -492,11 +726,14 @@ This Entity-Relationship Diagram (ERD) illustrates the database structure for th
 | Parent Entity | Relationship | Child Entity | Cardinality |
 |--------------|--------------|--------------|-------------|
 | USERS | creates | BOOKINGS | 1:N |
+| BOOKINGS | contains | MEMBERS | 1:N ★ NEW |
 | USERS | creates | POSTS | 1:N |
 | USERS | writes | COMMENTS | 1:N |
 | USERS | writes | REPLIES | 1:N |
 | USERS | receives | NOTIFICATIONS | 1:N |
 | USERS | visits | VISITED_STATIONS | 1:N |
+| USERS | has | CLIMBS | 1:N ★ NEW |
+| CLIMBS | contains | CLIMB_STATIONS | 1:N ★ NEW |
 | USERS | unlocks | ACHIEVEMENTS | 1:N |
 | USERS | earns | CERTIFICATES | 1:N |
 | USERS | saves | BOOKMARKS | 1:N |
@@ -520,12 +757,33 @@ This Entity-Relationship Diagram (ERD) illustrates the database structure for th
 - `followersCount` and `followingCount` auto-updated
 
 ### 2. BOOKINGS Collection
-- `userId` must reference existing user
+## Key Constraints & Validations
+
+### 1. USERS Collection
+- `email` must be unique
+- `userId` is immutable (Firebase Auth UID)
+- `badges[]` can only contain valid achievement IDs
+- `followersCount` and `followingCount` auto-updated
+
+### 2. BOOKINGS Collection
+- `userId` must reference existing authenticated user (primary contact/booker only)
+- `bookingType` must be: "special_trekking", "benchmarking_trek", "research_trek", or "regular_trek"
 - `trekDate` must be at least `bufferDays` (default 3) days in future
 - `status` must be: "pending", "approved", "declined", or "cancelled"
-- `numberOfPorters` must be ≥ 0
-- `maxSlots` per date enforced via CALENDAR_CONFIG
+- `primaryContact` auto-filled from USERS collection on booking creation
+- `totalMembers` calculated from MEMBERS subcollection count
 - One user can only have one booking per date
+
+### 2.1 MEMBERS Subcollection
+- Each booking must have at least 1 member (the primary contact)
+- All member fields (personal info) entered by authenticated user
+- `userId` is optional: String (if member has account) or null (if guest member)
+- `hasAccount` indicates whether member has Firebase authentication
+- `isPrimaryContact` = true only for booking creator
+- `category` must match one of 7 defined categories (student, senior_citizen, davao_oriental_resident, ocfdo, outside_davao_oriental, children_8_15, mfsm)
+- `memberStatus` must be: "pending", "incomplete", "complete", "verified", or "rejected"
+- `fileRequirements.requiredFiles` dynamically populated based on selected `category`
+- All attachments uploaded by primary contact on behalf of each member
 
 ### 3. POSTS Collection
 - `userId` must reference existing user
@@ -544,6 +802,29 @@ This Entity-Relationship Diagram (ERD) illustrates the database structure for th
 - `verificationCode` must be unique
 - Generated only after meeting station visit requirements
 
+### 6. CLIMBS Subcollection ★ NEW
+- `climbId` is unique per user and auto-generated
+- `userId` must reference existing user
+- `trekType` must be one of: "special_trek", "benchmarking_trek", "research_trek", "regular_trek"
+- `trekStartDate` required, `trekEndDate` optional (can be null for flexible-duration treks)
+- `startDate` required (when first station scanned), `endDate` optional (null if in-progress)
+- `status` must be: "in_progress", "completed", or "abandoned"
+- `climbName` and `description` optional but recommended
+- `stationsVisited` is ordered array of station numbers (1-14)
+- `highestStationReached` must match max value in `stationsVisited`
+- `totalDuration` calculated: endDate - startDate (in minutes)
+- One user can have multiple active climbs (concurrent multi-trek support)
+
+### 7. CLIMB_STATIONS Subcollection ★ NEW
+- `climbStationId` auto-generated within each climb
+- `climbId` required, must reference parent climb
+- `stationId` required (1-14), must be valid station number
+- `visitedAt` timestamp cannot be before parent climb's `startDate`
+- `order` must be sequential (1, 2, 3, ...) within a climb
+- `durationFromPrevious` auto-calculated from previous station's `visitedAt`
+- `isCheckpoint` determined by stationId (hardcoded: 1, 5, 8, 11, 14)
+- Only stations visited during active (`in_progress`) climbs can be added
+
 ---
 
 ## Security Rules Summary
@@ -556,11 +837,14 @@ This Entity-Relationship Diagram (ERD) illustrates the database structure for th
 ### Collection-Level Rules
 1. **USERS**: Users can read all profiles (for social features), write only their own
 2. **BOOKINGS**: Users can create/read/update their own, admins can manage all
-3. **POSTS**: Public posts readable by all, private posts only by owner
-4. **COMMENTS/REPLIES**: Readable by authenticated users, writable by all, deletable by owner
-5. **LIKES**: Any authenticated user can like/unlike
-6. **NOTIFICATIONS**: Users can read/delete their own, any user can create for others
-7. **SUBCOLLECTIONS**: Users can only access their own subcollections
+3. **MEMBERS**: Only authenticated booking creator can add/edit/delete members for their own booking
+4. **CLIMBS** ★ NEW: Only authenticated user can create/read/update/delete their own climbs; admins can read all
+5. **CLIMB_STATIONS** ★ NEW: Only authenticated user can add station visits to their own in-progress climbs; locked after climb completion
+6. **POSTS**: Public posts readable by all, private posts only by owner
+7. **COMMENTS/REPLIES**: Readable by authenticated users, writable by all, deletable by owner
+8. **LIKES**: Any authenticated user can like/unlike
+9. **NOTIFICATIONS**: Users can read/delete their own, any user can create for others
+10. **SUBCOLLECTIONS**: Users can only access their own subcollections
 8. **SYSTEM_SETTINGS**: Read public, write admin only
 9. **CALENDAR_CONFIG**: Read public, write admin only
 
