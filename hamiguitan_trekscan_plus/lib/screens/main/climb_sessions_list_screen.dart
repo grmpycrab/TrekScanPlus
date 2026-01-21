@@ -30,6 +30,19 @@ class _ClimbSessionsListScreenState extends State<ClimbSessionsListScreen>
 
   @override
   Widget build(BuildContext context) {
+    // Guard against uninitialized service
+    if (!ClimbSessionService.isInitialized) {
+      return Scaffold(
+        appBar: AppBar(
+          title: const Text('My Climbs'),
+          backgroundColor: AppColors.primary,
+          foregroundColor: Colors.white,
+        ),
+        backgroundColor: AppColors.background,
+        body: const Center(child: CircularProgressIndicator()),
+      );
+    }
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('My Climbs'),
