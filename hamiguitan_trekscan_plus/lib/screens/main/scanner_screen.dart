@@ -26,6 +26,7 @@ class _ScannerScreenState extends State<ScannerScreen>
   bool _isLoading = true;
   bool _geofencingEnabled = true; // Tap location icon to toggle
   bool _isProcessingQR = false; // Prevent duplicate QR processing
+  bool _isValidatingGeofence = false; // Show loading during geofence check
 
   @override
   void initState() {
@@ -71,6 +72,37 @@ class _ScannerScreenState extends State<ScannerScreen>
     controller?.dispose();
     WidgetsBinding.instance.removeObserver(this);
     super.dispose();
+  }
+
+  void _showGeofenceValidatingDialog() {
+    if (mounted && _isValidatingGeofence) {
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            backgroundColor: Colors.grey[900],
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const CircularProgressIndicator(),
+                const SizedBox(height: 16),
+                Text(
+                  'Verifying location...',
+                  style: TextStyle(color: Colors.grey[300]),
+                ),
+              ],
+            ),
+          );
+        },
+      );
+    }
+  }
+
+  void _dismissGeofenceDialog() {
+    if (mounted && Navigator.of(context).canPop()) {
+      Navigator.of(context).pop();
+    }
   }
 
   @override
@@ -213,6 +245,9 @@ class _ScannerScreenState extends State<ScannerScreen>
                         debugPrint(
                           '🔍 Geofencing enabled, verifying location...',
                         );
+                        setState(() => _isValidatingGeofence = true);
+                        _showGeofenceValidatingDialog();
+
                         try {
                           final geofenceResult =
                               await GeofencingService.checkGeofence(
@@ -234,6 +269,9 @@ class _ScannerScreenState extends State<ScannerScreen>
                                   );
                                 },
                               );
+
+                          _dismissGeofenceDialog();
+                          setState(() => _isValidatingGeofence = false);
 
                           if (geofenceResult.errorMessage != null) {
                             debugPrint(
@@ -272,6 +310,8 @@ class _ScannerScreenState extends State<ScannerScreen>
                           }
                         } catch (e) {
                           debugPrint('❌ Error during geofence check: $e');
+                          _dismissGeofenceDialog();
+                          setState(() => _isValidatingGeofence = false);
                           if (mounted) {
                             ScaffoldMessenger.of(context).showSnackBar(
                               SnackBar(
@@ -313,6 +353,9 @@ class _ScannerScreenState extends State<ScannerScreen>
                         debugPrint(
                           '🔍 Geofencing enabled, verifying location...',
                         );
+                        setState(() => _isValidatingGeofence = true);
+                        _showGeofenceValidatingDialog();
+
                         try {
                           final geofenceResult =
                               await GeofencingService.checkGeofence(
@@ -334,6 +377,9 @@ class _ScannerScreenState extends State<ScannerScreen>
                                   );
                                 },
                               );
+
+                          _dismissGeofenceDialog();
+                          setState(() => _isValidatingGeofence = false);
 
                           if (geofenceResult.errorMessage != null) {
                             debugPrint(
@@ -372,6 +418,8 @@ class _ScannerScreenState extends State<ScannerScreen>
                           }
                         } catch (e) {
                           debugPrint('❌ Error during geofence check: $e');
+                          _dismissGeofenceDialog();
+                          setState(() => _isValidatingGeofence = false);
                           if (mounted) {
                             ScaffoldMessenger.of(context).showSnackBar(
                               SnackBar(
