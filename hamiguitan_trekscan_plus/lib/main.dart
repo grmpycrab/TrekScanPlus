@@ -116,24 +116,17 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
       debugPrint('⚠️ Auth listener error: $e');
     }
 
-    // Also check for existing user synchronously
-    final currentUser = FirebaseAuth.instance.currentUser;
-    if (currentUser != null) {
-      debugPrint('👤 Found existing user: ${currentUser.email}');
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        _initializeVerifiedUserServices(currentUser.uid);
-      });
-    } else {
-      // Initialize in offline mode anyway for the app to work
-      debugPrint('🔌 No user logged in, initializing in offline mode');
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (!ClimbSessionService.isInitialized) {
-          _initializeVerifiedUserServices(
-            'offline_${DateTime.now().millisecondsSinceEpoch}',
-          );
-        }
-      });
-    }
+    // Initialize ClimbSessionService immediately in offline mode if no user
+    // This ensures the app works even before auth listener fires
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!ClimbSessionService.isInitialized &&
+          FirebaseAuth.instance.currentUser == null) {
+        debugPrint('🔌 Initializing ClimbSessionService in offline mode...');
+        _initializeVerifiedUserServices(
+          'offline_${DateTime.now().millisecondsSinceEpoch}',
+        );
+      }
+    });
 
     // Defer all heavy initialization to after frame is rendered
     WidgetsBinding.instance.addPostFrameCallback((_) {

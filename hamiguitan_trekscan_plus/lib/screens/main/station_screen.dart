@@ -645,7 +645,10 @@ class _StationScreenState extends State<StationScreen> {
                                         Text(
                                           duration != null
                                               ? '${duration.inMinutes}m'
-                                              : 'Not started',
+                                              : _formatTime(
+                                                  session.startedAt ??
+                                                      session.createdAt,
+                                                ),
                                           style: TextStyle(
                                             fontSize: 12,
                                             color: Colors.grey[700],
@@ -717,6 +720,23 @@ class _StationScreenState extends State<StationScreen> {
         return Colors.red;
       default:
         return Colors.grey;
+    }
+  }
+
+  String _formatTime(DateTime dateTime) {
+    final now = DateTime.now();
+    final diff = now.difference(dateTime);
+
+    if (diff.inMinutes < 1) {
+      return 'Just now';
+    } else if (diff.inHours < 1) {
+      return '${diff.inMinutes}m ago';
+    } else if (diff.inDays < 1) {
+      return '${diff.inHours}h ago';
+    } else if (diff.inDays < 7) {
+      return '${diff.inDays}d ago';
+    } else {
+      return '${dateTime.day}/${dateTime.month}';
     }
   }
 

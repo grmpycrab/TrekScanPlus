@@ -4,7 +4,7 @@ import 'package:permission_handler/permission_handler.dart';
 import '../../theme/color.dart';
 import '../../services/station_service.dart';
 import '../../services/climb_session_service.dart';
-//import '../../services/geofencing_service.dart';
+import '../../services/geofencing_service.dart';
 import '../../services/achievement_service.dart';
 import '../../models/station_data.dart';
 //import '../../components/achievement_notification.dart';
@@ -25,6 +25,7 @@ class _ScannerScreenState extends State<ScannerScreen>
   late AchievementService achievementService;
   bool _isLoading = true;
   bool _geofencingEnabled = true; // Tap location icon to toggle
+  bool _isProcessingQR = false; // Prevent duplicate QR processing
 
   @override
   void initState() {
@@ -121,16 +122,31 @@ class _ScannerScreenState extends State<ScannerScreen>
               );
             },
             onScannerStarted: (arguments) {
-              debugPrint('Scanner started successfully');
+              debugPrint('✅ Scanner started successfully');
             },
             onDetect: (capture) async {
+              // Prevent processing multiple QR detections simultaneously
+              if (_isProcessingQR) {
+                debugPrint('⏭️ Already processing QR, skipping...');
+                return;
+              }
+
+              _isProcessingQR = true;
+
               try {
                 final List<Barcode> barcodes = capture.barcodes;
+                debugPrint(
+                  '🔍 QR Detection triggered: ${barcodes.length} barcode(s) detected',
+                );
 
                 for (final barcode in barcodes) {
                   final String? rawValue = barcode.rawValue;
+                  debugPrint(
+                    '📱 Barcode detected - Type: ${barcode.format}, Value: $rawValue',
+                  );
 
                   if (rawValue == null || rawValue.isEmpty) {
+                    debugPrint('⚠️ Empty barcode value, skipping');
                     continue;
                   }
 
@@ -138,16 +154,30 @@ class _ScannerScreenState extends State<ScannerScreen>
                       .getStationById(rawValue);
 
                   if (station != null) {
-                    try {
-                      await StationService.instance.updateStationVisited(
-                        station.id,
-                        true,
-                      );
-                    } catch (e) {
-                      // Station marking failed but continue
-                    }
+                    debugPrint(
+                      '✅ Station found: ${station.name} (ID: ${station.id})',
+                    );
+
+                    debugPrint('🔄 Attempting to mark station as visited...');
+                    // Fire and forget - don't wait for Firestore update
+                    // This prevents hanging when offline
+                    StationService.instance
+                        .updateStationVisited(station.id, true)
+                        .then((_) => debugPrint('✅ Station marked as visited'))
+                        .catchError(
+                          (e) => debugPrint(
+                            '⚠️ Error updating station visited: $e',
+                          ),
+                        );
+
+                    debugPrint(
+                      '🧗 ClimbSessionService.isInitialized: ${ClimbSessionService.isInitialized}',
+                    );
 
                     if (!ClimbSessionService.isInitialized) {
+                      debugPrint(
+                        '❌ Service NOT initialized, showing snackbar and returning',
+                      );
                       if (mounted) {
                         ScaffoldMessenger.of(context).showSnackBar(
                           const SnackBar(
@@ -162,9 +192,13 @@ class _ScannerScreenState extends State<ScannerScreen>
 
                     final activeSession = ClimbSessionService.instance
                         .getActiveSession();
+                    debugPrint(
+                      '🧗 Active session: ${activeSession?.id ?? "None"}',
+                    );
 
                     if (activeSession != null &&
                         activeSession.status == 'ongoing') {
+                      debugPrint('✅ Using existing active session');
                       final isStationInSession = activeSession.visitedStations
                           .any((visit) => visit.stationId == station.id);
 
@@ -172,7 +206,87 @@ class _ScannerScreenState extends State<ScannerScreen>
                         activeSession.addVisitedStation(station);
                       }
 
+                      // Check geofencing if enabled - navigate only if validated
+                      if (_geofencingEnabled &&
+                          station.latitude != null &&
+                          station.longitude != null) {
+                        debugPrint(
+                          '🔍 Geofencing enabled, verifying location...',
+                        );
+                        try {
+                          final geofenceResult =
+                              await GeofencingService.checkGeofence(
+                                stationLat: station.latitude!,
+                                stationLng: station.longitude!,
+                                radiusMeters:
+                                    GeofencingService.GEOFENCE_RADIUS_METERS,
+                              ).timeout(
+                                const Duration(seconds: 5),
+                                onTimeout: () {
+                                  debugPrint(
+                                    '⏱️ Geofence check timed out after 5 seconds',
+                                  );
+                                  return GeofenceCheckResult(
+                                    isWithinGeofence: false,
+                                    distanceMeters: null,
+                                    errorMessage:
+                                        'Location check timed out. Try enabling location services.',
+                                  );
+                                },
+                              );
+
+                          if (geofenceResult.errorMessage != null) {
+                            debugPrint(
+                              '⚠️ Geofence error: ${geofenceResult.errorMessage}',
+                            );
+                          }
+
+                          if (!geofenceResult.isWithinGeofence &&
+                              geofenceResult.errorMessage == null &&
+                              geofenceResult.distanceMeters != null) {
+                            // Only block if we have a valid location and user is too far
+                            debugPrint(
+                              '❌ NOT within geofence. Distance: ${geofenceResult.distanceMeters?.toStringAsFixed(2) ?? "unknown"} meters',
+                            );
+                            if (mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text(
+                                    'You are too far from the station (${geofenceResult.distanceMeters?.toStringAsFixed(0) ?? "?"} meters away)',
+                                  ),
+                                  backgroundColor: Colors.red,
+                                ),
+                              );
+                            }
+                            return;
+                          }
+
+                          if (geofenceResult.errorMessage != null) {
+                            debugPrint(
+                              '⚠️ Location unavailable - allowing scan for testing',
+                            );
+                          } else {
+                            debugPrint(
+                              '✅ Geofence verified! Distance: ${geofenceResult.distanceMeters?.toStringAsFixed(2) ?? "0"} meters',
+                            );
+                          }
+                        } catch (e) {
+                          debugPrint('❌ Error during geofence check: $e');
+                          if (mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text('Could not verify location: $e'),
+                                backgroundColor: Colors.orange,
+                              ),
+                            );
+                          }
+                          return;
+                        }
+                      }
+
+                      // Geofencing passed or disabled - navigate
                       if (mounted) {
+                        debugPrint('📱 Navigating to station detail screen...');
                         Navigator.of(context).push(
                           MaterialPageRoute(
                             builder: (context) =>
@@ -180,16 +294,99 @@ class _ScannerScreenState extends State<ScannerScreen>
                           ),
                         );
                       }
+                      return; // Exit after navigation
                     } else {
+                      debugPrint('🚀 Creating new climb session...');
                       final newSession = await ClimbSessionService.instance
                           .createClimbSession(
                             name: station.name,
                             description: station.description,
                             trekType: 'regular_trek',
                           );
+                      debugPrint('✅ Climb session created: ${newSession.id}');
                       newSession.addVisitedStation(station);
 
+                      // Check geofencing if enabled - navigate only if validated
+                      if (_geofencingEnabled &&
+                          station.latitude != null &&
+                          station.longitude != null) {
+                        debugPrint(
+                          '🔍 Geofencing enabled, verifying location...',
+                        );
+                        try {
+                          final geofenceResult =
+                              await GeofencingService.checkGeofence(
+                                stationLat: station.latitude!,
+                                stationLng: station.longitude!,
+                                radiusMeters:
+                                    GeofencingService.GEOFENCE_RADIUS_METERS,
+                              ).timeout(
+                                const Duration(seconds: 5),
+                                onTimeout: () {
+                                  debugPrint(
+                                    '⏱️ Geofence check timed out after 5 seconds',
+                                  );
+                                  return GeofenceCheckResult(
+                                    isWithinGeofence: false,
+                                    distanceMeters: null,
+                                    errorMessage:
+                                        'Location check timed out. Try enabling location services.',
+                                  );
+                                },
+                              );
+
+                          if (geofenceResult.errorMessage != null) {
+                            debugPrint(
+                              '⚠️ Geofence error: ${geofenceResult.errorMessage}',
+                            );
+                          }
+
+                          if (!geofenceResult.isWithinGeofence &&
+                              geofenceResult.errorMessage == null &&
+                              geofenceResult.distanceMeters != null) {
+                            // Only block if we have a valid location and user is too far
+                            debugPrint(
+                              '❌ NOT within geofence. Distance: ${geofenceResult.distanceMeters?.toStringAsFixed(2) ?? "unknown"} meters',
+                            );
+                            if (mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text(
+                                    'You are too far from the station (${geofenceResult.distanceMeters?.toStringAsFixed(0) ?? "?"} meters away)',
+                                  ),
+                                  backgroundColor: Colors.red,
+                                ),
+                              );
+                            }
+                            return;
+                          }
+
+                          if (geofenceResult.errorMessage != null) {
+                            debugPrint(
+                              '⚠️ Location unavailable - allowing scan for testing',
+                            );
+                          } else {
+                            debugPrint(
+                              '✅ Geofence verified! Distance: ${geofenceResult.distanceMeters?.toStringAsFixed(2) ?? "0"} meters',
+                            );
+                          }
+                        } catch (e) {
+                          debugPrint('❌ Error during geofence check: $e');
+                          if (mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text('Could not verify location: $e'),
+                                backgroundColor: Colors.orange,
+                              ),
+                            );
+                          }
+                          return;
+                        }
+                      }
+
+                      // Geofencing passed or disabled - navigate
                       if (mounted) {
+                        debugPrint('📱 Navigating to station detail screen...');
                         Navigator.of(context).push(
                           MaterialPageRoute(
                             builder: (context) =>
@@ -197,17 +394,21 @@ class _ScannerScreenState extends State<ScannerScreen>
                           ),
                         );
                       }
+                      return; // Exit after navigation
                     }
-
-                    return;
+                  } else {
+                    debugPrint('❌ Station NOT found for QR value: $rawValue');
                   }
                 }
               } catch (e) {
+                debugPrint('❌ CRITICAL ERROR in QR detection: $e');
                 try {
                   await controller?.start();
                 } catch (e2) {
-                  // Camera restart failed
+                  debugPrint('❌ Camera restart failed: $e2');
                 }
+              } finally {
+                _isProcessingQR = false;
               }
             },
           ),
