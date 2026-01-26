@@ -1,7 +1,7 @@
-# Mt. Hamiguitan TrekScan+ Database ERD
+# Mt. Hamiguitan TrekScan+ noSQL Data Model Diagram
 
 ## Overview
-This Entity-Relationship Diagram (ERD) illustrates the database structure for the Mt. Hamiguitan TrekScan+ application using Firebase Firestore (NoSQL database). The diagram shows all collections, their attributes, data types, relationships, and cardinality.
+This noSQL Data Model Diagram illustrates the database structure for the Mt. Hamiguitan TrekScan+ application using Firebase Firestore (NoSQL database). The diagram shows all collections, their attributes, data types, relationships, and cardinality.
 
 ---
 
