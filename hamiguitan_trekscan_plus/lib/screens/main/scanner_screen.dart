@@ -256,16 +256,16 @@ class _ScannerScreenState extends State<ScannerScreen>
                                 radiusMeters:
                                     GeofencingService.GEOFENCE_RADIUS_METERS,
                               ).timeout(
-                                const Duration(seconds: 5),
+                                const Duration(seconds: 15),
                                 onTimeout: () {
                                   debugPrint(
-                                    '⏱️ Geofence check timed out after 5 seconds',
+                                    '⏱️ Geofence check timed out after 15 seconds',
                                   );
                                   return GeofenceCheckResult(
                                     isWithinGeofence: false,
                                     distanceMeters: null,
                                     errorMessage:
-                                        'Location check timed out. Try enabling location services.',
+                                        'Could not get your location in time. Make sure GPS is enabled and you have a clear sky view.',
                                   );
                                 },
                               );
@@ -277,12 +277,21 @@ class _ScannerScreenState extends State<ScannerScreen>
                             debugPrint(
                               '⚠️ Geofence error: ${geofenceResult.errorMessage}',
                             );
+                            if (mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text(
+                                    'Cannot verify location: ${geofenceResult.errorMessage}',
+                                  ),
+                                  backgroundColor: Colors.orange,
+                                ),
+                              );
+                            }
+                            return;
                           }
 
                           if (!geofenceResult.isWithinGeofence &&
-                              geofenceResult.errorMessage == null &&
                               geofenceResult.distanceMeters != null) {
-                            // Only block if we have a valid location and user is too far
                             debugPrint(
                               '❌ NOT within geofence. Distance: ${geofenceResult.distanceMeters?.toStringAsFixed(2) ?? "unknown"} meters',
                             );
@@ -299,15 +308,9 @@ class _ScannerScreenState extends State<ScannerScreen>
                             return;
                           }
 
-                          if (geofenceResult.errorMessage != null) {
-                            debugPrint(
-                              '⚠️ Location unavailable - allowing scan for testing',
-                            );
-                          } else {
-                            debugPrint(
-                              '✅ Geofence verified! Distance: ${geofenceResult.distanceMeters?.toStringAsFixed(2) ?? "0"} meters',
-                            );
-                          }
+                          debugPrint(
+                            '✅ Geofence verified! Distance: ${geofenceResult.distanceMeters?.toStringAsFixed(2) ?? "0"} meters',
+                          );
                         } catch (e) {
                           debugPrint('❌ Error during geofence check: $e');
                           _dismissGeofenceDialog();
@@ -337,10 +340,14 @@ class _ScannerScreenState extends State<ScannerScreen>
                       return; // Exit after navigation
                     } else {
                       debugPrint('🚀 Creating new climb session...');
+                      final now = DateTime.now();
+                      final sessionName =
+                          'Trek - ${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}';
                       final newSession = await ClimbSessionService.instance
                           .createClimbSession(
-                            name: station.name,
-                            description: station.description,
+                            name: sessionName,
+                            description:
+                                'Climbing session starting at ${station.name}',
                             trekType: 'regular_trek',
                           );
                       debugPrint('✅ Climb session created: ${newSession.id}');
@@ -364,16 +371,16 @@ class _ScannerScreenState extends State<ScannerScreen>
                                 radiusMeters:
                                     GeofencingService.GEOFENCE_RADIUS_METERS,
                               ).timeout(
-                                const Duration(seconds: 5),
+                                const Duration(seconds: 15),
                                 onTimeout: () {
                                   debugPrint(
-                                    '⏱️ Geofence check timed out after 5 seconds',
+                                    '⏱️ Geofence check timed out after 15 seconds',
                                   );
                                   return GeofenceCheckResult(
                                     isWithinGeofence: false,
                                     distanceMeters: null,
                                     errorMessage:
-                                        'Location check timed out. Try enabling location services.',
+                                        'Could not get your location in time. Make sure GPS is enabled and you have a clear sky view.',
                                   );
                                 },
                               );
@@ -385,12 +392,21 @@ class _ScannerScreenState extends State<ScannerScreen>
                             debugPrint(
                               '⚠️ Geofence error: ${geofenceResult.errorMessage}',
                             );
+                            if (mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text(
+                                    'Cannot verify location: ${geofenceResult.errorMessage}',
+                                  ),
+                                  backgroundColor: Colors.orange,
+                                ),
+                              );
+                            }
+                            return;
                           }
 
                           if (!geofenceResult.isWithinGeofence &&
-                              geofenceResult.errorMessage == null &&
                               geofenceResult.distanceMeters != null) {
-                            // Only block if we have a valid location and user is too far
                             debugPrint(
                               '❌ NOT within geofence. Distance: ${geofenceResult.distanceMeters?.toStringAsFixed(2) ?? "unknown"} meters',
                             );
@@ -407,15 +423,9 @@ class _ScannerScreenState extends State<ScannerScreen>
                             return;
                           }
 
-                          if (geofenceResult.errorMessage != null) {
-                            debugPrint(
-                              '⚠️ Location unavailable - allowing scan for testing',
-                            );
-                          } else {
-                            debugPrint(
-                              '✅ Geofence verified! Distance: ${geofenceResult.distanceMeters?.toStringAsFixed(2) ?? "0"} meters',
-                            );
-                          }
+                          debugPrint(
+                            '✅ Geofence verified! Distance: ${geofenceResult.distanceMeters?.toStringAsFixed(2) ?? "0"} meters',
+                          );
                         } catch (e) {
                           debugPrint('❌ Error during geofence check: $e');
                           _dismissGeofenceDialog();

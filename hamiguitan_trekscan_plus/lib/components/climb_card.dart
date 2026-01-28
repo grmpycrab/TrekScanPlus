@@ -13,6 +13,7 @@ class ClimbCard extends StatelessWidget {
   final ClimbCallback? onCancel;
   final BookingModel? booking;
   final void Function(BookingModel booking)? onEditBooking;
+  final void Function(BookingModel booking)? onSubmitBooking;
 
   const ClimbCard({
     super.key,
@@ -21,6 +22,7 @@ class ClimbCard extends StatelessWidget {
     this.onCancel,
     this.booking,
     this.onEditBooking,
+    this.onSubmitBooking,
   });
 
   String _formatDate(DateTime? date) {
@@ -37,13 +39,14 @@ class ClimbCard extends StatelessWidget {
     final statusTextColor = _getStatusTextColor(status);
 
     return Card(
-      margin: const EdgeInsets.only(bottom: 16),
+      margin: const EdgeInsets.only(bottom: 12),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       elevation: 2,
       child: Container(
-        padding: const EdgeInsets.all(20),
+        padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(16),
+          color: Colors.blue.shade50,
           image: const DecorationImage(
             image: AssetImage('assets/images/mountain_with_background.png'),
             fit: BoxFit.cover,
@@ -91,37 +94,69 @@ class ClimbCard extends StatelessWidget {
                     ],
                   ),
                 ),
-                // Status badge
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 8,
-                  ),
-                  decoration: BoxDecoration(
-                    color: statusColor,
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: Text(
-                    status,
-                    style: TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w600,
-                      color: statusTextColor,
+                // Status badges (Booking Status + Submission Status)
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 6,
+                      ),
+                      decoration: BoxDecoration(
+                        color: statusColor,
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      child: Text(
+                        status,
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w600,
+                          color: statusTextColor,
+                        ),
+                      ),
                     ),
-                  ),
+                    // Submission status badge
+                    if (booking != null)
+                      Padding(
+                        padding: const EdgeInsets.only(left: 8),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 6,
+                          ),
+                          decoration: BoxDecoration(
+                            color: booking!.isDraft
+                                ? Colors.orange.shade100
+                                : Colors.green.shade100,
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                          child: Text(
+                            booking!.isDraft ? 'Draft' : 'Submitted',
+                            style: TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w600,
+                              color: booking!.isDraft
+                                  ? Colors.orange.shade700
+                                  : Colors.green.shade700,
+                            ),
+                          ),
+                        ),
+                      ),
+                  ],
                 ),
               ],
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 12),
             // Date information
             _buildDateRow('Date Booked:', _formatDate(climb.dateBooked)),
-            const SizedBox(height: 8),
+            const SizedBox(height: 6),
             _buildDateRow('Target Date:', _formatDate(climb.targetDate)),
-            const SizedBox(height: 8),
+            const SizedBox(height: 6),
             if (status != 'Pending')
               _buildDateRow('Date Approved:', _formatDate(climb.dateApproved)),
-            if (status != 'Pending') const SizedBox(height: 8),
-            const SizedBox(height: 8),
+            if (status != 'Pending') const SizedBox(height: 6),
+            const SizedBox(height: 6),
             // Action buttons
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -138,7 +173,7 @@ class ClimbCard extends StatelessWidget {
                       label: const Text('Cancel'),
                       style: TextButton.styleFrom(
                         foregroundColor: Colors.redAccent,
-                        padding: const EdgeInsets.symmetric(vertical: 8),
+                        padding: const EdgeInsets.symmetric(vertical: 6),
                       ),
                     ),
                   ),
@@ -146,30 +181,6 @@ class ClimbCard extends StatelessWidget {
                     status != 'Completed' &&
                     status != 'Declined' &&
                     status != 'Rejected')
-                  const SizedBox(width: 12),
-                // Show Edit button ONLY for declined/rejected bookings
-                if ((status == 'Declined' || status == 'Rejected') &&
-                    booking != null &&
-                    onEditBooking != null)
-                  Expanded(
-                    child: FilledButton.icon(
-                      onPressed: () => onEditBooking!(booking!),
-                      icon: const Icon(Icons.edit, size: 18),
-                      label: const Text('Edit Request'),
-                      style: FilledButton.styleFrom(
-                        backgroundColor: const Color.fromARGB(
-                          255,
-                          98,
-                          188,
-                          248,
-                        ),
-                        padding: const EdgeInsets.symmetric(vertical: 8),
-                      ),
-                    ),
-                  ),
-                if ((status == 'Declined' || status == 'Rejected') &&
-                    booking != null &&
-                    onEditBooking != null)
                   const SizedBox(width: 12),
                 // Always show View Details button
                 Expanded(
@@ -179,7 +190,7 @@ class ClimbCard extends StatelessWidget {
                     label: const Text('View Details'),
                     style: FilledButton.styleFrom(
                       backgroundColor: AppColors.primary,
-                      padding: const EdgeInsets.symmetric(vertical: 8),
+                      padding: const EdgeInsets.symmetric(vertical: 6),
                     ),
                   ),
                 ),
@@ -258,6 +269,12 @@ class ClimbCard extends StatelessWidget {
             ? () {
                 Navigator.pop(context);
                 onEditBooking!(booking!);
+              }
+            : null,
+        onSubmit: booking != null && onSubmitBooking != null
+            ? () {
+                Navigator.pop(context);
+                onSubmitBooking!(booking!);
               }
             : null,
       ),

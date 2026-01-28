@@ -1,9 +1,10 @@
 import 'package:geolocator/geolocator.dart';
+import 'package:flutter/foundation.dart';
 import 'dart:math' as math;
 
 class GeofencingService {
   static const double GEOFENCE_RADIUS_METERS =
-      500; // 500 meters for testing (can be reduced to 100 later)
+      100; // 100 meters geofence radius
 
   /// Request location permissions from user
   static Future<bool> requestLocationPermission() async {
@@ -30,25 +31,60 @@ class GeofencingService {
     return await Geolocator.isLocationServiceEnabled();
   }
 
-  /// Get current user location
-  static Future<Position?> getCurrentLocation() async {
+  /// Get current user location with optimized settings for faster acquisition
+  static Future<Position?> getCurrentLocation({
+    bool forceRefresh = false,
+  }) async {
     try {
-      // Check permission first
-      final hasPermission = await requestLocationPermission();
-      if (!hasPermission) return null;
-
-      // Check if services are enabled
+      // First, ensure location services are enabled
       final serviceEnabled = await isLocationServiceEnabled();
       if (!serviceEnabled) {
-        throw Exception('Location services are disabled.');
+        debugPrint('❌ Location services are disabled');
+        return null;
       }
 
+      // Check and request permission
+      final permission = await Geolocator.checkPermission();
+      if (permission == LocationPermission.denied) {
+        debugPrint('📍 Requesting location permission...');
+        final result = await Geolocator.requestPermission();
+        if (result != LocationPermission.whileInUse &&
+            result != LocationPermission.always) {
+          debugPrint('❌ Location permission denied by user');
+          return null;
+        }
+      } else if (permission == LocationPermission.deniedForever) {
+        debugPrint(
+          '❌ Location permission permanently denied. Please enable in Settings.',
+        );
+        return null;
+      }
+
+      // Try to get last known position first (fastest)
+      if (!forceRefresh) {
+        final lastPosition = await Geolocator.getLastKnownPosition();
+        if (lastPosition != null) {
+          final timeDiff = DateTime.now().difference(lastPosition.timestamp);
+          // Use last position if less than 5 minutes old for geofencing
+          if (timeDiff.inSeconds < 300) {
+            debugPrint('📍 Using cached location (${timeDiff.inSeconds}s old)');
+            return lastPosition;
+          }
+        }
+      }
+
+      // Use MEDIUM accuracy for faster results (better for geofencing tests)
+      debugPrint('📍 Fetching fresh location with MEDIUM accuracy...');
       final position = await Geolocator.getCurrentPosition(
-        desiredAccuracy: LocationAccuracy.best,
+        desiredAccuracy: LocationAccuracy.medium,
         timeLimit: const Duration(seconds: 10),
+      );
+      debugPrint(
+        '📍 Location acquired: ${position.latitude}, ${position.longitude}',
       );
       return position;
     } catch (e) {
+      debugPrint('❌ Error getting location: $e');
       return null;
     }
   }
@@ -92,13 +128,15 @@ class GeofencingService {
     required double radiusMeters,
   }) async {
     try {
-      final userPosition = await getCurrentLocation();
+      // Get location with refresh for accurate geofence validation
+      final userPosition = await getCurrentLocation(forceRefresh: true);
 
       if (userPosition == null) {
         return GeofenceCheckResult(
           isWithinGeofence: false,
           distanceMeters: null,
-          errorMessage: 'Unable to get current location',
+          errorMessage:
+              'Unable to get current location. Please enable location services and grant permissions.',
         );
       }
 

@@ -370,6 +370,8 @@ class UserService {
     String? phoneNumber,
     String? birthDate,
     String? gender,
+    String? nationality,
+    String? homeAddress,
   }) async {
     try {
       final data = <String, dynamic>{};
@@ -378,6 +380,8 @@ class UserService {
       if (phoneNumber != null) data['phoneNumber'] = phoneNumber;
       if (birthDate != null) data['birthDate'] = birthDate;
       if (gender != null) data['gender'] = gender;
+      if (nationality != null) data['nationality'] = nationality;
+      if (homeAddress != null) data['homeAddress'] = homeAddress;
 
       await _usersCollection.doc(uid).set(data, SetOptions(merge: true));
       if (kDebugMode) {
