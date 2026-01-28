@@ -9,6 +9,7 @@ class BookingDetailsModal extends StatelessWidget {
   final BookingModel? booking;
   final VoidCallback onClose;
   final VoidCallback? onEdit;
+  final VoidCallback? onSubmit;
 
   const BookingDetailsModal({
     super.key,
@@ -16,6 +17,7 @@ class BookingDetailsModal extends StatelessWidget {
     this.booking,
     required this.onClose,
     this.onEdit,
+    this.onSubmit,
   });
 
   String _formatDate(DateTime? date) {
@@ -137,12 +139,15 @@ class BookingDetailsModal extends StatelessWidget {
                             _buildDetailRow('Trek Type:', climb.type),
                             const SizedBox(height: 8),
                             _buildDetailRow(
-                              'Number of Porters:',
+                              'Total Participants:',
                               booking != null
-                                  ? '${booking!.numberOfPorters}'
+                                  ? '${booking!.members.length}'
                                   : 'N/A',
                             ),
-                            const SizedBox(height: 8),
+                            const SizedBox(height: 12),
+                            if (booking != null && booking!.members.isNotEmpty)
+                              _buildMembersSection(),
+                            const SizedBox(height: 12),
                             _buildDetailRow(
                               'Affiliation:',
                               booking?.affiliation ?? 'Not provided',
@@ -156,13 +161,6 @@ class BookingDetailsModal extends StatelessWidget {
                             _buildDetailRow(
                               'Hometown:',
                               booking?.hometown ?? 'Not provided',
-                            ),
-                            const SizedBox(height: 8),
-                            _buildDetailRow(
-                              'Senior Citizen:',
-                              booking != null
-                                  ? (booking!.isSenior ? 'Yes' : 'No')
-                                  : 'N/A',
                             ),
                             const SizedBox(height: 12),
                             // Attachments section
@@ -204,18 +202,35 @@ class BookingDetailsModal extends StatelessWidget {
                             ),
                             const SizedBox(width: 12),
                           ],
-                          Expanded(
-                            child: FilledButton(
-                              style: FilledButton.styleFrom(
-                                backgroundColor: AppColors.primary,
-                                padding: const EdgeInsets.symmetric(
-                                  vertical: 12,
+                          // Submit button for draft bookings, Close for others
+                          if (booking != null &&
+                              booking!.isDraft &&
+                              onSubmit != null)
+                            Expanded(
+                              child: FilledButton(
+                                style: FilledButton.styleFrom(
+                                  backgroundColor: Colors.green,
+                                  padding: const EdgeInsets.symmetric(
+                                    vertical: 12,
+                                  ),
                                 ),
+                                onPressed: onSubmit,
+                                child: const Text('Submit'),
                               ),
-                              onPressed: onClose,
-                              child: const Text('Close'),
+                            )
+                          else
+                            Expanded(
+                              child: FilledButton(
+                                style: FilledButton.styleFrom(
+                                  backgroundColor: AppColors.primary,
+                                  padding: const EdgeInsets.symmetric(
+                                    vertical: 12,
+                                  ),
+                                ),
+                                onPressed: onClose,
+                                child: const Text('Close'),
+                              ),
                             ),
-                          ),
                         ],
                       ),
                     ),
@@ -334,6 +349,87 @@ class BookingDetailsModal extends StatelessWidget {
     );
   }
 
+  Widget _buildMembersSection() {
+    if (booking == null || booking!.members.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _buildSectionTitle('Group Members'),
+        const SizedBox(height: 12),
+        ...booking!.members.asMap().entries.map((entry) {
+          final member = entry.value;
+          return Container(
+            margin: const EdgeInsets.only(bottom: 12),
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: member.isPrimaryContact
+                  ? Colors.blue[50]
+                  : Colors.grey[50],
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(
+                color: member.isPrimaryContact ? Colors.blue : AppColors.border,
+              ),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      member.fullName,
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.bold,
+                        color: member.isPrimaryContact
+                            ? Colors.blue[800]
+                            : Colors.black87,
+                      ),
+                    ),
+                    if (member.isPrimaryContact)
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 4,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.blue,
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                        child: const Text(
+                          'Primary',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                _buildDetailRow('Gender:', member.gender),
+                const SizedBox(height: 4),
+                _buildDetailRow('Birth Date:', member.birthDate),
+                const SizedBox(height: 4),
+                _buildDetailRow('Contact:', member.contactNumber),
+                const SizedBox(height: 4),
+                _buildDetailRow('Nationality:', member.nationality),
+                const SizedBox(height: 4),
+                _buildDetailRow('Address:', member.homeAddress),
+                const SizedBox(height: 4),
+                _buildDetailRow('Category:', member.categoryDisplayName),
+              ],
+            ),
+          );
+        }).toList(),
+      ],
+    );
+  }
+
   List<Widget> _buildAttachmentsList() {
     if (booking == null || booking!.attachments.isEmpty) {
       return [];
@@ -370,7 +466,10 @@ class BookingDetailsModal extends StatelessWidget {
                     const SizedBox(height: 2),
                     Text(
                       '${_formatBytes(attachment.size)} • ${DateFormat('MMM dd, yyyy').format(attachment.uploadedAt.toDate())}',
-                      style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: AppColors.textSecondary,
+                      ),
                     ),
                   ],
                 ),

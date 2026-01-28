@@ -19,6 +19,8 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
   late TextEditingController _lastNameController;
   late TextEditingController _phoneController;
   late TextEditingController _birthDateController;
+  late TextEditingController _nationalityController;
+  late TextEditingController _homeAddressController;
   String? _selectedGender;
   bool _isLoading = false;
   bool _isInitializing = true;
@@ -35,6 +37,8 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
     _lastNameController = TextEditingController();
     _phoneController = TextEditingController();
     _birthDateController = TextEditingController();
+    _nationalityController = TextEditingController();
+    _homeAddressController = TextEditingController();
     _loadUserData();
   }
 
@@ -49,6 +53,8 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
             _lastNameController.text = userData['lastName'] ?? '';
             _phoneController.text = userData['phoneNumber'] ?? '';
             _birthDateController.text = userData['birthDate'] ?? '';
+            _nationalityController.text = userData['nationality'] ?? '';
+            _homeAddressController.text = userData['homeAddress'] ?? '';
             _selectedGender = userData['gender'];
           });
         }
@@ -79,6 +85,8 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
     _lastNameController.dispose();
     _phoneController.dispose();
     _birthDateController.dispose();
+    _nationalityController.dispose();
+    _homeAddressController.dispose();
     super.dispose();
   }
 
@@ -167,6 +175,8 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
       final lastName = _lastNameController.text.trim();
       final phoneNumber = _phoneController.text.trim();
       final birthDate = _birthDateController.text.trim();
+      final nationality = _nationalityController.text.trim();
+      final homeAddress = _homeAddressController.text.trim();
       final gender = _selectedGender;
 
       if (firstName.isEmpty || lastName.isEmpty) {
@@ -222,7 +232,7 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
         }
       }
 
-      // Always update all other information (phone, birthDate, gender)
+      // Always update all other information (phone, birthDate, gender, nationality, homeAddress)
       await _userService.updateUserInfo(
         uid: user.uid,
         firstName: firstName,
@@ -230,6 +240,8 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
         phoneNumber: phoneNumber.isNotEmpty ? phoneNumber : null,
         birthDate: birthDate.isNotEmpty ? birthDate : null,
         gender: gender,
+        nationality: nationality.isNotEmpty ? nationality : null,
+        homeAddress: homeAddress.isNotEmpty ? homeAddress : null,
       );
 
       setState(() {
@@ -316,7 +328,10 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
         backgroundColor: AppColors.primary,
         title: const Text(
           'Account Settings',
-          style: TextStyle(color: SharedColors.white, fontWeight: FontWeight.bold),
+          style: TextStyle(
+            color: SharedColors.white,
+            fontWeight: FontWeight.bold,
+          ),
         ),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: SharedColors.white),
@@ -582,6 +597,21 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
                               });
                             },
                     ),
+                  ),
+
+                  // Nationality
+                  _buildTextField(
+                    controller: _nationalityController,
+                    label: 'Nationality',
+                    hint: 'Enter your nationality',
+                  ),
+
+                  // Home Address
+                  _buildTextField(
+                    controller: _homeAddressController,
+                    label: 'Home Address',
+                    hint: 'Enter your home address',
+                    maxLines: 2,
                   ),
                 ],
               ),

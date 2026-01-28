@@ -4,6 +4,8 @@ class UserModel {
   final String email;
   final String birthDate;
   final String gender;
+  final String? nationality;
+  final String? homeAddress;
   final String? profileImage;
   final List<String> badges;
   final int followingCount;
@@ -20,6 +22,8 @@ class UserModel {
     required this.email,
     required this.birthDate,
     required this.gender,
+    this.nationality,
+    this.homeAddress,
     this.profileImage,
     this.badges = const [],
     this.followingCount = 0,
@@ -35,6 +39,8 @@ class UserModel {
     String? email,
     String? birthDate,
     String? gender,
+    String? nationality,
+    String? homeAddress,
     String? profileImage,
     List<String>? badges,
     int? followingCount,
@@ -49,6 +55,8 @@ class UserModel {
       email: email ?? this.email,
       birthDate: birthDate ?? this.birthDate,
       gender: gender ?? this.gender,
+      nationality: nationality ?? this.nationality,
+      homeAddress: homeAddress ?? this.homeAddress,
       profileImage: profileImage ?? this.profileImage,
       badges: badges ?? this.badges,
       followingCount: followingCount ?? this.followingCount,

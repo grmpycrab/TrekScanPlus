@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:io';
 import 'dart:math';
 
+import 'package:flutter/foundation.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:file_picker/file_picker.dart';
@@ -21,8 +22,8 @@ class BookingService {
   final _storage = FirebaseStorage.instance;
   final _notificationService = NotificationService();
 
-  /// Check if user already has a booking on the same date
-  /// Returns true if a booking exists for that date, false otherwise
+  /// Check if user already has an active booking on the same date
+  /// Returns true if an active (non-cancelled) booking exists for that date, false otherwise
   Future<bool> hasExistingBookingOnDate(
     String userId,
     DateTime trekDate,
@@ -49,7 +50,13 @@ class BookingService {
           .where('trekDate', isLessThanOrEqualTo: Timestamp.fromDate(endOfDay))
           .get();
 
-      return snapshot.docs.isNotEmpty;
+      // Filter out cancelled bookings
+      final activeBookings = snapshot.docs.where((doc) {
+        final status = doc['status']?.toString().toLowerCase() ?? '';
+        return status != 'cancelled' && status != 'cancel';
+      }).toList();
+
+      return activeBookings.isNotEmpty;
     } catch (e) {
       print('Error checking for existing bookings: $e');
       rethrow;
@@ -133,10 +140,8 @@ class BookingService {
   Future<void> updateBooking(
     String bookingId, {
     String? affiliation,
-    int? numberOfPorters,
     String? trekType,
     String? hometown,
-    bool? isSenior,
     String? phoneNumber,
     String? notes,
     bool resubmitDeclined = false,
@@ -147,17 +152,11 @@ class BookingService {
     if (affiliation != null) {
       updateData['affiliation'] = affiliation;
     }
-    if (numberOfPorters != null) {
-      updateData['numberOfPorters'] = numberOfPorters;
-    }
     if (trekType != null) {
       updateData['trekType'] = trekType;
     }
     if (hometown != null) {
       updateData['hometown'] = hometown;
-    }
-    if (isSenior != null) {
-      updateData['isSenior'] = isSenior;
     }
     if (phoneNumber != null) {
       updateData['phoneNumber'] = phoneNumber;
@@ -172,6 +171,37 @@ class BookingService {
     }
 
     await _firestore.collection('bookings').doc(bookingId).update(updateData);
+  }
+
+  /// Update the primary contact's category
+  Future<void> updatePrimaryContactCategory(
+    String bookingId,
+    String newCategory,
+  ) async {
+    try {
+      final docRef = _firestore.collection('bookings').doc(bookingId);
+      final doc = await docRef.get();
+
+      if (!doc.exists) throw Exception('Booking not found');
+
+      final data = doc.data() as Map<String, dynamic>;
+      final membersList = (data['members'] as List<dynamic>?) ?? [];
+
+      if (membersList.isNotEmpty) {
+        // Update the first member's category (primary contact)
+        final primaryMember = membersList[0] as Map<String, dynamic>;
+        primaryMember['category'] = newCategory;
+
+        // Update the document
+        await docRef.update({
+          'members': membersList,
+          'updatedAt': FieldValue.serverTimestamp(),
+        });
+      }
+    } catch (e) {
+      debugPrint('Error updating primary contact category: $e');
+      rethrow;
+    }
   }
 
   /// Upload a PlatformFile to storage under bookings/{bookingId}/attachments/
@@ -308,7 +338,7 @@ class BookingService {
           for (final change in snapshot.docChanges) {
             if (change.type == DocumentChangeType.modified) {
               final booking = BookingModel.fromDoc(change.doc);
-              final bookingId = booking.id!;
+              final bookingId = booking.id;
               final currentStatus = booking.status;
               final previousStatus = _lastKnownStatus[bookingId];
 
@@ -331,9 +361,7 @@ class BookingService {
             } else if (change.type == DocumentChangeType.added) {
               // Track initial status for new bookings
               final booking = BookingModel.fromDoc(change.doc);
-              if (booking.id != null) {
-                _lastKnownStatus[booking.id!] = booking.status;
-              }
+              _lastKnownStatus[booking.id] = booking.status;
             }
           }
         });

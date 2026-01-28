@@ -1,16 +1,19 @@
 import 'package:flutter/material.dart';
 import 'dart:async';
 import 'package:file_picker/file_picker.dart';
-import 'package:firebase_core/firebase_core.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'dart:convert';
 import '../../models/booking_model.dart';
+import '../../models/member.dart';
 import '../../services/booking_service.dart';
 import '../../services/calendar_config_service.dart';
 import '../../services/validators.dart';
 import '../../services/user_service.dart';
 import '../../models/climb.dart';
 import '../../components/climb_card.dart';
+import '../../components/member_form_card.dart';
 import '../../components/app_dialogue_handler.dart';
 import '../../theme/color.dart';
 
@@ -33,10 +36,16 @@ class BookAClimbScreen extends StatefulWidget {
 class _BookAClimbScreenState extends State<BookAClimbScreen> {
   final _formKey = GlobalKey<FormState>();
   final ScrollController _scrollController = ScrollController();
-  String _climbType = 'General';
-  String _hometown = 'Inside San Isidro';
-  bool _isSenior = false;
+  String _climbType = 'Regular Trek';
+  String _hometown = '';
+  String _primaryContactCategory = 'student';
   bool _hasScrolledToBooking = false;
+
+  // Group members for booking
+  List<Member> _bookingMembers = [];
+
+  // Draft bookings (saved locally, not yet submitted)
+  List<BookingModel> _draftBookings = [];
 
   // Filter states
   String _selectedStatusFilter = 'All';
@@ -59,9 +68,8 @@ class _BookAClimbScreenState extends State<BookAClimbScreen> {
   // Controllers for text fields
   // Note: name/email are obtained from the authenticated user; do not request
   // them in the booking form per the solo-booking UX. Keep controllers for
-  // affiliation and porters only.
+  // affiliation only.
   final TextEditingController _contactController = TextEditingController();
-  final TextEditingController _portersController = TextEditingController();
   final TextEditingController _affiliationController = TextEditingController();
   DateTime? _selectedDate;
   bool _shouldShowBookingForm = false;
@@ -84,6 +92,8 @@ class _BookAClimbScreenState extends State<BookAClimbScreen> {
         setState(() => _bookings = []);
         return;
       }
+      // Load draft bookings when user authenticates
+      _loadDraftBookings();
       _bookingSub = BookingService.instance
           .streamBookingsForUser(user.uid)
           .listen((bookings) async {
@@ -372,77 +382,6 @@ class _BookAClimbScreenState extends State<BookAClimbScreen> {
     }
   }
 
-  /// Create booking and upload files sequentially using BookingService.
-  /// Attachments will be stored in Firestore as the booking is created.
-  /// Returns the created bookingId.
-  Future<String> _submitBookingToFirebase(
-    Climb climb,
-    List<PlatformFile> files,
-    Map<String, String> meta, {
-    void Function(
-      int uploadedCount,
-      int totalCount,
-      String? fileName,
-      double? filePercent,
-    )?
-    onProgress,
-  }) async {
-    // Ensure Firebase initialized (user must generate firebase_options.dart with FlutterFire CLI)
-    if (Firebase.apps.isEmpty) {
-      await Firebase.initializeApp();
-    }
-
-    // Build BookingModel from the form + current user info
-    final now = DateTime.now();
-    final currentUser = FirebaseAuth.instance.currentUser;
-    final booking = BookingModel(
-      userId: currentUser?.uid ?? meta['userId'] ?? '',
-      affiliation: meta['affiliation'] ?? '',
-      trekDate: Timestamp.fromDate(_selectedDate ?? now),
-      numberOfPorters: int.tryParse(meta['porters'] ?? '') ?? 0,
-      trekType: meta['trekType'] ?? _climbType.toLowerCase(),
-      hometown:
-          meta['hometown'] ?? _hometown.toLowerCase().replaceAll(' ', '_'),
-      isSenior: meta['isSenior'] == 'true' || _isSenior,
-      phoneNumber: meta['contact'] ?? '',
-      notes: meta['notes'],
-    );
-
-    final bookingService = BookingService.instance;
-
-    // If no files, just create booking
-    if (files.isEmpty) {
-      return await bookingService.createBooking(booking);
-    }
-
-    // Create booking first to get its ID
-    final bookingId = await bookingService.createBooking(booking);
-
-    // Upload files sequentially with progress reporting
-    int uploadedCount = 0;
-    for (final f in files) {
-      try {
-        await bookingService.uploadAttachment(
-          bookingId,
-          f,
-          onProgress: (sent, total) {
-            final percent = total > 0 ? sent / total : 0.0;
-            onProgress?.call(uploadedCount, files.length, f.name, percent);
-          },
-        );
-        uploadedCount++;
-        onProgress?.call(uploadedCount, files.length, f.name, 1.0);
-      } catch (e) {
-        debugPrint('Error uploading file ${f.name}: $e');
-        debugPrint(StackTrace.current.toString());
-        // Continue with next file rather than failing entire booking
-        continue;
-      }
-    }
-
-    return bookingId;
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -456,7 +395,10 @@ class _BookAClimbScreenState extends State<BookAClimbScreen> {
         automaticallyImplyLeading: false,
         title: const Text(
           'Book a Climb',
-          style: TextStyle(color: SharedColors.white, fontWeight: FontWeight.bold),
+          style: TextStyle(
+            color: SharedColors.white,
+            fontWeight: FontWeight.bold,
+          ),
         ),
         actions: [
           IconButton(
@@ -507,14 +449,40 @@ class _BookAClimbScreenState extends State<BookAClimbScreen> {
   }
 
   List<dynamic> _filterBookings(String type) {
-    // Filter from _bookings which contains maps with climb and booking
+    // Combine submitted bookings and draft bookings
+    List<dynamic> allBookings = List.from(_bookings);
+
+    // Add draft bookings to the display list
+    final user = FirebaseAuth.instance.currentUser;
+    if (user != null) {
+      for (final draft in _draftBookings) {
+        String userName = user.displayName ?? 'You';
+        allBookings.add({
+          'climb': Climb(
+            id: draft.id,
+            name: userName,
+            date: draft.trekDate.toDate(),
+            dateBooked: draft.createdAt.toDate(),
+            targetDate: draft.trekDate.toDate(),
+            dateApproved: draft.updatedAt?.toDate(),
+            type: draft.trekType,
+            status: draft.status,
+            documents: draft.attachments.map((a) => a.fileName).toList(),
+            adminNotes: draft.adminNotes,
+          ),
+          'booking': draft,
+        });
+      }
+    }
+
+    // Filter by date type
     final today = DateTime.now();
     final todayDate = DateTime(today.year, today.month, today.day);
 
     List<dynamic> filteredList;
 
     if (type == 'upcoming') {
-      filteredList = _bookings.where((item) {
+      filteredList = allBookings.where((item) {
         if (item is Map<String, dynamic> && item.containsKey('climb')) {
           final climb = item['climb'] as Climb;
           return !climb.date.isBefore(todayDate);
@@ -522,7 +490,7 @@ class _BookAClimbScreenState extends State<BookAClimbScreen> {
         return false;
       }).toList();
     } else if (type == 'previous') {
-      filteredList = _bookings.where((item) {
+      filteredList = allBookings.where((item) {
         if (item is Map<String, dynamic> && item.containsKey('climb')) {
           final climb = item['climb'] as Climb;
           return climb.date.isBefore(todayDate);
@@ -530,7 +498,7 @@ class _BookAClimbScreenState extends State<BookAClimbScreen> {
         return false;
       }).toList();
     } else {
-      filteredList = _bookings;
+      filteredList = allBookings;
     }
 
     // Apply additional filters
@@ -580,7 +548,10 @@ class _BookAClimbScreenState extends State<BookAClimbScreen> {
                   const SizedBox(height: 16),
                   Text(
                     'No bookings',
-                    style: TextStyle(color: AppColors.textSecondary, fontSize: 16),
+                    style: TextStyle(
+                      color: AppColors.textSecondary,
+                      fontSize: 16,
+                    ),
                   ),
                   const SizedBox(height: 8),
                   Text(
@@ -611,6 +582,7 @@ class _BookAClimbScreenState extends State<BookAClimbScreen> {
               booking: bookingModel,
               onCancel: (c) => _confirmCancelModel(c),
               onEditBooking: (b) => _showEditBookingSheet(b),
+              onSubmitBooking: _submitDraftBooking,
             );
           }
           // Fallback
@@ -621,6 +593,120 @@ class _BookAClimbScreenState extends State<BookAClimbScreen> {
         },
       ),
     );
+  }
+
+  /// Submit a draft booking to Firebase
+  Future<void> _submitDraftBooking(BookingModel draft) async {
+    try {
+      // Show confirmation dialog
+      final confirmed = await AppDialogueHandler.showConfirmation(
+        context: context,
+        title: 'Submit Booking',
+        message:
+            'Are you sure you want to submit this booking? You won\'t be able to edit it after submission.',
+      );
+
+      if (confirmed != true) return;
+
+      // Show loading dialog
+      if (mounted) {
+        AppDialogueHandler.showLoading(
+          context: context,
+          message: 'Submitting booking...',
+        );
+      }
+
+      // Update submission status to 'submitted'
+      final submittedBooking = draft.copyWith(submissionStatus: 'submitted');
+
+      // Create booking in Firestore
+      final bookingService = BookingService.instance;
+      await bookingService.createBooking(submittedBooking);
+
+      // Remove from draft list
+      if (mounted) {
+        setState(() {
+          _draftBookings.removeWhere((b) => b.id == draft.id);
+        });
+        // Save updated drafts to persistent storage
+        await _saveDraftBookings();
+      }
+
+      // Close loading dialog
+      if (mounted) {
+        Navigator.of(context).pop();
+
+        // Show success message
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+              'Booking submitted successfully! Please wait for confirmation.',
+            ),
+            backgroundColor: Colors.green,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        Navigator.of(context).pop(); // Close loading dialog if open
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error submitting booking: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
+  /// Load draft bookings from SharedPreferences
+  Future<void> _loadDraftBookings() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final currentUser = FirebaseAuth.instance.currentUser;
+      if (currentUser == null) return;
+
+      // Get draft bookings for current user
+      final key = 'draft_bookings_${currentUser.uid}';
+      final jsonString = prefs.getString(key);
+
+      if (jsonString != null && jsonString.isNotEmpty) {
+        final jsonData = jsonDecode(jsonString) as List;
+        final drafts = jsonData
+            .map((item) => BookingModel.fromJson(item as Map<String, dynamic>))
+            .toList();
+
+        if (mounted) {
+          setState(() {
+            _draftBookings = drafts;
+          });
+        }
+      }
+    } catch (e) {
+      debugPrint('Error loading draft bookings: $e');
+    }
+  }
+
+  /// Save draft bookings to SharedPreferences
+  Future<void> _saveDraftBookings() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final currentUser = FirebaseAuth.instance.currentUser;
+      if (currentUser == null) return;
+
+      final key = 'draft_bookings_${currentUser.uid}';
+
+      if (_draftBookings.isEmpty) {
+        // Clear if no drafts
+        await prefs.remove(key);
+      } else {
+        // Convert to JSON and save
+        final jsonData = _draftBookings.map((b) => b.toMap()).toList();
+        await prefs.setString(key, jsonEncode(jsonData));
+      }
+    } catch (e) {
+      debugPrint('Error saving draft bookings: $e');
+    }
   }
 
   Future<void> _refreshBookings() async {
@@ -900,44 +986,49 @@ class _BookAClimbScreenState extends State<BookAClimbScreen> {
   }
 
   void _showEditBookingSheet(BookingModel booking) {
-    if (booking.id == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Cannot edit a pending local booking yet.'),
-        ),
-      );
-      return;
-    }
+    // Check if this is a draft booking
+    final isDraft = booking.isDraft;
+
+    // Hometown is now a text input, store as-is
+    String hometownValue = booking.hometown;
 
     final formKey = GlobalKey<FormState>();
     final affiliationController = TextEditingController(
       text: booking.affiliation,
     );
     final phoneController = TextEditingController(text: booking.phoneNumber);
-    final portersController = TextEditingController(
-      text: booking.numberOfPorters.toString(),
-    );
     final notesController = TextEditingController(text: booking.notes ?? '');
+    final hometownController = TextEditingController(text: hometownValue);
 
-    // Convert database format to display format
-    String hometownValue = booking.hometown;
-    if (hometownValue == 'inside_san_isidro') {
-      hometownValue = 'Inside San Isidro';
-    } else if (hometownValue == 'inside_davao_oriental') {
-      hometownValue = 'Inside Davao Oriental';
-    } else if (hometownValue == 'outside_davao_oriental') {
-      hometownValue = 'Outside Davao Oriental';
-    }
-
-    bool isSeniorValue = booking.isSenior;
+    // Get primary contact's category
+    String primaryContactCategory =
+        booking.members.isNotEmpty && booking.members[0].isPrimaryContact
+        ? booking.members[0].category
+        : 'student';
 
     // Convert trek type from database format
     String trekTypeValue = booking.trekType;
-    if (trekTypeValue == 'recreational' ||
-        trekTypeValue.toLowerCase() == 'general') {
-      trekTypeValue = 'General';
-    } else if (trekTypeValue == 'research') {
-      trekTypeValue = 'Research';
+    if (trekTypeValue == 'regular_trek' || trekTypeValue == 'regular trek') {
+      trekTypeValue = 'Regular Trek';
+    } else if (trekTypeValue == 'research_trek' ||
+        trekTypeValue == 'research trek') {
+      trekTypeValue = 'Research Trek';
+    } else if (trekTypeValue == 'benchmarking_trek' ||
+        trekTypeValue == 'benchmarking trek') {
+      trekTypeValue = 'Benchmarking Trek';
+    } else if (trekTypeValue == 'special_trek' ||
+        trekTypeValue == 'special trek') {
+      trekTypeValue = 'Special Trek';
+    }
+
+    // Ensure the value matches a dropdown option
+    if (![
+      'Regular Trek',
+      'Research Trek',
+      'Benchmarking Trek',
+      'Special Trek',
+    ].contains(trekTypeValue)) {
+      trekTypeValue = 'Regular Trek'; // Default fallback
     }
 
     bool isSaving = false;
@@ -979,16 +1070,6 @@ class _BookAClimbScreenState extends State<BookAClimbScreen> {
             Future<void> handleSave() async {
               if (!formKey.currentState!.validate()) return;
 
-              final porters = int.tryParse(portersController.text.trim());
-              if (porters == null || porters < 0) {
-                ScaffoldMessenger.of(this.context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Enter a valid number of porters.'),
-                  ),
-                );
-                return;
-              }
-
               // Validate that at least one file exists (current or new)
               final remainingExistingFiles = existingAttachments
                   .where((a) => !attachmentsToDelete.contains(a.fileName))
@@ -1010,63 +1091,117 @@ class _BookAClimbScreenState extends State<BookAClimbScreen> {
               setModalState(() => isSaving = true);
 
               try {
-                // Update booking details
-                await BookingService.instance.updateBooking(
-                  booking.id!,
-                  affiliation: affiliationController.text.trim(),
-                  phoneNumber: phoneController.text.trim(),
-                  numberOfPorters: porters,
-                  trekType: trekTypeValue.toLowerCase(),
-                  hometown: hometownValue.toLowerCase().replaceAll(' ', '_'),
-                  isSenior: isSeniorValue,
-                  notes: notesController.text.trim().isEmpty
-                      ? null
-                      : notesController.text.trim(),
-                  resubmitDeclined: isDeclined, // Reset to pending if declined
-                );
+                if (isDraft) {
+                  // Update draft booking locally
+                  final updatedDraft = booking.copyWith(
+                    affiliation: affiliationController.text.trim(),
+                    phoneNumber: phoneController.text.trim(),
+                    trekType: trekTypeValue.toLowerCase(),
+                    hometown: hometownValue,
+                    notes: notesController.text.trim().isEmpty
+                        ? null
+                        : notesController.text.trim(),
+                  );
 
-                // Delete removed attachments
-                for (final attachment in existingAttachments) {
-                  if (attachmentsToDelete.contains(attachment.fileName)) {
-                    try {
-                      await BookingService.instance.deleteAttachment(
-                        booking.id!,
-                        attachment,
-                      );
-                    } catch (e) {
-                      debugPrint(
-                        'Error deleting attachment ${attachment.fileName}: $e',
-                      );
-                      // Continue with other deletions
+                  // Update primary contact's category
+                  if (updatedDraft.members.isNotEmpty) {
+                    final updatedMembers = List<Member>.from(
+                      updatedDraft.members,
+                    );
+                    updatedMembers[0] = updatedMembers[0].copyWith(
+                      category: primaryContactCategory,
+                    );
+                    updatedDraft.members = updatedMembers;
+                  }
+
+                  // Update in draft list
+                  final draftIndex = _draftBookings.indexWhere(
+                    (b) => b == booking,
+                  );
+                  if (draftIndex != -1) {
+                    setState(() {
+                      _draftBookings[draftIndex] = updatedDraft;
+                    });
+                    // Save updated drafts to persistent storage
+                    await _saveDraftBookings();
+                  }
+
+                  if (mounted) {
+                    Navigator.of(context).pop();
+                    ScaffoldMessenger.of(this.context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Draft booking updated successfully.'),
+                      ),
+                    );
+                  }
+                } else {
+                  // Update submitted booking in Firestore
+                  await BookingService.instance.updateBooking(
+                    booking.id,
+                    affiliation: affiliationController.text.trim(),
+                    phoneNumber: phoneController.text.trim(),
+                    trekType: trekTypeValue.toLowerCase(),
+                    hometown: hometownValue,
+                    notes: notesController.text.trim().isEmpty
+                        ? null
+                        : notesController.text.trim(),
+                    resubmitDeclined: isDeclined,
+                  );
+
+                  // Update primary contact's category if it changed
+                  if (primaryContactCategory !=
+                      (booking.members.isNotEmpty
+                          ? booking.members[0].category
+                          : 'student')) {
+                    await BookingService.instance.updatePrimaryContactCategory(
+                      booking.id,
+                      primaryContactCategory,
+                    );
+                  }
+
+                  // Delete removed attachments
+                  for (final attachment in existingAttachments) {
+                    if (attachmentsToDelete.contains(attachment.fileName)) {
+                      try {
+                        await BookingService.instance.deleteAttachment(
+                          booking.id,
+                          attachment,
+                        );
+                      } catch (e) {
+                        debugPrint(
+                          'Error deleting attachment ${attachment.fileName}: $e',
+                        );
+                        // Continue with other deletions
+                      }
                     }
                   }
-                }
 
-                // Upload new files
-                for (final file in newFiles) {
-                  try {
-                    await BookingService.instance.uploadAttachment(
-                      booking.id!,
-                      file,
-                    );
-                  } catch (e) {
-                    debugPrint('Error uploading file ${file.name}: $e');
-                    debugPrint(StackTrace.current.toString());
-                    // Continue with other uploads
+                  // Upload new files
+                  for (final file in newFiles) {
+                    try {
+                      await BookingService.instance.uploadAttachment(
+                        booking.id,
+                        file,
+                      );
+                    } catch (e) {
+                      debugPrint('Error uploading file ${file.name}: $e');
+                      debugPrint(StackTrace.current.toString());
+                      // Continue with other uploads
+                    }
                   }
-                }
 
-                if (mounted) {
-                  Navigator.of(context).pop();
-                  ScaffoldMessenger.of(this.context).showSnackBar(
-                    SnackBar(
-                      content: Text(
-                        isDeclined
-                            ? 'Booking updated and resubmitted for review!'
-                            : 'Booking details updated.',
+                  if (mounted) {
+                    Navigator.of(context).pop();
+                    ScaffoldMessenger.of(this.context).showSnackBar(
+                      SnackBar(
+                        content: Text(
+                          isDeclined
+                              ? 'Booking updated and resubmitted for review!'
+                              : 'Booking details updated.',
+                        ),
                       ),
-                    ),
-                  );
+                    );
+                  }
                 }
               } catch (e) {
                 if (mounted) {
@@ -1233,25 +1368,6 @@ class _BookAClimbScreenState extends State<BookAClimbScreen> {
                                 },
                               ),
                               const SizedBox(height: 12),
-                              TextFormField(
-                                controller: portersController,
-                                decoration: const InputDecoration(
-                                  labelText: 'Number of Porters',
-                                  border: OutlineInputBorder(),
-                                ),
-                                keyboardType: TextInputType.number,
-                                validator: (value) {
-                                  if (value == null || value.trim().isEmpty) {
-                                    return 'Number of porters is required';
-                                  }
-                                  final porters = int.tryParse(value);
-                                  if (porters == null || porters < 0) {
-                                    return 'Enter a valid whole number';
-                                  }
-                                  return null;
-                                },
-                              ),
-                              const SizedBox(height: 12),
                               // Trek Type Dropdown
                               Container(
                                 decoration: BoxDecoration(
@@ -1289,7 +1405,7 @@ class _BookAClimbScreenState extends State<BookAClimbScreen> {
                                   dropdownColor: SharedColors.white,
                                   items: const [
                                     DropdownMenuItem(
-                                      value: 'General',
+                                      value: 'Regular Trek',
                                       child: Row(
                                         children: [
                                           Icon(
@@ -1298,12 +1414,12 @@ class _BookAClimbScreenState extends State<BookAClimbScreen> {
                                             color: AppColors.primary,
                                           ),
                                           SizedBox(width: 12),
-                                          Text('General'),
+                                          Text('Regular Trek'),
                                         ],
                                       ),
                                     ),
                                     DropdownMenuItem(
-                                      value: 'Research',
+                                      value: 'Research Trek',
                                       child: Row(
                                         children: [
                                           Icon(
@@ -1312,7 +1428,35 @@ class _BookAClimbScreenState extends State<BookAClimbScreen> {
                                             color: Colors.blueGrey,
                                           ),
                                           SizedBox(width: 12),
-                                          Text('Research'),
+                                          Text('Research Trek'),
+                                        ],
+                                      ),
+                                    ),
+                                    DropdownMenuItem(
+                                      value: 'Benchmarking Trek',
+                                      child: Row(
+                                        children: [
+                                          Icon(
+                                            Icons.trending_up,
+                                            size: 20,
+                                            color: Colors.amber,
+                                          ),
+                                          SizedBox(width: 12),
+                                          Text('Benchmarking Trek'),
+                                        ],
+                                      ),
+                                    ),
+                                    DropdownMenuItem(
+                                      value: 'Special Trek',
+                                      child: Row(
+                                        children: [
+                                          Icon(
+                                            Icons.star,
+                                            size: 20,
+                                            color: Colors.orange,
+                                          ),
+                                          SizedBox(width: 12),
+                                          Text('Special Trek'),
                                         ],
                                       ),
                                     ),
@@ -1325,7 +1469,23 @@ class _BookAClimbScreenState extends State<BookAClimbScreen> {
                                 ),
                               ),
                               const SizedBox(height: 12),
-                              // Hometown Dropdown
+                              // Home Address Text Input
+                              TextFormField(
+                                controller: hometownController,
+                                decoration: InputDecoration(
+                                  labelText: 'Home Address',
+                                  hintText: 'Enter your home address',
+                                  border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  prefixIcon: const Icon(Icons.location_on),
+                                ),
+                                onChanged: (val) {
+                                  setModalState(() => hometownValue = val);
+                                },
+                              ),
+                              const SizedBox(height: 12),
+                              // Primary Contact Category
                               Container(
                                 decoration: BoxDecoration(
                                   color: Colors.white,
@@ -1344,9 +1504,9 @@ class _BookAClimbScreenState extends State<BookAClimbScreen> {
                                   vertical: 4,
                                 ),
                                 child: DropdownButtonFormField<String>(
-                                  value: hometownValue,
+                                  value: primaryContactCategory,
                                   decoration: const InputDecoration(
-                                    labelText: 'Hometown',
+                                    labelText: 'Your Category',
                                     border: InputBorder.none,
                                     contentPadding: EdgeInsets.zero,
                                   ),
@@ -1356,122 +1516,98 @@ class _BookAClimbScreenState extends State<BookAClimbScreen> {
                                   ),
                                   items: const [
                                     DropdownMenuItem(
-                                      value: 'Inside San Isidro',
-                                      child: Row(
-                                        children: [
-                                          Icon(
-                                            Icons.location_city,
-                                            size: 20,
-                                            color: AppColors.primary,
-                                          ),
-                                          SizedBox(width: 12),
-                                          Text('Inside San Isidro'),
-                                        ],
-                                      ),
+                                      value: 'student',
+                                      child: Text('Student'),
                                     ),
                                     DropdownMenuItem(
-                                      value: 'Inside Davao Oriental',
-                                      child: Row(
-                                        children: [
-                                          Icon(
-                                            Icons.map,
-                                            size: 20,
-                                            color: AppColors.primary,
-                                          ),
-                                          SizedBox(width: 12),
-                                          Text('Inside Davao Oriental'),
-                                        ],
-                                      ),
+                                      value: 'senior_citizen',
+                                      child: Text('Senior Citizen'),
                                     ),
                                     DropdownMenuItem(
-                                      value: 'Outside Davao Oriental',
-                                      child: Row(
-                                        children: [
-                                          Icon(
-                                            Icons.public,
-                                            size: 20,
-                                            color: AppColors.primary,
-                                          ),
-                                          SizedBox(width: 12),
-                                          Text('Outside Davao Oriental'),
-                                        ],
-                                      ),
+                                      value: 'davao_oriental_resident',
+                                      child: Text('Davao Oriental Resident'),
+                                    ),
+                                    DropdownMenuItem(
+                                      value: 'ocfdo',
+                                      child: Text('OCFDO Member'),
+                                    ),
+                                    DropdownMenuItem(
+                                      value: 'outside_davao_oriental',
+                                      child: Text('Outside Davao Oriental'),
+                                    ),
+                                    DropdownMenuItem(
+                                      value: 'children_8_15',
+                                      child: Text('Children (8-15)'),
+                                    ),
+                                    DropdownMenuItem(
+                                      value: 'mfsm',
+                                      child: Text('MFSM Member'),
                                     ),
                                   ],
                                   onChanged: (val) {
                                     if (val != null) {
-                                      setModalState(() => hometownValue = val);
+                                      setModalState(
+                                        () => primaryContactCategory = val,
+                                      );
                                     }
                                   },
                                 ),
                               ),
                               const SizedBox(height: 12),
-                              // Senior Citizen Dropdown
-                              Container(
-                                decoration: BoxDecoration(
-                                  color: SharedColors.white,
-                                  borderRadius: BorderRadius.circular(12),
-                                  border: Border.all(
-                                    color: AppColors.borderBlack26,
-                                  ),
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: SharedColors.black.withOpacity(0.05),
-                                      blurRadius: 4,
-                                      offset: const Offset(0, 2),
-                                    ),
-                                  ],
+                              // Group Members section
+                              const Text(
+                                'Group Members',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
                                 ),
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 12,
-                                  vertical: 4,
-                                ),
-                                child: DropdownButtonFormField<bool>(
-                                  value: isSeniorValue,
-                                  decoration: const InputDecoration(
-                                    labelText: 'Senior Citizen (60+)',
-                                    border: InputBorder.none,
-                                    contentPadding: EdgeInsets.zero,
-                                  ),
-                                  icon: Icon(
-                                    Icons.arrow_drop_down,
-                                    color: AppColors.primary,
-                                  ),
-                                  items: const [
-                                    DropdownMenuItem(
-                                      value: false,
-                                      child: Row(
-                                        children: [
-                                          Icon(
-                                            Icons.person,
-                                            size: 20,
-                                            color: AppColors.primary,
-                                          ),
-                                          SizedBox(width: 12),
-                                          Text('No'),
-                                        ],
-                                      ),
-                                    ),
-                                    DropdownMenuItem(
-                                      value: true,
-                                      child: Row(
-                                        children: [
-                                          Icon(
-                                            Icons.elderly,
-                                            size: 20,
-                                            color: AppColors.primary,
-                                          ),
-                                          SizedBox(width: 12),
-                                          Text('Yes'),
-                                        ],
-                                      ),
-                                    ),
-                                  ],
-                                  onChanged: (val) {
-                                    if (val != null) {
-                                      setModalState(() => isSeniorValue = val);
-                                    }
+                              ),
+                              const SizedBox(height: 8),
+                              // Display members
+                              ..._bookingMembers.asMap().entries.map((entry) {
+                                final index = entry.key;
+                                final member = entry.value;
+                                return MemberFormCard(
+                                  member: member,
+                                  memberIndex: index,
+                                  isPrimaryContact: member.isPrimaryContact,
+                                  onMemberUpdated: (updatedMember) {
+                                    setModalState(() {
+                                      _bookingMembers[index] = updatedMember;
+                                    });
                                   },
+                                  onRemoveMember: () {
+                                    setModalState(() {
+                                      _bookingMembers.removeAt(index);
+                                    });
+                                  },
+                                );
+                              }).toList(),
+                              // Add Member button
+                              SizedBox(
+                                width: double.infinity,
+                                child: OutlinedButton.icon(
+                                  onPressed: () {
+                                    setModalState(() {
+                                      _bookingMembers.add(
+                                        Member(
+                                          firstName: '',
+                                          lastName: '',
+                                          gender: 'male',
+                                          birthDate: '',
+                                          contactNumber: '',
+                                          nationality: '',
+                                          homeAddress: '',
+                                          category: 'student',
+                                          isPrimaryContact: false,
+                                          hasAccount: false,
+                                          createdAt: Timestamp.now(),
+                                        ),
+                                      );
+                                    });
+                                  },
+                                  icon: const Icon(Icons.add),
+                                  label: const Text('Add Member'),
                                 ),
                               ),
                               const SizedBox(height: 12),
@@ -1680,6 +1816,39 @@ class _BookAClimbScreenState extends State<BookAClimbScreen> {
 
     if (!mounted) return;
 
+    // Initialize members list with primary contact (current authenticated user)
+    final currentUser = FirebaseAuth.instance.currentUser;
+    if (currentUser != null && _bookingMembers.isEmpty) {
+      final userData = await UserService.instance.getUserOnce(currentUser.uid);
+      final firstName =
+          userData?['firstName'] as String? ??
+          currentUser.displayName?.split(' ').first ??
+          '';
+      final lastName =
+          userData?['lastName'] as String? ??
+          currentUser.displayName?.split(' ').last ??
+          '';
+
+      _bookingMembers = [
+        Member(
+          firstName: firstName,
+          lastName: lastName,
+          gender: userData?['gender'] as String? ?? 'Not specified',
+          birthDate: userData?['birthDate'] as String? ?? '',
+          contactNumber: _contactController.text,
+          nationality: userData?['nationality'] as String? ?? '',
+          homeAddress: userData?['homeAddress'] as String? ?? '',
+          category: _primaryContactCategory,
+          isPrimaryContact: true,
+          hasAccount: true,
+          userId: currentUser.uid,
+          createdAt: Timestamp.now(),
+        ),
+      ];
+    }
+
+    if (!mounted) return;
+
     final scaffoldContext = context; // Capture outer context for SnackBar
 
     showModalBottomSheet(
@@ -1766,8 +1935,7 @@ class _BookAClimbScreenState extends State<BookAClimbScreen> {
                                                 Text(
                                                   user?.email ?? '',
                                                   style: const TextStyle(
-                                                    color:
-                                                        AppColors.text,
+                                                    color: AppColors.text,
                                                   ),
                                                 ),
                                               ],
@@ -1793,13 +1961,6 @@ class _BookAClimbScreenState extends State<BookAClimbScreen> {
                             _buildRoundedTextField(
                               'Affiliation',
                               controller: _affiliationController,
-                            ),
-                            const SizedBox(height: 12),
-                            _buildRoundedTextField(
-                              'Number of Porters',
-                              controller: _portersController,
-                              keyboardType: TextInputType.number,
-                              validator: Validators.validPorters,
                             ),
                             const SizedBox(height: 12),
                             // Date picker row
@@ -1985,8 +2146,11 @@ class _BookAClimbScreenState extends State<BookAClimbScreen> {
     }
 
     // Check if the selected date has available slots
-    final porters = int.tryParse(_portersController.text.trim()) ?? 0;
-    final availability = await _checkDateAvailability(_selectedDate!, porters);
+    final totalMembers = _bookingMembers.length;
+    final availability = await _checkDateAvailability(
+      _selectedDate!,
+      totalMembers,
+    );
 
     // Check if date is closed
     if (availability['isClosed'] == true) {
@@ -2038,8 +2202,8 @@ class _BookAClimbScreenState extends State<BookAClimbScreen> {
             'Current status:\n'
             '• Slots used: $slotsUsed/$maxSlots\n'
             '• Slots remaining: $remaining\n'
-            '• Your booking needs: $slotsNeeded slots (1 person + $porters porter${porters != 1 ? 's' : ''})\n\n'
-            'Please select another date or reduce the number of porters.',
+            '• Your booking needs: $slotsNeeded slots for ${_bookingMembers.length} member${_bookingMembers.length != 1 ? 's' : ''}\n\n'
+            'Please select another date or reduce the number of group members.',
       );
       return;
     }
@@ -2076,7 +2240,7 @@ class _BookAClimbScreenState extends State<BookAClimbScreen> {
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(16),
               ),
-              title: const Text('Review Your Submission'),
+              title: const Text('Review Your Booking'),
               content: SingleChildScrollView(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -2086,10 +2250,12 @@ class _BookAClimbScreenState extends State<BookAClimbScreen> {
                     _reviewRow('Email', user?.email ?? ''),
                     _reviewRow('Contact Number', _contactController.text),
                     _reviewRow('Affiliation', _affiliationController.text),
-                    _reviewRow('Number of Porters', _portersController.text),
-                    _reviewRow('Purpose of Trek', _climbType),
+                    _reviewRow('Trek Type', _climbType),
                     _reviewRow('Hometown', _hometown),
-                    _reviewRow('Senior Citizen', _isSenior ? 'Yes' : 'No'),
+                    _reviewRow(
+                      'Total Members',
+                      _bookingMembers.length.toString(),
+                    ),
                     _reviewRow(
                       'Trek Date',
                       _selectedDate != null ? _formatSelectedDate() : 'Not set',
@@ -2125,6 +2291,12 @@ class _BookAClimbScreenState extends State<BookAClimbScreen> {
                   onPressed: isSubmitting
                       ? null
                       : () => Navigator.of(context).pop(),
+                  style: TextButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(
+                      vertical: 12,
+                      horizontal: 16,
+                    ),
+                  ),
                   child: const Text('Cancel'),
                 ),
                 ElevatedButton(
@@ -2133,15 +2305,19 @@ class _BookAClimbScreenState extends State<BookAClimbScreen> {
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(8),
                     ),
+                    padding: const EdgeInsets.symmetric(
+                      vertical: 12,
+                      horizontal: 24,
+                    ),
                   ),
-                  onPressed: isSubmitting
+                  onPressed: isSubmitting || user == null
                       ? null
                       : () async {
                           // Check for duplicate bookings on the same date
                           try {
                             final hasDuplicate = await BookingService.instance
                                 .hasExistingBookingOnDate(
-                                  user!.uid,
+                                  user.uid,
                                   _selectedDate!,
                                 );
 
@@ -2169,61 +2345,45 @@ class _BookAClimbScreenState extends State<BookAClimbScreen> {
                             return;
                           }
 
-                          // create local object for immediate insertion
-                          final newClimb = Climb(
-                            name: user.displayName ?? 'Guest',
-                            date: _selectedDate ?? DateTime.now(),
-                            type: _climbType,
-                            status: 'Pending',
-                            documents: _pickedFiles.map((f) => f.name).toList(),
-                          );
-
+                          // create draft booking directly without intermediate Climb object
                           // show loading state inside dialog
                           dialogSetState(() => isSubmitting = true);
 
-                          // We'll show a progress indicator inside the dialog by
-                          // updating the StatefulBuilder's state via dialogSetState.
                           try {
-                            await _submitBookingToFirebase(
-                              newClimb,
-                              _pickedFiles,
-                              {
-                                'contact': _contactController.text,
-                                'affiliation': _affiliationController.text,
-                                'porters': _portersController.text,
-                                'trekType': _climbType.toLowerCase(),
-                                'hometown': _hometown,
-                                'isSenior': _isSenior.toString(),
-                              },
-                              onProgress: (uploaded, total, fileName, percent) {
-                                // Update the dialog-scoped progress variables
-                                uploadedCount = uploaded;
-                                filePercent = percent ?? 0.0;
-                                currentFile = fileName;
-                                dialogSetState(() {});
-                              },
+                            // Create a draft booking with all the current form data
+                            final now = DateTime.now();
+                            final draftBooking = BookingModel(
+                              userId: user.uid,
+                              affiliation: _affiliationController.text,
+                              trekDate: Timestamp.fromDate(
+                                _selectedDate ?? now,
+                              ),
+                              trekType: _climbType.toLowerCase(),
+                              hometown: _hometown,
+                              phoneNumber: _contactController.text,
+                              notes: 'Draft booking - not yet submitted',
+                              members: _bookingMembers,
                             );
+
+                            // Add to draft bookings list (saved locally)
+                            if (mounted) {
+                              setState(() {
+                                _draftBookings.add(draftBooking);
+                              });
+                              // Save to persistent storage
+                              await _saveDraftBookings();
+                            }
 
                             // show snack on the main scaffold
                             if (mounted) {
                               ScaffoldMessenger.of(this.context).showSnackBar(
-                                const SnackBar(
-                                  content: Text('Booking submitted to server.'),
+                                SnackBar(
+                                  content: Text(
+                                    'Booking saved locally. ${_bookingMembers.length} member${_bookingMembers.length != 1 ? 's' : ''} added. You can add more members or submit when ready.',
+                                  ),
+                                  duration: const Duration(seconds: 4),
                                 ),
                               );
-                            }
-
-                            // update main UI list if we aren't already subscribed
-                            // to the Firestore stream (avoid duplicate entries).
-                            if (mounted) {
-                              setState(() {
-                                if (_bookingSub == null) {
-                                  // In this case we don't have the bookingId in the
-                                  // newClimb instance; the Firestore stream will
-                                  // populate attachments once uploads complete.
-                                  _bookings.insert(0, newClimb);
-                                }
-                              });
                             }
 
                             // close the dialog first (use rootNavigator to ensure dialog is dismissed)
@@ -2236,11 +2396,11 @@ class _BookAClimbScreenState extends State<BookAClimbScreen> {
                               setState(() {
                                 _contactController.clear();
                                 _affiliationController.clear();
-                                _portersController.clear();
                                 _pickedFiles = [];
-                                _climbType = 'General';
-                                _hometown = 'Inside San Isidro';
-                                _isSenior = false;
+                                _bookingMembers = [];
+                                _climbType = 'Regular Trek';
+                                _hometown = '';
+                                _primaryContactCategory = 'student';
                                 _selectedDate = null;
                               });
                             }
@@ -2249,9 +2409,7 @@ class _BookAClimbScreenState extends State<BookAClimbScreen> {
                             if (mounted) {
                               ScaffoldMessenger.of(this.context).showSnackBar(
                                 SnackBar(
-                                  content: Text(
-                                    'Saved locally (upload failed): $e',
-                                  ),
+                                  content: Text('Error saving booking: $e'),
                                 ),
                               );
                             }
@@ -2266,7 +2424,7 @@ class _BookAClimbScreenState extends State<BookAClimbScreen> {
                           child: CircularProgressIndicator(strokeWidth: 2),
                         )
                       : const Text(
-                          'Proceed',
+                          'Save',
                           style: TextStyle(color: SharedColors.white),
                         ),
                 ),
@@ -2332,22 +2490,42 @@ class _BookAClimbScreenState extends State<BookAClimbScreen> {
             dropdownColor: SharedColors.white,
             items: const [
               DropdownMenuItem(
-                value: 'General',
+                value: 'Regular Trek',
                 child: Row(
                   children: [
                     Icon(Icons.hiking, size: 20, color: AppColors.primary),
                     SizedBox(width: 12),
-                    Text('General'),
+                    Text('Regular Trek'),
                   ],
                 ),
               ),
               DropdownMenuItem(
-                value: 'Research',
+                value: 'Research Trek',
                 child: Row(
                   children: [
                     Icon(Icons.science, size: 20, color: AppColors.primary),
                     SizedBox(width: 12),
-                    Text('Research'),
+                    Text('Research Trek'),
+                  ],
+                ),
+              ),
+              DropdownMenuItem(
+                value: 'Benchmarking Trek',
+                child: Row(
+                  children: [
+                    Icon(Icons.trending_up, size: 20, color: AppColors.primary),
+                    SizedBox(width: 12),
+                    Text('Benchmarking Trek'),
+                  ],
+                ),
+              ),
+              DropdownMenuItem(
+                value: 'Special Trek',
+                child: Row(
+                  children: [
+                    Icon(Icons.star, size: 20, color: AppColors.primary),
+                    SizedBox(width: 12),
+                    Text('Special Trek'),
                   ],
                 ),
               ),
@@ -2359,7 +2537,37 @@ class _BookAClimbScreenState extends State<BookAClimbScreen> {
         ),
         const SizedBox(height: 18),
         const Text(
-          'Hometown',
+          'Home Address',
+          style: TextStyle(
+            fontWeight: FontWeight.w600,
+            fontSize: 15,
+            color: AppColors.text,
+          ),
+        ),
+        const SizedBox(height: 8),
+        TextFormField(
+          validator: (value) {
+            if (value == null || value.isEmpty) {
+              return 'Please enter your home address';
+            }
+            return null;
+          },
+          onChanged: (val) {
+            setState(() => _hometown = val);
+          },
+          decoration: InputDecoration(
+            hintText: 'Enter your home address',
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
+            prefixIcon: const Icon(Icons.location_on),
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 16,
+              vertical: 12,
+            ),
+          ),
+        ),
+        const SizedBox(height: 18),
+        const Text(
+          'Your Category',
           style: TextStyle(
             fontWeight: FontWeight.w600,
             fontSize: 15,
@@ -2382,7 +2590,7 @@ class _BookAClimbScreenState extends State<BookAClimbScreen> {
           ),
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
           child: DropdownButtonFormField<String>(
-            value: _hometown,
+            value: _primaryContactCategory,
             decoration: const InputDecoration(
               border: InputBorder.none,
               contentPadding: EdgeInsets.zero,
@@ -2395,110 +2603,32 @@ class _BookAClimbScreenState extends State<BookAClimbScreen> {
             ),
             dropdownColor: SharedColors.white,
             items: const [
+              DropdownMenuItem(value: 'student', child: Text('Student')),
               DropdownMenuItem(
-                value: 'Inside San Isidro',
-                child: Row(
-                  children: [
-                    Icon(
-                      Icons.location_city,
-                      size: 20,
-                      color: AppColors.primary,
-                    ),
-                    SizedBox(width: 12),
-                    Text('Inside San Isidro'),
-                  ],
-                ),
+                value: 'senior_citizen',
+                child: Text('Senior Citizen'),
               ),
               DropdownMenuItem(
-                value: 'Inside Davao Oriental',
-                child: Row(
-                  children: [
-                    Icon(Icons.map, size: 20, color: AppColors.primary),
-                    SizedBox(width: 12),
-                    Text('Inside Davao Oriental'),
-                  ],
-                ),
+                value: 'davao_oriental_resident',
+                child: Text('Davao Oriental Resident'),
+              ),
+              DropdownMenuItem(value: 'ocfdo', child: Text('OCFDO Member')),
+              DropdownMenuItem(
+                value: 'outside_davao_oriental',
+                child: Text('Outside Davao Oriental'),
               ),
               DropdownMenuItem(
-                value: 'Outside Davao Oriental',
-                child: Row(
-                  children: [
-                    Icon(Icons.public, size: 20, color: AppColors.primary),
-                    SizedBox(width: 12),
-                    Text('Outside Davao Oriental'),
-                  ],
-                ),
+                value: 'children_8_15',
+                child: Text('Children (8-15)'),
               ),
+              DropdownMenuItem(value: 'mfsm', child: Text('MFSM Member')),
             ],
             onChanged: (val) {
-              if (val != null) setState(() => _hometown = val);
+              if (val != null) setState(() => _primaryContactCategory = val);
             },
           ),
         ),
         const SizedBox(height: 18),
-        const Text(
-          'Senior Citizen (60+)',
-          style: TextStyle(
-            fontWeight: FontWeight.w600,
-            fontSize: 15,
-            color: AppColors.text,
-          ),
-        ),
-        const SizedBox(height: 8),
-        Container(
-          decoration: BoxDecoration(
-            color: SharedColors.white,
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: AppColors.borderBlack12),
-            boxShadow: [
-              BoxShadow(
-                color: SharedColors.black.withOpacity(0.05),
-                blurRadius: 4,
-                offset: const Offset(0, 2),
-              ),
-            ],
-          ),
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-          child: DropdownButtonFormField<bool>(
-            value: _isSenior,
-            decoration: const InputDecoration(
-              border: InputBorder.none,
-              contentPadding: EdgeInsets.zero,
-            ),
-            icon: Icon(Icons.arrow_drop_down, color: AppColors.primary),
-            style: const TextStyle(
-              fontSize: 15,
-              color: AppColors.text,
-              fontWeight: FontWeight.w500,
-            ),
-            dropdownColor: SharedColors.white,
-            items: const [
-              DropdownMenuItem(
-                value: false,
-                child: Row(
-                  children: [
-                    Icon(Icons.person, size: 20, color: AppColors.primary),
-                    SizedBox(width: 12),
-                    Text('No'),
-                  ],
-                ),
-              ),
-              DropdownMenuItem(
-                value: true,
-                child: Row(
-                  children: [
-                    Icon(Icons.elderly, size: 20, color: AppColors.primary),
-                    SizedBox(width: 12),
-                    Text('Yes'),
-                  ],
-                ),
-              ),
-            ],
-            onChanged: (val) {
-              if (val != null) setState(() => _isSenior = val);
-            },
-          ),
-        ),
       ],
     );
   }
@@ -2610,7 +2740,6 @@ class _BookAClimbScreenState extends State<BookAClimbScreen> {
     _bookingSub?.cancel();
     _authSub?.cancel();
     _contactController.dispose();
-    _portersController.dispose();
     _affiliationController.dispose();
     super.dispose();
   }
