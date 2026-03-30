@@ -1,7 +1,7 @@
-﻿[
+[
     {
         "id": "56okrkt0pb",
-        "name": "Station 1: UNESCO Marker",
+        "name": "UNESCO Marker",
         "description": "The official entry point to Mt. Hamiguitan Wildlife Sanctuary, marked by the UNESCO World Heritage inscription. This station highlights the global recognition of the mountain's ecological importance. Trekkers usually gather here for orientation, safety briefings, and group photos before beginning their ascent. It sets the tone for the journey, reminding visitors that they are entering a protected and fragile environment.",
         "difficulty": "Easy",
         "elevation": 449,
@@ -14,7 +14,7 @@
         "steps": null,
         "distanceToNextKm": null,
         "nextStationId": "hu2c5c0kfn",
-        "nextStationName": "Station 2: Crossing Stampa",
+        "nextStationName": "Crossing Stampa",
         "flora": [
             "Dipterocarp trees"
         ],
@@ -28,7 +28,7 @@
     },
     {
         "id": "hu2c5c0kfn",
-        "name": "Station 2: Crossing Stampa",
+        "name": "Crossing Stampa",
         "description": "A shaded forest crossing where several trails intersect. The canopy here is thick, providing a cool rest stop for hikers. Its name, Stampa, is remembered by locals as a place where the trail divides, offering both challenge and reprieve. Trekkers often pause here to take in the sounds of birds and insects before pressing deeper into the sanctuary.",
         "difficulty": "Easy",
         "elevation": 682,
@@ -41,7 +41,7 @@
         "steps": 948,
         "distanceToNextKm": 0.7,
         "nextStationId": "um6j8dnii4",
-        "nextStationName": "Station 3: Puting Bato",
+        "nextStationName": "Puting Bato",
         "flora": [
             "Ferns"
         ],
@@ -53,7 +53,7 @@
     },
     {
         "id": "um6j8dnii4",
-        "name": "Station 3: Puting Bato",
+        "name": "Puting Bato",
         "description": "Named after its distinctive white rock formation, Puting Bato provides both a scenic landmark and a natural resting point. The pale stones stand in contrast to the surrounding greenery, making it a memorable stop along the trail. From here, trekkers begin to notice the gradual shift in vegetation as they climb higher. It is also a spot where small mammals and insects are often observed.",
         "difficulty": "Moderate",
         "elevation": 623,
@@ -66,7 +66,7 @@
         "steps": null,
         "distanceToNextKm": null,
         "nextStationId": "3ko938o2gb",
-        "nextStationName": "Station 4: Lantawan 1",
+        "nextStationName": "Lantawan 1",
         "flora": [
             "Orchids"
         ],
@@ -78,7 +78,7 @@
     },
     {
         "id": "3ko938o2gb",
-        "name": "Station 4: Lantawan 1",
+        "name": "Lantawan 1",
         "description": "The first major viewpoint on the trek, offering wide panoramas of the forest canopy below. Lantawan, meaning 'view deck' in the local dialect, is a favorite stop for photography and quiet reflection. The air is cooler here, and the breeze carries the scent of mountain flora. It serves as a checkpoint for guides to assess the group's condition before moving further uphill.",
         "difficulty": "Moderate",
         "elevation": 830,
@@ -91,7 +91,7 @@
         "steps": 5194,
         "distanceToNextKm": 4.0,
         "nextStationId": "33ii1jrc5s",
-        "nextStationName": "Station 5: Camp 4",
+        "nextStationName": "Camp 4",
         "flora": [
             "Rattan"
         ],
@@ -105,7 +105,7 @@
     },
     {
         "id": "33ii1jrc5s",
-        "name": "Station 5: Camp 4",
+        "name": "Camp 4",
         "description": "A designated campsite where trekkers often rest or spend the night. This stop is surrounded by tall trees, creating a sheltered environment from wind and sun. It is a strategic point for acclimatization before tackling steeper sections ahead. Camp 4 is known for its cool evenings and the sound of nocturnal wildlife.",
         "difficulty": "Moderate",
         "elevation": 908,
@@ -118,7 +118,7 @@
         "steps": 8200,
         "distanceToNextKm": 6.3,
         "nextStationId": "vaatj8uomu",
-        "nextStationName": "Station 6: Uwang-Uwang Trail",
+        "nextStationName": "Uwang-Uwang Trail",
         "flora": [
             "Bamboo"
         ],
@@ -130,7 +130,7 @@
     },
     {
         "id": "vaatj8uomu",
-        "name": "Station 6: Uwang-Uwang Trail",
+        "name": "Uwang-Uwang Trail",
         "description": "A challenging trail section known for its steep inclines and dense vegetation. The name 'Uwang-Uwang' reflects the narrow, winding nature of the path. Here, the forest grows thicker, with mosses carpeting rocks and branches. Trekkers often slow down in this section, taking care as the trail can be muddy and slippery.",
         "difficulty": "Hard",
         "elevation": 1121,
@@ -143,7 +143,7 @@
         "steps": 2,
         "distanceToNextKm": 0.0,
         "nextStationId": "cbensi5juq",
-        "nextStationName": "Station 7: Lantawan 2",
+        "nextStationName": "Lantawan 2",
         "flora": [
             "Mosses"
         ],
@@ -157,7 +157,7 @@
     },
     {
         "id": "cbensi5juq",
-        "name": "Station 7: Lantawan 2",
+        "name": "Lantawan 2",
         "description": "The second major view deck along the trail, located at a higher elevation. Lantawan 2 provides sweeping views of the surrounding valleys and distant mountain ridges. The cooler climate here supports orchids and other epiphytes. Trekkers often take extended breaks to enjoy the scenery and spot rare bird species like the Philippine eagle.",
         "difficulty": "Moderate",
         "elevation": 1215,
@@ -170,7 +170,7 @@
         "steps": 3767,
         "distanceToNextKm": 2.9,
         "nextStationId": "utvrrkfkh9",
-        "nextStationName": "Station 8: Camp 3",
+        "nextStationName": "Camp 3",
         "flora": [
             "Wild orchids"
         ],
@@ -182,7 +182,7 @@
     },
     {
         "id": "utvrrkfkh9",
-        "name": "Station 8: Camp 3",
+        "name": "Camp 3",
         "description": "A camp area commonly used for overnight stays during multi-day treks. It sits near mid-elevation forest, where the sound of owls and other nocturnal animals fill the night. The site offers relative safety and flat ground for tents. It is also a good place to observe the transition between lowland and montane ecosystems.",
         "difficulty": "Moderate",
         "elevation": 1190,
@@ -195,7 +195,7 @@
         "steps": 6627,
         "distanceToNextKm": 5.1,
         "nextStationId": "62n05d42d6",
-        "nextStationName": "Station 9: Pygmy Field",
+        "nextStationName": "Pygmy Field",
         "flora": [
             "Tree ferns"
         ],
@@ -207,7 +207,7 @@
     },
     {
         "id": "6mm4kle34g",
-        "name": "Station 9: Pygmy Field",
+        "name": "Pygmy Field",
         "description": "One of the most iconic features of Mt. Hamiguitan, the Pygmy Field is home to century-old bonsai-like trees that only grow a few feet tall. This unique ecosystem exists due to thin soils, strong winds, and high-altitude conditions. The area is highly fragile, and visitors are strictly advised to stay on the trail. It is both a scientific wonder and a symbol of the sanctuary's uniqueness.",
         "difficulty": "Moderate",
         "elevation": 1214,
@@ -220,7 +220,7 @@
         "steps": 1595,
         "distanceToNextKm": 1.2,
         "nextStationId": "g5iabiveqd",
-        "nextStationName": "Station 10/11: Lantawan 3 / Mossy Forest",
+        "nextStationName": "Lantawan 3 / Mossy Forest",
         "flora": [
             "Bonsai trees"
         ],
@@ -234,7 +234,7 @@
     },
     {
         "id": "g5uabiveqd",
-        "name": "Station 10/11: Lantawan 3 / Mossy Forest",
+        "name": "Lantawan 3 / Mossy Forest",
         "description": "A combined site where trekkers encounter both another viewpoint and the start of the mossy forest ecosystem. The air is damp and cool, with thick moss blanketing tree trunks and rocks. This environment supports amphibians, orchids, and rare ferns. The atmosphere is often misty, giving it an enchanting and otherworldly feel.",
         "difficulty": "Hard",
         "elevation": 1363,
@@ -247,7 +247,7 @@
         "steps": 5241,
         "distanceToNextKm": 4.0,
         "nextStationId": "79t42cmo77",
-        "nextStationName": "Station 12: Tinagong Dagat",
+        "nextStationName": "Tinagong Dagat",
         "flora": [
             "Mosses"
         ],
@@ -261,7 +261,7 @@
     },
     {
         "id": "79t42cmo77",
-        "name": "Station 12: Tinagong Dagat",
+        "name": "Tinagong Dagat",
         "description": "Known as the 'Hidden Sea,' Tinagong Dagat is a seasonal lake basin that fills with water during heavy rains. It resembles an inland sea, adding to its mysterious charm. During the dry season, the ground may be grassy and firm, providing open space amidst the dense forest. It is a favorite spot for nature photography and ecological studies.",
         "difficulty": "Moderate",
         "elevation": 1108,
@@ -274,7 +274,7 @@
         "steps": 8895,
         "distanceToNextKm": 6.8,
         "nextStationId": "stn13",
-        "nextStationName": "Station 13: Hidden Garden",
+        "nextStationName": "Hidden Garden",
         "flora": [
             "Grasses"
         ],
@@ -288,7 +288,7 @@
     },
     {
         "id": "i73hl7b7g3",
-        "name": "Station 13: Hidden Garden",
+        "name": "Hidden Garden",
         "description": "A little-documented site, the Hidden Garden is believed to contain diverse yet understudied flora. Trekkers describe it as a serene clearing, though official ecological surveys remain incomplete. Its mystery adds to the sense of discovery along the Hamiguitan trek. More research may reveal rare plants or animals in this area.",
         "difficulty": "Unknown",
         "elevation": 0,
@@ -301,7 +301,7 @@
         "steps": null,
         "distanceToNextKm": null,
         "nextStationId": "stn14",
-        "nextStationName": "Station 14: Peak",
+        "nextStationName": "Mt. Hamiguitan Peak",
         "flora": [],
         "fauna": [],
         "warnings": {},
@@ -309,7 +309,7 @@
     },
     {
         "id": "mr2l529okj",
-        "name": "Station 14: Peak",
+        "name": "Mt. Hamiguitan Peak",
         "description": "The highest point of Mt. Hamiguitan, offering 360-degree views of Davao Oriental and neighboring landscapes. The summit is often shrouded in clouds, but on clear days trekkers can see as far as the Pacific coast. It is a rewarding finale to the climb, with alpine grasses and occasional sightings of raptors. Weather can change rapidly here, adding challenge and excitement.",
         "difficulty": "Hard",
         "elevation": 1641,
@@ -322,7 +322,7 @@
         "steps": 6342,
         "distanceToNextKm": 4.9,
         "nextStationId": "44r5tebjrc",
-        "nextStationName": "Station 15: Black Mountain",
+        "nextStationName": "Black Mountain",
         "flora": [
             "Alpine grasses"
         ],
@@ -336,7 +336,7 @@
     },
     {
         "id": "44r5tebjrc",
-        "name": "Station 15: Black Mountain",
+        "name": "Black Mountain",
         "description": "This rugged section of the trek is named after its dark rock outcrops. Black Mountain provides a stark contrast to the greener parts of the sanctuary. Its slopes support hardy plant species and are frequented by wild animals such as boars. The path is rocky, making it both a challenge and an adventure for trekkers.",
         "difficulty": "Moderate",
         "elevation": 1238,
@@ -349,7 +349,7 @@
         "steps": 1709,
         "distanceToNextKm": 1.3,
         "nextStationId": "r5kntj3sae",
-        "nextStationName": "Station 16: Twin Falls",
+        "nextStationName": "Twin Falls",
         "flora": [
             "Hardwood trees"
         ],
@@ -361,7 +361,7 @@
     },
     {
         "id": "r5kntj3sae",
-        "name": "Station 16: Twin Falls",
+        "name": "Twin Falls",
         "description": "A scenic finale to the trek, Twin Falls features two waterfalls cascading side by side into a natural pool. The area is lush with greenery and is a favorite spot for cooling down after the long hike. Birds, butterflies, and frogs are often spotted here, adding life to the refreshing environment. It is both a recreational stop and a symbol of Mt. Hamiguitan's natural beauty.",
         "difficulty": "Moderate",
         "elevation": 1130,

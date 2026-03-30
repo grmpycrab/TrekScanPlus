@@ -19,13 +19,18 @@ class _StationDetailScreenState extends State<StationDetailScreen> {
   StationData? nextStationData;
   List<StationData> allStations = [];
   late ScrollController _scrollController;
+  late PageController _imagePageController;
   double _scrollOffset = 0.0;
+  int _currentImageIndex = 0;
 
   @override
   void initState() {
     super.initState();
     _scrollController = ScrollController();
     _scrollController.addListener(_onScroll);
+    _imagePageController = PageController();
+    _imagePageController.addListener(_onImagePageChanged);
+    _preloadImages();
     _loadStationData();
   }
 
@@ -33,12 +38,52 @@ class _StationDetailScreenState extends State<StationDetailScreen> {
   void dispose() {
     _scrollController.removeListener(_onScroll);
     _scrollController.dispose();
+    _imagePageController.removeListener(_onImagePageChanged);
+    _imagePageController.dispose();
     super.dispose();
   }
 
   void _onScroll() {
     setState(() {
       _scrollOffset = _scrollController.offset;
+    });
+  }
+
+  void _onImagePageChanged() {
+    setState(() {
+      _currentImageIndex = _imagePageController.page?.round() ?? 0;
+      // Pre-cache the next image
+      _precacheNextImage();
+    });
+  }
+
+  Future<void> _preloadImages() async {
+    if (station.images.isEmpty) return;
+
+    try {
+      // Pre-cache the first two images for smooth experience
+      await precacheImage(
+        AssetImage('assets/images/${station.images[0]}'),
+        context,
+      );
+      if (station.images.length > 1) {
+        await precacheImage(
+          AssetImage('assets/images/${station.images[1]}'),
+          context,
+        );
+      }
+    } catch (e) {
+      debugPrint('Error preloading images: $e');
+    }
+  }
+
+  void _precacheNextImage() {
+    final nextIndex = (_currentImageIndex + 1) % station.images.length;
+    precacheImage(
+      AssetImage('assets/images/${station.images[nextIndex]}'),
+      context,
+    ).catchError((e) {
+      debugPrint('Error precaching image: $e');
     });
   }
 
@@ -107,6 +152,102 @@ class _StationDetailScreenState extends State<StationDetailScreen> {
     // Gradually show white background as user scrolls
     final progress = (_scrollOffset / 150).clamp(0.0, 1.0);
     return Color.lerp(Colors.transparent, Colors.white, progress)!;
+  }
+
+  Widget _buildImageCarousel() {
+    if (station.images.isEmpty) {
+      return Container(
+        decoration: BoxDecoration(color: AppColors.border),
+        child: const Icon(Icons.image_not_supported, size: 50),
+      );
+    }
+
+    return Stack(
+      fit: StackFit.expand,
+      children: [
+        // PageView carousel with looping
+        PageView.builder(
+          controller: _imagePageController,
+          onPageChanged: (index) {
+            setState(() {
+              _currentImageIndex = index % station.images.length;
+            });
+          },
+          itemBuilder: (context, index) {
+            final imageIndex = index % station.images.length;
+            final imagePath = station.images[imageIndex];
+
+            return GestureDetector(
+              onTap: () => _showFullscreenImage(imageIndex),
+              child: Image.asset(
+                'assets/images/$imagePath',
+                fit: BoxFit.cover,
+                cacheHeight: 800,
+                cacheWidth: 600,
+                errorBuilder: (context, error, stackTrace) {
+                  return Container(
+                    decoration: BoxDecoration(color: AppColors.border),
+                    child: const Icon(Icons.image_not_supported, size: 50),
+                  );
+                },
+              ),
+            );
+          },
+          // Create infinite carousel by using a large number
+          itemCount: station.images.length * 100,
+          physics: const PageScrollPhysics(),
+        ),
+        // Image indicators (dots)
+        if (station.images.length > 1)
+          Positioned(
+            bottom: 80,
+            left: 0,
+            right: 0,
+            child: _buildImageIndicators(),
+          ),
+      ],
+    );
+  }
+
+  Widget _buildImageIndicators() {
+    return Center(
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        decoration: BoxDecoration(
+          color: Colors.black.withValues(alpha: 0.6),
+          borderRadius: BorderRadius.circular(20),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: List.generate(
+            station.images.length,
+            (index) => Container(
+              margin: const EdgeInsets.symmetric(horizontal: 4),
+              width: _currentImageIndex == index ? 24 : 8,
+              height: 8,
+              decoration: BoxDecoration(
+                color: _currentImageIndex == index
+                    ? Colors.white
+                    : Colors.white.withValues(alpha: 0.5),
+                borderRadius: BorderRadius.circular(4),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _showFullscreenImage(int initialIndex) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => _FullscreenImageViewer(
+          images: station.images,
+          initialIndex: initialIndex,
+        ),
+      ),
+    );
   }
 
   @override
@@ -245,16 +386,7 @@ class _StationDetailScreenState extends State<StationDetailScreen> {
         background: Stack(
           fit: StackFit.expand,
           children: [
-            Image.asset(
-              'assets/images/${station.images.first}',
-              fit: BoxFit.cover,
-              errorBuilder: (context, error, stackTrace) {
-                return Container(
-                  decoration: BoxDecoration(color: AppColors.border),
-                  child: const Icon(Icons.image_not_supported, size: 50),
-                );
-              },
-            ),
+            _buildImageCarousel(),
             Container(
               decoration: BoxDecoration(
                 gradient: LinearGradient(
@@ -631,10 +763,7 @@ class _StationDetailScreenState extends State<StationDetailScreen> {
                       Expanded(
                         child: Text(
                           warning.value,
-                          style: TextStyle(
-                            color: AppColors.text,
-                            height: 1.5,
-                          ),
+                          style: TextStyle(color: AppColors.text, height: 1.5),
                         ),
                       ),
                     ],
@@ -1071,6 +1200,90 @@ class _StationDetailScreenState extends State<StationDetailScreen> {
             ],
           ],
         ),
+      ),
+    );
+  }
+}
+
+class _FullscreenImageViewer extends StatefulWidget {
+  final List<String> images;
+  final int initialIndex;
+
+  const _FullscreenImageViewer({
+    required this.images,
+    required this.initialIndex,
+  });
+
+  @override
+  State<_FullscreenImageViewer> createState() => _FullscreenImageViewerState();
+}
+
+class _FullscreenImageViewerState extends State<_FullscreenImageViewer> {
+  late PageController _pageController;
+  late int _currentIndex;
+
+  @override
+  void initState() {
+    super.initState();
+    _currentIndex = widget.initialIndex;
+    // Use a high initial page to support infinite scroll
+    final centerPage = widget.images.length * 50 + widget.initialIndex;
+    _pageController = PageController(initialPage: centerPage);
+  }
+
+  @override
+  void dispose() {
+    _pageController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.black,
+      appBar: AppBar(
+        backgroundColor: Colors.black87,
+        elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.close, color: Colors.white),
+          onPressed: () => Navigator.pop(context),
+        ),
+        title: Text(
+          '${(_currentIndex % widget.images.length) + 1} / ${widget.images.length}',
+          style: const TextStyle(color: Colors.white),
+        ),
+        centerTitle: true,
+      ),
+      body: PageView.builder(
+        controller: _pageController,
+        onPageChanged: (index) {
+          setState(() {
+            _currentIndex = index % widget.images.length;
+          });
+        },
+        itemBuilder: (context, index) {
+          final imageIndex = index % widget.images.length;
+          final imagePath = widget.images[imageIndex];
+
+          return GestureDetector(
+            onTap: () => Navigator.pop(context),
+            child: Center(
+              child: Image.asset(
+                'assets/images/$imagePath',
+                fit: BoxFit.contain,
+                errorBuilder: (context, error, stackTrace) {
+                  return const Icon(
+                    Icons.image_not_supported,
+                    color: Colors.white,
+                    size: 50,
+                  );
+                },
+              ),
+            ),
+          );
+        },
+        itemCount: widget.images.length * 100,
+        physics: const PageScrollPhysics(),
       ),
     );
   }
