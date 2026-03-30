@@ -18,6 +18,7 @@ import '../../theme/color.dart';
 import '../../services/firebase_auth_service.dart';
 import '../../services/user_service.dart';
 import '../../services/social_sharing_service.dart';
+import '../../services/feed_pagination_service.dart';
 import '../../services/calendar_config_service.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -59,11 +60,26 @@ class _HomeScreenState extends State<HomeScreen>
   // Collapsible sections
   bool _areSectionsVisible = true;
 
+  // Pagination variables for optimized feed loading
+  final List<SocialPost> _loadedPosts = [];
+  bool _isLoadingMore = false;
+  bool _hasMorePosts = true;
+  late ScrollController _feedScrollController;
+  final FeedPaginationService _paginationService =
+      FeedPaginationService.instance;
+
   @override
   void initState() {
     super.initState();
     _initializeTrekDays();
     _firebaseUser = FirebaseAuthService.instance.currentUser;
+
+    // Initialize pagination scroll controller
+    _feedScrollController = ScrollController();
+    _feedScrollController.addListener(_onFeedScroll);
+
+    // Load first page of posts
+    _loadFirstPageOfPosts();
 
     // Initialize banner animation controller
     _bannerAnimationController = AnimationController(
@@ -101,6 +117,7 @@ class _HomeScreenState extends State<HomeScreen>
     _searchController.dispose();
     _searchFocusNode.dispose();
     _bannerAnimationController.dispose();
+    _feedScrollController.dispose();
 
     super.dispose();
   }
@@ -238,19 +255,7 @@ class _HomeScreenState extends State<HomeScreen>
             Expanded(
               child: RefreshIndicator(
                 onRefresh: _refreshAll,
-                child: SingleChildScrollView(
-                  physics: const AlwaysScrollableScrollPhysics(),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      const SizedBox(height: 20),
-                      _buildSocialFeed(),
-                      const SizedBox(
-                        height: 30,
-                      ), // Bottom padding for comfortable scrolling
-                    ],
-                  ),
-                ),
+                child: _buildSocialFeed(),
               ),
             ),
           ],
@@ -893,7 +898,10 @@ class _HomeScreenState extends State<HomeScreen>
                     decoration: BoxDecoration(
                       color: Colors.grey[50],
                       borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: AppColors.borderLight, width: 1),
+                      border: Border.all(
+                        color: AppColors.borderLight,
+                        width: 1,
+                      ),
                     ),
                     child: Icon(
                       Icons.keyboard_arrow_up,
@@ -1020,14 +1028,6 @@ class _HomeScreenState extends State<HomeScreen>
     );
   }
 
-  void _showTipsAndTricksOverlay() {
-    showDialog(
-      context: context,
-      barrierDismissible: true,
-      builder: (context) => const TrekTipsOverlay(),
-    );
-  }
-
   Widget _buildSocialFeed() {
     if (_firebaseUser == null) {
       return const Padding(
@@ -1036,132 +1036,235 @@ class _HomeScreenState extends State<HomeScreen>
       );
     }
 
-    return StreamBuilder<List<SocialPost>>(
-      stream: SocialSharingService.instance.streamPublicPosts(),
-      builder: (context, snapshot) {
-        // Show existing data while loading new updates to prevent UI jumps
-        if (snapshot.connectionState == ConnectionState.waiting &&
-            !snapshot.hasData) {
-          return const Padding(
-            padding: EdgeInsets.all(16),
-            child: Center(child: CircularProgressIndicator()),
-          );
-        }
+    // Show loading if no posts loaded yet
+    if (_loadedPosts.isEmpty) {
+      return const Padding(
+        padding: EdgeInsets.all(16),
+        child: Center(child: CircularProgressIndicator()),
+      );
+    }
 
-        if (snapshot.hasError) {
-          final error = snapshot.error;
-          if (error is FirebaseException && error.message != null) {
-            debugPrint('Firestore index error: ${error.message}');
-          }
-          return const Padding(
-            padding: EdgeInsets.all(16),
-            child: Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(Icons.error_outline, size: 48, color: Colors.grey),
-                  SizedBox(height: 16),
-                  Text(
-                    'Error loading posts',
-                    style: TextStyle(color: Colors.grey),
-                  ),
-                ],
-              ),
-            ),
-          );
-        }
+    // Filter posts based on search query
+    final filteredPosts = _searchQuery.isEmpty
+        ? _loadedPosts
+        : _loadedPosts.where((post) {
+            final captionMatch = post.caption.toLowerCase().contains(
+              _searchQuery,
+            );
+            final userNameMatch = post.userName.toLowerCase().contains(
+              _searchQuery,
+            );
+            return captionMatch || userNameMatch;
+          }).toList();
 
-        final posts = snapshot.data ?? [];
-
-        if (posts.isEmpty) {
-          return const Padding(
-            padding: EdgeInsets.all(16),
-            child: Center(
-              child: Text(
-                'No posts yet. Be the first to share your experience!',
-              ),
-            ),
-          );
-        }
-
-        // Filter posts based on search query
-        final filteredPosts = _searchQuery.isEmpty
-            ? posts
-            : posts.where((post) {
-                final captionMatch = post.caption.toLowerCase().contains(
-                  _searchQuery,
-                );
-                final userNameMatch = post.userName.toLowerCase().contains(
-                  _searchQuery,
-                );
-                return captionMatch || userNameMatch;
-              }).toList();
-
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              child: Row(
-                children: [
-                  const Text(
-                    'Community Feed',
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                  ),
-                  if (snapshot.connectionState == ConnectionState.waiting &&
-                      snapshot.hasData)
-                    const Padding(
-                      padding: EdgeInsets.only(left: 12),
-                      child: SizedBox(
-                        width: 16,
-                        height: 16,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          valueColor: AlwaysStoppedAnimation<Color>(
-                            Colors.grey,
-                          ),
-                        ),
+    return ListView.builder(
+      controller: _feedScrollController,
+      padding: const EdgeInsets.symmetric(
+        vertical: 8,
+      ).copyWith(top: 20, bottom: 30),
+      itemCount:
+          filteredPosts.length +
+          (filteredPosts.isEmpty ? 1 : 0) +
+          (_isLoadingMore ? 1 : 0), // Add loading indicator at bottom
+      itemBuilder: (context, index) {
+        // Show "Community Feed" header
+        if (index == 0) {
+          return Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            child: Row(
+              children: [
+                const Text(
+                  'Community Feed',
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                ),
+                if (_isLoadingMore)
+                  const Padding(
+                    padding: EdgeInsets.only(left: 12),
+                    child: SizedBox(
+                      width: 16,
+                      height: 16,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        valueColor: AlwaysStoppedAnimation<Color>(Colors.grey),
                       ),
                     ),
-                ],
+                  ),
+              ],
+            ),
+          );
+        }
+
+        // Show "no posts found" message
+        if (filteredPosts.isEmpty) {
+          return Padding(
+            padding: const EdgeInsets.all(16),
+            child: Center(
+              child: Text(
+                _searchQuery.isNotEmpty
+                    ? 'No posts found for "$_searchQuery"'
+                    : 'No posts yet. Be the first to share your experience!',
+                style: TextStyle(color: AppColors.textSecondary),
               ),
             ),
-            if (_searchQuery.isNotEmpty && filteredPosts.isEmpty)
-              Padding(
-                padding: const EdgeInsets.all(16),
-                child: Center(
-                  child: Text(
-                    'No posts found for "$_searchQuery"',
-                    style: TextStyle(color: AppColors.textSecondary),
-                  ),
-                ),
-              ),
-            // Use ListView.builder for better performance with large lists
-            ...filteredPosts.asMap().entries.map((entry) {
-              final post = entry.value;
+          );
+        }
 
-              // Preload images for better UX (do this asynchronously for first 3 posts)
-              if (post.imageUrls.isNotEmpty && entry.key < 3) {
-                WidgetsBinding.instance.addPostFrameCallback((_) {
-                  ImageCacheManager.preloadImages(post.imageUrls, context);
-                });
-              }
+        // Show loading indicator at bottom
+        if (index == filteredPosts.length + 1) {
+          return Padding(
+            padding: const EdgeInsets.all(16),
+            child: Center(
+              child: _isLoadingMore
+                  ? const CircularProgressIndicator()
+                  : _hasMorePosts
+                  ? ElevatedButton(
+                      onPressed: _loadNextPageOfPosts,
+                      child: const Text('Load More Posts'),
+                    )
+                  : Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.sentiment_satisfied_alt,
+                            size: 48,
+                            color: Colors.grey[400],
+                          ),
+                          const SizedBox(height: 16),
+                          Text(
+                            'You\'ve reached the end!',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                              color: AppColors.textSecondary,
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            'Share your Hamiguitan adventure to inspire others',
+                            style: TextStyle(
+                              fontSize: 14,
+                              color: Colors.grey[500],
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                          const SizedBox(height: 20),
+                          ElevatedButton.icon(
+                            onPressed: () {
+                              // Navigate to post creation
+                              // This assumes you have a navigation method or FAB
+                            },
+                            icon: const Icon(Icons.add),
+                            label: const Text('Share Your Experience'),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: AppColors.accent,
+                              foregroundColor: Colors.white,
+                            ),
+                          ),
+                          const SizedBox(height: 24),
+                        ],
+                      ),
+                    ),
+            ),
+          );
+        }
 
-              return Padding(
-                key: ValueKey(
-                  post.id ?? entry.key,
-                ), // Add key for better widget recycling
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: SocialCard(
-                  post: post,
-                  onCommentTap: () => _showCommentsDialog(post),
-                  onDelete: () => _handleDeletePost(post),
-                ),
-              );
-            }),
-          ],
+        final post = filteredPosts[index - 1];
+
+        return Padding(
+          key: ValueKey(post.id ?? index),
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          child: SocialCard(
+            post: post,
+            onCommentTap: () => _showCommentsDialog(post),
+            onDelete: () => _handleDeletePost(post),
+          ),
         );
       },
+    );
+  }
+
+  /// Load the first page of posts (pagination)
+  Future<void> _loadFirstPageOfPosts() async {
+    try {
+      debugPrint('📝 Loading first page of posts...');
+      final (posts, hasMore) = await _paginationService
+          .loadPublicPostsFirstPage();
+
+      if (mounted) {
+        setState(() {
+          _loadedPosts.clear();
+          _loadedPosts.addAll(posts);
+          _hasMorePosts = hasMore;
+          _isLoadingMore = false;
+        });
+      }
+
+      // Preload first 3 images for better UX
+      for (int i = 0; i < _loadedPosts.length && i < 3; i++) {
+        if (_loadedPosts[i].imageUrls.isNotEmpty && mounted) {
+          ImageCacheManager.preloadImages(_loadedPosts[i].imageUrls, context);
+        }
+      }
+
+      debugPrint('✅ First page loaded: ${posts.length} posts');
+    } catch (e) {
+      debugPrint('❌ Error loading first page: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Error loading posts: $e')));
+      }
+    }
+  }
+
+  /// Load next page of posts when user scrolls near bottom
+  Future<void> _loadNextPageOfPosts() async {
+    if (_isLoadingMore || !_hasMorePosts) return;
+
+    setState(() => _isLoadingMore = true);
+
+    try {
+      debugPrint('📄 Loading next page of posts...');
+      final (posts, hasMore) = await _paginationService
+          .loadPublicPostsNextPage();
+
+      if (mounted) {
+        setState(() {
+          _loadedPosts.addAll(posts);
+          _hasMorePosts = hasMore;
+          _isLoadingMore = false;
+        });
+      }
+
+      debugPrint('✅ Next page loaded: ${posts.length} new posts');
+    } catch (e) {
+      debugPrint('❌ Error loading next page: $e');
+      if (mounted) {
+        setState(() => _isLoadingMore = false);
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Error loading more posts: $e')));
+      }
+    }
+  }
+
+  /// Detect when user scrolls near bottom and load more posts
+  void _onFeedScroll() {
+    if (_feedScrollController.position.pixels >
+        _feedScrollController.position.maxScrollExtent - 500) {
+      // User is near the bottom, load more posts
+      _loadNextPageOfPosts();
+    }
+  }
+
+  void _showTipsAndTricksOverlay() {
+    showDialog(
+      context: context,
+      barrierDismissible: true,
+      builder: (context) => const TrekTipsOverlay(),
     );
   }
 

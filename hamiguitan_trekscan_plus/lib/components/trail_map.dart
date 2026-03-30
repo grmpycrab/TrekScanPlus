@@ -261,6 +261,14 @@ class _TrailMapState extends State<TrailMap> {
               children: [
                 TileLayer(
                   urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                  userAgentPackageName: 'hamiguitan_trekscan_plus',
+                  tileSize: 256,
+                  backgroundColor: Colors.transparent,
+                  // Add proper headers to comply with OSM tile policy
+                  additionalOptions: const {
+                    'User-Agent':
+                        'HamiguitanTrekScanPlus/1.0 (https://trekscanplus.app)',
+                  },
                 ),
                 PolylineLayer(polylines: _buildTrailPolylines()),
                 MarkerLayer(markers: _buildStationMarkers()),

@@ -278,9 +278,7 @@ class BadgeDetailScreen extends StatelessWidget {
                 children: [
                   Icon(
                     isAcquired ? Icons.check_circle : Icons.lock_outline,
-                    color: isAcquired
-                        ? AppColors.statusApproved
-                        : Colors.grey,
+                    color: isAcquired ? AppColors.statusApproved : Colors.grey,
                     size: 16,
                   ),
                   const SizedBox(width: 6),
@@ -392,7 +390,11 @@ class BadgeDetailScreen extends StatelessWidget {
             const SizedBox(height: 12),
             Row(
               children: [
-                Icon(Icons.calendar_today, color: AppColors.textSecondary, size: 20),
+                Icon(
+                  Icons.calendar_today,
+                  color: AppColors.textSecondary,
+                  size: 20,
+                ),
                 const SizedBox(width: 12),
                 Text(
                   formattedDate,
@@ -406,7 +408,11 @@ class BadgeDetailScreen extends StatelessWidget {
             const SizedBox(height: 12),
             Row(
               children: [
-                Icon(Icons.access_time, color: AppColors.textSecondary, size: 20),
+                Icon(
+                  Icons.access_time,
+                  color: AppColors.textSecondary,
+                  size: 20,
+                ),
                 const SizedBox(width: 12),
                 Text(
                   formattedTime,

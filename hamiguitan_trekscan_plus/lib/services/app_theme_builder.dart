@@ -29,6 +29,7 @@ class AppThemeBuilder {
 
     return ThemeData(
       useMaterial3: true,
+      fontFamily: 'Montserrat',
       brightness: isDark ? Brightness.dark : Brightness.light,
       primaryColor: primaryColor,
       scaffoldBackgroundColor: backgroundColor,
@@ -122,6 +123,7 @@ class AppThemeBuilder {
 
     return ThemeData(
       useMaterial3: true,
+      fontFamily: 'Montserrat',
       brightness: isDark ? Brightness.dark : Brightness.light,
       primaryColor: primaryColor,
       scaffoldBackgroundColor: backgroundColor,

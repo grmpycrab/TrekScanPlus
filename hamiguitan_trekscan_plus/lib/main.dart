@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'dart:async';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
@@ -49,6 +50,20 @@ void main() async {
       options: DefaultFirebaseOptions.currentPlatform,
     );
     debugPrint('✅ Firebase initialized successfully');
+
+    // Enable Firestore offline persistence and caching
+    try {
+      final firestore = FirebaseFirestore.instance;
+      // Enable offline persistence (already enabled by default on mobile)
+      // Set cache size to 100 MB for better caching of frequently accessed data
+      firestore.settings = const Settings(
+        persistenceEnabled: true,
+        cacheSizeBytes: 104857600, // 100 MB cache
+      );
+      debugPrint('✅ Firestore offline persistence and caching enabled');
+    } catch (e) {
+      debugPrint('⚠️ Could not configure Firestore caching: $e');
+    }
   } catch (e) {
     debugPrint('❌ Firebase init error: $e');
     // Don't continue if Firebase fails - it's critical for auth
