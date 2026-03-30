@@ -613,7 +613,10 @@ class _SocialCardState extends State<SocialCard> {
                     children: [
                       Text(
                         _getTimeAgo(),
-                        style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: AppColors.textSecondary,
+                        ),
                       ),
                       Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 6),
@@ -673,7 +676,11 @@ class _SocialCardState extends State<SocialCard> {
             ),
           const SizedBox(width: 8),
           IconButton(
-            icon: Icon(Icons.more_horiz, size: 22, color: AppColors.textSecondary),
+            icon: Icon(
+              Icons.more_horiz,
+              size: 22,
+              color: AppColors.textSecondary,
+            ),
             onPressed: _showOptionsMenu,
             padding: EdgeInsets.zero,
             constraints: const BoxConstraints(),
@@ -738,10 +745,24 @@ class _SocialCardState extends State<SocialCard> {
               ),
             ),
           ),
-          errorWidget: (context, url, error) => Container(
-            color: AppColors.borderLight,
-            child: const Icon(Icons.broken_image, size: 48, color: Colors.grey),
-          ),
+          errorWidget: (context, url, error) {
+            debugPrint('❌ Image load error for $url: $error');
+            return Container(
+              color: AppColors.borderLight,
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Icon(Icons.broken_image, size: 48, color: Colors.grey),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Image failed to load',
+                    style: TextStyle(fontSize: 11, color: Colors.grey[600]),
+                    textAlign: TextAlign.center,
+                  ),
+                ],
+              ),
+            );
+          },
           memCacheWidth: 800,
           memCacheHeight: 600,
         ),
@@ -886,10 +907,13 @@ class _SocialCardState extends State<SocialCard> {
             ),
           ),
         ),
-        errorWidget: (context, url, error) => Container(
-          color: AppColors.borderLight,
-          child: const Icon(Icons.broken_image, size: 32, color: Colors.grey),
-        ),
+        errorWidget: (context, url, error) {
+          debugPrint('❌ Image load error for $url: $error');
+          return Container(
+            color: AppColors.borderLight,
+            child: const Icon(Icons.broken_image, size: 32, color: Colors.grey),
+          );
+        },
         memCacheWidth: 400,
         memCacheHeight: 400,
       ),
@@ -971,7 +995,11 @@ class _SocialCardState extends State<SocialCard> {
               padding: const EdgeInsets.all(8),
               child: Row(
                 children: [
-                  Icon(Icons.share_outlined, color: AppColors.textSecondary, size: 22),
+                  Icon(
+                    Icons.share_outlined,
+                    color: AppColors.textSecondary,
+                    size: 22,
+                  ),
                   if (_sharesCount > 0) ...[
                     const SizedBox(width: 6),
                     Text(
@@ -992,7 +1020,9 @@ class _SocialCardState extends State<SocialCard> {
           IconButton(
             icon: Icon(
               _isBookmarked ? Icons.bookmark : Icons.bookmark_border,
-              color: _isBookmarked ? AppColors.primary : AppColors.textSecondary,
+              color: _isBookmarked
+                  ? AppColors.primary
+                  : AppColors.textSecondary,
               size: 24,
             ),
             onPressed: _handleBookmark,

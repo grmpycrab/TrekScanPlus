@@ -54,6 +54,19 @@ flutter:
     - assets/data/badge.json
     - .env
 
+  fonts:
+    - family: Montserrat
+      fonts:
+        - asset: assets/fonts/MONTSERRAT-REGULAR.ttf
+        - asset: assets/fonts/MONTSERRAT-BOLD.ttf
+          weight: 700
+        - asset: assets/fonts/MONTSERRAT-SEMIBOLD.ttf
+          weight: 600
+        - asset: assets/fonts/MONTSERRAT-LIGHT.ttf
+          weight: 300
+        - asset: assets/fonts/MONTSERRAT-MEDIUM.ttf
+          weight: 500
+
 flutter_launcher_icons:
   android: "launcher_icon"
   ios: true

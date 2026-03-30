@@ -7,14 +7,21 @@ class ImageCacheManager {
   static const Duration cacheTimeout = Duration(days: 7); // Cache for 7 days
 
   /// Pre-load images for better performance
+  /// Note: Firebase Storage URLs are automatically cached when displayed
+  /// Skipping them here prevents 412 errors from token expiration
   static Future<void> preloadImages(
     List<String> imageUrls,
     BuildContext context,
   ) async {
+    // Only precache non-Firebase URLs
+    // Firebase Storage images are cached passively by CachedNetworkImage
     for (final url in imageUrls.take(5)) {
-      // Only preload first 5 images
       try {
-        await precacheImage(CachedNetworkImageProvider(url), context);
+        // Skip Firebase Storage URLs - they use time-limited tokens
+        // that can expire during precaching and cause 412 errors
+        if (!url.contains('firebasestorage')) {
+          await precacheImage(CachedNetworkImageProvider(url), context);
+        }
       } catch (e) {
         debugPrint('Failed to preload image: $url, Error: $e');
       }
