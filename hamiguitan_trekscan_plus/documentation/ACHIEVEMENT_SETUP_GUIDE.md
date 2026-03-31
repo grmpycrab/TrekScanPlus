@@ -385,7 +385,7 @@ To add new criteria (e.g., time-based):
 try {
   await _firestore.collection('users').doc(userId).update(...);
 } catch (e) {
-  print('Error syncing achievement: $e');
+  AppLogger.i('Error syncing achievement: $e');
   // Achievement stays in sync queue for retry
 }
 ```
@@ -395,7 +395,7 @@ try {
 try {
   await prefs.setString(ACHIEVEMENTS_KEY, jsonEncode(jsonList));
 } catch (e) {
-  print('Error saving achievement: $e');
+  AppLogger.i('Error saving achievement: $e');
   rethrow;
 }
 ```
@@ -405,7 +405,7 @@ try {
 try {
   await achievementService.init();
 } catch (e) {
-  print('Error initializing AchievementService: $e');
+  AppLogger.i('Error initializing AchievementService: $e');
   // Fall back to empty achievements list
   rethrow;
 }
@@ -458,28 +458,28 @@ try {
 ### Check Local Cache
 ```dart
 List<Achievement> local = await localService.getAchievements();
-print('Local achievements: ${local.length}');
+AppLogger.i('Local achievements: ${local.length}');
 for (var a in local) {
-  print('${a.name}: ${a.isUnlocked} (${a.unlockedAt})');
+  AppLogger.i('${a.name}: ${a.isUnlocked} (${a.unlockedAt})');
 }
 ```
 
 ### Check Sync Queue
 ```dart
 List<String> queue = await localService.getSyncQueue();
-print('Pending sync: $queue');
+AppLogger.i('Pending sync: $queue');
 ```
 
 ### Check Pending Notifications
 ```dart
 List<String> pending = await localService.getPendingNotifications();
-print('Pending notifications: $pending');
+AppLogger.i('Pending notifications: $pending');
 ```
 
 ### Force Complete Sync
 ```dart
 await achievementService.syncToFirebase();
-print('Sync completed');
+AppLogger.i('Sync completed');
 ```
 
 ### Check Firebase

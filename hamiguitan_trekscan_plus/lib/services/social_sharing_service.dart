@@ -1,11 +1,12 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
-import 'package:flutter/foundation.dart';
+//import 'package:flutter/foundation.dart';
 import 'package:image/image.dart' as img;
 import 'dart:io';
 import '../models/social_model.dart';
 import '../services/notification_manager.dart';
+import '../utils/app_logger.dart';
 
 class SocialSharingService {
   SocialSharingService._();
@@ -48,9 +49,9 @@ class SocialSharingService {
       await _firestore.collection('users').doc(user.uid).update({
         'postsCount': FieldValue.increment(1),
       });
-      debugPrint('Post count incremented for ${user.uid}');
+      AppLogger.i('Post count incremented for ${user.uid}');
     } catch (e) {
-      debugPrint('Error updating post count: $e');
+      AppLogger.w('Error updating post count: $e');
     }
 
     // Show success notification
@@ -81,13 +82,13 @@ class SocialSharingService {
       final compressedSize = compressedBytes.length;
       final reduction = ((originalSize - compressedSize) / originalSize * 100)
           .toStringAsFixed(1);
-      debugPrint(
+      AppLogger.d(
         'Compression: $originalSize → $compressedSize bytes ($reduction% reduction)',
       );
 
       return compressedFile;
     } catch (e) {
-      debugPrint('Compression failed, using original: $e');
+      AppLogger.w('Compression failed, using original: $e');
       return imageFile;
     }
   }
@@ -99,9 +100,9 @@ class SocialSharingService {
 
     try {
       // Compress image first
-      debugPrint('Compressing image...');
+      AppLogger.d('Compressing image...');
       final compressedFile = await _compressImage(imageFile);
-      debugPrint('Compressed file size: ${compressedFile.lengthSync()} bytes');
+      AppLogger.d('Compressed file size: ${compressedFile.lengthSync()} bytes');
 
       final timestamp = DateTime.now().millisecondsSinceEpoch;
       final fileName =
@@ -109,7 +110,7 @@ class SocialSharingService {
       final path = 'posts/$postId/$fileName';
 
       final ref = _storage.ref(path);
-      debugPrint('Starting upload to: $path');
+      AppLogger.i('Starting upload to: $path');
 
       // Set metadata for the file upload
       final metadata = SettableMetadata(
@@ -123,7 +124,7 @@ class SocialSharingService {
       uploadTask.snapshotEvents.listen((TaskSnapshot snapshot) {
         final progress = (snapshot.bytesTransferred / snapshot.totalBytes * 100)
             .toStringAsFixed(0);
-        debugPrint('Upload progress: $progress%');
+        AppLogger.d('Upload progress: $progress%');
       });
 
       // Add timeout of 180 seconds (increased for slower connections)
@@ -132,20 +133,20 @@ class SocialSharingService {
         onTimeout: () => throw Exception('Upload timeout after 180 seconds'),
       );
 
-      debugPrint('Upload complete. Snapshot path: ${snapshot.ref.fullPath}');
+      AppLogger.i('Upload complete. Snapshot path: ${snapshot.ref.fullPath}');
       final downloadUrl = await ref.getDownloadURL();
-      debugPrint('Download URL: $downloadUrl');
+      AppLogger.d('Download URL: $downloadUrl');
 
       // Clean up compressed temp file
       try {
         await compressedFile.delete();
       } catch (e) {
-        debugPrint('Failed to delete temp file: $e');
+        AppLogger.w('Failed to delete temp file: $e');
       }
 
       return downloadUrl;
     } catch (e) {
-      debugPrint('Error uploading image: $e');
+      AppLogger.e('Error uploading image: $e');
       rethrow;
     }
   }
@@ -203,7 +204,7 @@ class SocialSharingService {
 
                     return null;
                   } catch (e) {
-                    debugPrint('Error parsing post from doc: $e');
+                    AppLogger.e('Error parsing post from doc: $e');
                     return null;
                   }
                 })
@@ -212,13 +213,13 @@ class SocialSharingService {
 
             return posts;
           } catch (e) {
-            debugPrint('Error in streamPublicPosts: $e');
+            AppLogger.e('Error in streamPublicPosts: $e');
             // Return empty list on error to prevent stream from breaking
             return <SocialPost>[];
           }
         })
         .handleError((error) {
-          debugPrint('Stream error in streamPublicPosts: $error');
+          AppLogger.e('Stream error in streamPublicPosts: $error');
           // Return empty list to keep stream alive
           return <SocialPost>[];
         })
@@ -313,7 +314,7 @@ class SocialSharingService {
             return true;
           }).toList();
 
-          print(
+          AppLogger.d(
             '🔍 Filtered ${filteredPosts.length}/${posts.length} posts for user $userId',
           );
           return filteredPosts;
@@ -778,7 +779,7 @@ class SocialSharingService {
                 bookmarkedPosts.add(bookmarkedPost);
               }
             } catch (e) {
-              debugPrint('Error loading bookmarked post: $e');
+              AppLogger.e('Error loading bookmarked post: $e');
               // Continue to next post if one fails
               continue;
             }
@@ -836,7 +837,7 @@ class SocialSharingService {
         final ref = _storage.refFromURL(url.toString());
         await ref.delete();
       } catch (e) {
-        print('Error deleting image: $e');
+        AppLogger.w('Error deleting image: $e');
       }
     }
 
@@ -848,9 +849,9 @@ class SocialSharingService {
       await _firestore.collection('users').doc(postUserId).update({
         'postsCount': FieldValue.increment(-1),
       });
-      debugPrint('Post count decremented for $postUserId');
+      AppLogger.i('Post count decremented for $postUserId');
     } catch (e) {
-      debugPrint('Error updating post count: $e');
+      AppLogger.w('Error updating post count: $e');
     }
 
     // Show info notification banner
@@ -867,7 +868,7 @@ class SocialSharingService {
     String postId,
   ) async {
     try {
-      print(
+      AppLogger.d(
         '📤 Sending like notification to $postOwnerId from $likerName on post $postId',
       );
       final notificationRef = _firestore
@@ -903,13 +904,13 @@ class SocialSharingService {
             'timestamp': FieldValue.serverTimestamp(),
             'isRead': false,
           });
-          print(
+          AppLogger.i(
             '✅ Updated like notification for post $postId with likers: $likers',
           );
           return;
         }
       } catch (e) {
-        print('⚠️  Error checking existing notifications: $e');
+        AppLogger.w('⚠️  Error checking existing notifications: $e');
         // Continue to create new notification
       }
 
@@ -926,9 +927,11 @@ class SocialSharingService {
       };
 
       await notificationRef.add(notifMap);
-      print('✅ Created new like notification for post $postId from $likerName');
+      AppLogger.i(
+        '✅ Created new like notification for post $postId from $likerName',
+      );
     } catch (e) {
-      print('❌ Error sending like notification: $e');
+      AppLogger.e('❌ Error sending like notification: $e');
       rethrow;
     }
   }
@@ -956,9 +959,9 @@ class SocialSharingService {
           .collection('notifications')
           .add(notifMap);
 
-      debugPrint('Created comment notification for post $postId');
+      AppLogger.i('Created comment notification for post $postId');
     } catch (e) {
-      debugPrint('Error sending comment notification: $e');
+      AppLogger.e('Error sending comment notification: $e');
       rethrow;
     }
   }

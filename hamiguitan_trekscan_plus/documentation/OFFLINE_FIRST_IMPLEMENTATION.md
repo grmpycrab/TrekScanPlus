@@ -65,13 +65,13 @@ final currentUser = FirebaseAuth.instance.currentUser;
 
 if (currentUser != null) {
   // User already logged in previously
-  debugPrint('👤 Found existing user: ${currentUser.email}');
+  debugAppLogger.i('👤 Found existing user: ${currentUser.email}');
   WidgetsBinding.instance.addPostFrameCallback((_) {
     _initializeVerifiedUserServices(currentUser.uid);
   });
 } else {
   // No user logged in - initialize in offline mode
-  debugPrint('🔌 No user logged in, initializing in offline mode');
+  debugAppLogger.i('🔌 No user logged in, initializing in offline mode');
   WidgetsBinding.instance.addPostFrameCallback((_) {
     _initializeVerifiedUserServices(
       'offline_${DateTime.now().millisecondsSinceEpoch}',
@@ -99,29 +99,29 @@ static Future<ClimbSessionService> init({String? userId}) async {
       userId: userId,
       firestore: FirebaseFirestore.instance,
     );
-    debugPrint('🚀 ClimbSessionService: Initializing for userId: $userId (offline-first)');
+    debugAppLogger.i('🚀 ClimbSessionService: Initializing for userId: $userId (offline-first)');
 
     // CRITICAL: Load from local cache SYNCHRONOUSLY (returns immediately)
     try {
       _instance!._loadLocalSessions();  // ← Synchronous, no blocking
-      debugPrint('✅ ClimbSessionService: Local sessions loaded (${_instance!._climbSessions.length} sessions)');
+      debugAppLogger.i('✅ ClimbSessionService: Local sessions loaded (${_instance!._climbSessions.length} sessions)');
     } catch (loadError) {
-      debugPrint('⚠️ Error loading local sessions: $loadError');
+      debugAppLogger.i('⚠️ Error loading local sessions: $loadError');
       _instance!._climbSessions = [];
       _instance!._activeSession = null;
     }
 
     // Start Firebase sync in background (fire-and-forget, non-blocking)
     if (_instance!._isFirebaseEnabled) {
-      debugPrint('🔄 ClimbSessionService: Starting background Firebase sync (non-blocking)');
+      debugAppLogger.i('🔄 ClimbSessionService: Starting background Firebase sync (non-blocking)');
       _instance!._syncWithFirebaseBackground();  // ← NO await - doesn't block!
     } else {
-      debugPrint('🔌 ClimbSessionService: Offline mode (no userId)');
+      debugAppLogger.i('🔌 ClimbSessionService: Offline mode (no userId)');
     }
 
     return _instance!;
   } catch (e) {
-    debugPrint('❌ ClimbSessionService init error: $e');
+    debugAppLogger.i('❌ ClimbSessionService init error: $e');
     rethrow;
   }
 }
@@ -136,11 +136,11 @@ void _syncWithFirebaseBackground() {
       .timeout(
         const Duration(seconds: 3),  // Safety timeout
         onTimeout: () {
-          debugPrint('⚠️ Firebase sync timeout');
+          debugAppLogger.i('⚠️ Firebase sync timeout');
         },
       )
       .catchError(
-        (e) => debugPrint('⚠️ Background Firebase sync error: $e'),
+        (e) => debugAppLogger.i('⚠️ Background Firebase sync error: $e'),
         test: (_) => true,
       );
 }
@@ -172,7 +172,7 @@ void _loadLocalSessions() {
 
     notifyListeners();  // UI updates immediately
   } catch (e) {
-    if (kDebugMode) print('Error in _loadLocalSessions: $e');
+    if (kDebugMode) AppLogger.i('Error in _loadLocalSessions: $e');
   }
 }
 ```
@@ -189,7 +189,7 @@ Future<void> _saveSessions() async {
     await prefs.setString(_userClimbSessionsKey, json.encode(jsonList));
     notifyListeners();  // Notify UI of changes
   } catch (e) {
-    if (kDebugMode) print('Error saving sessions locally: $e');
+    if (kDebugMode) AppLogger.i('Error saving sessions locally: $e');
   }
 }
 ```

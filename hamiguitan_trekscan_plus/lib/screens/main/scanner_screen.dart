@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:permission_handler/permission_handler.dart';
 import '../../theme/color.dart';
+import '../../utils/app_logger.dart';
 import '../../services/station_service.dart';
 import '../../services/climb_session_service.dart';
 import '../../services/geofencing_service.dart';
@@ -154,12 +155,12 @@ class _ScannerScreenState extends State<ScannerScreen>
               );
             },
             onScannerStarted: (arguments) {
-              debugPrint('✅ Scanner started successfully');
+              AppLogger.i('Scanner started successfully');
             },
             onDetect: (capture) async {
               // Prevent processing multiple QR detections simultaneously
               if (_isProcessingQR) {
-                debugPrint('⏭️ Already processing QR, skipping...');
+                AppLogger.d('Already processing QR, skipping...');
                 return;
               }
 
@@ -167,18 +168,18 @@ class _ScannerScreenState extends State<ScannerScreen>
 
               try {
                 final List<Barcode> barcodes = capture.barcodes;
-                debugPrint(
-                  '🔍 QR Detection triggered: ${barcodes.length} barcode(s) detected',
+                AppLogger.d(
+                  'QR Detection triggered: ${barcodes.length} barcode(s) detected',
                 );
 
                 for (final barcode in barcodes) {
                   final String? rawValue = barcode.rawValue;
-                  debugPrint(
-                    '📱 Barcode detected - Type: ${barcode.format}, Value: $rawValue',
+                  AppLogger.d(
+                    'Barcode detected - Type: ${barcode.format}, Value: $rawValue',
                   );
 
                   if (rawValue == null || rawValue.isEmpty) {
-                    debugPrint('⚠️ Empty barcode value, skipping');
+                    AppLogger.w('Empty barcode value, skipping');
                     continue;
                   }
 
@@ -186,29 +187,28 @@ class _ScannerScreenState extends State<ScannerScreen>
                       .getStationById(rawValue);
 
                   if (station != null) {
-                    debugPrint(
-                      '✅ Station found: ${station.name} (ID: ${station.id})',
+                    AppLogger.i(
+                      'Station found: ${station.name} (ID: ${station.id})',
                     );
 
-                    debugPrint('🔄 Attempting to mark station as visited...');
+                    AppLogger.d('Attempting to mark station as visited...');
                     // Fire and forget - don't wait for Firestore update
                     // This prevents hanging when offline
                     StationService.instance
                         .updateStationVisited(station.id, true)
-                        .then((_) => debugPrint('✅ Station marked as visited'))
+                        .then((_) => AppLogger.i('Station marked as visited'))
                         .catchError(
-                          (e) => debugPrint(
-                            '⚠️ Error updating station visited: $e',
-                          ),
+                          (e) =>
+                              AppLogger.w('Error updating station visited: $e'),
                         );
 
-                    debugPrint(
-                      '🧗 ClimbSessionService.isInitialized: ${ClimbSessionService.isInitialized}',
+                    AppLogger.d(
+                      'ClimbSessionService.isInitialized: ${ClimbSessionService.isInitialized}',
                     );
 
                     if (!ClimbSessionService.isInitialized) {
-                      debugPrint(
-                        '❌ Service NOT initialized, showing snackbar and returning',
+                      AppLogger.e(
+                        'Service NOT initialized, showing snackbar and returning',
                       );
                       if (mounted) {
                         ScaffoldMessenger.of(context).showSnackBar(
@@ -224,13 +224,13 @@ class _ScannerScreenState extends State<ScannerScreen>
 
                     final activeSession = ClimbSessionService.instance
                         .getActiveSession();
-                    debugPrint(
-                      '🧗 Active session: ${activeSession?.id ?? "None"}',
+                    AppLogger.d(
+                      'Active session: ${activeSession?.id ?? "None"}',
                     );
 
                     if (activeSession != null &&
                         activeSession.status == 'ongoing') {
-                      debugPrint('✅ Using existing active session');
+                      AppLogger.i('Using existing active session');
                       final isStationInSession = activeSession.visitedStations
                           .any((visit) => visit.stationId == station.id);
 
@@ -242,8 +242,8 @@ class _ScannerScreenState extends State<ScannerScreen>
                       if (_geofencingEnabled &&
                           station.latitude != null &&
                           station.longitude != null) {
-                        debugPrint(
-                          '🔍 Geofencing enabled, verifying location...',
+                        AppLogger.d(
+                          'Geofencing enabled, verifying location...',
                         );
                         setState(() => _isValidatingGeofence = true);
                         _showGeofenceValidatingDialog();
@@ -258,8 +258,8 @@ class _ScannerScreenState extends State<ScannerScreen>
                               ).timeout(
                                 const Duration(seconds: 15),
                                 onTimeout: () {
-                                  debugPrint(
-                                    '⏱️ Geofence check timed out after 15 seconds',
+                                  AppLogger.w(
+                                    'Geofence check timed out after 15 seconds',
                                   );
                                   return GeofenceCheckResult(
                                     isWithinGeofence: false,
@@ -274,8 +274,8 @@ class _ScannerScreenState extends State<ScannerScreen>
                           setState(() => _isValidatingGeofence = false);
 
                           if (geofenceResult.errorMessage != null) {
-                            debugPrint(
-                              '⚠️ Geofence error: ${geofenceResult.errorMessage}',
+                            AppLogger.w(
+                              'Geofence error: ${geofenceResult.errorMessage}',
                             );
                             if (mounted) {
                               ScaffoldMessenger.of(context).showSnackBar(
@@ -292,8 +292,8 @@ class _ScannerScreenState extends State<ScannerScreen>
 
                           if (!geofenceResult.isWithinGeofence &&
                               geofenceResult.distanceMeters != null) {
-                            debugPrint(
-                              '❌ NOT within geofence. Distance: ${geofenceResult.distanceMeters?.toStringAsFixed(2) ?? "unknown"} meters',
+                            AppLogger.w(
+                              'NOT within geofence. Distance: ${geofenceResult.distanceMeters?.toStringAsFixed(2) ?? "unknown"} meters',
                             );
                             if (mounted) {
                               ScaffoldMessenger.of(context).showSnackBar(
@@ -308,11 +308,11 @@ class _ScannerScreenState extends State<ScannerScreen>
                             return;
                           }
 
-                          debugPrint(
-                            '✅ Geofence verified! Distance: ${geofenceResult.distanceMeters?.toStringAsFixed(2) ?? "0"} meters',
+                          AppLogger.i(
+                            'Geofence verified! Distance: ${geofenceResult.distanceMeters?.toStringAsFixed(2) ?? "0"} meters',
                           );
                         } catch (e) {
-                          debugPrint('❌ Error during geofence check: $e');
+                          AppLogger.e('Error during geofence check: $e');
                           _dismissGeofenceDialog();
                           setState(() => _isValidatingGeofence = false);
                           if (mounted) {
@@ -329,7 +329,7 @@ class _ScannerScreenState extends State<ScannerScreen>
 
                       // Geofencing passed or disabled - navigate
                       if (mounted) {
-                        debugPrint('📱 Navigating to station detail screen...');
+                        AppLogger.i('Navigating to station detail screen...');
                         Navigator.of(context).push(
                           MaterialPageRoute(
                             builder: (context) =>
@@ -339,7 +339,7 @@ class _ScannerScreenState extends State<ScannerScreen>
                       }
                       return; // Exit after navigation
                     } else {
-                      debugPrint('🚀 Creating new climb session...');
+                      AppLogger.i('Creating new climb session...');
                       final now = DateTime.now();
                       final sessionName =
                           'Trek - ${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}';
@@ -350,15 +350,15 @@ class _ScannerScreenState extends State<ScannerScreen>
                                 'Climbing session starting at ${station.name}',
                             trekType: 'regular_trek',
                           );
-                      debugPrint('✅ Climb session created: ${newSession.id}');
+                      AppLogger.i('Climb session created: ${newSession.id}');
                       newSession.addVisitedStation(station);
 
                       // Check geofencing if enabled - navigate only if validated
                       if (_geofencingEnabled &&
                           station.latitude != null &&
                           station.longitude != null) {
-                        debugPrint(
-                          '🔍 Geofencing enabled, verifying location...',
+                        AppLogger.d(
+                          'Geofencing enabled, verifying location...',
                         );
                         setState(() => _isValidatingGeofence = true);
                         _showGeofenceValidatingDialog();
@@ -373,8 +373,8 @@ class _ScannerScreenState extends State<ScannerScreen>
                               ).timeout(
                                 const Duration(seconds: 15),
                                 onTimeout: () {
-                                  debugPrint(
-                                    '⏱️ Geofence check timed out after 15 seconds',
+                                  AppLogger.w(
+                                    'Geofence check timed out after 15 seconds',
                                   );
                                   return GeofenceCheckResult(
                                     isWithinGeofence: false,
@@ -389,8 +389,8 @@ class _ScannerScreenState extends State<ScannerScreen>
                           setState(() => _isValidatingGeofence = false);
 
                           if (geofenceResult.errorMessage != null) {
-                            debugPrint(
-                              '⚠️ Geofence error: ${geofenceResult.errorMessage}',
+                            AppLogger.w(
+                              'Geofence error: ${geofenceResult.errorMessage}',
                             );
                             if (mounted) {
                               ScaffoldMessenger.of(context).showSnackBar(
@@ -407,8 +407,8 @@ class _ScannerScreenState extends State<ScannerScreen>
 
                           if (!geofenceResult.isWithinGeofence &&
                               geofenceResult.distanceMeters != null) {
-                            debugPrint(
-                              '❌ NOT within geofence. Distance: ${geofenceResult.distanceMeters?.toStringAsFixed(2) ?? "unknown"} meters',
+                            AppLogger.w(
+                              'NOT within geofence. Distance: ${geofenceResult.distanceMeters?.toStringAsFixed(2) ?? "unknown"} meters',
                             );
                             if (mounted) {
                               ScaffoldMessenger.of(context).showSnackBar(
@@ -423,11 +423,11 @@ class _ScannerScreenState extends State<ScannerScreen>
                             return;
                           }
 
-                          debugPrint(
-                            '✅ Geofence verified! Distance: ${geofenceResult.distanceMeters?.toStringAsFixed(2) ?? "0"} meters',
+                          AppLogger.i(
+                            'Geofence verified! Distance: ${geofenceResult.distanceMeters?.toStringAsFixed(2) ?? "0"} meters',
                           );
                         } catch (e) {
-                          debugPrint('❌ Error during geofence check: $e');
+                          AppLogger.e('❌ Error during geofence check: $e');
                           _dismissGeofenceDialog();
                           setState(() => _isValidatingGeofence = false);
                           if (mounted) {
@@ -444,7 +444,7 @@ class _ScannerScreenState extends State<ScannerScreen>
 
                       // Geofencing passed or disabled - navigate
                       if (mounted) {
-                        debugPrint('📱 Navigating to station detail screen...');
+                        AppLogger.i('Navigating to station detail screen...');
                         Navigator.of(context).push(
                           MaterialPageRoute(
                             builder: (context) =>
@@ -455,15 +455,15 @@ class _ScannerScreenState extends State<ScannerScreen>
                       return; // Exit after navigation
                     }
                   } else {
-                    debugPrint('❌ Station NOT found for QR value: $rawValue');
+                    AppLogger.e('Station NOT found for QR value: $rawValue');
                   }
                 }
               } catch (e) {
-                debugPrint('❌ CRITICAL ERROR in QR detection: $e');
+                AppLogger.e('CRITICAL ERROR in QR detection: $e');
                 try {
                   await controller?.start();
                 } catch (e2) {
-                  debugPrint('❌ Camera restart failed: $e2');
+                  AppLogger.e('Camera restart failed: $e2');
                 }
               } finally {
                 _isProcessingQR = false;

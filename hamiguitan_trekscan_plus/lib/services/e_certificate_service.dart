@@ -1,11 +1,11 @@
 import 'dart:convert';
-import 'package:flutter/foundation.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/e_certificate.dart';
 import '../models/station_data.dart';
 import 'certificate_email_service.dart';
+import '../utils/app_logger.dart';
 
 class ECertificateService {
   static final ECertificateService _instance = ECertificateService._internal();
@@ -55,7 +55,7 @@ class ECertificateService {
         await _loadCertificatesFromFirebase(currentUserId);
       }
     } catch (e) {
-      print('Error initializing ECertificateService: $e');
+      AppLogger.i('Error initializing ECertificateService: $e');
       rethrow;
     }
   }
@@ -133,7 +133,7 @@ class ECertificateService {
 
       return lastAwardedCert;
     } catch (e) {
-      print('Error checking and awarding certificate: $e');
+      AppLogger.i('Error checking and awarding certificate: $e');
       return null;
     }
   }
@@ -190,7 +190,7 @@ class ECertificateService {
 
       return certificate;
     } catch (e) {
-      print('Error creating certificate: $e');
+      AppLogger.i('Error creating certificate: $e');
       rethrow;
     }
   }
@@ -222,7 +222,7 @@ class ECertificateService {
       final key = _getCertificateStorageKey(certificate.certificateId);
       await _prefs.setString(key, jsonEncode(certificate.toJson()));
     } catch (e) {
-      print('Error saving certificate locally: $e');
+      AppLogger.i('Error saving certificate locally: $e');
     }
   }
 
@@ -241,7 +241,7 @@ class ECertificateService {
             'lastUpdated': FieldValue.serverTimestamp(),
           }, SetOptions(merge: true));
     } catch (e) {
-      print('Error saving certificate to Firebase: $e');
+      AppLogger.i('Error saving certificate to Firebase: $e');
       // Don't rethrow - certificate is still saved locally
     }
   }
@@ -262,12 +262,12 @@ class ECertificateService {
             final json = jsonDecode(jsonString) as Map<String, dynamic>;
             _userCertificates.add(ECertificate.fromJson(json));
           } catch (e) {
-            print('Error parsing certificate from local storage: $e');
+            AppLogger.i('Error parsing certificate from local storage: $e');
           }
         }
       }
     } catch (e) {
-      print('Error loading certificates from local storage: $e');
+      AppLogger.i('Error loading certificates from local storage: $e');
     }
   }
 
@@ -300,7 +300,7 @@ class ECertificateService {
         }
       }
     } catch (e) {
-      print('Error loading certificates from Firebase: $e');
+      AppLogger.i('Error loading certificates from Firebase: $e');
       // Don't rethrow - we still have local certificates
     }
   }
@@ -335,7 +335,7 @@ class ECertificateService {
                 .toList();
             return List.unmodifiable(_userCertificates);
           } catch (e) {
-            debugPrint('Error parsing certificates: $e');
+            AppLogger.e('Error parsing certificates: $e');
             return <ECertificate>[];
           }
         });
@@ -394,7 +394,7 @@ class ECertificateService {
 
       return false;
     } catch (e) {
-      print('Error verifying certificate: $e');
+      AppLogger.i('Error verifying certificate: $e');
       return false;
     }
   }
@@ -427,7 +427,7 @@ class ECertificateService {
     try {
       return await _emailService.sendCertificateEmail(certificate);
     } catch (e) {
-      print('Error sending certificate email: $e');
+      AppLogger.i('Error sending certificate email: $e');
       return false;
     }
   }
@@ -438,7 +438,7 @@ class ECertificateService {
       if (_userCertificates.isEmpty) return false;
       return await _emailService.sendAllCertificatesEmail(_userCertificates);
     } catch (e) {
-      print('Error sending all certificates: $e');
+      AppLogger.i('Error sending all certificates: $e');
       return false;
     }
   }

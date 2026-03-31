@@ -1,10 +1,11 @@
 import 'dart:io';
-import 'package:flutter/foundation.dart';
+//import 'package:flutter/foundation.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
 import 'package:path_provider/path_provider.dart';
 import '../models/e_certificate.dart';
+import '../utils/app_logger.dart';
 
 class CertificatePdfService {
   static final CertificatePdfService _instance =
@@ -242,7 +243,7 @@ class CertificatePdfService {
     final file = File('${directory.path}/$fileName');
     await file.writeAsBytes(await pdf.save());
 
-    print('📄 PDF certificate generated: ${file.path}');
+    AppLogger.i('📄 PDF certificate generated: ${file.path}');
     return file;
   }
 
@@ -328,20 +329,19 @@ class CertificatePdfService {
           final savedFile = File('${certificatesDir.path}/$fileName');
           await file.copy(savedFile.path);
 
-          debugPrint('✅ Certificate saved: ${savedFile.path}');
+          AppLogger.i('Certificate saved: ${savedFile.path}');
           return savedFile;
         }
       }
 
-      // For iOS/other platforms, use documents directory
       final directory = await getApplicationDocumentsDirectory();
       final savedFile = File('${directory.path}/$fileName');
       await file.copy(savedFile.path);
 
-      debugPrint('✅ Certificate saved: ${savedFile.path}');
+      AppLogger.i('Certificate saved: ${savedFile.path}');
       return savedFile;
     } catch (e) {
-      debugPrint('❌ Error saving certificate: $e');
+      AppLogger.e('Error saving certificate: $e');
       return null;
     }
   }

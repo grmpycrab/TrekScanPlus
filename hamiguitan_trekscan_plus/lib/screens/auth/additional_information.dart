@@ -4,6 +4,7 @@ import '../../services/user_service.dart';
 import '../../theme/color.dart';
 import '../main/main_screen.dart';
 import '../../components/error_feedback.dart';
+import '../../utils/app_logger.dart';
 
 class AdditionalInformationScreen extends StatefulWidget {
   const AdditionalInformationScreen({super.key});
@@ -27,7 +28,7 @@ class _AdditionalInformationScreenState
   @override
   void initState() {
     super.initState();
-    print('✅ AdditionalInformationScreen initialized');
+    AppLogger.i('✅ AdditionalInformationScreen initialized');
     _firstNameController = TextEditingController();
     _lastNameController = TextEditingController();
     _phoneController = TextEditingController();
@@ -159,9 +160,7 @@ class _AdditionalInformationScreenState
                 gender: gender,
               );
             },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.primary,
-            ),
+            style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary),
             child: const Text(
               'Confirm & Continue',
               style: TextStyle(color: SharedColors.white),

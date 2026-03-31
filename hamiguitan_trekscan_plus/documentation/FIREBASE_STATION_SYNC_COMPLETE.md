@@ -213,7 +213,7 @@ await stationService.updateStationVisited('stn1', true);
 
 // Verify
 final station = stationService.getStationById('stn1');
-print(station.isVisited); // true
+AppLogger.i(station.isVisited); // true
 ```
 
 ### Example 2: Get Visited Stations
@@ -224,11 +224,11 @@ final service = FirestoreStationService.instance;
 
 // One-time fetch
 final visitedIds = await service.getVisitedStationIds();
-print('Visited: ${visitedIds.length}');
+AppLogger.i('Visited: ${visitedIds.length}');
 
 // Real-time listener
 service.getVisitedStationsStream().listen((ids) {
-  print('Updated: ${ids.length} stations');
+  AppLogger.i('Updated: ${ids.length} stations');
   // UI refreshes here
 });
 ```
@@ -330,7 +330,7 @@ await stationService.loadStations();
 // Add to main.dart for detailed logging
 void main() {
   if (kDebugMode) {
-    print('🔍 Firebase Station Sync: ENABLED');
+    AppLogger.i('🔍 Firebase Station Sync: ENABLED');
   }
   runApp(MyApp());
 }

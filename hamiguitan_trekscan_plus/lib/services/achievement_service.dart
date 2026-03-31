@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import '../models/achievement.dart';
 import 'local_achievement_service.dart';
+import '../utils/app_logger.dart';
 
 /// Achievement service that handles logic, Firebase sync, and offline support
 class AchievementService {
@@ -113,7 +114,7 @@ class AchievementService {
           .map((badge) => Achievement.fromJson(badge as Map<String, dynamic>))
           .toList();
     } catch (e) {
-      print('Error loading achievements from JSON: $e');
+      AppLogger.i('Error loading achievements from JSON: $e');
       _allAchievements = [];
     }
   }
@@ -157,19 +158,19 @@ class AchievementService {
     bool saveToLocal = true,
   }) async {
     try {
-      print(
-        '📥 AchievementService: Fetching achievements from Firebase for userId: $userId',
+      AppLogger.i(
+        'AchievementService: Fetching achievements from Firebase for userId: $userId',
       );
       final firebaseAchievements = await fetchFromFirebase(userId: userId);
       if (firebaseAchievements.isEmpty) {
-        print(
-          '📭 AchievementService: No achievements found in Firebase for userId: $userId',
+        AppLogger.i(
+          'AchievementService: No achievements found in Firebase for userId: $userId',
         );
         return;
       }
 
-      print(
-        '📦 AchievementService: Found ${firebaseAchievements.length} achievements in Firebase',
+      AppLogger.i(
+        'AchievementService: Found ${firebaseAchievements.length} achievements in Firebase',
       );
 
       for (int i = 0; i < _allAchievements.length; i++) {
@@ -200,7 +201,7 @@ class AchievementService {
         }
       }
     } catch (e) {
-      print('Error merging with Firebase achievements: $e');
+      AppLogger.i('Error merging with Firebase achievements: $e');
     }
   }
 
@@ -327,7 +328,7 @@ class AchievementService {
           return false;
       }
     } catch (e) {
-      print('Error checking achievement criteria: $e');
+      AppLogger.i('Error checking achievement criteria: $e');
       return false;
     }
   }
@@ -352,7 +353,7 @@ class AchievementService {
         await _syncSingleAchievementToFirebase(achievement, userId);
       }
     } catch (e) {
-      print('Error unlocking achievement locally: $e');
+      AppLogger.i('Error unlocking achievement locally: $e');
     }
   }
 
@@ -392,7 +393,7 @@ class AchievementService {
         'badges': FieldValue.arrayUnion([achievement.id]),
       });
     } catch (e) {
-      print('Error syncing achievement to Firebase: $e');
+      AppLogger.i('Error syncing achievement to Firebase: $e');
       await _localService.addToSyncQueue(achievement.id);
     }
   }
@@ -440,12 +441,12 @@ class AchievementService {
             await _localService.removeFromSyncQueue(achievementId);
           }
         } catch (e) {
-          print('Failed to sync achievement $achievementId: $e');
+          AppLogger.i('Failed to sync achievement $achievementId: $e');
           continue;
         }
       }
     } catch (e) {
-      print('Error syncing achievements to Firebase: $e');
+      AppLogger.i('Error syncing achievements to Firebase: $e');
     }
   }
 
@@ -556,7 +557,7 @@ class AchievementService {
 
             firebaseAchievements.add(Achievement.fromJson(achievementData));
           } catch (e) {
-            print('Error parsing achievement ${doc.id}: $e');
+            AppLogger.i('Error parsing achievement ${doc.id}: $e');
             continue;
           }
         }
@@ -596,7 +597,7 @@ class AchievementService {
 
       return firebaseAchievements;
     } catch (e) {
-      print('Error fetching achievements from Firebase: $e');
+      AppLogger.i('Error fetching achievements from Firebase: $e');
       return [];
     }
   }
@@ -616,7 +617,7 @@ class AchievementService {
       }
       await _localService.clearAll();
     } catch (e) {
-      print('Error resetting achievements: $e');
+      AppLogger.i('Error resetting achievements: $e');
     }
   }
 }

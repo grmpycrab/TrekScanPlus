@@ -5,6 +5,7 @@ import 'dart:async';
 import 'dart:convert';
 import '../models/climb_session.dart';
 import '../models/station_data.dart';
+import '../utils/app_logger.dart';
 
 /// Service for managing climb/trek sessions
 ///
@@ -82,35 +83,35 @@ class ClimbSessionService extends ChangeNotifier {
         userId: userId,
         firestore: FirebaseFirestore.instance,
       );
-      debugPrint(
-        '🚀 ClimbSessionService: Initializing for userId: $userId (offline-first)',
+      AppLogger.i(
+        'ClimbSessionService: Initializing for userId: $userId (offline-first)',
       );
 
       // Load from local cache immediately (synchronous, non-blocking)
       try {
         _instance!._loadLocalSessions();
-        debugPrint(
-          '✅ ClimbSessionService: Local sessions loaded (${_instance!._climbSessions.length} sessions)',
+        AppLogger.i(
+          'ClimbSessionService: Local sessions loaded (${_instance!._climbSessions.length} sessions)',
         );
       } catch (loadError) {
-        debugPrint('⚠️ Error loading local sessions: $loadError');
+        AppLogger.w('Error loading local sessions: $loadError');
         _instance!._climbSessions = [];
         _instance!._activeSession = null;
       }
 
       // Sync with Firebase in background (fire-and-forget, non-blocking)
       if (_instance!._isFirebaseEnabled) {
-        debugPrint(
-          '🔄 ClimbSessionService: Starting background Firebase sync (non-blocking)',
+        AppLogger.d(
+          'ClimbSessionService: Starting background Firebase sync (non-blocking)',
         );
         _instance!._syncWithFirebaseBackground();
       } else {
-        debugPrint('🔌 ClimbSessionService: Offline mode (no userId)');
+        AppLogger.i('🔌 ClimbSessionService: Offline mode (no userId)');
       }
 
       return _instance!;
     } catch (e) {
-      debugPrint('❌ ClimbSessionService init error: $e');
+      AppLogger.e('ClimbSessionService init error: $e');
       rethrow;
     }
   }
@@ -152,7 +153,7 @@ class ClimbSessionService extends ChangeNotifier {
 
       notifyListeners();
     } catch (e) {
-      if (kDebugMode) print('Error in _loadLocalSessions: $e');
+      if (kDebugMode) AppLogger.e('Error in _loadLocalSessions: $e');
     }
   }
 
@@ -163,11 +164,11 @@ class ClimbSessionService extends ChangeNotifier {
         .timeout(
           const Duration(seconds: 3),
           onTimeout: () {
-            debugPrint('⚠️ Firebase sync timeout');
+            AppLogger.w('Firebase sync timeout');
           },
         )
         .catchError(
-          (e) => debugPrint('⚠️ Background Firebase sync error: $e'),
+          (e) => AppLogger.w('Background Firebase sync error: $e'),
           test: (_) => true,
         );
   }
@@ -188,7 +189,7 @@ class ClimbSessionService extends ChangeNotifier {
           firebaseSessions.add(session);
         } catch (e) {
           if (kDebugMode) {
-            print('Error parsing climb session from Firebase: $e');
+            AppLogger.e('Error parsing climb session from Firebase: $e');
           }
         }
       }
@@ -201,12 +202,12 @@ class ClimbSessionService extends ChangeNotifier {
       }
 
       if (kDebugMode) {
-        print(
-          '✅ Synced ${firebaseSessions.length} climb sessions from Firebase',
+        AppLogger.i(
+          'Synced ${firebaseSessions.length} climb sessions from Firebase',
         );
       }
     } catch (e) {
-      if (kDebugMode) print('⚠️ Error syncing with Firebase: $e');
+      if (kDebugMode) AppLogger.w('Error syncing with Firebase: $e');
       // Don't fail - continue with local data
     }
   }
@@ -218,7 +219,7 @@ class ClimbSessionService extends ChangeNotifier {
       await prefs.setString(_userClimbSessionsKey, json.encode(jsonList));
       notifyListeners();
     } catch (e) {
-      if (kDebugMode) print('Error saving sessions locally: $e');
+      if (kDebugMode) AppLogger.e('Error saving sessions locally: $e');
     }
   }
 
@@ -350,8 +351,8 @@ class ClimbSessionService extends ChangeNotifier {
     try {
       if (!_isFirebaseEnabled || _userClimbsRef == null) {
         if (kDebugMode) {
-          print(
-            '⚠️ Firebase disabled or no user, skipping sync for ${session.id}',
+          AppLogger.w(
+            'Firebase disabled or no user, skipping sync for ${session.id}',
           );
         }
         return;
@@ -364,7 +365,7 @@ class ClimbSessionService extends ChangeNotifier {
             const Duration(seconds: 3),
             onTimeout: () {
               if (kDebugMode) {
-                print('⚠️ Firebase sync timeout for session ${session.id}');
+                AppLogger.w('Firebase sync timeout for session ${session.id}');
               }
               throw TimeoutException('Firebase sync timed out');
             },
@@ -372,11 +373,11 @@ class ClimbSessionService extends ChangeNotifier {
 
       if (kDebugMode) {
         final action = isNew ? 'created' : 'updated';
-        print('✅ Climb session ${session.name} $action on Firebase');
+        AppLogger.i('Climb session ${session.name} $action on Firebase');
       }
     } catch (e) {
       if (kDebugMode) {
-        print('❌ Error syncing climb session to Firebase: $e');
+        AppLogger.e('Error syncing climb session to Firebase: $e');
       }
       // Don't throw - app should work offline
     }
@@ -387,7 +388,7 @@ class ClimbSessionService extends ChangeNotifier {
   Stream<List<ClimbSession>> getClimbSessionsStream() {
     if (!_isFirebaseEnabled || _userClimbsRef == null) {
       if (kDebugMode) {
-        print('⚠️ Firebase disabled, returning empty stream');
+        AppLogger.w('Firebase disabled, returning empty stream');
       }
       return const Stream.empty();
     }
@@ -400,12 +401,14 @@ class ClimbSessionService extends ChangeNotifier {
           sessions.add(session);
         } catch (e) {
           if (kDebugMode) {
-            print('Error parsing climb session from stream: $e');
+            AppLogger.e('Error parsing climb session from stream: $e');
           }
         }
       }
       if (kDebugMode) {
-        print('🔄 Climb sessions stream updated: ${sessions.length} sessions');
+        AppLogger.i(
+          'Climb sessions stream updated: ${sessions.length} sessions',
+        );
       }
       return sessions;
     });
@@ -424,11 +427,11 @@ class ClimbSessionService extends ChangeNotifier {
       try {
         await _userClimbsRef!.doc(sessionId).delete();
         if (kDebugMode) {
-          print('✅ Climb session $sessionId deleted from Firebase');
+          AppLogger.i('Climb session $sessionId deleted from Firebase');
         }
       } catch (e) {
         if (kDebugMode) {
-          print('❌ Error deleting climb session from Firebase: $e');
+          AppLogger.e('Error deleting climb session from Firebase: $e');
         }
       }
     }

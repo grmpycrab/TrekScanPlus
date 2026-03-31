@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
+import '../utils/app_logger.dart';
 import '../../theme/new_color.dart';
 import '../../models/station_data.dart';
 
@@ -61,7 +62,7 @@ class _TrailMapState extends State<TrailMap> {
         }
       });
     } catch (e) {
-      debugPrint('Error checking connectivity: $e');
+      AppLogger.e('Error checking connectivity: $e');
       if (mounted) {
         setState(() {
           _isOnline = true; // Assume online if check fails

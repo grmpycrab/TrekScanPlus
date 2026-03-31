@@ -5,6 +5,7 @@ import '../../services/climb_session_service.dart';
 import '../../theme/color.dart';
 import '../../models/climb_session.dart';
 import '../../dialogs/new_climb_session_dialog.dart';
+import '../../utils/app_logger.dart';
 import 'station_detail_screen.dart';
 import 'climb_session_detail_screen.dart';
 
@@ -52,8 +53,8 @@ class _StationScreenState extends State<StationScreen> {
     // ClimbSessionService should already be initialized by main.dart
     // If not initialized yet, it means init() failed - show error but don't block
     if (!ClimbSessionService.isInitialized) {
-      debugPrint(
-        '⚠️ ClimbSessionService not yet initialized (waiting for postFrameCallback)',
+      AppLogger.w(
+        'ClimbSessionService not yet initialized (waiting for postFrameCallback)',
       );
     } else {
       // Add listener for updates
@@ -61,7 +62,7 @@ class _StationScreenState extends State<StationScreen> {
         ClimbSessionService.instance.addListener(_onClimbSessionsChanged);
         _updateActiveSession();
       } catch (e) {
-        debugPrint('⚠️ Error setting up climb service listener: $e');
+        AppLogger.w('Error setting up climb service listener: $e');
       }
     }
 
@@ -78,7 +79,7 @@ class _StationScreenState extends State<StationScreen> {
         _activeSession = ClimbSessionService.instance.getActiveSession();
       }
     } catch (e) {
-      debugPrint('⚠️ Error updating active session: $e');
+      AppLogger.w('Error updating active session: $e');
       _activeSession = null;
     }
   }

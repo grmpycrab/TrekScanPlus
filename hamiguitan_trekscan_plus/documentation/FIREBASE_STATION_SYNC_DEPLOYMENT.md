@@ -239,12 +239,12 @@ firebase deploy --only firestore:rules
 **Solution**:
 ```dart
 // Check userId is passed
-print('UserId: ${user.uid}');
+AppLogger.i('UserId: ${user.uid}');
 
 // Check SharedPreferences has data
 final prefs = await SharedPreferences.getInstance();
 final local = prefs.getStringList('visited_stations_${user.uid}');
-print('Local: $local');
+AppLogger.i('Local: $local');
 ```
 
 ### Issue: Firebase Sync Not Working

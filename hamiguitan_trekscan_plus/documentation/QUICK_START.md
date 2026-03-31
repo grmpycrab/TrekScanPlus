@@ -212,8 +212,8 @@ final ongoing = ClimbSessionService.instance.getOngoingSessions();
 ### Get Session Statistics
 ```dart
 final stats = ClimbSessionService.instance.getSessionStats(session);
-print('Duration: ${stats['totalDuration']}');
-print('Stations: ${stats['totalStations']}');
+AppLogger.i('Duration: ${stats['totalDuration']}');
+AppLogger.i('Stations: ${stats['totalStations']}');
 ```
 
 ---

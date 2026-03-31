@@ -49,7 +49,7 @@ Future<void> approveBooking(String bookingId, DateTime trekDate) async {
   final calendarService = CalendarConfigService();
   await calendarService.markTrekDownDay(trekDate);
   
-  print('✅ Booking approved and buffer day created');
+  AppLogger.i('✅ Booking approved and buffer day created');
 }
 ```
 
@@ -71,7 +71,7 @@ Future<void> cancelBooking(String bookingId, DateTime trekDate) async {
   final calendarService = CalendarConfigService();
   await calendarService.removeTrekDownDay(trekDate);
   
-  print('✅ Booking cancelled and buffer day removed');
+  AppLogger.i('✅ Booking cancelled and buffer day removed');
 }
 ```
 

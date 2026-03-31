@@ -25,14 +25,14 @@ The Pigeon (platform bridge) code was failing to properly type-cast the UserCred
      // Sometimes a Pigeon type-cast error happens even though the user was created
      // Check if we have a current user before throwing
      if (kDebugMode) {
-       print('⚠️ Sign up Pigeon cast error: $e');
+       AppLogger.i('⚠️ Sign up Pigeon cast error: $e');
        print(st);
      }
 
      final fallbackUser = _firebaseAuth.currentUser;
      if (fallbackUser != null) {
        if (kDebugMode) {
-         print('✅ User was created despite Pigeon error. Continuing with user: ${fallbackUser.email}');
+         AppLogger.i('✅ User was created despite Pigeon error. Continuing with user: ${fallbackUser.email}');
        }
        // Ensure Firestore has a user document for this account
        try {
@@ -40,7 +40,7 @@ The Pigeon (platform bridge) code was failing to properly type-cast the UserCred
        } catch (e) {
          // Log Firestore error but don't block signup
          if (kDebugMode) {
-           print('⚠️ Warning: Failed to create user document in Firestore: $e');
+           AppLogger.i('⚠️ Warning: Failed to create user document in Firestore: $e');
          }
        }
        // User created successfully despite the error, so continue
@@ -69,7 +69,7 @@ try {
     password: _passwordController.text.trim(),
   );
 
-  print('✅ Sign up successful, navigating to Additional Information Screen');
+  AppLogger.i('✅ Sign up successful, navigating to Additional Information Screen');
 
   if (mounted) {
     Navigator.pushReplacement(
@@ -80,7 +80,7 @@ try {
     );
   }
 } catch (e) {
-  print('❌ Sign up error: $e');
+  AppLogger.i('❌ Sign up error: $e');
   // ... error handling
 }
 ```

@@ -2,6 +2,7 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import '../../utils/app_logger.dart';
 import 'dart:io';
 
 /// Service for handling both local and push notifications
@@ -40,9 +41,9 @@ class NotificationService {
       await getFCMToken();
 
       _isInitialized = true;
-      print('✅ [NotificationService] Initialized successfully');
+      AppLogger.i('[NotificationService] Initialized successfully');
     } catch (e) {
-      print('❌ [NotificationService] Initialization failed: $e');
+      AppLogger.i('[NotificationService] Initialization failed: $e');
     }
   }
 
@@ -105,20 +106,20 @@ class NotificationService {
               badge: true,
               sound: true,
             );
-        print(
-          '✅ [NotificationService] Android notification permission: ${notificationPermission.authorizationStatus}',
+        AppLogger.i(
+          '[NotificationService] Android notification permission: ${notificationPermission.authorizationStatus}',
         );
       } catch (e) {
-        print(
-          '❌ [NotificationService] Failed to request Android notification permission: $e',
+        AppLogger.i(
+          '[NotificationService] Failed to request Android notification permission: $e',
         );
       }
     }
 
     // Handle foreground messages
     FirebaseMessaging.onMessage.listen((RemoteMessage message) {
-      print(
-        '📬 [NotificationService] Foreground message received: ${message.notification?.title}',
+      AppLogger.i(
+        '[NotificationService] Foreground message received: ${message.notification?.title}',
       );
       _showLocalNotification(
         title: message.notification?.title ?? 'Booking Update',
@@ -128,8 +129,8 @@ class NotificationService {
 
     // Handle background/terminated messages
     FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
-      print(
-        '📬 [NotificationService] Message opened from background: ${message.notification?.title}',
+      AppLogger.i(
+        'NotificationService] Message opened from background: ${message.notification?.title}',
       );
       // Handle navigation to booking screen here if needed
     });
@@ -138,18 +139,18 @@ class NotificationService {
     final RemoteMessage? initialMessage = await _firebaseMessaging
         .getInitialMessage();
     if (initialMessage != null) {
-      print(
-        '📬 [NotificationService] App opened from terminated state with message: ${initialMessage.notification?.title}',
+      AppLogger.i(
+        '[NotificationService] App opened from terminated state with message: ${initialMessage.notification?.title}',
       );
     }
 
     // Listen for FCM token changes and update Firestore
     _firebaseMessaging.onTokenRefresh.listen((newToken) {
-      print('🔄 [NotificationService] FCM token refreshed: $newToken');
+      AppLogger.i('[NotificationService] FCM token refreshed: $newToken');
       _saveFCMTokenToFirestore(newToken);
     });
 
-    print('✅ [NotificationService] Firebase Cloud Messaging initialized');
+    AppLogger.i('[NotificationService] Firebase Cloud Messaging initialized');
   }
 
   /// Save FCM token to Firestore
@@ -161,11 +162,11 @@ class NotificationService {
           'fcmToken': token,
           'lastTokenUpdate': DateTime.now(),
         }, SetOptions(merge: true));
-        print('💾 [NotificationService] FCM token updated in Firestore');
+        AppLogger.i('[NotificationService] FCM token updated in Firestore');
       }
     } catch (e) {
-      print(
-        '❌ [NotificationService] Failed to save FCM token to Firestore: $e',
+      AppLogger.i(
+        '[NotificationService] Failed to save FCM token to Firestore: $e',
       );
     }
   }
@@ -176,8 +177,8 @@ class NotificationService {
     required String body,
     String? payload,
   }) async {
-    print(
-      '🔔 [NotificationService] Showing local notification: $title - $body',
+    AppLogger.i(
+      '[NotificationService] Showing local notification: $title - $body',
     );
 
     try {
@@ -214,11 +215,11 @@ class NotificationService {
         platformChannelSpecifics,
         payload: payload,
       );
-      print(
-        '✅ [NotificationService] Notification shown with ID: $notificationId',
+      AppLogger.i(
+        '[NotificationService] Notification shown with ID: $notificationId',
       );
     } catch (e) {
-      print('❌ [NotificationService] Failed to show notification: $e');
+      AppLogger.i('[NotificationService] Failed to show notification: $e');
     }
   }
 
@@ -226,7 +227,7 @@ class NotificationService {
   Future<String?> getFCMToken() async {
     try {
       final token = await _firebaseMessaging.getToken();
-      print('🔑 [NotificationService] FCM Token: $token');
+      AppLogger.i('[NotificationService] FCM Token: $token');
 
       // Save FCM token to Firestore for backend to use
       final user = FirebaseAuth.instance.currentUser;
@@ -235,12 +236,12 @@ class NotificationService {
           'fcmToken': token,
           'lastTokenUpdate': DateTime.now(),
         }, SetOptions(merge: true));
-        print('💾 [NotificationService] FCM token saved to Firestore');
+        AppLogger.i('[NotificationService] FCM token saved to Firestore');
       }
 
       return token;
     } catch (e) {
-      print('❌ [NotificationService] Failed to get FCM token: $e');
+      AppLogger.i('[NotificationService] Failed to get FCM token: $e');
       return null;
     }
   }
@@ -251,12 +252,12 @@ class NotificationService {
     try {
       final user = FirebaseAuth.instance.currentUser;
       if (user == null) {
-        print('⚠️ [NotificationService] No user logged in');
+        AppLogger.i('[NotificationService] No user logged in');
         return;
       }
 
-      print(
-        '👂 [NotificationService] Listening to booking updates for user: ${user.uid}',
+      AppLogger.i(
+        '[NotificationService] Listening to booking updates for user: ${user.uid}',
       );
 
       FirebaseFirestore.instance
@@ -266,13 +267,13 @@ class NotificationService {
           .snapshots()
           .listen(
             (snapshot) {
-              print(
-                '📋 [NotificationService] Firestore snapshot received with ${snapshot.docChanges.length} changes, total docs: ${snapshot.docs.length}',
+              AppLogger.i(
+                '[NotificationService] Firestore snapshot received with ${snapshot.docChanges.length} changes, total docs: ${snapshot.docs.length}',
               );
 
               for (var docChange in snapshot.docChanges) {
-                print(
-                  '📍 [NotificationService] Document change type: ${docChange.type}, docId: ${docChange.doc.id}',
+                AppLogger.i(
+                  '[NotificationService] Document change type: ${docChange.type}, docId: ${docChange.doc.id}',
                 );
 
                 // Show notification on both modified and added documents
@@ -291,8 +292,8 @@ class NotificationService {
                     final now = DateTime.now();
                     final diff = now.difference(modifiedTime);
 
-                    print(
-                      '📍 [NotificationService] Document modified ${diff.inSeconds} seconds ago',
+                    AppLogger.i(
+                      '[NotificationService] Document modified ${diff.inSeconds} seconds ago',
                     );
 
                     // Only notify if modified within last 2 minutes
@@ -302,26 +303,26 @@ class NotificationService {
 
                       // Generate notification based on status
                       if (status?.toLowerCase() == 'approved') {
-                        notificationTitle = '✅ Booking Approved!';
+                        notificationTitle = 'Booking Approved!';
                         notificationBody =
                             'Your booking has been approved and is ready to go.';
                       } else if (status?.toLowerCase() == 'rejected') {
-                        notificationTitle = '❌ Booking Rejected';
+                        notificationTitle = 'Booking Rejected';
                         notificationBody =
                             adminNotes ?? 'Your booking was rejected.';
                       } else if (status?.toLowerCase() == 'changes required') {
-                        notificationTitle = '⚠️ Changes Required';
+                        notificationTitle = 'Changes Required';
                         notificationBody =
                             adminNotes ??
                             'Admin notes: Please review and update.';
                       } else if (status?.toLowerCase() == 'pending') {
-                        notificationTitle = '⏳ Booking Submitted';
+                        notificationTitle = 'Booking Submitted';
                         notificationBody =
                             'Your booking has been submitted for review.';
                       }
 
-                      print(
-                        '📬 [NotificationService] Booking status: $status, Will notify',
+                      AppLogger.i(
+                        '[NotificationService] Booking status: $status, Will notify',
                       );
 
                       _showLocalNotification(
@@ -330,26 +331,26 @@ class NotificationService {
                         payload: docChange.doc.id,
                       );
                     } else {
-                      print(
-                        '📍 [NotificationService] Document too old (${diff.inSeconds}s), skipping notification',
+                      AppLogger.i(
+                        '[NotificationService] Document too old (${diff.inSeconds}s), skipping notification',
                       );
                     }
                   }
                 } else {
-                  print(
-                    '📍 [NotificationService] Ignoring document change type: ${docChange.type}',
+                  AppLogger.i(
+                    '[NotificationService] Ignoring document change type: ${docChange.type}',
                   );
                 }
               }
             },
             onError: (error) {
-              print(
-                '❌ [NotificationService] Error listening to bookings: $error',
+              AppLogger.i(
+                '[NotificationService] Error listening to bookings: $error',
               );
             },
           );
     } catch (e) {
-      print('❌ [NotificationService] Failed to setup booking listener: $e');
+      AppLogger.i('[NotificationService] Failed to setup booking listener: $e');
     }
   }
 

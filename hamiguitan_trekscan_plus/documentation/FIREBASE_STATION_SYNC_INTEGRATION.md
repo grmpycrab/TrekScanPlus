@@ -79,9 +79,9 @@ class _QRScannerScreenState extends State<QRScannerScreen> {
       // Mark station as visited
       await _stationService.updateStationVisited(qrCode, true);
       
-      print('✅ Station marked as visited');
-      print('📱 Automatically saved to local storage');
-      print('☁️ Automatically synced to Firebase');
+      AppLogger.i('✅ Station marked as visited');
+      AppLogger.i('📱 Automatically saved to local storage');
+      AppLogger.i('☁️ Automatically synced to Firebase');
       
       // Navigate to station detail
       if (mounted) {
@@ -95,7 +95,7 @@ class _QRScannerScreenState extends State<QRScannerScreen> {
         );
       }
     } catch (e) {
-      print('❌ Error: $e');
+      AppLogger.i('❌ Error: $e');
     }
   }
 
@@ -197,9 +197,9 @@ class AuthService {
     // Load and merge stations from both local and Firebase
     await stationService.loadStations();
     
-    print('✅ User logged in: ${user.email}');
-    print('📱 Local stations loaded');
-    print('☁️ Firebase data merged');
+    AppLogger.i('✅ User logged in: ${user.email}');
+    AppLogger.i('📱 Local stations loaded');
+    AppLogger.i('☁️ Firebase data merged');
   }
 
   static Future<void> handleUserLogout() async {
@@ -209,8 +209,8 @@ class AuthService {
     // Optional: Reset stations on logout
     // await stationService.resetAllStations();
     
-    print('✅ User logged out');
-    print('📱 Local cache cleared');
+    AppLogger.i('✅ User logged out');
+    AppLogger.i('📱 Local cache cleared');
   }
 }
 ```
@@ -315,8 +315,8 @@ import 'package:flutter/foundation.dart';
 void main() {
   // Enable Firestore logging
   if (kDebugMode) {
-    print('📱 Starting TrekScanPlus with Firebase Station Sync');
-    print('🔍 Debug logging enabled');
+    AppLogger.i('📱 Starting TrekScanPlus with Firebase Station Sync');
+    AppLogger.i('🔍 Debug logging enabled');
   }
   
   runApp(MyApp());
@@ -346,9 +346,9 @@ void main() {
 // Verify user is logged in
 final user = FirebaseAuth.instance.currentUser;
 if (user == null) {
-  print('❌ No user logged in');
+  AppLogger.i('❌ No user logged in');
 } else {
-  print('✅ Logged in as: ${user.uid}');
+  AppLogger.i('✅ Logged in as: ${user.uid}');
 }
 
 // Check Firestore connection

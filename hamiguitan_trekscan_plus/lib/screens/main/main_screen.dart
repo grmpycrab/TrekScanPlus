@@ -4,6 +4,7 @@ import 'dart:async';
 import '../../components/bottom_navigation.dart';
 import '../../services/achievement_service.dart';
 import '../../services/onboarding_service.dart';
+import '../../utils/app_logger.dart';
 import 'home_screen.dart';
 import 'station_screen.dart';
 import 'scanner_screen.dart';
@@ -88,7 +89,7 @@ class _MainScreenState extends State<MainScreen> {
             await OnboardingService.showOnboarding(context, user.uid);
           }
         } catch (e) {
-          debugPrint('Onboarding check error: $e');
+          AppLogger.e('Onboarding check error: $e');
         }
       }),
     );

@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'user_service.dart';
 import 'email_verification_service.dart';
+import '../../utils/app_logger.dart';
 
 class FirebaseAuthService {
   FirebaseAuthService._internal();
@@ -33,7 +34,7 @@ class FirebaseAuthService {
       return signInMethods.isNotEmpty;
     } catch (e) {
       if (kDebugMode) {
-        print('Error checking email availability: $e');
+        AppLogger.i('Error checking email availability: $e');
       }
       return false;
     }
@@ -45,7 +46,7 @@ class FirebaseAuthService {
       return await _auth.fetchSignInMethodsForEmail(email);
     } catch (e) {
       if (kDebugMode) {
-        print('Error fetching sign-in methods: $e');
+        AppLogger.i('Error fetching sign-in methods: $e');
       }
       return [];
     }
@@ -89,7 +90,7 @@ class FirebaseAuthService {
       if (userCredential.user != null) {
         await EmailVerificationService.instance.sendVerificationCode(email);
         if (kDebugMode) {
-          print('✉️ Verification code sent to $email');
+          AppLogger.i('Verification code sent to $email');
         }
       }
 
@@ -102,13 +103,13 @@ class FirebaseAuthService {
         } catch (e) {
           // Log Firestore error but don't block user signup
           if (kDebugMode) {
-            print(
-              '⚠️ Warning: Failed to create user document in Firestore: $e',
+            AppLogger.i(
+              'Warning: Failed to create user document in Firestore: $e',
             );
-            print(
+            AppLogger.i(
               'User was created in Firebase Auth, but Firestore sync failed.',
             );
-            print(
+            AppLogger.i(
               'User can proceed - data will sync when network is available.',
             );
           }
@@ -116,22 +117,22 @@ class FirebaseAuthService {
       }
     } on FirebaseAuthException catch (e) {
       if (kDebugMode) {
-        print('Sign up error: ${e.code} - ${e.message}');
+        AppLogger.i('Sign up error: ${e.code} - ${e.message}');
       }
       rethrow;
     } catch (e, st) {
       // Sometimes a Pigeon type-cast error happens even though the user was created
       // Check if we have a current user before throwing
       if (kDebugMode) {
-        print('⚠️ Sign up Pigeon cast error: $e');
+        AppLogger.i('Sign up Pigeon cast error: $e');
         print(st);
       }
 
       final fallbackUser = _auth.currentUser;
       if (fallbackUser != null) {
         if (kDebugMode) {
-          print(
-            '✅ User was created despite Pigeon error. Continuing with user: ${fallbackUser.email}',
+          AppLogger.i(
+            'User was created despite Pigeon error. Continuing with user: ${fallbackUser.email}',
           );
         }
         // Ensure Firestore has a user document for this account
@@ -142,8 +143,8 @@ class FirebaseAuthService {
         } catch (e) {
           // Log Firestore error but don't block signup
           if (kDebugMode) {
-            print(
-              '⚠️ Warning: Failed to create user document in Firestore: $e',
+            AppLogger.i(
+              'Warning: Failed to create user document in Firestore: $e',
             );
           }
         }
@@ -169,7 +170,7 @@ class FirebaseAuthService {
       );
 
       if (kDebugMode) {
-        print('✅ Email login successful: ${userCredential.user?.email}');
+        AppLogger.i('Email login successful: ${userCredential.user?.email}');
       }
 
       // Update/create the Firestore user document when logging in
@@ -181,10 +182,10 @@ class FirebaseAuthService {
         } catch (e) {
           // Log Firestore error but don't block login - user is authenticated
           if (kDebugMode) {
-            print(
-              '⚠️ Warning: Failed to update user document in Firestore: $e',
+            AppLogger.i(
+              'Warning: Failed to update user document in Firestore: $e',
             );
-            print(
+            AppLogger.i(
               'User can proceed - data will sync when network is available.',
             );
           }
@@ -194,22 +195,22 @@ class FirebaseAuthService {
       return userCredential;
     } on FirebaseAuthException catch (e) {
       if (kDebugMode) {
-        print('Login error: ${e.code} - ${e.message}');
+        AppLogger.i('Login error: ${e.code} - ${e.message}');
       }
       rethrow;
     } catch (e, st) {
       // Sometimes a Pigeon type-cast error happens even though the user was authenticated
       // Check if we have a current user before throwing
       if (kDebugMode) {
-        print('⚠️ Login Pigeon cast error: $e');
+        AppLogger.i('Login Pigeon cast error: $e');
         print(st);
       }
 
       final fallbackUser = _auth.currentUser;
       if (fallbackUser != null) {
         if (kDebugMode) {
-          print(
-            '✅ User was authenticated despite Pigeon error. Continuing with user: ${fallbackUser.email}',
+          AppLogger.i(
+            'User was authenticated despite Pigeon error. Continuing with user: ${fallbackUser.email}',
           );
         }
         // Ensure Firestore has a user document for this account
@@ -220,8 +221,8 @@ class FirebaseAuthService {
         } catch (e) {
           // Log Firestore error but don't block login - user is authenticated
           if (kDebugMode) {
-            print(
-              '⚠️ Warning: Failed to create user document in Firestore: $e',
+            AppLogger.i(
+              'Warning: Failed to create user document in Firestore: $e',
             );
           }
         }
@@ -239,11 +240,11 @@ class FirebaseAuthService {
     try {
       await _auth.signOut();
       if (kDebugMode) {
-        print('✅ User signed out successfully');
+        AppLogger.i('User signed out successfully');
       }
     } on FirebaseAuthException catch (e) {
       if (kDebugMode) {
-        print('Sign out error: ${e.code} - ${e.message}');
+        AppLogger.i('Sign out error: ${e.code} - ${e.message}');
       }
       rethrow;
     }
@@ -255,7 +256,7 @@ class FirebaseAuthService {
       await _auth.sendPasswordResetEmail(email: email);
     } on FirebaseAuthException catch (e) {
       if (kDebugMode) {
-        print('Reset password error: ${e.code} - ${e.message}');
+        AppLogger.i('Reset password error: ${e.code} - ${e.message}');
       }
       rethrow;
     }
@@ -270,12 +271,12 @@ class FirebaseAuthService {
           user.email!,
         );
         if (kDebugMode) {
-          print('✉️ Verification code sent to ${user.email}');
+          AppLogger.i('Verification code sent to ${user.email}');
         }
       }
     } catch (e) {
       if (kDebugMode) {
-        print('Send verification code error: $e');
+        AppLogger.i('Send verification code error: $e');
       }
       rethrow;
     }
@@ -319,14 +320,14 @@ class FirebaseAuthService {
       if (googleUser == null) {
         // User canceled the sign-in
         if (kDebugMode) {
-          print('Google sign-in cancelled by user');
+          AppLogger.i('Google sign-in cancelled by user');
         }
         return null;
       }
 
       if (kDebugMode) {
-        print('Google user signed in: ${googleUser.email}');
-        print('Google display name: ${googleUser.displayName}');
+        AppLogger.i('Google user signed in: ${googleUser.email}');
+        AppLogger.i('Google display name: ${googleUser.displayName}');
       }
 
       // Check if this email is already used with email/password authentication
@@ -345,7 +346,7 @@ class FirebaseAuthService {
           await googleUser.authentication;
 
       if (kDebugMode) {
-        print(
+        AppLogger.i(
           'Google auth obtained. Access token: ${googleAuth.accessToken != null}, ID token: ${googleAuth.idToken != null}',
         );
       }
@@ -379,7 +380,7 @@ class FirebaseAuthService {
             }
 
             if (kDebugMode) {
-              print(
+              AppLogger.i(
                 'Extracted from Google: firstName="$firstName", lastName="$lastName"',
               );
             }
@@ -392,13 +393,13 @@ class FirebaseAuthService {
           } catch (e) {
             // Log Firestore error but don't block sign-in
             if (kDebugMode) {
-              print(
-                '⚠️ Warning: Failed to create user document in Firestore: $e',
+              AppLogger.i(
+                'Warning: Failed to create user document in Firestore: $e',
               );
-              print(
+              AppLogger.i(
                 'User was created in Firebase Auth, but Firestore sync failed.',
               );
-              print(
+              AppLogger.i(
                 'User can proceed - data will sync when network is available.',
               );
             }
@@ -406,7 +407,9 @@ class FirebaseAuthService {
         }
 
         if (kDebugMode) {
-          print('Firebase sign in successful: ${userCredential.user?.email}');
+          AppLogger.i(
+            'Firebase sign in successful: ${userCredential.user?.email}',
+          );
         }
 
         return userCredential.user;
@@ -416,14 +419,16 @@ class FirebaseAuthService {
         // has completed the sign-in. Detect that case and return the
         // current user if available.
         if (kDebugMode) {
-          print('Error while converting UserCredential: $e');
+          AppLogger.i('Error while converting UserCredential: $e');
           print(st);
         }
 
         final fallbackUser = _auth.currentUser;
         if (fallbackUser != null) {
           if (kDebugMode) {
-            print('Returning fallback currentUser: ${fallbackUser.email}');
+            AppLogger.i(
+              'Returning fallback currentUser: ${fallbackUser.email}',
+            );
           }
           // Ensure Firestore has a user document for this account and then return it.
           try {
@@ -433,8 +438,8 @@ class FirebaseAuthService {
           } catch (e) {
             // Log Firestore error but don't block sign-in
             if (kDebugMode) {
-              print(
-                '⚠️ Warning: Failed to create user document in Firestore: $e',
+              AppLogger.i(
+                'Warning: Failed to create user document in Firestore: $e',
               );
             }
           }
@@ -445,14 +450,14 @@ class FirebaseAuthService {
       }
     } on FirebaseAuthException catch (e) {
       if (kDebugMode) {
-        print(
+        AppLogger.i(
           'FirebaseAuthException - Google sign in failed: ${e.code} - ${e.message}',
         );
       }
       rethrow;
     } catch (e) {
       if (kDebugMode) {
-        print('Generic exception - Google sign in failed: $e');
+        AppLogger.i('Generic exception - Google sign in failed: $e');
       }
       rethrow;
     }

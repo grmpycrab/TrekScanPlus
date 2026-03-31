@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter_cache_manager/flutter_cache_manager.dart';
+import '../utils/app_logger.dart';
 
 class ImageCacheManager {
   static const int maxCacheSize = 100; // Maximum number of images to cache
@@ -23,7 +24,7 @@ class ImageCacheManager {
           await precacheImage(CachedNetworkImageProvider(url), context);
         }
       } catch (e) {
-        debugPrint('Failed to preload image: $url, Error: $e');
+        AppLogger.w('Failed to preload image: $url, Error: $e');
       }
     }
   }
@@ -33,9 +34,9 @@ class ImageCacheManager {
     try {
       final cacheManager = DefaultCacheManager();
       await cacheManager.emptyCache();
-      debugPrint('Image cache cleared successfully');
+      AppLogger.i('Image cache cleared successfully');
     } catch (e) {
-      debugPrint('Failed to clear image cache: $e');
+      AppLogger.e('Failed to clear image cache: $e');
     }
   }
 

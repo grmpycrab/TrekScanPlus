@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/foundation.dart';
 import 'notification_services.dart';
+import '../../utils/app_logger.dart';
 
 class UserService {
   UserService._internal();
@@ -81,23 +82,23 @@ class UserService {
         data['sentFollowRequests'] = [];
         await docRef.set(data, SetOptions(merge: true));
         if (kDebugMode) {
-          print('User document created for ${user.uid}');
-          print('  - firstName: $extractedFirstName');
-          print('  - lastName: $extractedLastName');
+          AppLogger.i('User document created for ${user.uid}');
+          AppLogger.i('  - firstName: $extractedFirstName');
+          AppLogger.i('  - lastName: $extractedLastName');
         }
       } else {
         await docRef.set(data, SetOptions(merge: true));
         if (kDebugMode) {
-          print('User document updated for ${user.uid}');
+          AppLogger.i('User document updated for ${user.uid}');
           if (extractedFirstName.isNotEmpty || extractedLastName.isNotEmpty) {
-            print('  - firstName: $extractedFirstName');
-            print('  - lastName: $extractedLastName');
+            AppLogger.i('  - firstName: $extractedFirstName');
+            AppLogger.i('  - lastName: $extractedLastName');
           }
         }
       }
     } catch (e, st) {
       if (kDebugMode) {
-        print('Error creating/updating user document: $e');
+        AppLogger.i('Error creating/updating user document: $e');
         print(st);
       }
       rethrow;
@@ -131,7 +132,7 @@ class UserService {
       final batch = _firestore.batch();
 
       if (kDebugMode) {
-        print('Starting cascade deletion for user: $uid');
+        AppLogger.i('Starting cascade deletion for user: $uid');
       }
 
       // 1. Delete subcollections under users/{uid}
@@ -153,7 +154,7 @@ class UserService {
         }
 
         if (kDebugMode) {
-          print(
+          AppLogger.i(
             'Deleting ${subcollectionDocs.docs.length} documents from $subcollection',
           );
         }
@@ -166,7 +167,7 @@ class UserService {
           .get();
 
       if (kDebugMode) {
-        print('Deleting ${postsQuery.docs.length} posts');
+        AppLogger.i('Deleting ${postsQuery.docs.length} posts');
       }
 
       for (final postDoc in postsQuery.docs) {
@@ -216,7 +217,7 @@ class UserService {
           .get();
 
       if (kDebugMode) {
-        print('Deleting ${bookingsQuery.docs.length} bookings');
+        AppLogger.i('Deleting ${bookingsQuery.docs.length} bookings');
       }
 
       for (final bookingDoc in bookingsQuery.docs) {
@@ -276,7 +277,7 @@ class UserService {
         }
 
         if (kDebugMode) {
-          print(
+          AppLogger.i(
             'Cleaning up ${followers.length} followers and ${following.length} following',
           );
         }
@@ -291,12 +292,12 @@ class UserService {
           final profilePhotoRef = storage.ref().child('users/$uid/profile.jpg');
           await profilePhotoRef.delete();
           if (kDebugMode) {
-            print('Deleted profile photo');
+            AppLogger.i('Deleted profile photo');
           }
         } catch (e) {
           // Profile photo might not exist, ignore
           if (kDebugMode) {
-            print('No profile photo to delete or error: $e');
+            AppLogger.i('No profile photo to delete or error: $e');
           }
         }
 
@@ -308,17 +309,17 @@ class UserService {
             await item.delete();
           }
           if (kDebugMode) {
-            print('Deleted ${postsList.items.length} post images');
+            AppLogger.i('Deleted ${postsList.items.length} post images');
           }
         } catch (e) {
           // Posts folder might not exist, ignore
           if (kDebugMode) {
-            print('No post images to delete or error: $e');
+            AppLogger.i('No post images to delete or error: $e');
           }
         }
       } catch (e) {
         if (kDebugMode) {
-          print('Error deleting storage files: $e');
+          AppLogger.i('Error deleting storage files: $e');
         }
         // Continue with deletion even if storage cleanup fails
       }
@@ -332,14 +333,14 @@ class UserService {
         batch.delete(verificationDoc);
 
         if (kDebugMode) {
-          print('Deleted email verification data');
+          AppLogger.i('Deleted email verification data');
         }
 
         // Note: Mail collection documents are managed by Cloud Functions
         // and have restricted permissions. They will be cleaned up automatically.
       } catch (e) {
         if (kDebugMode) {
-          print('Error deleting email verification data: $e');
+          AppLogger.i('Error deleting email verification data: $e');
         }
         // Continue with deletion even if email cleanup fails
       }
@@ -351,11 +352,11 @@ class UserService {
       await batch.commit();
 
       if (kDebugMode) {
-        print('Successfully completed cascade deletion for user: $uid');
+        AppLogger.i('Successfully completed cascade deletion for user: $uid');
       }
     } catch (e, st) {
       if (kDebugMode) {
-        print('Error deleting user: $e');
+        AppLogger.i('Error deleting user: $e');
         print(st);
       }
       rethrow;
@@ -385,11 +386,11 @@ class UserService {
 
       await _usersCollection.doc(uid).set(data, SetOptions(merge: true));
       if (kDebugMode) {
-        print('User info updated for $uid');
+        AppLogger.i('User info updated for $uid');
       }
     } catch (e, st) {
       if (kDebugMode) {
-        print('Error updating user info: $e');
+        AppLogger.i('Error updating user info: $e');
         print(st);
       }
       rethrow;
@@ -430,12 +431,12 @@ class UserService {
       }, SetOptions(merge: true));
 
       if (kDebugMode) {
-        print('User name updated for $uid');
+        AppLogger.i('User name updated for $uid');
       }
       return true;
     } catch (e, st) {
       if (kDebugMode) {
-        print('Error updating user name: $e');
+        AppLogger.i('Error updating user name: $e');
         print(st);
       }
       rethrow;
@@ -464,7 +465,7 @@ class UserService {
       return daysRemaining > 0 ? daysRemaining : 0;
     } catch (e, st) {
       if (kDebugMode) {
-        print('Error checking name change cooldown: $e');
+        AppLogger.i('Error checking name change cooldown: $e');
         print(st);
       }
       return 0;
@@ -483,7 +484,7 @@ class UserService {
 
       if (pendingRequests.contains(followerUid)) {
         if (kDebugMode) {
-          print(
+          AppLogger.i(
             'Follow request already pending from $followerUid to $followingUid',
           );
         }
@@ -516,11 +517,11 @@ class UserService {
       );
 
       if (kDebugMode) {
-        print('Follow request sent from $followerUid to $followingUid');
+        AppLogger.i('Follow request sent from $followerUid to $followingUid');
       }
     } catch (e, st) {
       if (kDebugMode) {
-        print('Error toggling follow: $e');
+        AppLogger.i('Error toggling follow: $e');
         print(st);
       }
       rethrow;
@@ -568,13 +569,13 @@ class UserService {
       await _usersCollection.doc(currentUid).update(currentUpdate);
 
       if (kDebugMode) {
-        print(
+        AppLogger.i(
           '$currentUid accepted follow request from $requesterUid - now mutual followers',
         );
       }
     } catch (e, st) {
       if (kDebugMode) {
-        print('Error accepting follow request: $e');
+        AppLogger.i('Error accepting follow request: $e');
         print(st);
       }
       rethrow;
@@ -598,11 +599,11 @@ class UserService {
       });
 
       if (kDebugMode) {
-        print('$currentUid rejected follow request from $requesterUid');
+        AppLogger.i('$currentUid rejected follow request from $requesterUid');
       }
     } catch (e, st) {
       if (kDebugMode) {
-        print('Error rejecting follow request: $e');
+        AppLogger.i('Error rejecting follow request: $e');
         print(st);
       }
       rethrow;
@@ -619,7 +620,7 @@ class UserService {
       );
       if (!isCurrentlyFollowing) {
         if (kDebugMode) {
-          print(
+          AppLogger.i(
             'User $currentUid is not following $userToUnfollowUid, skipping unfollow',
           );
         }
@@ -667,11 +668,13 @@ class UserService {
       await _usersCollection.doc(userToUnfollowUid).update(targetUserUpdate);
 
       if (kDebugMode) {
-        print('$currentUid unfollowed $userToUnfollowUid (mutual unfollow)');
+        AppLogger.i(
+          '$currentUid unfollowed $userToUnfollowUid (mutual unfollow)',
+        );
       }
     } catch (e, st) {
       if (kDebugMode) {
-        print('Error unfollowing: $e');
+        AppLogger.i('Error unfollowing: $e');
         print(st);
       }
       rethrow;
@@ -688,7 +691,7 @@ class UserService {
       return following.contains(userUid);
     } catch (e, st) {
       if (kDebugMode) {
-        print('Error checking follow status: $e');
+        AppLogger.i('Error checking follow status: $e');
         print(st);
       }
       return false;
@@ -709,7 +712,7 @@ class UserService {
       return sentRequests.contains(targetUid);
     } catch (e, st) {
       if (kDebugMode) {
-        print('Error checking pending follow request: $e');
+        AppLogger.i('Error checking pending follow request: $e');
         print(st);
       }
       return false;
@@ -730,11 +733,11 @@ class UserService {
       });
 
       if (kDebugMode) {
-        print('$currentUid cancelled follow request to $targetUid');
+        AppLogger.i('$currentUid cancelled follow request to $targetUid');
       }
     } catch (e, st) {
       if (kDebugMode) {
-        print('Error cancelling follow request: $e');
+        AppLogger.i('Error cancelling follow request: $e');
         print(st);
       }
       rethrow;
@@ -748,11 +751,11 @@ class UserService {
         'postsCount': FieldValue.increment(1),
       });
       if (kDebugMode) {
-        print('Post count incremented for $uid');
+        AppLogger.i('Post count incremented for $uid');
       }
     } catch (e, st) {
       if (kDebugMode) {
-        print('Error incrementing post count: $e');
+        AppLogger.i('Error incrementing post count: $e');
         print(st);
       }
       rethrow;
@@ -766,11 +769,11 @@ class UserService {
         'postsCount': FieldValue.increment(-1),
       });
       if (kDebugMode) {
-        print('Post count decremented for $uid');
+        AppLogger.i('Post count decremented for $uid');
       }
     } catch (e, st) {
       if (kDebugMode) {
-        print('Error decrementing post count: $e');
+        AppLogger.i('Error decrementing post count: $e');
         print(st);
       }
       rethrow;
@@ -810,12 +813,12 @@ class UserService {
       if (updates.isNotEmpty) {
         await _usersCollection.doc(uid).update(updates);
         if (kDebugMode) {
-          print('Fixed counts for $uid: $updates');
+          AppLogger.i('Fixed counts for $uid: $updates');
         }
       }
     } catch (e, st) {
       if (kDebugMode) {
-        print('Error fixing negative counts: $e');
+        AppLogger.i('Error fixing negative counts: $e');
         print(st);
       }
       rethrow;

@@ -248,7 +248,7 @@ Check if Station Has Coordinates?
 
 ### Distance Always Shows 0
 - Ensure station coordinates parsed correctly
-- Check `print()` statements in debug console
+- Check `AppLogger.i()` statements in debug console
 
 ### Geofence Check Hangs
 - 10-second timeout implemented

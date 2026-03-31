@@ -4,6 +4,7 @@ import 'dart:io';
 import '../models/social_model.dart';
 import '../services/social_sharing_service.dart';
 import '../theme/color.dart';
+import '../utils/app_logger.dart';
 
 class CreatePostSheet extends StatefulWidget {
   final VoidCallback? onPostCreated;
@@ -70,16 +71,16 @@ class _CreatePostSheetState extends State<CreatePostSheet> {
 
       // Generate post ID first
       final postId = socialService.generatePostId();
-      debugPrint('Generated post ID: $postId');
+      AppLogger.d('Generated post ID: $postId');
 
       // Upload images FIRST in parallel using the generated post ID
-      debugPrint('Starting image upload for ${_selectedImages.length} images');
+      AppLogger.i('Starting image upload for ${_selectedImages.length} images');
       final uploadFutures = _selectedImages.map((imageFile) {
-        debugPrint('Uploading image: ${imageFile.path}');
+        AppLogger.d('Uploading image: ${imageFile.path}');
         return socialService.uploadImage(imageFile, postId);
       });
       final imageUrls = await Future.wait(uploadFutures);
-      debugPrint('Image upload complete. URLs: $imageUrls');
+      AppLogger.i('Image upload complete. URLs: $imageUrls');
 
       if (imageUrls.isEmpty) {
         throw Exception('No images were uploaded');
@@ -91,7 +92,7 @@ class _CreatePostSheetState extends State<CreatePostSheet> {
         imageUrls: imageUrls,
         privacy: _privacy,
       );
-      debugPrint('Post created with ID: $createdPostId');
+      AppLogger.i('Post created with ID: $createdPostId');
 
       if (mounted) {
         Navigator.pop(context);
@@ -101,7 +102,7 @@ class _CreatePostSheetState extends State<CreatePostSheet> {
         widget.onPostCreated?.call();
       }
     } catch (e) {
-      debugPrint('Error creating post: $e');
+      AppLogger.e('Error creating post: $e');
       if (mounted) {
         setState(() => _isUploading = false);
         ScaffoldMessenger.of(

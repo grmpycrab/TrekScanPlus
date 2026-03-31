@@ -2,7 +2,7 @@ import 'dart:async';
 import 'dart:io';
 import 'dart:math';
 
-import 'package:flutter/foundation.dart';
+//import 'package:flutter/foundation.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:file_picker/file_picker.dart';
@@ -13,6 +13,7 @@ import 'fcm_service.dart';
 import 'notification_manager.dart';
 import 'e_certificate_service.dart';
 import 'station_service.dart';
+import '../utils/app_logger.dart';
 
 class BookingService {
   BookingService._();
@@ -58,7 +59,7 @@ class BookingService {
 
       return activeBookings.isNotEmpty;
     } catch (e) {
-      print('Error checking for existing bookings: $e');
+      AppLogger.e('Error checking for existing bookings: $e');
       rethrow;
     }
   }
@@ -130,7 +131,7 @@ class BookingService {
       );
     } catch (e) {
       // Log error but don't fail the booking creation
-      print('Failed to send booking created notification: $e');
+      AppLogger.i('Failed to send booking created notification: $e');
     }
 
     return bookingId;
@@ -199,7 +200,7 @@ class BookingService {
         });
       }
     } catch (e) {
-      debugPrint('Error updating primary contact category: $e');
+      AppLogger.e('Error updating primary contact category: $e');
       rethrow;
     }
   }
@@ -387,7 +388,7 @@ class BookingService {
         );
       }
     } catch (e) {
-      print('Failed to check certificates on booking approval: $e');
+      AppLogger.i('Failed to check certificates on booking approval: $e');
       // Don't fail - let the app continue normally
     }
   }
@@ -537,7 +538,7 @@ class BookingService {
       );
     } catch (e) {
       // Log error but don't fail the booking update
-      print('Failed to send booking notification: $e');
+      AppLogger.i('Failed to send booking notification: $e');
     }
   }
 
@@ -554,7 +555,7 @@ class BookingService {
         'updatedAt': FieldValue.serverTimestamp(),
       });
     } catch (e) {
-      print('ERROR deleting attachment: $e');
+      AppLogger.i('ERROR deleting attachment: $e');
       rethrow;
     }
   }

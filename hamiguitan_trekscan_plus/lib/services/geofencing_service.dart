@@ -1,6 +1,7 @@
 import 'package:geolocator/geolocator.dart';
-import 'package:flutter/foundation.dart';
+//import 'package:flutter/foundation.dart';
 import 'dart:math' as math;
+import '../utils/app_logger.dart';
 
 class GeofencingService {
   static const double GEOFENCE_RADIUS_METERS =
@@ -39,23 +40,23 @@ class GeofencingService {
       // First, ensure location services are enabled
       final serviceEnabled = await isLocationServiceEnabled();
       if (!serviceEnabled) {
-        debugPrint('❌ Location services are disabled');
+        AppLogger.w('Location services are disabled');
         return null;
       }
 
       // Check and request permission
       final permission = await Geolocator.checkPermission();
       if (permission == LocationPermission.denied) {
-        debugPrint('📍 Requesting location permission...');
+        AppLogger.d('Requesting location permission...');
         final result = await Geolocator.requestPermission();
         if (result != LocationPermission.whileInUse &&
             result != LocationPermission.always) {
-          debugPrint('❌ Location permission denied by user');
+          AppLogger.w('Location permission denied by user');
           return null;
         }
       } else if (permission == LocationPermission.deniedForever) {
-        debugPrint(
-          '❌ Location permission permanently denied. Please enable in Settings.',
+        AppLogger.w(
+          'Location permission permanently denied. Please enable in Settings.',
         );
         return null;
       }
@@ -67,24 +68,24 @@ class GeofencingService {
           final timeDiff = DateTime.now().difference(lastPosition.timestamp);
           // Use last position if less than 5 minutes old for geofencing
           if (timeDiff.inSeconds < 300) {
-            debugPrint('📍 Using cached location (${timeDiff.inSeconds}s old)');
+            AppLogger.d('Using cached location (${timeDiff.inSeconds}s old)');
             return lastPosition;
           }
         }
       }
 
       // Use MEDIUM accuracy for faster results (better for geofencing tests)
-      debugPrint('📍 Fetching fresh location with MEDIUM accuracy...');
+      AppLogger.d('Fetching fresh location with MEDIUM accuracy...');
       final position = await Geolocator.getCurrentPosition(
         desiredAccuracy: LocationAccuracy.medium,
         timeLimit: const Duration(seconds: 10),
       );
-      debugPrint(
-        '📍 Location acquired: ${position.latitude}, ${position.longitude}',
+      AppLogger.d(
+        'Location acquired: ${position.latitude}, ${position.longitude}',
       );
       return position;
     } catch (e) {
-      debugPrint('❌ Error getting location: $e');
+      AppLogger.e('Error getting location: $e');
       return null;
     }
   }

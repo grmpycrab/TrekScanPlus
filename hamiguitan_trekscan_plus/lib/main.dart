@@ -7,6 +7,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:app_links/app_links.dart';
 import 'package:provider/provider.dart';
 import 'firebase_options.dart';
+import 'utils/app_logger.dart';
 import 'screens/auth/login_screen.dart';
 import 'screens/auth/signup_screen.dart';
 import 'screens/auth/email_verification_screen.dart';
@@ -49,7 +50,7 @@ void main() async {
     await Firebase.initializeApp(
       options: DefaultFirebaseOptions.currentPlatform,
     );
-    debugPrint('✅ Firebase initialized successfully');
+    AppLogger.i('✅ Firebase initialized successfully');
 
     // Enable Firestore offline persistence and caching
     try {
@@ -60,12 +61,12 @@ void main() async {
         persistenceEnabled: true,
         cacheSizeBytes: 104857600, // 100 MB cache
       );
-      debugPrint('✅ Firestore offline persistence and caching enabled');
+      AppLogger.d('✅ Firestore offline persistence and caching enabled');
     } catch (e) {
-      debugPrint('⚠️ Could not configure Firestore caching: $e');
+      AppLogger.w('⚠️ Could not configure Firestore caching: $e');
     }
   } catch (e) {
-    debugPrint('❌ Firebase init error: $e');
+    AppLogger.e('❌ Firebase init error: $e');
     // Don't continue if Firebase fails - it's critical for auth
     rethrow;
   }
@@ -117,9 +118,9 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
               .isEmailVerified();
           if (isVerified) {
             // Additional services for verified users can go here if needed
-            debugPrint('✅ User email verified');
+            AppLogger.i('✅ User email verified');
           } else {
-            debugPrint('⏳ User email not yet verified');
+            AppLogger.i('⏳ User email not yet verified');
           }
         } else {
           // User logged out, reset flags
@@ -128,7 +129,7 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
         }
       });
     } catch (e) {
-      debugPrint('⚠️ Auth listener error: $e');
+      AppLogger.w('⚠️ Auth listener error: $e');
     }
 
     // Initialize ClimbSessionService immediately in offline mode if no user
@@ -136,7 +137,7 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!ClimbSessionService.isInitialized &&
           FirebaseAuth.instance.currentUser == null) {
-        debugPrint('🔌 Initializing ClimbSessionService in offline mode...');
+        AppLogger.i('🔌 Initializing ClimbSessionService in offline mode...');
         _initializeVerifiedUserServices(
           'offline_${DateTime.now().millisecondsSinceEpoch}',
         );
@@ -184,7 +185,7 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
           await NotificationService().initialize();
           PresenceService.instance.initialize();
         } catch (e) {
-          debugPrint(
+          AppLogger.w(
             '⚠️ Non-critical service initialization: $e (offline mode)',
           );
         }
@@ -196,14 +197,14 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
   Future<void> _initializeVerifiedUserServices(String userId) async {
     if (_servicesInitialized) return;
 
-    debugPrint('🚀 Initializing services for verified user: $userId');
+    AppLogger.i('🚀 Initializing services for verified user: $userId');
 
     // Initialize ClimbSessionService with user ID (offline-first)
     try {
       await ClimbSessionService.init(userId: userId);
-      debugPrint('✅ ClimbSessionService initialized (offline-first)');
+      AppLogger.i('✅ ClimbSessionService initialized (offline-first)');
     } catch (e) {
-      debugPrint('⚠️ ClimbSessionService: $e (offline mode available)');
+      AppLogger.w('⚠️ ClimbSessionService: $e (offline mode available)');
     }
 
     // Start booking listener in background (non-blocking)
@@ -212,7 +213,7 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
         try {
           BookingService.instance.startBookingStatusListener(userId);
         } catch (e) {
-          debugPrint('⚠️ Booking service: $e');
+          AppLogger.w('⚠️ Booking service: $e');
         }
       }),
     );
@@ -260,13 +261,13 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
         },
         onMessageOpened: (message) {
           // Handle navigation when notification is tapped
-          debugPrint('🔔 Notification opened: ${message.data}');
+          AppLogger.d('🔔 Notification opened: ${message.data}');
           _handleNotificationNavigation(message);
         },
       );
-      debugPrint('✅ FCM initialized successfully');
+      AppLogger.i('✅ FCM initialized successfully');
     } catch (e) {
-      debugPrint('❌ FCM initialization error: $e');
+      AppLogger.e('❌ FCM initialization error: $e');
     }
   }
 
@@ -286,7 +287,7 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
     final actionType = message.data['actionType'] as String?;
     final actionData = message.data['actionData'] as String?;
 
-    debugPrint('🔔 ActionType: $actionType, ActionData: $actionData');
+    AppLogger.d('🔔 ActionType: $actionType, ActionData: $actionData');
 
     if (actionType == 'post' && actionData != null) {
       Navigator.pushNamed(context, '/post-detail', arguments: actionData);
@@ -304,11 +305,11 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
       final appLinks = AppLinks();
       final link = await appLinks.getInitialLink();
       if (link != null) {
-        debugPrint('🔗 [DeepLink] Initial link: $link');
+        AppLogger.d('🔗 [DeepLink] Initial link: $link');
         _handleDeepLink(link.toString());
       }
     } catch (e) {
-      debugPrint('❌ [DeepLink] Error getting initial link: $e');
+      AppLogger.e('❌ [DeepLink] Error getting initial link: $e');
     }
   }
 
@@ -317,11 +318,11 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
     final appLinks = AppLinks();
     appLinks.uriLinkStream.listen(
       (Uri link) {
-        debugPrint('🔗 [DeepLink] Received link: $link');
+        AppLogger.d('🔗 [DeepLink] Received link: $link');
         _handleDeepLink(link.toString());
       },
       onError: (err) {
-        debugPrint('❌ [DeepLink] Stream error: $err');
+        AppLogger.e('❌ [DeepLink] Stream error: $err');
       },
     );
   }
@@ -330,7 +331,7 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
   void _handleDeepLink(String link) {
     try {
       final uri = Uri.parse(link);
-      debugPrint(
+      AppLogger.d(
         '🔗 [DeepLink] Parsed URI - scheme: ${uri.scheme}, path: ${uri.path}, host: ${uri.host}',
       );
 
@@ -350,13 +351,13 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
       }
 
       if (postId != null && postId.isNotEmpty) {
-        debugPrint('🔗 [DeepLink] Navigating to post: $postId');
+        AppLogger.d('🔗 [DeepLink] Navigating to post: $postId');
         navigatorKey.currentState?.pushNamed('/post-detail', arguments: postId);
       } else {
-        debugPrint('⚠️ [DeepLink] Could not extract postId from link');
+        AppLogger.w('⚠️ [DeepLink] Could not extract postId from link');
       }
     } catch (e) {
-      debugPrint('❌ [DeepLink] Error handling deep link: $e');
+      AppLogger.e('❌ [DeepLink] Error handling deep link: $e');
     }
   }
 
@@ -365,7 +366,7 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
       try {
         await PermissionService.instance.requestInitialPermissions(context);
       } catch (e) {
-        debugPrint('Permission request error: $e');
+        AppLogger.e('Permission request error: $e');
       }
     }
   }
@@ -503,12 +504,12 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
     unawaited(
       Future.microtask(() async {
         try {
-          debugPrint('🔄 Loading stations in background...');
+          AppLogger.d('🔄 Loading stations in background...');
           final stationService = await StationService.init();
           await stationService.loadStations();
-          debugPrint('✅ Stations loaded successfully');
+          AppLogger.i('✅ Stations loaded successfully');
         } catch (error) {
-          debugPrint('❌ Failed to load stations: $error');
+          AppLogger.e('❌ Failed to load stations: $error');
         }
       }),
     );

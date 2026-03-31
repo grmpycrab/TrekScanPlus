@@ -2,7 +2,8 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'dart:io' show Platform;
-import 'package:flutter/foundation.dart';
+//import 'package:flutter/foundation.dart';
+import '../utils/app_logger.dart';
 
 /// Service to handle Firebase Cloud Messaging (FCM) for push notifications
 class FCMService {
@@ -42,18 +43,18 @@ class FCMService {
         sound: true,
       );
 
-      debugPrint(
-        '🔔 User notification permission: ${settings.authorizationStatus}',
+      AppLogger.i(
+        'User notification permission: ${settings.authorizationStatus}',
       );
 
       if (settings.authorizationStatus == AuthorizationStatus.denied) {
-        debugPrint('🔔 Notification permission denied');
+        AppLogger.w('Notification permission denied');
         return;
       }
 
       // Get FCM token
       final token = await _messaging.getToken();
-      debugPrint('🔔 FCM Token: $token');
+      AppLogger.d('FCM Token: $token');
 
       // Save token to Firestore
       if (_auth.currentUser != null && token != null) {
@@ -62,16 +63,16 @@ class FCMService {
 
       // Handle foreground messages
       FirebaseMessaging.onMessage.listen((RemoteMessage message) {
-        debugPrint(
-          '🔔 Message received in foreground: ${message.notification?.title}',
+        AppLogger.i(
+          'Message received in foreground: ${message.notification?.title}',
         );
         _onMessageReceivedCallback?.call(message);
       });
 
       // Handle background message (when app is in background)
       FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
-        debugPrint(
-          '🔔 Message opened from background: ${message.notification?.title}',
+        AppLogger.i(
+          'Message opened from background: ${message.notification?.title}',
         );
         _onMessageOpenedCallback?.call(message);
       });
@@ -79,21 +80,21 @@ class FCMService {
       // Handle terminated message (when app is closed)
       final initialMessage = await _messaging.getInitialMessage();
       if (initialMessage != null) {
-        debugPrint(
-          '🔔 App launched from terminated state with message: ${initialMessage.notification?.title}',
+        AppLogger.i(
+          'App launched from terminated state with message: ${initialMessage.notification?.title}',
         );
         _onMessageOpenedCallback?.call(initialMessage);
       }
 
       // Token refresh
       _messaging.onTokenRefresh.listen((newToken) {
-        debugPrint('🔔 FCM Token refreshed: $newToken');
+        AppLogger.d('FCM Token refreshed: $newToken');
         if (_auth.currentUser != null) {
           _saveFCMToken(newToken);
         }
       });
     } catch (e) {
-      debugPrint('🔴 FCM Initialization Error: $e');
+      AppLogger.e('FCM Initialization Error: $e');
     }
   }
 
@@ -115,9 +116,9 @@ class FCMService {
         },
       }, SetOptions(merge: true));
 
-      debugPrint('✅ FCM Token saved to Firestore');
+      AppLogger.i('FCM Token saved to Firestore');
     } catch (e) {
-      debugPrint('🔴 Error saving FCM token: $e');
+      AppLogger.e('Error saving FCM token: $e');
     }
   }
 
@@ -150,9 +151,9 @@ class FCMService {
         'isRead': false,
       });
 
-      debugPrint('✅ Notification sent to user: $targetUserId');
+      AppLogger.i('Notification sent to user: $targetUserId');
     } catch (e) {
-      debugPrint('🔴 Error sending notification: $e');
+      AppLogger.e('Error sending notification: $e');
     }
   }
 
@@ -160,9 +161,9 @@ class FCMService {
   Future<void> subscribeToTopic(String topic) async {
     try {
       await _messaging.subscribeToTopic(topic);
-      debugPrint('✅ Subscribed to topic: $topic');
+      AppLogger.i('Subscribed to topic: $topic');
     } catch (e) {
-      debugPrint('🔴 Error subscribing to topic: $e');
+      AppLogger.e('Error subscribing to topic: $e');
     }
   }
 
@@ -170,9 +171,9 @@ class FCMService {
   Future<void> unsubscribeFromTopic(String topic) async {
     try {
       await _messaging.unsubscribeFromTopic(topic);
-      debugPrint('✅ Unsubscribed from topic: $topic');
+      AppLogger.i('Unsubscribed from topic: $topic');
     } catch (e) {
-      debugPrint('🔴 Error unsubscribing from topic: $e');
+      AppLogger.e('Error unsubscribing from topic: $e');
     }
   }
 }
@@ -180,6 +181,6 @@ class FCMService {
 /// Background message handler (must be a top-level function)
 @pragma('vm:entry-point')
 Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
-  debugPrint('🔔 Handling background message: ${message.notification?.title}');
+  AppLogger.i('Handling background message: ${message.notification?.title}');
   // Handle background messages here
 }

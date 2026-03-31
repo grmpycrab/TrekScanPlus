@@ -13,6 +13,7 @@ import '../../components/social_card.dart';
 import '../../components/e_certificate_badge.dart';
 import '../../components/app_dialogue_handler.dart';
 import '../../theme/color.dart';
+import '../../utils/app_logger.dart';
 import 'favorites_screen.dart';
 import 'settings_screen.dart';
 import '../settings/account_settings.dart';
@@ -47,8 +48,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   Future<void> _initializeAchievements({String? userId}) async {
     try {
-      debugPrint(
-        '👤 ProfileScreen: Initializing achievements for userId: $userId',
+      AppLogger.i(
+        'ProfileScreen: Initializing achievements for userId: $userId',
       );
 
       // Determine if viewing own profile or someone else's
@@ -68,8 +69,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
       final unlockedCount = achievementService.getUnlockedAchievements().length;
       final totalCount = achievementService.getAllAchievements().length;
-      debugPrint(
-        '✅ ProfileScreen: Loaded $unlockedCount/$totalCount achievements for userId: $userId',
+      AppLogger.i(
+        'ProfileScreen: Loaded $unlockedCount/$totalCount achievements for userId: $userId',
       );
 
       if (mounted) {
@@ -78,7 +79,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         });
       }
     } catch (e) {
-      debugPrint(
+      AppLogger.e(
         'Error initializing AchievementService for userId $userId: $e',
       );
       if (mounted) {
@@ -122,8 +123,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
         }
       }
     } catch (e, stackTrace) {
-      debugPrint('Error initializing ECertificateService: $e');
-      debugPrint('Stack trace: $stackTrace');
+      AppLogger.e('Error initializing ECertificateService: $e');
+      AppLogger.e('Stack trace: $stackTrace');
     }
   }
 
@@ -151,7 +152,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
     if (_firebaseUser != null && _isOwnProfile) {
       _userService.fixNegativeCounts(_firebaseUser!.uid).catchError((e) {
-        debugPrint('Error fixing negative counts: $e');
+        AppLogger.e('Error fixing negative counts: $e');
       });
 
       final display = _firebaseUser!.displayName ?? '';
@@ -352,7 +353,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 const SizedBox(height: 4),
                 Text(
                   '${unlockedAchievements.length} of $totalAchievements unlocked',
-                  style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: AppColors.textSecondary,
+                  ),
                 ),
               ],
             ),
@@ -401,7 +405,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     _isOwnProfile
                         ? 'No achievements unlocked yet. Start scanning stations to earn achievements!'
                         : 'No achievements unlocked yet.',
-                    style: TextStyle(fontSize: 14, color: AppColors.textSecondary),
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: AppColors.textSecondary,
+                    ),
                   ),
                 ),
               ],
@@ -732,7 +739,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             }
 
             if (snapshot.hasError) {
-              debugPrint(
+              AppLogger.e(
                 'Error loading posts for user ${widget.userId ?? _firebaseUser!.uid}: ${snapshot.error}',
               );
               return Padding(
@@ -746,7 +753,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     const SizedBox(height: 8),
                     Text(
                       '${snapshot.error}',
-                      style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: AppColors.textSecondary,
+                      ),
                       textAlign: TextAlign.center,
                     ),
                   ],
@@ -1065,11 +1075,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 ),
                 padding: const EdgeInsets.symmetric(vertical: 10),
               ),
-              child: Icon(
-                Icons.more_vert,
-                size: 18,
-                color: AppColors.text,
-              ),
+              child: Icon(Icons.more_vert, size: 18, color: AppColors.text),
             ),
           ),
         ],
@@ -1088,9 +1094,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 backgroundColor: isFollowing
                     ? AppColors.background
                     : AppColors.primary,
-                foregroundColor: isFollowing
-                    ? AppColors.text
-                    : Colors.white,
+                foregroundColor: isFollowing ? AppColors.text : Colors.white,
                 elevation: 0,
                 side: BorderSide(
                   color: isFollowing
@@ -1151,9 +1155,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 isCurrentlyFollowing ? 'Unfollow' : 'Follow',
                 style: TextStyle(
                   fontWeight: FontWeight.w500,
-                  color: isCurrentlyFollowing
-                      ? Colors.red
-                      : AppColors.text,
+                  color: isCurrentlyFollowing ? Colors.red : AppColors.text,
                 ),
               ),
               onTap: () async {
@@ -1494,7 +1496,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
       return followers;
     } catch (e) {
-      debugPrint('Error fetching followers for user $userId: $e');
+      AppLogger.e('Error fetching followers for user $userId: $e');
       return [];
     }
   }
@@ -1523,7 +1525,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
       return following;
     } catch (e) {
-      debugPrint('Error fetching following for user $userId: $e');
+      AppLogger.e('Error fetching following for user $userId: $e');
       return [];
     }
   }

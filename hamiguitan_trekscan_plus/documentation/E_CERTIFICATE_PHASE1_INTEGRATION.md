@@ -112,11 +112,11 @@ Future<void> updateStationVisited(String stationId, bool isVisited) async {
           await certificateService.checkAndAwardCertificate(visitedStations);
       
       if (awardedCertificate != null) {
-        print('Certificate awarded: ${awardedCertificate.certificateType.name}');
+        AppLogger.i('Certificate awarded: ${awardedCertificate.certificateType.name}');
         // TODO: Phase 2 - Show UI notification/dialog
       }
     } catch (certificateError) {
-      print('Warning: Failed to check certificate eligibility: $certificateError');
+      AppLogger.i('Warning: Failed to check certificate eligibility: $certificateError');
     }
   }
 }
@@ -334,11 +334,11 @@ if (isVisited) {
     final awardedCertificate = 
         await certificateService.checkAndAwardCertificate(visitedStations);
     if (awardedCertificate != null) {
-      print('Certificate awarded: ${awardedCertificate.certificateType.name}');
+      AppLogger.i('Certificate awarded: ${awardedCertificate.certificateType.name}');
     }
   } catch (certificateError) {
     // Logs error but doesn't crash station visit
-    print('Warning: Failed to check certificate eligibility: $certificateError');
+    AppLogger.i('Warning: Failed to check certificate eligibility: $certificateError');
     // Don't rethrow - this is non-critical
   }
 }

@@ -87,12 +87,12 @@ if (isVisited) {
         await certificateService.checkAndAwardCertificate(visitedStations);
     
     if (awardedCertificate != null) {
-      print(
+      AppLogger.i(
         'Certificate awarded: ${awardedCertificate.certificateType.name}',
       );
     }
   } catch (certificateError) {
-    print('Warning: Failed to check certificate eligibility: $certificateError');
+    AppLogger.i('Warning: Failed to check certificate eligibility: $certificateError');
   }
 }
 ```
