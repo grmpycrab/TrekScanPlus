@@ -1,3 +1,5 @@
+// ignore_for_file: constant_identifier_names
+
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
@@ -93,7 +95,7 @@ class StationService extends ChangeNotifier {
         );
         List<dynamic> jsonList = json.decode(jsonString);
         if (kDebugMode) {
-          AppLogger.i('📍 Loaded ${jsonList.length} stations from JSON');
+          AppLogger.i('Loaded ${jsonList.length} stations from JSON');
         }
 
         // Get visited station IDs from SharedPreferences (user-scoped)
@@ -107,7 +109,7 @@ class StationService extends ChangeNotifier {
           visitedStationIds.addAll(firebaseVisitedIds);
           if (kDebugMode) {
             AppLogger.i(
-              '🔄 Synced ${firebaseVisitedIds.length} visited stations from Firebase',
+              'Synced ${firebaseVisitedIds.length} visited stations from Firebase',
             );
           }
         } catch (e) {
@@ -154,7 +156,7 @@ class StationService extends ChangeNotifier {
         }).toList();
 
         if (kDebugMode) {
-          AppLogger.i('✅ Processed ${_stations.length} stations');
+          AppLogger.i('Processed ${_stations.length} stations');
         }
 
         // Update visited status
@@ -165,7 +167,7 @@ class StationService extends ChangeNotifier {
         }
       } catch (e) {
         if (kDebugMode) {
-          AppLogger.e('❌ Error loading station data');
+          AppLogger.e('Error loading station data');
         }
         _stations = [];
         _loadError = e.toString();

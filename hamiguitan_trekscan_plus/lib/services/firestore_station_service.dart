@@ -100,7 +100,7 @@ class FirestoreStationService {
     try {
       if (_currentUserId == null) {
         if (kDebugMode) {
-          AppLogger.i('⚠️ No user logged in, cannot fetch visited stations');
+          AppLogger.i('No user logged in, cannot fetch visited stations');
         }
         return [];
       }

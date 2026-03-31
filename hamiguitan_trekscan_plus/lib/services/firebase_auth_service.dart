@@ -90,7 +90,7 @@ class FirebaseAuthService {
       if (userCredential.user != null) {
         await EmailVerificationService.instance.sendVerificationCode(email);
         if (kDebugMode) {
-          AppLogger.i('✉️ Verification code sent');
+          AppLogger.i('Verification code sent');
         }
       }
 
@@ -170,7 +170,7 @@ class FirebaseAuthService {
       );
 
       if (kDebugMode) {
-        AppLogger.i('🔐 Email login successful');
+        AppLogger.i('Email login successful');
       }
 
       // Update/create the Firestore user document when logging in
@@ -271,7 +271,7 @@ class FirebaseAuthService {
           user.email!,
         );
         if (kDebugMode) {
-          AppLogger.i('✅ User account verified');
+          AppLogger.i('User account verified');
         }
       }
     } catch (e) {

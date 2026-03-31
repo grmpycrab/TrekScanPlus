@@ -55,7 +55,7 @@ class FCMService {
       // Get FCM token
       final token = await _messaging.getToken();
       if (kDebugMode) {
-        AppLogger.d('🗞️ FCM Token obtained');
+        AppLogger.d('FCM Token obtained');
       }
 
       // Save token to Firestore
@@ -91,7 +91,7 @@ class FCMService {
       // Token refresh
       _messaging.onTokenRefresh.listen((newToken) {
         if (kDebugMode) {
-          AppLogger.d('🗞️ FCM Token refreshed');
+          AppLogger.d('FCM Token refreshed');
         }
         if (_auth.currentUser != null) {
           _saveFCMToken(newToken);

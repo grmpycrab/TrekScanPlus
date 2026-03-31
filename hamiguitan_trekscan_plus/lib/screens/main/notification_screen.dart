@@ -125,7 +125,7 @@ class _NotificationScreenState extends State<NotificationScreen> {
           ),
           const SizedBox(height: 16),
           Text(
-            message == null ? 'No notifications yet' : message,
+            message ?? 'No notifications yet',
             style: TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.w500,

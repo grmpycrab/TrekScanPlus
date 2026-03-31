@@ -1,3 +1,6 @@
+// ignore_for_file: unnecessary_brace_in_string_interps
+// ignore_for_file: use_key_in_widget_constructors, deprecated_member_use, use_build_context_synchronously
+
 import 'package:flutter/material.dart';
 import '../../models/climb_session.dart';
 import '../../theme/color.dart';
@@ -190,9 +193,9 @@ class _ClimbSessionDetailScreenState extends State<ClimbSessionDetailScreen> {
                             index < _session.visitedStations.length - 1
                             ? _session.visitedStations[index + 1]
                             : null;
-                        final duration = nextVisit != null
-                            ? nextVisit.scannedAt.difference(visit.scannedAt)
-                            : null;
+                        final duration = nextVisit?.scannedAt.difference(
+                          visit.scannedAt,
+                        );
 
                         return Column(
                           children: [

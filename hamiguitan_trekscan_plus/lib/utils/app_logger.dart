@@ -79,7 +79,9 @@ class AppLogger {
     final log = '[$timestamp] [$level] | $message';
 
     // Print to console directly (avoid recursion!)
-    print(log);
+    if (kDebugMode) {
+      print(log);
+    }
 
     // Send to all registered handlers
     for (final handler in _handlers) {

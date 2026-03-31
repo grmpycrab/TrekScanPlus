@@ -1,5 +1,4 @@
 import 'package:flutter/cupertino.dart';
-import 'package:flutter/material.dart';
 
 /// Centralized dialogue handler for consistent UI across the app
 /// Uses Cupertino design for native iOS feel
@@ -172,6 +171,7 @@ class AppDialogueHandler {
     return showCupertinoDialog(
       context: context,
       barrierDismissible: false,
+      // ignore: deprecated_member_use
       builder: (BuildContext context) => WillPopScope(
         onWillPop: () async => false,
         child: CupertinoAlertDialog(

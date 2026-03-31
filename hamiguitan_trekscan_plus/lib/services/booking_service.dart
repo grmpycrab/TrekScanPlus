@@ -1,3 +1,5 @@
+// ignore_for_file: no_leading_underscores_for_local_identifiers
+
 import 'dart:async';
 import 'dart:io';
 import 'dart:math';
@@ -213,7 +215,8 @@ class BookingService {
     void Function(int, int)? onProgress,
   }) async {
     final rand = Random().nextInt(100000);
-    final name = '${DateTime.now().millisecondsSinceEpoch}_$rand\_${file.name}';
+    final name =
+        '${DateTime.now().millisecondsSinceEpoch}_${rand}_${file.name}';
     final path = 'bookings/$bookingId/attachments/$name';
     final ref = _storage.ref(path);
 

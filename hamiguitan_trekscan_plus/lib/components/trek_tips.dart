@@ -117,9 +117,9 @@ class _TrekTipsState extends State<TrekTips> {
                 },
                 body: Column(
                   children: [
-                    ...entry.value
-                        .map((tip) => _buildTipItem(tip, isSmallScreen))
-                        .toList(),
+                    ...entry.value.map(
+                      (tip) => _buildTipItem(tip, isSmallScreen),
+                    ),
                     const SizedBox(height: 8),
                   ],
                 ),
@@ -503,9 +503,7 @@ class _TrekTipsOverlayState extends State<TrekTipsOverlay> {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(10),
-        border: Border.all(
-          color: AppColors.accent.withValues(alpha: 0.2),
-        ),
+        border: Border.all(color: AppColors.accent.withValues(alpha: 0.2)),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.02),

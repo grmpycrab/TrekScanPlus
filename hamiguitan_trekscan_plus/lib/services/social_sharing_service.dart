@@ -50,7 +50,7 @@ class SocialSharingService {
         'postsCount': FieldValue.increment(1),
       });
       if (kDebugMode) {
-        AppLogger.i('📊 Post count incremented');
+        AppLogger.i('Post count incremented');
       }
     } catch (e) {
       AppLogger.w('Error updating post count: $e');
@@ -317,7 +317,7 @@ class SocialSharingService {
           }).toList();
 
           AppLogger.d(
-            '🔍 Filtered ${filteredPosts.length}/${posts.length} posts for user $userId',
+            'Filtered ${filteredPosts.length}/${posts.length} posts for user $userId',
           );
           return filteredPosts;
         });
@@ -871,7 +871,7 @@ class SocialSharingService {
   ) async {
     try {
       AppLogger.d(
-        '📤 Sending like notification to $postOwnerId from $likerName on post $postId',
+        'Sending like notification to $postOwnerId from $likerName on post $postId',
       );
       final notificationRef = _firestore
           .collection('users')
@@ -933,7 +933,7 @@ class SocialSharingService {
         '  Created new like notification for post $postId from $likerName',
       );
     } catch (e) {
-      AppLogger.e('❌ Error sending like notification: $e');
+      AppLogger.e('Error sending like notification: $e');
       rethrow;
     }
   }
@@ -972,8 +972,9 @@ class SocialSharingService {
   String _buildLikeMessage(List<String> likers) {
     if (likers.isEmpty) return 'Someone liked your post';
     if (likers.length == 1) return '${likers[0]} liked your post';
-    if (likers.length == 2)
+    if (likers.length == 2) {
       return '${likers[0]} and ${likers[1]} liked your post';
+    }
 
     final others = likers.length - 2;
     return '${likers[0]}, ${likers[1]}, and $others others liked your post';
