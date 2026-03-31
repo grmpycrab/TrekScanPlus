@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../theme/color.dart';
+import '../utils/app_logger.dart';
 
 class StationCard extends StatelessWidget {
   final String imagePath;
@@ -47,7 +48,7 @@ class StationCard extends StatelessWidget {
                 ? null
                 : ColorFilter.mode(Colors.grey, BlendMode.saturation),
             onError: (_, __) {
-              debugPrint('Error loading image: $imagePath');
+              AppLogger.e('Error loading image: $imagePath');
             },
           ),
           boxShadow: [

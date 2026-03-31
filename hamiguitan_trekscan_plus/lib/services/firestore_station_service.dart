@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import '../models/station_data.dart';
+import '../../utils/app_logger.dart';
 
 /// Service to sync user's visited stations to Firebase Firestore
 /// This ensures visited stations are persisted across devices and app reinstalls
@@ -41,7 +42,7 @@ class FirestoreStationService {
     try {
       if (_currentUserId == null) {
         if (kDebugMode) {
-          print('⚠️ No user logged in, cannot save visited station');
+          AppLogger.i('No user logged in, cannot save visited station');
         }
         return;
       }
@@ -62,10 +63,10 @@ class FirestoreStationService {
       }, SetOptions(merge: true));
 
       if (kDebugMode) {
-        print('✅ ${station.name} saved to Firestore');
+        AppLogger.i('${station.name} saved to Firestore');
       }
     } catch (e) {
-      if (kDebugMode) print('❌ Error saving visited station: $e');
+      if (kDebugMode) AppLogger.i('❌ Error saving visited station: $e');
       rethrow;
     }
   }
@@ -75,7 +76,7 @@ class FirestoreStationService {
     try {
       if (_currentUserId == null) {
         if (kDebugMode) {
-          print('⚠️ No user logged in, cannot remove visited station');
+          AppLogger.i('No user logged in, cannot remove visited station');
         }
         return;
       }
@@ -86,10 +87,10 @@ class FirestoreStationService {
       await ref.doc(stationId).delete();
 
       if (kDebugMode) {
-        print('✅ Station $stationId removed from Firestore');
+        AppLogger.i('Station $stationId removed from Firestore');
       }
     } catch (e) {
-      if (kDebugMode) print('❌ Error removing visited station: $e');
+      if (kDebugMode) AppLogger.i('Error removing visited station: $e');
       rethrow;
     }
   }
@@ -99,7 +100,7 @@ class FirestoreStationService {
     try {
       if (_currentUserId == null) {
         if (kDebugMode) {
-          print('⚠️ No user logged in, cannot fetch visited stations');
+          AppLogger.i('⚠️ No user logged in, cannot fetch visited stations');
         }
         return [];
       }
@@ -111,12 +112,14 @@ class FirestoreStationService {
       final stationIds = snapshot.docs.map((doc) => doc.id).toList();
 
       if (kDebugMode) {
-        print('✅ Fetched ${stationIds.length} visited stations from Firestore');
+        AppLogger.i(
+          'Fetched ${stationIds.length} visited stations from Firestore',
+        );
       }
 
       return stationIds;
     } catch (e) {
-      if (kDebugMode) print('❌ Error fetching visited stations: $e');
+      if (kDebugMode) AppLogger.i('Error fetching visited stations: $e');
       return [];
     }
   }
@@ -125,7 +128,9 @@ class FirestoreStationService {
   /// Useful for UI that should update when stations are visited on another device
   Stream<List<String>> getVisitedStationsStream() {
     if (_currentUserId == null) {
-      if (kDebugMode) print('⚠️ No user logged in, returning empty stream');
+      if (kDebugMode) {
+        AppLogger.i('No user logged in, returning empty stream');
+      }
       return const Stream.empty();
     }
 
@@ -135,8 +140,8 @@ class FirestoreStationService {
     return ref.snapshots().map((snapshot) {
       final stationIds = snapshot.docs.map((doc) => doc.id).toList();
       if (kDebugMode) {
-        print(
-          '🔄 Visited stations stream updated: ${stationIds.length} stations',
+        AppLogger.i(
+          'Visited stations stream updated: ${stationIds.length} stations',
         );
       }
       return stationIds;
@@ -149,7 +154,7 @@ class FirestoreStationService {
     try {
       if (_currentUserId == null) {
         if (kDebugMode) {
-          print('⚠️ No user logged in, cannot sync visited stations');
+          AppLogger.i('No user logged in, cannot sync visited stations');
         }
         return;
       }
@@ -176,10 +181,10 @@ class FirestoreStationService {
       }
 
       if (kDebugMode) {
-        print('✅ Synced ${stationsToAdd.length} stations to Firestore');
+        AppLogger.i('Synced ${stationsToAdd.length} stations to Firestore');
       }
     } catch (e) {
-      if (kDebugMode) print('❌ Error syncing visited stations: $e');
+      if (kDebugMode) AppLogger.i('Error syncing visited stations: $e');
     }
   }
 
@@ -188,7 +193,7 @@ class FirestoreStationService {
     try {
       if (_currentUserId == null) {
         if (kDebugMode) {
-          print('⚠️ No user logged in, cannot reset visited stations');
+          AppLogger.i('No user logged in, cannot reset visited stations');
         }
         return;
       }
@@ -202,10 +207,10 @@ class FirestoreStationService {
       }
 
       if (kDebugMode) {
-        print('✅ All visited stations reset in Firestore');
+        AppLogger.i('All visited stations reset in Firestore');
       }
     } catch (e) {
-      if (kDebugMode) print('❌ Error resetting visited stations: $e');
+      if (kDebugMode) AppLogger.i('Error resetting visited stations: $e');
       rethrow;
     }
   }
@@ -215,7 +220,7 @@ class FirestoreStationService {
     try {
       if (_currentUserId == null) {
         if (kDebugMode) {
-          print('⚠️ No user logged in, cannot check visited status');
+          AppLogger.i('No user logged in, cannot check visited status');
         }
         return false;
       }
@@ -226,7 +231,7 @@ class FirestoreStationService {
       final doc = await ref.doc(stationId).get();
       return doc.exists;
     } catch (e) {
-      if (kDebugMode) print('❌ Error checking visited status: $e');
+      if (kDebugMode) AppLogger.i('Error checking visited status: $e');
       return false;
     }
   }

@@ -123,9 +123,9 @@ class _MainScreenState extends State<MainScreen> {
   Future<void> _initializeAchievements() async {
     try {
       await _achievementService.init();
-      print('AchievementService initialized in MainScreen');
+      AppLogger.i('AchievementService initialized in MainScreen');
     } catch (e) {
-      print('Error initializing AchievementService: $e');
+      AppLogger.i('Error initializing AchievementService: $e');
     }
   }
 }
@@ -149,9 +149,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
     try {
       await achievementService.init();
       setState(() {});
-      print('AchievementService initialized in ProfileScreen');
+      AppLogger.i('AchievementService initialized in ProfileScreen');
     } catch (e) {
-      print('Error initializing AchievementService in ProfileScreen: $e');
+      AppLogger.i('Error initializing AchievementService in ProfileScreen: $e');
     }
   }
 
@@ -399,7 +399,7 @@ try {
 
 ### Enable Debug Logging
 ```dart
-// In achievement_service.dart, look for print() statements
+// In achievement_service.dart, look for AppLogger.i() statements
 // They log:
 // - Initialization status
 // - Merge operations

@@ -77,7 +77,7 @@ That's it! Certificates are awarded automatically.
 ```dart
 final service = ECertificateService.instance;
 final certificates = service.getAllCertificates();
-print('User has ${certificates.length} certificates');
+AppLogger.i('User has ${certificates.length} certificates');
 ```
 
 #### Check for Specific Certificate
@@ -247,10 +247,10 @@ if (isVisited) {
     final awardedCertificate = 
         await certificateService.checkAndAwardCertificate(visitedStations);
     if (awardedCertificate != null) {
-      print('Certificate awarded: ${awardedCertificate.certificateType.name}');
+      AppLogger.i('Certificate awarded: ${awardedCertificate.certificateType.name}');
     }
   } catch (certificateError) {
-    print('Warning: Failed to check certificate eligibility: $certificateError');
+    AppLogger.i('Warning: Failed to check certificate eligibility: $certificateError');
     // App continues normally
   }
 }

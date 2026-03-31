@@ -188,10 +188,10 @@ adb logcat | grep -E "Certificate|ECertificate"
 ### Enable Verbose Logging
 ```dart
 // In e_certificate_service.dart (already enabled)
-print('ECertificateService initialized for user: $currentUserId');
-print('Certificate awarded: ${awardedCertificate.certificateType.name}');
+AppLogger.i('ECertificateService initialized for user: $currentUserId');
+AppLogger.i('Certificate awarded: ${awardedCertificate.certificateType.name}');
 // Check Firebase logs
-print('Saved certificate to Firebase: $certificateId');
+AppLogger.i('Saved certificate to Firebase: $certificateId');
 ```
 
 ---

@@ -139,7 +139,7 @@ Run weekly to ensure consistency:
 void _weeklySync() async {
   final calendarService = CalendarConfigService();
   await calendarService.syncTrekDownDays();
-  print('✅ Buffer days synced');
+  AppLogger.i('✅ Buffer days synced');
 }
 ```
 

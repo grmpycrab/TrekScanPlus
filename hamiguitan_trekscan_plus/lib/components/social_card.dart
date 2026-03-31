@@ -13,6 +13,7 @@ import 'post_options_sheet.dart';
 import 'image_viewer.dart';
 import 'profile_avatar_with_status.dart';
 import 'app_dialogue_handler.dart';
+import '../utils/app_logger.dart';
 
 class SocialCard extends StatefulWidget {
   final SocialPost post;
@@ -75,7 +76,7 @@ class _SocialCardState extends State<SocialCard> {
         }
       }
     } catch (e) {
-      debugPrint('Error loading user name: $e');
+      AppLogger.e('Error loading user name: $e');
       // Keep the default userName if fetching fails
     }
   }
@@ -114,7 +115,7 @@ class _SocialCardState extends State<SocialCard> {
         setState(() => _isFollowing = isFollowing);
       }
     } catch (e) {
-      debugPrint('Error checking follow status: $e');
+      AppLogger.e('Error checking follow status: $e');
     }
   }
 
@@ -131,7 +132,7 @@ class _SocialCardState extends State<SocialCard> {
         setState(() => _isPending = isPending);
       }
     } catch (e) {
-      debugPrint('Error checking pending status: $e');
+      AppLogger.e('Error checking pending status: $e');
     }
   }
 
@@ -746,7 +747,7 @@ class _SocialCardState extends State<SocialCard> {
             ),
           ),
           errorWidget: (context, url, error) {
-            debugPrint('❌ Image load error for $url: $error');
+            AppLogger.e('Image load error for $url: $error');
             return Container(
               color: AppColors.borderLight,
               child: Column(
@@ -908,7 +909,7 @@ class _SocialCardState extends State<SocialCard> {
           ),
         ),
         errorWidget: (context, url, error) {
-          debugPrint('❌ Image load error for $url: $error');
+          AppLogger.e('Image load error for $url: $error');
           return Container(
             color: AppColors.borderLight,
             child: const Icon(Icons.broken_image, size: 32, color: Colors.grey),

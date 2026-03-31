@@ -16,6 +16,7 @@ import '../../components/climb_card.dart';
 import '../../components/member_form_card.dart';
 import '../../components/app_dialogue_handler.dart';
 import '../../theme/color.dart';
+import '../../utils/app_logger.dart';
 
 class BookAClimbScreen extends StatefulWidget {
   final String? highlightBookingId;
@@ -187,7 +188,7 @@ class _BookAClimbScreenState extends State<BookAClimbScreen> {
         }
       }
     } catch (e) {
-      debugPrint('Error prefilling phone number: $e');
+      AppLogger.e('Error prefilling phone number: $e');
     }
   }
 
@@ -278,7 +279,7 @@ class _BookAClimbScreenState extends State<BookAClimbScreen> {
 
       return null;
     } catch (e) {
-      debugPrint('Error checking buffer period: $e');
+      AppLogger.e('Error checking buffer period: $e');
       return null;
     }
   }
@@ -369,7 +370,7 @@ class _BookAClimbScreenState extends State<BookAClimbScreen> {
         'isClosed': false,
       };
     } catch (e) {
-      debugPrint('Error checking date availability: $e');
+      AppLogger.e('Error checking date availability: $e');
       // If error, allow booking (fail open)
       return {
         'available': true,
@@ -683,7 +684,7 @@ class _BookAClimbScreenState extends State<BookAClimbScreen> {
         }
       }
     } catch (e) {
-      debugPrint('Error loading draft bookings: $e');
+      AppLogger.e('Error loading draft bookings: $e');
     }
   }
 
@@ -705,7 +706,7 @@ class _BookAClimbScreenState extends State<BookAClimbScreen> {
         await prefs.setString(key, jsonEncode(jsonData));
       }
     } catch (e) {
-      debugPrint('Error saving draft bookings: $e');
+      AppLogger.e('Error saving draft bookings: $e');
     }
   }
 
@@ -781,7 +782,7 @@ class _BookAClimbScreenState extends State<BookAClimbScreen> {
             });
       }
     } catch (e) {
-      debugPrint('Error refreshing bookings: $e');
+      AppLogger.e('Error refreshing bookings: $e');
     }
   }
 
@@ -805,7 +806,7 @@ class _BookAClimbScreenState extends State<BookAClimbScreen> {
         }
       }
     } catch (e) {
-      debugPrint('Error fetching user display name: $e');
+      AppLogger.e('Error fetching user display name: $e');
     }
 
     // Final fallback to Firebase displayName
@@ -967,7 +968,7 @@ class _BookAClimbScreenState extends State<BookAClimbScreen> {
             });
           }
         } catch (e) {
-          debugPrint('Error cancelling booking: $e');
+          AppLogger.e('Error cancelling booking: $e');
           if (mounted) {
             await AppDialogueHandler.showError(
               context: context,
@@ -1168,7 +1169,7 @@ class _BookAClimbScreenState extends State<BookAClimbScreen> {
                           attachment,
                         );
                       } catch (e) {
-                        debugPrint(
+                        AppLogger.e(
                           'Error deleting attachment ${attachment.fileName}: $e',
                         );
                         // Continue with other deletions
@@ -1184,8 +1185,8 @@ class _BookAClimbScreenState extends State<BookAClimbScreen> {
                         file,
                       );
                     } catch (e) {
-                      debugPrint('Error uploading file ${file.name}: $e');
-                      debugPrint(StackTrace.current.toString());
+                      AppLogger.e('Error uploading file ${file.name}: $e');
+                      AppLogger.e(StackTrace.current.toString());
                       // Continue with other uploads
                     }
                   }

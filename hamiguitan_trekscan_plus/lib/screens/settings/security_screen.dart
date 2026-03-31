@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import '../../services/user_service.dart';
 import '../../theme/color.dart';
+import '../../utils/app_logger.dart';
 
 class SecurityScreen extends StatefulWidget {
   const SecurityScreen({super.key});
@@ -40,7 +41,10 @@ class _SecurityScreenState extends State<SecurityScreen> {
         backgroundColor: AppColors.primary,
         title: const Text(
           'Security & Privacy',
-          style: TextStyle(color: SharedColors.white, fontWeight: FontWeight.bold),
+          style: TextStyle(
+            color: SharedColors.white,
+            fontWeight: FontWeight.bold,
+          ),
         ),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: SharedColors.white),
@@ -515,10 +519,7 @@ class _SecurityScreenState extends State<SecurityScreen> {
           children: [
             const Text(
               'This action cannot be undone. All your data will be permanently deleted.',
-              style: TextStyle(
-                color: Colors.red,
-                fontWeight: FontWeight.w500,
-              ),
+              style: TextStyle(color: Colors.red, fontWeight: FontWeight.w500),
             ),
             const SizedBox(height: 16),
             if (!_isGoogleUser) ...[
@@ -581,7 +582,7 @@ class _SecurityScreenState extends State<SecurityScreen> {
                     if (!e.toString().contains('PigeonUserDetails')) {
                       rethrow;
                     }
-                    print('⚠️ Ignoring Pigeon error: $e');
+                    AppLogger.i('Ignoring Pigeon error: $e');
                   }
                 } else {
                   // Reauthenticate with email/password
@@ -599,7 +600,7 @@ class _SecurityScreenState extends State<SecurityScreen> {
                     if (!e.toString().contains('PigeonUserDetails')) {
                       rethrow;
                     }
-                    print('⚠️ Ignoring Pigeon error: $e');
+                    AppLogger.i('Ignoring Pigeon error: $e');
                   }
                 }
 
@@ -614,12 +615,14 @@ class _SecurityScreenState extends State<SecurityScreen> {
                   if (!e.toString().contains('PigeonUserDetails')) {
                     rethrow;
                   }
-                  print('⚠️ Ignoring Pigeon error during account deletion: $e');
+                  AppLogger.i(
+                    'Ignoring Pigeon error during account deletion: $e',
+                  );
                 }
 
                 Navigator.pop(context, true);
               } catch (e) {
-                print('❌ Delete account error: $e');
+                AppLogger.i('Delete account error: $e');
                 if (context.mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(

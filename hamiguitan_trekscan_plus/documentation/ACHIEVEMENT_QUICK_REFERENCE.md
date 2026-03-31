@@ -276,21 +276,21 @@ App Starts → Load Achievements → Check Pending Notifications
 ### Check Sync Queue
 ```dart
 List<String> queue = await localService.getSyncQueue();
-print('Pending sync: $queue');
+AppLogger.i('Pending sync: $queue');
 ```
 
 ### Check Pending Notifications
 ```dart
 List<String> pending = await localService.getPendingNotifications();
-print('Pending notifications: $pending');
+AppLogger.i('Pending notifications: $pending');
 ```
 
 ### Check Achievement Status
 ```dart
 Achievement? achievement = achievementService.getAchievementById('id');
-print('Unlocked: ${achievement?.isUnlocked}');
-print('Notification shown: ${achievement?.isNotificationShown}');
-print('Unlocked at: ${achievement?.unlockedAt}');
+AppLogger.i('Unlocked: ${achievement?.isUnlocked}');
+AppLogger.i('Notification shown: ${achievement?.isNotificationShown}');
+AppLogger.i('Unlocked at: ${achievement?.unlockedAt}');
 ```
 
 ### Force Sync

@@ -250,7 +250,7 @@ Before deploying to production, remove or comment out the debug print statements
 Or wrap them in `kDebugMode` checks:
 ```dart
 if (kDebugMode) {
-  print('📝 CREATING BOOKING WITH DATA:');
+  AppLogger.i('📝 CREATING BOOKING WITH DATA:');
   // ... debug logs
 }
 ```

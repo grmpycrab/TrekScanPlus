@@ -2,7 +2,7 @@
     {
         "id": "56okrkt0pb",
         "name": "UNESCO Marker",
-        "description": "The official entry point to Mt. Hamiguitan Wildlife Sanctuary, marked by the UNESCO World Heritage inscription. This station highlights the global recognition of the mountain's ecological importance. Trekkers usually gather here for orientation, safety briefings, and group photos before beginning their ascent. It sets the tone for the journey, reminding visitors that they are entering a protected and fragile environment.",
+        "description": "The official entry point to Mt. Hamiguitan Wildlife Sanctuary at 449 MASL, marked by the UNESCO World Heritage inscription amid initial dipterocarp groves and glimpses of Philippine deer. Trekkers gather here for orientation, safety briefings, and group photos under towering canopies, where the air hums with anticipation and the weight of global recognition settles in; it's the ceremonial threshold, reminding all that every step honors a fragile, irreplaceable Eden.",
         "difficulty": "Easy",
         "elevation": 449,
         "coordinates": "N:06°44'10.65'' E:126°08'29.99''",
@@ -29,7 +29,7 @@
     {
         "id": "hu2c5c0kfn",
         "name": "Crossing Stampa",
-        "description": "A shaded forest crossing where several trails intersect. The canopy here is thick, providing a cool rest stop for hikers. Its name, Stampa, is remembered by locals as a place where the trail divides, offering both challenge and reprieve. Trekkers often pause here to take in the sounds of birds and insects before pressing deeper into the sanctuary.",
+        "description": "A shaded forest nexus at 682 MASL where trails converge under thick fern-laden canopies, offering cool reprieve after 948 steps from the start. Local lore names it Stampa for its dividing paths, alive with long-tailed macaque chatter and insect symphonies; hikers linger on mossy logs, sipping water amid dappled light, feeling the mountain's crossroads pulse as deeper wilds call through rustling leaves and distant echoes.",
         "difficulty": "Easy",
         "elevation": 682,
         "coordinates": "N:06°44'05.54'' E:126°08'34.09''",
@@ -54,7 +54,7 @@
     {
         "id": "um6j8dnii4",
         "name": "Puting Bato",
-        "description": "Named after its distinctive white rock formation, Puting Bato provides both a scenic landmark and a natural resting point. The pale stones stand in contrast to the surrounding greenery, making it a memorable stop along the trail. From here, trekkers begin to notice the gradual shift in vegetation as they climb higher. It is also a spot where small mammals and insects are often observed.",
+        "description": "Nestled roughly 4-5 hours from the Brgy. La Union jump-off, Puting Bato emerges as a shimmering prelude where sunlight dances off pale boulders amid crisscrossing rivers and thick dipterocarp canopies. Trekkers ford shallow streams, their boots slick with mud, while the air thickens with the scent of wet earth and blooming ferns; it's here that the mountain first whispers its wild invitation, easing novices into rhythm with playful water splashes and distant bird calls. Monkeys rustle overhead, and the white rocks—ancient sentinels, offer a natural bench for refueling, marking the threshold from civilized trails to untamed ascent.",
         "difficulty": "Moderate",
         "elevation": 623,
         "coordinates": "N:06°43'46.66'' E:126°09'22.06''",
@@ -79,7 +79,7 @@
     {
         "id": "3ko938o2gb",
         "name": "Lantawan 1",
-        "description": "The first major viewpoint on the trek, offering wide panoramas of the forest canopy below. Lantawan, meaning 'view deck' in the local dialect, is a favorite stop for photography and quiet reflection. The air is cooler here, and the breeze carries the scent of mountain flora. It serves as a checkpoint for guides to assess the group's condition before moving further uphill.",
+        "description": "About 5-6 hours in, this first grand viewpoint unfurls like a living tapestry, where massive hardwoods frame endless green ridges rolling toward the Pujada Peninsula. Filtered sunlight spotlights carnivorous pitcher plants dangling like emerald chalices, their veins pulsing with dew, while rare orchids peek from mossy nooks; hikers catch their breath amid panoramic sweeps, feeling the forest's pulse quicken as gradients hint at trials ahead. Breezes carry salty Pacific hints, blending with floral perfumes, creating a meditative pause where the soul syncs with the wild's vast symphony.",
         "difficulty": "Moderate",
         "elevation": 830,
         "coordinates": "N:06°43'23.06'' E:126°09'38.12''",
@@ -106,7 +106,7 @@
     {
         "id": "33ii1jrc5s",
         "name": "Camp 4",
-        "description": "A designated campsite where trekkers often rest or spend the night. This stop is surrounded by tall trees, creating a sheltered environment from wind and sun. It is a strategic point for acclimatization before tackling steeper sections ahead. Camp 4 is known for its cool evenings and the sound of nocturnal wildlife.",
+        "description": "At ~950 MASL after 7-8 hours of toil, Camp 4 unfolds as a misty haven with natural sinks, toilets fed by trickles, and flat clearings ringed by moss-draped limbs. Twilight brings a chorus of nocturnal life—crickets, owls, and glowing fungi—while campfires flicker against encroaching fog; it's the cusp of mossy realms, where weary bodies mend under star-peeked skies, inhaling the damp alchemy of decaying leaves and rebirth. Provisions taste divine here, fueling dreams of pygmy wonders above.",
         "difficulty": "Moderate",
         "elevation": 908,
         "coordinates": "N:06°43'23.06'' E:126°09'38.21''",
@@ -131,7 +131,7 @@
     {
         "id": "vaatj8uomu",
         "name": "Uwang-Uwang Trail",
-        "description": "A challenging trail section known for its steep inclines and dense vegetation. The name 'Uwang-Uwang' reflects the narrow, winding nature of the path. Here, the forest grows thicker, with mosses carpeting rocks and branches. Trekkers often slow down in this section, taking care as the trail can be muddy and slippery.",
+        "description": "The beast at 997 MASL demands 1-2 grueling hours of root-clinging scrambles and creek-wading plunges, where narrow defiles amplify every slip on slick granite under perpetual mist. Echoing waterfalls roar like jungle spirits, roots form precarious ladders, and the air grows cool with spray; endurance forges character amid primal immersion, with fleeting glimpses of iridescent birds piercing the veil. Emerging triumphant feels mythic, the mountain's raw forge tempering resolve.",
         "difficulty": "Hard",
         "elevation": 1121,
         "coordinates": "N:06°43'56.04'' E:126°10'38.58''",
@@ -158,7 +158,7 @@
     {
         "id": "cbensi5juq",
         "name": "Lantawan 2",
-        "description": "The second major view deck along the trail, located at a higher elevation. Lantawan 2 provides sweeping views of the surrounding valleys and distant mountain ridges. The cooler climate here supports orchids and other epiphytes. Trekkers often take extended breaks to enjoy the scenery and spot rare bird species like the Philippine eagle.",
+        "description": "Perched at ~1,200 MASL near 8-10 hours total, this upper aerie surveys twisted bonsai fringes framing abyssal valleys and distant ocean shimmer through swirling clouds. Wind sculpts stunted giants into otherworldly shapes, carrying scents of resin and rain; it's a high-altitude trance where silence reigns save for raptor cries, priming the spirit for the surreal plateau beyond. Clear spells gift vertigo-inducing vistas, etching the climb's epic scale into memory.",
         "difficulty": "Moderate",
         "elevation": 1215,
         "coordinates": "N:06°43'53.30'' E:126°10'41.70''",
@@ -183,7 +183,7 @@
     {
         "id": "utvrrkfkh9",
         "name": "Camp 3",
-        "description": "A camp area commonly used for overnight stays during multi-day treks. It sits near mid-elevation forest, where the sound of owls and other nocturnal animals fill the night. The site offers relative safety and flat ground for tents. It is also a good place to observe the transition between lowland and montane ecosystems.",
+        "description": "The pygmy epicenter at 1,151-1,200 MASL after 10-11 hours on Day 1, this plateau cradles tents amid century-old dwarf forests beside enigmatic Tinagong Dagat lake, its surface mirroring starlit voids. Black Forest silhouettes loom nearby, fireflies dance like earth-stars, and night winds hush ancient secrets through bonsai canopies; dawn reveals raptors soaring over mist-shrouded vales, with camp's camaraderie amplifying the magic. It's the climb's enchanted core, blending exhaustion with transcendence.",
         "difficulty": "Moderate",
         "elevation": 1190,
         "coordinates": "N:06°43'34.44'' E:126°11'03.75''",
@@ -208,7 +208,7 @@
     {
         "id": "6mm4kle34g",
         "name": "Pygmy Field",
-        "description": "One of the most iconic features of Mt. Hamiguitan, the Pygmy Field is home to century-old bonsai-like trees that only grow a few feet tall. This unique ecosystem exists due to thin soils, strong winds, and high-altitude conditions. The area is highly fragile, and visitors are strictly advised to stay on the trail. It is both a scientific wonder and a symbol of the sanctuary's uniqueness.",
+        "description": "One of Mt. Hamiguitan's most iconic realms at 1214 MASL, the Pygmy Field harbors century-old bonsai-like trees stunted to mere feet by thin ultramafic soils, fierce winds, and altitude, mountain shrews scurrying below. A scientific marvel and sanctuary symbol, its fragile otherworldliness demands strict trail adherence—no stepping on these ancient miniatures—as surreal winds whisper evolutionary secrets across wind-carved horizons.",
         "difficulty": "Moderate",
         "elevation": 1214,
         "coordinates": "N:06°43'12.97'' E:126°11'00.22''",
@@ -235,7 +235,7 @@
     {
         "id": "g5uabiveqd",
         "name": "Lantawan 3 / Mossy Forest",
-        "description": "A combined site where trekkers encounter both another viewpoint and the start of the mossy forest ecosystem. The air is damp and cool, with thick moss blanketing tree trunks and rocks. This environment supports amphibians, orchids, and rare ferns. The atmosphere is often misty, giving it an enchanting and otherworldly feel.",
+        "description": "At 1363 MASL, this misty fusion unveils a third viewpoint merging into damp mossy realms where thick velvet blankets trunks, rocks, and rare ferns, tree frogs croaking in fog. Cool, enchanting air evokes fairy-tale immersion supporting amphibians and orchids; often slippery, it cloaks trekkers in otherworldly hush, gradients teasing the high-alpine unknown beyond.",
         "difficulty": "Hard",
         "elevation": 1363,
         "coordinates": "N:06°42'46.08'' E:126°11'14.02''",
@@ -262,7 +262,7 @@
     {
         "id": "79t42cmo77",
         "name": "Tinagong Dagat",
-        "description": "Known as the 'Hidden Sea,' Tinagong Dagat is a seasonal lake basin that fills with water during heavy rains. It resembles an inland sea, adding to its mysterious charm. During the dry season, the ground may be grassy and firm, providing open space amidst the dense forest. It is a favorite spot for nature photography and ecological studies.",
+        "description": "The 'Hidden Sea' at 1108 MASL, a seasonal lake basin swelling with rains to mimic an inland ocean amid grasses and wading birds, or firm meadows in dry spells (8895 steps prior). Mysterious allure captivates photographers and ecologists, its vast grassy embrace a serene interlude where water's mirror reflects fleeting clouds, evoking timeless seclusion amid the sanctuary's heart.",
         "difficulty": "Moderate",
         "elevation": 1108,
         "coordinates": "N:06°42'27.55'' E:126°11'43.11''",
@@ -289,10 +289,10 @@
     {
         "id": "i73hl7b7g3",
         "name": "Hidden Garden",
-        "description": "A little-documented site, the Hidden Garden is believed to contain diverse yet understudied flora. Trekkers describe it as a serene clearing, though official ecological surveys remain incomplete. Its mystery adds to the sense of discovery along the Hamiguitan trek. More research may reveal rare plants or animals in this area.",
+        "description": "A little-documented enigma at 1065 MASL, the Hidden Garden unfolds as a serene, understudied clearing whispered to harbor diverse rare flora awaiting discovery amid misty veils. Trekkers sense untapped wonders in its quiet folds—perhaps elusive blooms or shy fauna—heightening the trek's exploratory thrill; incomplete surveys veil its secrets, inviting future revelations in this hushed, promising nook.",
         "difficulty": "Unknown",
-        "elevation": 0,
-        "coordinates": "N:06°42'15.00'' E:126°11'58.00'' (approx)",
+        "elevation": 1065,
+        "coordinates": "6°42’ 15” N, 126°11’59’’ E",
         "latitude": 6.70417,
         "longitude": 126.19972,
         "images": [
@@ -301,7 +301,7 @@
         "steps": null,
         "distanceToNextKm": null,
         "nextStationId": "stn14",
-        "nextStationName": "Mt. Hamiguitan Peak",
+        "nextStationName": "Mt. Hamiguitan Summit",
         "flora": [],
         "fauna": [],
         "warnings": {},
@@ -309,8 +309,8 @@
     },
     {
         "id": "mr2l529okj",
-        "name": "Mt. Hamiguitan Peak",
-        "description": "The highest point of Mt. Hamiguitan, offering 360-degree views of Davao Oriental and neighboring landscapes. The summit is often shrouded in clouds, but on clear days trekkers can see as far as the Pacific coast. It is a rewarding finale to the climb, with alpine grasses and occasional sightings of raptors. Weather can change rapidly here, adding challenge and excitement.",
+        "name": "Mt. Hamiguitan Summit",
+        "description": "The highest point of Mt. Hamiguitan, offering 360-degree views of Davao Oriental and neighboring landscapes. The summit is often shrouded in clouds, but on clear days trekkers can see as far as the Pacific coast. It is a rewarding finale to the climb, with alpine grasses and occasional sightings of raptors. Weather can change rapidly here, adding challenge and excitement. Ultramafic bonsai fields stretch like a lunar garden, Twin Falls cascade nearby, and euphoria peaks amid whipping winds, pure conquest etched in sweat and skyline.",
         "difficulty": "Hard",
         "elevation": 1641,
         "coordinates": "N:06°44'23.90'' E:126°10'55.25''",
@@ -337,7 +337,7 @@
     {
         "id": "44r5tebjrc",
         "name": "Black Mountain",
-        "description": "This rugged section of the trek is named after its dark rock outcrops. Black Mountain provides a stark contrast to the greener parts of the sanctuary. Its slopes support hardy plant species and are frequented by wild animals such as boars. The path is rocky, making it both a challenge and an adventure for trekkers.",
+        "description": "Rugged dark rock outcrops at 1238 MASL contrast verdant sanctuary, hardy hardwoods clinging to boar-frequented slopes after summit descent. Stark, adventurous terrain tests footing on jagged paths, wild energy pulsing through resilient life; it's a gritty counterpoint, where earth's raw geology meets tenacious green, amplifying the trek's dramatic contrasts.",
         "difficulty": "Moderate",
         "elevation": 1238,
         "coordinates": "N:06°43'35.73'' E:126°10'49.34''",
@@ -362,7 +362,7 @@
     {
         "id": "r5kntj3sae",
         "name": "Twin Falls",
-        "description": "A scenic finale to the trek, Twin Falls features two waterfalls cascading side by side into a natural pool. The area is lush with greenery and is a favorite spot for cooling down after the long hike. Birds, butterflies, and frogs are often spotted here, adding life to the refreshing environment. It is both a recreational stop and a symbol of Mt. Hamiguitan's natural beauty.",
+        "description": "Scenic finale at 1130 MASL, twin waterfalls plunge side-by-side into lush pools ringed by Philippine ferns, kingfishers darting with butterflies and frogs (rocks slippery). Cooling refreshment post-hike, its vibrant life symphony—cascades thundering, mist rising—embodies Hamiguitan's beauty; a recreational haven symbolizing nature's harmonious power and trekker triumph.",
         "difficulty": "Moderate",
         "elevation": 1130,
         "coordinates": "N:06°43'25.74'' E:126°10'59.02''",

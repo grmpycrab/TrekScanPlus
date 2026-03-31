@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:flutter/foundation.dart';
+//import 'package:flutter/foundation.dart';
 import '../models/social_model.dart';
+import '../utils/app_logger.dart';
 
 /// Manages paginated feed loading with in-memory caching
 class FeedPaginationService {
@@ -22,7 +23,7 @@ class FeedPaginationService {
   /// Returns: List of posts and a boolean indicating if more posts exist
   Future<(List<SocialPost>, bool)> loadPublicPostsFirstPage() async {
     try {
-      debugPrint('Loading first page of public posts...');
+      AppLogger.i('Loading first page of public posts...');
 
       final query = _firestore
           .collection('posts')
@@ -43,7 +44,7 @@ class FeedPaginationService {
           posts.add(post);
           _postCache[post.id ?? ''] = post;
         } catch (e) {
-          debugPrint('Error parsing post: $e');
+          AppLogger.e('Error parsing post: $e');
         }
       }
 
@@ -55,10 +56,10 @@ class FeedPaginationService {
       // Check if more posts exist
       final hasMore = snapshot.docs.length > postsPerPage;
 
-      debugPrint('Loaded ${posts.length} posts (more available: $hasMore)');
+      AppLogger.i('Loaded ${posts.length} posts (more available: $hasMore)');
       return (posts, hasMore);
     } catch (e) {
-      debugPrint('Error loading public posts: $e');
+      AppLogger.e('Error loading public posts: $e');
       return (<SocialPost>[], false);
     }
   }
@@ -67,12 +68,12 @@ class FeedPaginationService {
   /// Returns: List of new posts and a boolean indicating if more posts exist
   Future<(List<SocialPost>, bool)> loadPublicPostsNextPage() async {
     if (_lastPublicPostDocument == null) {
-      debugPrint('No more posts to load');
+      AppLogger.d('No more posts to load');
       return (<SocialPost>[], false);
     }
 
     try {
-      debugPrint('Loading next page of public posts...');
+      AppLogger.i('Loading next page of public posts...');
 
       final query = _firestore
           .collection('posts')
@@ -93,7 +94,7 @@ class FeedPaginationService {
             _postCache[post.id ?? ''] = post;
           }
         } catch (e) {
-          debugPrint('Error parsing post: $e');
+          AppLogger.e('Error parsing post: $e');
         }
       }
 
@@ -106,12 +107,12 @@ class FeedPaginationService {
 
       final hasMore = snapshot.docs.length > postsPerPage;
 
-      debugPrint(
+      AppLogger.i(
         'Loaded ${posts.length} more posts (more available: $hasMore)',
       );
       return (posts, hasMore);
     } catch (e) {
-      debugPrint('Error loading next page of public posts: $e');
+      AppLogger.e('Error loading next page of public posts: $e');
       return (<SocialPost>[], false);
     }
   }
@@ -124,14 +125,14 @@ class FeedPaginationService {
   /// Update cached post (when likes, comments count change)
   void updateCachedPost(SocialPost post) {
     _postCache[post.id ?? ''] = post;
-    debugPrint('Updated cached post: ${post.id}');
+    AppLogger.d('Updated cached post: ${post.id}');
   }
 
   /// Clear all cache (when needed for refresh)
   void clearCache() {
     _postCache.clear();
     _lastPublicPostDocument = null;
-    debugPrint('Cache cleared');
+    AppLogger.d('Cache cleared');
   }
 
   /// Get cache size for debugging

@@ -2,6 +2,7 @@ import 'dart:math';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
+import '../../utils/app_logger.dart';
 
 class EmailVerificationService {
   EmailVerificationService._internal();
@@ -51,12 +52,12 @@ class EmailVerificationService {
       });
 
       if (kDebugMode) {
-        print('✉️ Verification code sent to $email');
-        print('🔢 CODE (for testing): $code');
+        AppLogger.i('✉️ Verification code sent to $email');
+        AppLogger.i('🔢 CODE (for testing): $code');
       }
     } catch (e) {
       if (kDebugMode) {
-        print('❌ Error sending verification code: $e');
+        AppLogger.i('❌ Error sending verification code: $e');
       }
       rethrow;
     }
@@ -125,19 +126,21 @@ class EmailVerificationService {
         });
 
         if (kDebugMode) {
-          print('✅ Email verified successfully for ${user.email}');
+          AppLogger.i('✅ Email verified successfully for ${user.email}');
         }
 
         return true;
       } else {
         if (kDebugMode) {
-          print('❌ Invalid verification code. Attempts: ${attempts + 1}/5');
+          AppLogger.i(
+            '❌ Invalid verification code. Attempts: ${attempts + 1}/5',
+          );
         }
         return false;
       }
     } catch (e) {
       if (kDebugMode) {
-        print('❌ Error verifying code: $e');
+        AppLogger.i('❌ Error verifying code: $e');
       }
       rethrow;
     }
@@ -160,7 +163,7 @@ class EmailVerificationService {
       return verified;
     } catch (e) {
       if (kDebugMode) {
-        print('❌ Error checking verification status: $e');
+        AppLogger.i('❌ Error checking verification status: $e');
       }
       return false;
     }
@@ -186,7 +189,7 @@ class EmailVerificationService {
       return remaining.isNegative ? null : remaining;
     } catch (e) {
       if (kDebugMode) {
-        print('❌ Error getting remaining time: $e');
+        AppLogger.i('❌ Error getting remaining time: $e');
       }
       return null;
     }
@@ -208,7 +211,7 @@ class EmailVerificationService {
       return doc.data()?['attempts'] as int? ?? 0;
     } catch (e) {
       if (kDebugMode) {
-        print('❌ Error getting attempts: $e');
+        AppLogger.i('❌ Error getting attempts: $e');
       }
       return 0;
     }

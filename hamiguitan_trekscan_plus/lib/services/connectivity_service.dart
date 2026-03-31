@@ -1,6 +1,6 @@
 import 'dart:async';
 import 'dart:io';
-
+import '../../utils/app_logger.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/foundation.dart';
 
@@ -56,7 +56,7 @@ class ConnectivityService {
     } on SocketException catch (_) {
       _updateStatus(ConnectionStatus.offline);
     } catch (e) {
-      if (kDebugMode) print('Connectivity check error: $e');
+      if (kDebugMode) AppLogger.i('Connectivity check error: $e');
       _updateStatus(ConnectionStatus.offline);
     }
   }

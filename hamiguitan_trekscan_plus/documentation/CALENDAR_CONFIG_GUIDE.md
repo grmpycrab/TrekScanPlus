@@ -73,9 +73,9 @@ final criticalThreshold = systemSettings['criticalThreshold'] as int; // 5
 ```dart
 final dateConfig = await calendarService.getDateConfig(DateTime(2025, 12, 25));
 
-print(dateConfig.isClosed); // true
-print(dateConfig.maxSlots); // 0
-print(dateConfig.reason); // "Christmas Holiday"
+AppLogger.i(dateConfig.isClosed); // true
+AppLogger.i(dateConfig.maxSlots); // 0
+AppLogger.i(dateConfig.reason); // "Christmas Holiday"
 ```
 
 **Returns:** `DateConfig` object with merged configuration (date-specific + system defaults)
@@ -143,7 +143,7 @@ await calendarService.updateSystemSettings({
 ### Watch System Settings
 ```dart
 calendarService.watchSystemSettings().listen((settings) {
-  print('Max slots updated to: ${settings['defaultMaxSlots']}');
+  AppLogger.i('Max slots updated to: ${settings['defaultMaxSlots']}');
 });
 ```
 
@@ -152,7 +152,7 @@ calendarService.watchSystemSettings().listen((settings) {
 ### Watch Date Configuration
 ```dart
 calendarService.watchDateConfig(DateTime(2025, 12, 25)).listen((config) {
-  print('Date closed: ${config.isClosed}');
+  AppLogger.i('Date closed: ${config.isClosed}');
 });
 ```
 

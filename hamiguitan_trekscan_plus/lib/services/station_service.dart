@@ -6,6 +6,7 @@ import '../models/station_data.dart';
 import 'geofencing_service.dart';
 import 'firestore_station_service.dart';
 import 'e_certificate_service.dart';
+import '../../utils/app_logger.dart';
 
 class StationService extends ChangeNotifier {
   static const String VISITED_STATIONS_KEY = 'visited_stations';
@@ -90,25 +91,29 @@ class StationService extends ChangeNotifier {
         String jsonString = await rootBundle.loadString(
           'assets/data/stations_test.json',
         );
-        print(
+        AppLogger.i(
           'Successfully loaded JSON string: ${jsonString.substring(0, 100)}...',
         );
         List<dynamic> jsonList = json.decode(jsonString);
-        print('Number of stations in JSON: ${jsonList.length}');
+        AppLogger.i('Number of stations in JSON: ${jsonList.length}');
 
         // Get visited station IDs from SharedPreferences (user-scoped)
         Set<String> visitedStationIds =
             prefs.getStringList(_userVisitedStationsKey)?.toSet() ?? {};
-        print('Visited station IDs: $visitedStationIds');
+        AppLogger.i('Visited station IDs: $visitedStationIds');
 
         // Sync with Firebase if user is logged in
         try {
           final firebaseVisitedIds = await FirestoreStationService.instance
               .getVisitedStationIds();
           visitedStationIds.addAll(firebaseVisitedIds);
-          print('Synced ${firebaseVisitedIds.length} stations from Firebase');
+          AppLogger.i(
+            'Synced ${firebaseVisitedIds.length} stations from Firebase',
+          );
         } catch (e) {
-          print('Info: Firebase sync skipped (user may not be logged in): $e');
+          AppLogger.i(
+            'Info: Firebase sync skipped (user may not be logged in): $e',
+          );
         }
 
         _stations = jsonList.map((json) {
@@ -116,7 +121,7 @@ class StationService extends ChangeNotifier {
 
           // Check if lat/lng are provided in JSON, otherwise try to parse from coordinates
           if (station.latitude == null || station.longitude == null) {
-            print(
+            AppLogger.i(
               'Station ${station.id} missing lat/lng, attempting to parse from coordinates: ${station.coordinates}',
             );
             final coords = GeofencingService.parseCoordinates(
@@ -145,20 +150,22 @@ class StationService extends ChangeNotifier {
                 isCheckpoint: station.isCheckpoint,
                 isVisited: station.isVisited,
               );
-              print(
+              AppLogger.i(
                 'Successfully parsed coordinates for ${station.id}: (${station.latitude}, ${station.longitude})',
               );
             } else {
-              print('Failed to parse coordinates for ${station.id}');
+              AppLogger.i('Failed to parse coordinates for ${station.id}');
             }
           } else {
-            print(
+            AppLogger.i(
               'Station ${station.id} has lat/lng from JSON: (${station.latitude}, ${station.longitude})',
             );
           }
           return station;
         }).toList();
-        print('Number of stations loaded into memory: ${_stations.length}');
+        AppLogger.i(
+          'Number of stations loaded into memory: ${_stations.length}',
+        );
 
         // Update visited status
         for (var station in _stations) {
@@ -167,8 +174,8 @@ class StationService extends ChangeNotifier {
           }
         }
       } catch (e) {
-        print('Error loading station data: $e');
-        print('Stack trace: ${StackTrace.current}');
+        AppLogger.i('Error loading station data: $e');
+        AppLogger.i('Stack trace: ${StackTrace.current}');
         _stations = [];
         _loadError = e.toString();
       } finally {
@@ -225,7 +232,7 @@ class StationService extends ChangeNotifier {
           );
         }
       } catch (firestoreError) {
-        print('Warning: Failed to sync with Firestore: $firestoreError');
+        AppLogger.i('Warning: Failed to sync with Firestore: $firestoreError');
         // Don't rethrow - local update was successful
       }
 
@@ -239,21 +246,21 @@ class StationService extends ChangeNotifier {
               .checkAndAwardCertificate(visitedStations);
 
           if (awardedCertificate != null) {
-            print(
+            AppLogger.i(
               'Certificate awarded: ${awardedCertificate.certificateType.name}',
             );
             // TODO: Trigger UI notification/dialog to show certificate earned
             // This will be implemented in Phase 2 (UI phase)
           }
         } catch (certificateError) {
-          print(
+          AppLogger.i(
             'Warning: Failed to check certificate eligibility: $certificateError',
           );
           // Don't rethrow - this is non-critical
         }
       }
     } catch (e) {
-      print('Error updating station visited status: $e');
+      AppLogger.i('Error updating station visited status: $e');
       rethrow;
     }
   }
@@ -278,7 +285,7 @@ class StationService extends ChangeNotifier {
     try {
       await FirestoreStationService.instance.resetAllVisitedStations();
     } catch (e) {
-      print('Warning: Failed to reset visited stations in Firestore: $e');
+      AppLogger.i('Warning: Failed to reset visited stations in Firestore: $e');
       // Don't rethrow - local reset was successful
     }
   }

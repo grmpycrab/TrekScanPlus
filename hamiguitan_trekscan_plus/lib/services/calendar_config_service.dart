@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:flutter/foundation.dart';
+//import 'package:flutter/foundation.dart';
+import '../utils/app_logger.dart';
 //import '../models/calendar_model.dart';
 
 /// Service for managing centralized calendar configuration in Firestore
@@ -55,7 +56,7 @@ class CalendarConfigService {
       _cacheTimestamp = DateTime.now();
       return defaults;
     } catch (e) {
-      print('Error getting system settings: $e');
+      AppLogger.i('Error getting system settings: $e');
       // Return hardcoded defaults on error
       return {
         'defaultMaxSlots': 30,
@@ -93,7 +94,7 @@ class CalendarConfigService {
         customNote: null,
       );
     } catch (e) {
-      print('Error getting date config for $dateKey: $e');
+      AppLogger.i('Error getting date config for $dateKey: $e');
       // Return defaults on error
       return DateConfig(
         date: date,
@@ -134,7 +135,7 @@ class CalendarConfigService {
 
       return configs;
     } catch (e) {
-      print('Error getting date range config: $e');
+      AppLogger.i('Error getting date range config: $e');
       return {};
     }
   }
@@ -376,7 +377,7 @@ class CalendarConfigService {
 
       await batch.commit();
     } catch (e) {
-      debugPrint('Error syncing trek down days: $e');
+      AppLogger.e('Error syncing trek down days: $e');
     }
   }
 }

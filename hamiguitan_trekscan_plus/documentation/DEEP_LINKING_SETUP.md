@@ -86,7 +86,7 @@ Future<void> _handleInitialDeepLink() async {
       _handleDeepLink(initialLink);
     }
   } catch (e) {
-    print('Error getting initial link: $e');
+    AppLogger.i('Error getting initial link: $e');
   }
 }
 
@@ -99,7 +99,7 @@ void _listenToDeepLinks() {
       }
     },
     onError: (err) {
-      print('Deep link error: $err');
+      AppLogger.i('Deep link error: $err');
     },
   );
 }
@@ -121,7 +121,7 @@ void _handleDeepLink(String link) {
       }
     }
   } catch (e) {
-    print('Error parsing deep link: $e');
+    AppLogger.i('Error parsing deep link: $e');
   }
 }
 ```

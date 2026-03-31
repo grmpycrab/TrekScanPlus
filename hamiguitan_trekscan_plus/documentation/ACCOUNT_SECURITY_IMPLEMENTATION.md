@@ -245,7 +245,7 @@ try {
 } catch (e) {
   // Profile photo might not exist, continue deletion
   if (kDebugMode) {
-    print('No profile photo to delete or error: $e');
+    AppLogger.i('No profile photo to delete or error: $e');
   }
 }
 ```
@@ -332,9 +332,9 @@ try {
 Enable debug logging to track deletion progress:
 ```dart
 if (kDebugMode) {
-  print('Starting cascade deletion for user: $uid');
-  print('Deleting X documents from subcollection');
-  print('Successfully completed cascade deletion');
+  AppLogger.i('Starting cascade deletion for user: $uid');
+  AppLogger.i('Deleting X documents from subcollection');
+  AppLogger.i('Successfully completed cascade deletion');
 }
 ```
 

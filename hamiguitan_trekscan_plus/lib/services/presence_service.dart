@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import '../../utils/app_logger.dart';
 import 'dart:async';
 import 'package:flutter/foundation.dart';
 
@@ -56,7 +57,7 @@ class PresenceService {
       }, SetOptions(merge: true));
     } catch (e) {
       if (kDebugMode) {
-        print('Error updating presence: $e');
+        AppLogger.i('Error updating presence: $e');
       }
     }
   }
@@ -71,7 +72,7 @@ class PresenceService {
       }, SetOptions(merge: true));
     } catch (e) {
       if (kDebugMode) {
-        print('Error marking offline: $e');
+        AppLogger.i('Error marking offline: $e');
       }
     }
   }

@@ -167,14 +167,14 @@ TrekScanPlus/
 ```dart
 final service = ECertificateService.instance;
 final allCerts = service.getAllCertificates();
-print('User has ${allCerts.length} certificates');
+AppLogger.i('User has ${allCerts.length} certificates');
 ```
 
 ### Check for Specific Certificate
 ```dart
 final hasCamp3 = service.hasCertificate(CertificateType.camp3);
 if (hasCamp3) {
-  print('User has earned Camp 3 certificate');
+  AppLogger.i('User has earned Camp 3 certificate');
 }
 ```
 
@@ -182,9 +182,9 @@ if (hasCamp3) {
 ```dart
 final certificates = service.getCertificatesByType(CertificateType.fullTrek);
 for (var cert in certificates) {
-  print('${cert.trekkerName} completed: ${cert.certificateType.name}');
-  print('Stations: ${cert.stationsVisited}');
-  print('Verification Code: ${cert.verificationCode}');
+  AppLogger.i('${cert.trekkerName} completed: ${cert.certificateType.name}');
+  AppLogger.i('Stations: ${cert.stationsVisited}');
+  AppLogger.i('Verification Code: ${cert.verificationCode}');
 }
 ```
 
@@ -200,11 +200,11 @@ try {
   final awardedCertificate = 
       await certificateService.checkAndAwardCertificate(visitedStations);
   if (awardedCertificate != null) {
-    print('Certificate awarded: ${awardedCertificate.certificateType.name}');
+    AppLogger.i('Certificate awarded: ${awardedCertificate.certificateType.name}');
   }
 } catch (certificateError) {
   // Logs error but doesn't crash
-  print('Warning: Failed to check certificate eligibility: $certificateError');
+  AppLogger.i('Warning: Failed to check certificate eligibility: $certificateError');
 }
 ```
 
@@ -279,9 +279,9 @@ Look for:
 // In your app for testing
 final service = ECertificateService.instance;
 final allCerts = service.getAllCertificates();
-print('Total certificates: ${allCerts.length}');
+AppLogger.i('Total certificates: ${allCerts.length}');
 for (var cert in allCerts) {
-  print('- ${cert.certificateType.name}: ${cert.verificationCode}');
+  AppLogger.i('- ${cert.certificateType.name}: ${cert.verificationCode}');
 }
 ```
 

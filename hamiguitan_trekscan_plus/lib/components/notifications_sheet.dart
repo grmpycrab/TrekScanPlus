@@ -5,6 +5,7 @@ import '../services/notification_services.dart';
 import '../screens/main/main_screen.dart';
 import '../theme/color.dart';
 import 'app_dialogue_handler.dart';
+import '../../utils/app_logger.dart';
 
 class NotificationsSheet extends StatefulWidget {
   final String userId;
@@ -155,17 +156,17 @@ class _NotificationsSheetState extends State<NotificationsSheet> {
             return;
           }
 
-          print('🔔 Notification tapped: ${notification.title}');
-          print('🔔 ActionType: ${notification.actionType}');
-          print('🔔 ActionData: ${notification.actionData}');
+          AppLogger.i('🔔 Notification tapped: ${notification.title}');
+          AppLogger.i('🔔 ActionType: ${notification.actionType}');
+          AppLogger.i('🔔 ActionData: ${notification.actionData}');
 
           // Handle navigation first BEFORE marking as read
           if (notification.actionType != null &&
               notification.actionData != null) {
-            print('🔔 Starting navigation...');
+            AppLogger.i('🔔 Starting navigation...');
 
             // Close the notifications sheet immediately
-            print('🔔 Closing notification sheet...');
+            AppLogger.i('🔔 Closing notification sheet...');
             Navigator.pop(context);
 
             // Mark as read asynchronously (don't wait)
@@ -174,11 +175,11 @@ class _NotificationsSheetState extends State<NotificationsSheet> {
             // Navigate based on type
             if (notification.actionType == 'post') {
               final postId = notification.actionData!;
-              print('🔔 Navigating to post: $postId');
+              AppLogger.i('🔔 Navigating to post: $postId');
               Navigator.pushNamed(context, '/post-detail', arguments: postId);
             } else if (notification.actionType == 'booking') {
               final bookingId = notification.actionData!;
-              print('🔔 Navigating to booking: $bookingId');
+              AppLogger.i('🔔 Navigating to booking: $bookingId');
               // Navigate to MainScreen with booking tab selected
               Navigator.pushAndRemoveUntil(
                 context,
@@ -193,7 +194,9 @@ class _NotificationsSheetState extends State<NotificationsSheet> {
             }
           } else {
             // Backward compatibility for old notifications
-            print('🔔 No actionType/actionData - checking for old format');
+            AppLogger.i(
+              '🔔 No actionType/actionData - checking for old format',
+            );
 
             // Detect old booking notifications by title
             final bookingTitles = [
@@ -206,7 +209,9 @@ class _NotificationsSheetState extends State<NotificationsSheet> {
             if (bookingTitles.any(
               (title) => notification.title.contains(title),
             )) {
-              print('🔔 Old booking notification - navigating to book-climb');
+              AppLogger.i(
+                '🔔 Old booking notification - navigating to book-climb',
+              );
               // Navigate to MainScreen with booking tab selected
               Navigator.pushAndRemoveUntil(
                 context,
@@ -218,7 +223,7 @@ class _NotificationsSheetState extends State<NotificationsSheet> {
                 (route) => false,
               );
             } else {
-              print('🔔 No navigation available');
+              AppLogger.i('🔔 No navigation available');
             }
 
             // Mark as read
@@ -376,7 +381,7 @@ class _NotificationTile extends StatelessWidget {
 
     return GestureDetector(
       onTap: () {
-        print('🔴🔴🔴 GESTURE DETECTOR TAPPED!!! 🔴🔴🔴');
+        AppLogger.i('🔴🔴🔴 GESTURE DETECTOR TAPPED!!! 🔴🔴🔴');
         onTap();
       },
       onLongPress: onLongPress,
@@ -396,7 +401,7 @@ class _NotificationTile extends StatelessWidget {
         ),
         child: ListTile(
           onTap: () {
-            print('🔴 ListTile tapped!');
+            AppLogger.i('🔴 ListTile tapped!');
             onTap();
           },
           leading: isSelectionMode

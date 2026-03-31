@@ -4,6 +4,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import '../../models/user_model.dart';
 import '../../services/user_service.dart';
 import '../../theme/color.dart';
+import '../../utils/app_logger.dart';
 
 class AccountSettingsScreen extends StatefulWidget {
   final UserModel? initialUserData;
@@ -61,7 +62,7 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
         await _checkNameChangeCooldown();
       } catch (e) {
         if (kDebugMode) {
-          print('Error loading user data: $e');
+          AppLogger.i('Error loading user data: $e');
         }
       } finally {
         if (mounted) {
@@ -101,7 +102,7 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
         });
       } catch (e) {
         if (kDebugMode) {
-          print('Error checking cooldown: $e');
+          AppLogger.i('Error checking cooldown: $e');
         }
       }
     }

@@ -37,7 +37,7 @@ final ids = await FirestoreStationService.instance.getVisitedStationIds();
 
 // Listen to updates (real-time from other devices)
 FirestoreStationService.instance.getVisitedStationsStream().listen((ids) {
-  print('Visited: $ids');
+  AppLogger.i('Visited: $ids');
 });
 ```
 
@@ -122,9 +122,9 @@ Future<void> _handleQRScanned(String qrCode) async {
     await _stationService.updateStationVisited(qrCode, true);
     // ✅ Saved locally
     // ✅ Syncing to Firebase
-    print('Station marked as visited!');
+    AppLogger.i('Station marked as visited!');
   } catch (e) {
-    print('Error: $e');
+    AppLogger.i('Error: $e');
   }
 }
 ```
@@ -152,7 +152,7 @@ await stationService.updateStationVisited('stn1', true);
 // Sees update immediately via stream listener
 FirestoreStationService.instance.getVisitedStationsStream().listen((ids) {
   if (ids.contains('stn1')) {
-    print('🔄 Device A marked stn1 as visited!');
+    AppLogger.i('🔄 Device A marked stn1 as visited!');
   }
 });
 ```
@@ -202,15 +202,15 @@ await stationService.updateStationVisited(id, true);
 ### Check if User is Logged In
 ```dart
 final user = FirebaseAuth.instance.currentUser;
-print('Logged in: ${user != null}');
-print('UID: ${user?.uid}');
+AppLogger.i('Logged in: ${user != null}');
+AppLogger.i('UID: ${user?.uid}');
 ```
 
 ### Check Local Data
 ```dart
 final prefs = await SharedPreferences.getInstance();
 final local = prefs.getStringList('visited_stations_$uid');
-print('Local: $local');
+AppLogger.i('Local: $local');
 ```
 
 ### Check Firebase Data
@@ -222,7 +222,7 @@ Console → Firestore → users → {userId} → visitedStations
 ```dart
 // Add to main.dart
 if (kDebugMode) {
-  print('🔍 Debug logging enabled');
+  AppLogger.i('🔍 Debug logging enabled');
 }
 ```
 
@@ -309,7 +309,7 @@ Console → Firestore → users → {userId} → visitedStations
      await stationService.updateStationVisited(id, true);
    } catch (e) {
      // Logged but app continues (offline support)
-     print('Sync failed: $e');
+     AppLogger.i('Sync failed: $e');
    }
    ```
 

@@ -25,6 +25,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'dart:async';
 import 'profile_screen.dart';
 import '../../utils/image_cache_manager.dart';
+import '../../utils/app_logger.dart';
 
 class HomeScreen extends StatefulWidget {
   final Function(DateTime)? onNavigateToBooking;
@@ -1189,7 +1190,7 @@ class _HomeScreenState extends State<HomeScreen>
   /// Load the first page of posts (pagination)
   Future<void> _loadFirstPageOfPosts() async {
     try {
-      debugPrint('📝 Loading first page of posts...');
+      AppLogger.i('📝 Loading first page of posts...');
       final (posts, hasMore) = await _paginationService
           .loadPublicPostsFirstPage();
 
@@ -1209,9 +1210,9 @@ class _HomeScreenState extends State<HomeScreen>
         }
       }
 
-      debugPrint('✅ First page loaded: ${posts.length} posts');
+      AppLogger.i('✅ First page loaded: ${posts.length} posts');
     } catch (e) {
-      debugPrint('❌ Error loading first page: $e');
+      AppLogger.e('❌ Error loading first page: $e');
       if (mounted) {
         ScaffoldMessenger.of(
           context,
@@ -1227,7 +1228,7 @@ class _HomeScreenState extends State<HomeScreen>
     setState(() => _isLoadingMore = true);
 
     try {
-      debugPrint('📄 Loading next page of posts...');
+      AppLogger.i('📄 Loading next page of posts...');
       final (posts, hasMore) = await _paginationService
           .loadPublicPostsNextPage();
 
@@ -1239,9 +1240,9 @@ class _HomeScreenState extends State<HomeScreen>
         });
       }
 
-      debugPrint('✅ Next page loaded: ${posts.length} new posts');
+      AppLogger.i('✅ Next page loaded: ${posts.length} new posts');
     } catch (e) {
-      debugPrint('❌ Error loading next page: $e');
+      AppLogger.e('❌ Error loading next page: $e');
       if (mounted) {
         setState(() => _isLoadingMore = false);
         ScaffoldMessenger.of(
@@ -1276,7 +1277,7 @@ class _HomeScreenState extends State<HomeScreen>
       builder: (context) => CreatePostSheet(
         onPostCreated: () {
           // Optionally refresh the feed or show a notification
-          debugPrint('Post created successfully');
+          AppLogger.i('Post created successfully');
         },
       ),
     );

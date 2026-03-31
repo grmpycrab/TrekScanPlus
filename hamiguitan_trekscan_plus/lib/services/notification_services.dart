@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:flutter/foundation.dart';
+//import 'package:flutter/foundation.dart';
 import '../models/notification_model.dart';
+import '../utils/app_logger.dart';
 
 class NotificationService {
   final FirebaseFirestore _firestore;
@@ -25,7 +26,7 @@ class NotificationService {
       final ref = _userNotificationsRef(userId);
       await ref.add(notification.toMap());
     } catch (e) {
-      debugPrint('Failed to send notification: $e');
+      AppLogger.e('Failed to send notification: $e');
       rethrow;
     }
   }
@@ -41,11 +42,11 @@ class NotificationService {
             }).toList();
           })
           .handleError((error) {
-            debugPrint('Notification stream error for $userId: $error');
+            AppLogger.e('Notification stream error for $userId: $error');
             return [];
           });
     } catch (e) {
-      debugPrint('notificationsStream error: $e');
+      AppLogger.e('notificationsStream error: $e');
       return Stream.value([]);
     }
   }
@@ -59,7 +60,7 @@ class NotificationService {
           .map((d) => NotificationModel.fromMap(d.id, d.data()))
           .toList();
     } catch (e) {
-      debugPrint('fetchNotifications error: $e');
+      AppLogger.e('fetchNotifications error: $e');
       return [];
     }
   }
@@ -70,7 +71,7 @@ class NotificationService {
         userId,
       ).doc(notificationId).update({'isRead': true});
     } catch (e) {
-      debugPrint('markAsRead error: $e');
+      AppLogger.e('markAsRead error: $e');
       rethrow;
     }
   }
@@ -86,8 +87,7 @@ class NotificationService {
       }
       await batch.commit();
     } catch (e) {
-      // ignore: avoid_print
-      debugPrint('markAllAsRead error: $e');
+      AppLogger.e('markAllAsRead error: $e');
     }
   }
 
@@ -95,7 +95,7 @@ class NotificationService {
     try {
       await _userNotificationsRef(userId).doc(notificationId).delete();
     } catch (e) {
-      debugPrint('deleteNotification error: $e');
+      AppLogger.e('deleteNotification error: $e');
     }
   }
 

@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/achievement.dart';
+import '../../utils/app_logger.dart';
 
 /// Service for local/offline achievement storage and management
 /// Handles caching, syncing flags, and persistence using SharedPreferences
@@ -59,7 +60,7 @@ class LocalAchievementService {
       final jsonList = achievements.map((a) => a.toJson()).toList();
       await prefs.setString(_userAchievementsKey, jsonEncode(jsonList));
     } catch (e) {
-      print('Error saving achievement locally: $e');
+      AppLogger.i('Error saving achievement locally: $e');
       rethrow;
     }
   }
@@ -70,7 +71,7 @@ class LocalAchievementService {
       final jsonList = achievements.map((a) => a.toJson()).toList();
       await prefs.setString(_userAchievementsKey, jsonEncode(jsonList));
     } catch (e) {
-      print('Error saving achievements locally: $e');
+      AppLogger.i('Error saving achievements locally: $e');
       rethrow;
     }
   }
@@ -86,7 +87,7 @@ class LocalAchievementService {
           .map((json) => Achievement.fromJson(json as Map<String, dynamic>))
           .toList();
     } catch (e) {
-      print('Error retrieving achievements locally: $e');
+      AppLogger.i('Error retrieving achievements locally: $e');
       return [];
     }
   }
@@ -114,7 +115,7 @@ class LocalAchievementService {
       await addToSyncQueue(unlockedAchievement.id);
       await addToPendingNotifications(unlockedAchievement.id);
     } catch (e) {
-      print('Error unlocking achievement: $e');
+      AppLogger.i('Error unlocking achievement: $e');
       rethrow;
     }
   }
@@ -128,7 +129,7 @@ class LocalAchievementService {
         await prefs.setStringList(_userSyncQueueKey, queue);
       }
     } catch (e) {
-      print('Error adding to sync queue: $e');
+      AppLogger.i('Error adding to sync queue: $e');
       rethrow;
     }
   }
@@ -145,7 +146,7 @@ class LocalAchievementService {
       queue.remove(achievementId);
       await prefs.setStringList(_userSyncQueueKey, queue);
     } catch (e) {
-      print('Error removing from sync queue: $e');
+      AppLogger.i('Error removing from sync queue: $e');
       rethrow;
     }
   }
@@ -159,7 +160,7 @@ class LocalAchievementService {
         await prefs.setStringList(_userPendingNotificationsKey, notifications);
       }
     } catch (e) {
-      print('Error adding to pending notifications: $e');
+      AppLogger.i('Error adding to pending notifications: $e');
       rethrow;
     }
   }
@@ -183,7 +184,7 @@ class LocalAchievementService {
         await saveAchievement(updated);
       }
     } catch (e) {
-      print('Error removing from pending notifications: $e');
+      AppLogger.i('Error removing from pending notifications: $e');
       rethrow;
     }
   }
@@ -207,7 +208,7 @@ class LocalAchievementService {
       await prefs.remove(_userSyncQueueKey);
       await prefs.remove(_userPendingNotificationsKey);
     } catch (e) {
-      print('Error clearing achievements: $e');
+      AppLogger.i('Error clearing achievements: $e');
       rethrow;
     }
   }
@@ -219,7 +220,7 @@ class LocalAchievementService {
       final achievements = await getAchievements();
       return achievements.where((a) => syncQueue.contains(a.id)).toList();
     } catch (e) {
-      print('Error getting achievements to sync: $e');
+      AppLogger.i('Error getting achievements to sync: $e');
       return [];
     }
   }

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../theme/color.dart';
+import '../../utils/app_logger.dart';
 import 'dart:async';
 
 enum NotificationBannerType { success, info, warning, error }
@@ -50,7 +51,7 @@ class NotificationBannerOverlayState extends State<NotificationBannerOverlay>
   void initState() {
     super.initState();
     _currentState = this;
-    print('📢 [NotificationBanner] Overlay initialized!');
+    AppLogger.i('[NotificationBanner] Overlay initialized!');
     _setupAnimations();
   }
 
@@ -86,12 +87,12 @@ class NotificationBannerOverlayState extends State<NotificationBannerOverlay>
   }
 
   void showNotification(NotificationBannerData data) {
-    print(
-      '📢 [NotificationBanner] Adding notification to queue: ${data.title}',
+    AppLogger.i(
+      '[NotificationBanner] Adding notification to queue: ${data.title}',
     );
     _queue.add(data);
-    print(
-      '📢 [NotificationBanner] Queue size: ${_queue.length}, Current: $_currentNotification',
+    AppLogger.i(
+      '[NotificationBanner] Queue size: ${_queue.length}, Current: $_currentNotification',
     );
     if (_currentNotification == null) {
       _showNext();
@@ -100,7 +101,7 @@ class NotificationBannerOverlayState extends State<NotificationBannerOverlay>
 
   void _showNext() {
     if (_queue.isEmpty) {
-      print('📢 [NotificationBanner] Queue empty, hiding banner');
+      AppLogger.i('[NotificationBanner] Queue empty, hiding banner');
       setState(() {
         _currentNotification = null;
       });
@@ -110,8 +111,8 @@ class NotificationBannerOverlayState extends State<NotificationBannerOverlay>
     setState(() {
       _currentNotification = _queue.removeAt(0);
     });
-    print(
-      '📢 [NotificationBanner] Showing notification: ${_currentNotification?.title}',
+    AppLogger.i(
+      '[NotificationBanner] Showing notification: ${_currentNotification?.title}',
     );
     _slideController.forward().then((_) {
       _fadeController.forward();
@@ -158,8 +159,8 @@ class NotificationBannerOverlayState extends State<NotificationBannerOverlay>
 
   @override
   Widget build(BuildContext context) {
-    print(
-      '📢 [NotificationBanner] build() called, _currentNotification: $_currentNotification',
+    AppLogger.i(
+      '[NotificationBanner] build() called, _currentNotification: $_currentNotification',
     );
 
     return Positioned(

@@ -4,6 +4,7 @@ import '../../models/station_data.dart';
 import '../../services/station_service.dart';
 import '../../theme/color.dart';
 import '../../components/trail_map.dart';
+import '../../utils/app_logger.dart';
 
 class StationDetailScreen extends StatefulWidget {
   final StationData station;
@@ -73,7 +74,7 @@ class _StationDetailScreenState extends State<StationDetailScreen> {
         );
       }
     } catch (e) {
-      debugPrint('Error preloading images: $e');
+      AppLogger.e('Error preloading images: $e');
     }
   }
 
@@ -83,7 +84,7 @@ class _StationDetailScreenState extends State<StationDetailScreen> {
       AssetImage('assets/images/${station.images[nextIndex]}'),
       context,
     ).catchError((e) {
-      debugPrint('Error precaching image: $e');
+      AppLogger.e('Error precaching image: $e');
     });
   }
 
@@ -110,7 +111,7 @@ class _StationDetailScreenState extends State<StationDetailScreen> {
         });
       }
     } catch (e) {
-      debugPrint('Error loading station data: $e');
+      AppLogger.e('Error loading station data: $e');
     }
   }
 
@@ -661,6 +662,7 @@ class _StationDetailScreenState extends State<StationDetailScreen> {
           const SizedBox(height: 16),
           Text(
             station.description,
+            textAlign: TextAlign.justify,
             style: const TextStyle(
               fontSize: 16,
               height: 1.6,

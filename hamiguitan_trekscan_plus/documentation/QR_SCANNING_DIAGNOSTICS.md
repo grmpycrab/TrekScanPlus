@@ -212,7 +212,7 @@ This is OK - app continues to work offline
 3. Verify SharedPreferences is accessible:
    ```dart
    final prefs = await SharedPreferences.getInstance();
-   debugPrint('SharedPreferences keys: ${prefs.getKeys()}');
+   debugAppLogger.i('SharedPreferences keys: ${prefs.getKeys()}');
    ```
 
 ---

@@ -72,7 +72,7 @@ final visitedIds = await firestoreService.getVisitedStationIds();
 
 // Listen to real-time updates
 firestoreService.getVisitedStationsStream().listen((stationIds) {
-  print('Updated stations: $stationIds');
+  AppLogger.i('Updated stations: $stationIds');
 });
 
 // Check if specific station is visited

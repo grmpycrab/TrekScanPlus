@@ -5,6 +5,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import '../models/e_certificate.dart';
 import 'certificate_pdf_service.dart';
+import '../../utils/app_logger.dart';
 
 class CertificateEmailService {
   static final CertificateEmailService _instance =
@@ -60,10 +61,12 @@ class CertificateEmailService {
       // Check for authentication errors
       if (e.message.contains('Authentication Failed') ||
           e.message.contains('BadCredentials')) {
-        print(
+        AppLogger.i(
           '\n⚠️  Gmail App Password required. See ENV_SETUP.md for setup instructions.',
         );
-        print('   Generate at: https://myaccount.google.com/apppasswords\n');
+        AppLogger.i(
+          '   Generate at: https://myaccount.google.com/apppasswords\n',
+        );
       }
       return false;
     } catch (e) {
@@ -240,7 +243,7 @@ class CertificateEmailService {
       final appName = dotenv.env['APP_NAME'] ?? 'Mt. Hamiguitan TrekScan';
 
       if (smtpEmail.isEmpty || smtpPassword.isEmpty) {
-        print('❌ SMTP credentials not configured in .env file');
+        AppLogger.i('❌ SMTP credentials not configured in .env file');
         return false;
       }
 
