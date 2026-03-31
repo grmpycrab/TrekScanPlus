@@ -81,7 +81,7 @@ npm run delete-bookings
 
 ## 🔍 What to Verify
 
-### ✅ Expected Behavior
+###   Expected Behavior
 
 1. **Home Screen Calendar**
    - Date shows red/full indicator

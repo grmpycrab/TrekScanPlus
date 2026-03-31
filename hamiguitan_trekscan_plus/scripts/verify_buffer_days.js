@@ -94,7 +94,7 @@ async function verifyBufferDays() {
             if (bufferDoc.exists && bufferDoc.data().isTrekDownDay) {
                 results.withBuffer++;
                 const bufferData = bufferDoc.data();
-                console.log(`✅ ${trekDateKey} → ${bufferDateKey} ${isAdvance ? '(ADVANCE)' : '(CURRENT)'}`);
+                console.log(`  ${trekDateKey} → ${bufferDateKey} ${isAdvance ? '(ADVANCE)' : '(CURRENT)'}`);
 
                 // Verify it points to correct trek
                 if (bufferData.originalTrekDate !== trekDateKey) {
@@ -119,7 +119,7 @@ async function verifyBufferDays() {
         console.log(`  - Current/past month:      ${results.current}`);
         console.log(`  - Advance bookings:        ${results.advance}`);
         console.log(`\nBuffer day status:`);
-        console.log(`  ✅ With buffer days:       ${results.withBuffer}`);
+        console.log(`    With buffer days:       ${results.withBuffer}`);
         console.log(`  ❌ Missing buffer days:    ${results.missingBuffer}`);
 
         if (results.missingBuffer > 0) {

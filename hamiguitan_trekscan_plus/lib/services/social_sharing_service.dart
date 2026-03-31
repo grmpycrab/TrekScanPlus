@@ -1,7 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
-//import 'package:flutter/foundation.dart';
+import 'package:flutter/foundation.dart';
 import 'package:image/image.dart' as img;
 import 'dart:io';
 import '../models/social_model.dart';
@@ -49,7 +49,9 @@ class SocialSharingService {
       await _firestore.collection('users').doc(user.uid).update({
         'postsCount': FieldValue.increment(1),
       });
-      AppLogger.i('Post count incremented for ${user.uid}');
+      if (kDebugMode) {
+        AppLogger.i('📊 Post count incremented');
+      }
     } catch (e) {
       AppLogger.w('Error updating post count: $e');
     }
@@ -905,7 +907,7 @@ class SocialSharingService {
             'isRead': false,
           });
           AppLogger.i(
-            '✅ Updated like notification for post $postId with likers: $likers',
+            '  Updated like notification for post $postId with likers: $likers',
           );
           return;
         }
@@ -928,7 +930,7 @@ class SocialSharingService {
 
       await notificationRef.add(notifMap);
       AppLogger.i(
-        '✅ Created new like notification for post $postId from $likerName',
+        '  Created new like notification for post $postId from $likerName',
       );
     } catch (e) {
       AppLogger.e('❌ Error sending like notification: $e');

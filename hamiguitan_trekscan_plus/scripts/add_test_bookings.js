@@ -106,7 +106,7 @@ async function main() {
 
                 // Progress indicator
                 if (i % 5 === 0) {
-                    console.log(`✅ Prepared ${i}/${NUMBER_OF_BOOKINGS} bookings...`);
+                    console.log(`  Prepared ${i}/${NUMBER_OF_BOOKINGS} bookings...`);
                 }
             } catch (e) {
                 failCount++;
@@ -118,7 +118,7 @@ async function main() {
         console.log('\n⏳ Committing batch write...');
         await batch.commit();
 
-        console.log('✅ Bookings committed!');
+        console.log('  Bookings committed!');
 
         // Create buffer days for approved bookings
         console.log('\n📅 Creating buffer days (trek down days)...');
@@ -145,12 +145,12 @@ async function main() {
         bufferCount++;
 
         await bufferBatch.commit();
-        console.log(`✅ Created ${bufferCount} buffer day: ${bufferDateKey}`);
+        console.log(`  Created ${bufferCount} buffer day: ${bufferDateKey}`);
 
         console.log('\n✨ Completed!\n');
         console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
         console.log('📊 Results:');
-        console.log(`   ✅ Successful: ${successCount}`);
+        console.log(`     Successful: ${successCount}`);
         console.log(`   ❌ Failed: ${failCount}`);
         console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n');
 

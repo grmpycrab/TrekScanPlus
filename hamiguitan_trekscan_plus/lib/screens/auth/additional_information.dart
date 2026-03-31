@@ -28,7 +28,7 @@ class _AdditionalInformationScreenState
   @override
   void initState() {
     super.initState();
-    AppLogger.i('✅ AdditionalInformationScreen initialized');
+    AppLogger.i('  AdditionalInformationScreen initialized');
     _firstNameController = TextEditingController();
     _lastNameController = TextEditingController();
     _phoneController = TextEditingController();

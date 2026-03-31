@@ -2,6 +2,7 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/foundation.dart';
 import '../../utils/app_logger.dart';
 import 'dart:io';
 
@@ -146,7 +147,9 @@ class NotificationService {
 
     // Listen for FCM token changes and update Firestore
     _firebaseMessaging.onTokenRefresh.listen((newToken) {
-      AppLogger.i('[NotificationService] FCM token refreshed: $newToken');
+      if (kDebugMode) {
+        AppLogger.i('[NotificationService] 🗞️ FCM token refreshed');
+      }
       _saveFCMTokenToFirestore(newToken);
     });
 
@@ -162,7 +165,11 @@ class NotificationService {
           'fcmToken': token,
           'lastTokenUpdate': DateTime.now(),
         }, SetOptions(merge: true));
-        AppLogger.i('[NotificationService] FCM token updated in Firestore');
+        if (kDebugMode) {
+          AppLogger.i(
+            '[NotificationService] 🗞️ FCM token updated in Firestore',
+          );
+        }
       }
     } catch (e) {
       AppLogger.i(
@@ -227,7 +234,9 @@ class NotificationService {
   Future<String?> getFCMToken() async {
     try {
       final token = await _firebaseMessaging.getToken();
-      AppLogger.i('[NotificationService] FCM Token: $token');
+      if (kDebugMode) {
+        AppLogger.i('[NotificationService] 🗞️ FCM Token obtained');
+      }
 
       // Save FCM token to Firestore for backend to use
       final user = FirebaseAuth.instance.currentUser;
@@ -236,7 +245,9 @@ class NotificationService {
           'fcmToken': token,
           'lastTokenUpdate': DateTime.now(),
         }, SetOptions(merge: true));
-        AppLogger.i('[NotificationService] FCM token saved to Firestore');
+        if (kDebugMode) {
+          AppLogger.i('[NotificationService] 🗞️ FCM token saved to Firestore');
+        }
       }
 
       return token;

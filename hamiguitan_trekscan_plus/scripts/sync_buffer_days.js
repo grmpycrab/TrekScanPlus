@@ -43,7 +43,7 @@ async function syncBufferDays() {
             .where('status', '==', 'approved')
             .get();
 
-        console.log(`✅ Found ${bookingsSnapshot.size} approved bookings\n`);
+        console.log(`  Found ${bookingsSnapshot.size} approved bookings\n`);
 
         // Step 2: Calculate all buffer days that should exist
         const trekDownDays = new Map();
@@ -79,7 +79,7 @@ async function syncBufferDays() {
             }
         }
 
-        console.log(`\n✅ Identified ${trekDownDays.size} unique buffer days\n`);
+        console.log(`\n  Identified ${trekDownDays.size} unique buffer days\n`);
 
         // Step 3: Get existing buffer days in calendar_config
         console.log('🔍 Checking existing buffer days in calendar_config...');
@@ -100,7 +100,7 @@ async function syncBufferDays() {
         }
 
         if (removedCount > 0) {
-            console.log(`\n✅ Removed ${removedCount} outdated buffer days\n`);
+            console.log(`\n  Removed ${removedCount} outdated buffer days\n`);
         }
 
         // Step 5: Add/update buffer days
@@ -116,7 +116,7 @@ async function syncBufferDays() {
 
         if (updatedCount > 0) {
             await batch.commit();
-            console.log(`✅ Updated ${updatedCount} buffer days\n`);
+            console.log(`  Updated ${updatedCount} buffer days\n`);
         }
 
         // Summary

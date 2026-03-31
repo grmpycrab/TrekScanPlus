@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'dart:async';
 import 'package:file_picker/file_picker.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -1185,8 +1186,9 @@ class _BookAClimbScreenState extends State<BookAClimbScreen> {
                         file,
                       );
                     } catch (e) {
-                      AppLogger.e('Error uploading file ${file.name}: $e');
-                      AppLogger.e(StackTrace.current.toString());
+                      if (kDebugMode) {
+                        AppLogger.e('⚠️ Error uploading file ${file.name}');
+                      }
                       // Continue with other uploads
                     }
                   }

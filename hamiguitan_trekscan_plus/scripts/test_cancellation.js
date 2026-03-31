@@ -45,7 +45,7 @@ async function testCancellation() {
             updatedAt: admin.firestore.FieldValue.serverTimestamp()
         });
 
-        console.log('✅ Booking status updated to cancelled');
+        console.log('  Booking status updated to cancelled');
         console.log('\n⏳ Waiting 3 seconds for Cloud Function to process...\n');
 
         await new Promise(resolve => setTimeout(resolve, 3000));
@@ -57,7 +57,7 @@ async function testCancellation() {
         if (bufferDocAfter.exists) {
             console.log('⚠️  Buffer day still exists (may have other bookings on same date)');
         } else {
-            console.log('✅ Buffer day successfully removed!');
+            console.log('  Buffer day successfully removed!');
         }
 
         // Restore booking to approved for further testing
@@ -74,12 +74,12 @@ async function testCancellation() {
         console.log(`Buffer day (2025-11-25) recreated: ${bufferDocRestored.exists}`);
 
         if (bufferDocRestored.exists) {
-            console.log('✅ Buffer day successfully recreated!');
+            console.log('  Buffer day successfully recreated!');
         } else {
             console.log('❌ Buffer day not recreated - check function logs');
         }
 
-        console.log('\n✅ Test complete!\n');
+        console.log('\n  Test complete!\n');
 
     } catch (error) {
         console.error('Error:', error);

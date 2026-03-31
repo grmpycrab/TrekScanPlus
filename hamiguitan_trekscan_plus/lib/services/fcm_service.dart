@@ -2,7 +2,7 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'dart:io' show Platform;
-//import 'package:flutter/foundation.dart';
+import 'package:flutter/foundation.dart';
 import '../utils/app_logger.dart';
 
 /// Service to handle Firebase Cloud Messaging (FCM) for push notifications
@@ -54,7 +54,9 @@ class FCMService {
 
       // Get FCM token
       final token = await _messaging.getToken();
-      AppLogger.d('FCM Token: $token');
+      if (kDebugMode) {
+        AppLogger.d('🗞️ FCM Token obtained');
+      }
 
       // Save token to Firestore
       if (_auth.currentUser != null && token != null) {
@@ -88,7 +90,9 @@ class FCMService {
 
       // Token refresh
       _messaging.onTokenRefresh.listen((newToken) {
-        AppLogger.d('FCM Token refreshed: $newToken');
+        if (kDebugMode) {
+          AppLogger.d('🗞️ FCM Token refreshed');
+        }
         if (_auth.currentUser != null) {
           _saveFCMToken(newToken);
         }

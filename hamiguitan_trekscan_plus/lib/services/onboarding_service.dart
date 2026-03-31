@@ -274,7 +274,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
           'Explore the various checkpoints and points of interest throughout Mt. Hamiguitan. Track your visits and unlock achievements.',
       features: [
         '🗺️ View all trek stations on the map',
-        '✅ Mark stations as visited when you arrive',
+        '  Mark stations as visited when you arrive',
         '🎖️ Unlock badges for visiting stations',
         '📈 Track your exploration progress',
       ],

@@ -78,8 +78,8 @@ class AppLogger {
     final timestamp = _formatTimestamp(now);
     final log = '[$timestamp] [$level] | $message';
 
-    // Print to console
-    AppLogger.i(log);
+    // Print to console directly (avoid recursion!)
+    print(log);
 
     // Send to all registered handlers
     for (final handler in _handlers) {

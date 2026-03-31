@@ -79,12 +79,12 @@ exports.validateNoDuplicateBooking = functions.region(region).firestore
 
                 // Delete the new booking to prevent duplicates
                 await snap.ref.delete();
-                console.log(`✅ Duplicate booking ${bookingId} deleted`);
+                console.log(`  Duplicate booking ${bookingId} deleted`);
 
                 return { action: 'deleted', reason: 'duplicate_booking' };
             }
 
-            console.log(`✅ Booking ${bookingId} validated: No duplicates found`);
+            console.log(`  Booking ${bookingId} validated: No duplicates found`);
             return { action: 'validated' };
 
         } catch (error) {
@@ -161,7 +161,7 @@ exports.onBookingStatusChange = functions.region(region).firestore
                 lastUpdated: admin.firestore.FieldValue.serverTimestamp()
             }, { merge: true });
 
-            console.log(`✅ Buffer day created: ${bufferDateKey}`);
+            console.log(`  Buffer day created: ${bufferDateKey}`);
             return { action: 'created', bufferDate: bufferDateKey };
         }
 
@@ -185,7 +185,7 @@ exports.onBookingStatusChange = functions.region(region).firestore
                     // Only delete if no other approved bookings exist for this date
                     if (otherBookings.empty || (otherBookings.size === 1 && otherBookings.docs[0].id === bookingId)) {
                         await db.collection('calendar_config').doc(bufferDateKey).delete();
-                        console.log(`✅ Buffer day removed: ${bufferDateKey}`);
+                        console.log(`  Buffer day removed: ${bufferDateKey}`);
                         return { action: 'removed', bufferDate: bufferDateKey };
                     } else {
                         console.log(`⚠️  Buffer day ${bufferDateKey} kept (other approved bookings exist)`);
@@ -213,7 +213,7 @@ exports.onBookingStatusChange = functions.region(region).firestore
 
                     if (otherBookings.empty) {
                         await db.collection('calendar_config').doc(bufferDateKey).delete();
-                        console.log(`✅ Buffer day removed: ${bufferDateKey}`);
+                        console.log(`  Buffer day removed: ${bufferDateKey}`);
                         return { action: 'removed', bufferDate: bufferDateKey };
                     }
                 }
@@ -351,7 +351,7 @@ exports.sendBookingStatusNotification = functions.region(region).firestore
             let notificationType = 'info';
 
             if (newStatus.toLowerCase() === 'approved') {
-                title = '✅ Booking Approved!';
+                title = '  Booking Approved!';
                 body = 'Your booking has been approved and is ready to go.';
                 notificationType = 'success';
             } else if (newStatus.toLowerCase() === 'rejected') {
@@ -408,7 +408,7 @@ exports.sendBookingStatusNotification = functions.region(region).firestore
             };
 
             const response = await admin.messaging().send(message);
-            console.log(`✅ [FCM] Notification sent to user ${userId}:`, response);
+            console.log(`  [FCM] Notification sent to user ${userId}:`, response);
             return { success: true, messageId: response };
 
         } catch (error) {
@@ -503,7 +503,7 @@ exports.sendVerificationEmail = functions.region(region).firestore
             };
 
             await sgMail.send(msg);
-            console.log(`✅ Email sent successfully to ${mailData.to}`);
+            console.log(`  Email sent successfully to ${mailData.to}`);
 
             // Mark as sent
             await snap.ref.update({

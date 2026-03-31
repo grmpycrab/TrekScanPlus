@@ -66,7 +66,7 @@ class FirestoreStationService {
         AppLogger.i('${station.name} saved to Firestore');
       }
     } catch (e) {
-      if (kDebugMode) AppLogger.i('❌ Error saving visited station: $e');
+      if (kDebugMode) AppLogger.i('Error saving visited station: $e');
       rethrow;
     }
   }

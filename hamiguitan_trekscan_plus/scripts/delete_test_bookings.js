@@ -55,7 +55,7 @@ async function main() {
             .get();
 
         if (querySnapshot.empty) {
-            console.log('✅ No test bookings found. Nothing to delete.\n');
+            console.log('  No test bookings found. Nothing to delete.\n');
             return;
         }
 
@@ -84,7 +84,7 @@ async function main() {
                 // Commit batch when reaching limit
                 if (operationCount >= batchSize) {
                     await batch.commit();
-                    console.log(`✅ Deleted ${deleteCount} bookings...`);
+                    console.log(`  Deleted ${deleteCount} bookings...`);
                     batch = db.batch();
                     operationCount = 0;
                 }
@@ -99,7 +99,7 @@ async function main() {
             await batch.commit();
         }
 
-        console.log('✅ Bookings deleted!');
+        console.log('  Bookings deleted!');
 
         // Delete buffer days
         console.log('\n📅 Cleaning up buffer days (trek down days)...');
@@ -116,7 +116,7 @@ async function main() {
             // Only delete if it's a trek down day related to our target date
             if (data.isTrekDownDay) {
                 await bufferRef.delete();
-                console.log(`✅ Deleted buffer day: ${bufferDateKey}`);
+                console.log(`  Deleted buffer day: ${bufferDateKey}`);
             } else {
                 console.log(`ℹ️  Buffer day exists but is not a trek down day - skipping`);
             }
@@ -127,7 +127,7 @@ async function main() {
         console.log('\n✨ Cleanup completed!\n');
         console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
         console.log('📊 Results:');
-        console.log(`   ✅ Deleted: ${deleteCount}`);
+        console.log(`     Deleted: ${deleteCount}`);
         console.log(`   ❌ Failed: ${failCount}`);
         console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n');
 
@@ -139,7 +139,7 @@ async function main() {
             .get();
 
         if (verifySnapshot.empty) {
-            console.log('✅ Verification: All test bookings have been deleted\n');
+            console.log('  Verification: All test bookings have been deleted\n');
         } else {
             console.log(`⚠️  Warning: ${verifySnapshot.size} booking(s) still remain\n`);
         }
@@ -170,7 +170,7 @@ async function main() {
         } else if (totalSlotsUsed > 0) {
             console.log('   🟢 Date has available slots');
         } else {
-            console.log('   ✅ Date is completely empty');
+            console.log('     Date is completely empty');
         }
 
         console.log('');
