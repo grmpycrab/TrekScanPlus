@@ -91,29 +91,30 @@ class StationService extends ChangeNotifier {
         String jsonString = await rootBundle.loadString(
           'assets/data/stations_test.json',
         );
-        AppLogger.i(
-          'Successfully loaded JSON string: ${jsonString.substring(0, 100)}...',
-        );
         List<dynamic> jsonList = json.decode(jsonString);
-        AppLogger.i('Number of stations in JSON: ${jsonList.length}');
+        if (kDebugMode) {
+          AppLogger.i('📍 Loaded ${jsonList.length} stations from JSON');
+        }
 
         // Get visited station IDs from SharedPreferences (user-scoped)
         Set<String> visitedStationIds =
             prefs.getStringList(_userVisitedStationsKey)?.toSet() ?? {};
-        AppLogger.i('Visited station IDs: $visitedStationIds');
 
         // Sync with Firebase if user is logged in
         try {
           final firebaseVisitedIds = await FirestoreStationService.instance
               .getVisitedStationIds();
           visitedStationIds.addAll(firebaseVisitedIds);
-          AppLogger.i(
-            'Synced ${firebaseVisitedIds.length} stations from Firebase',
-          );
+          if (kDebugMode) {
+            AppLogger.i(
+              '🔄 Synced ${firebaseVisitedIds.length} visited stations from Firebase',
+            );
+          }
         } catch (e) {
-          AppLogger.i(
-            'Info: Firebase sync skipped (user may not be logged in): $e',
-          );
+          // Firebase sync skipped (user may not be logged in)
+          if (kDebugMode) {
+            AppLogger.d('Firebase sync skipped (offline or auth error)');
+          }
         }
 
         _stations = jsonList.map((json) {
@@ -121,9 +122,6 @@ class StationService extends ChangeNotifier {
 
           // Check if lat/lng are provided in JSON, otherwise try to parse from coordinates
           if (station.latitude == null || station.longitude == null) {
-            AppLogger.i(
-              'Station ${station.id} missing lat/lng, attempting to parse from coordinates: ${station.coordinates}',
-            );
             final coords = GeofencingService.parseCoordinates(
               station.coordinates,
             );
@@ -150,22 +148,14 @@ class StationService extends ChangeNotifier {
                 isCheckpoint: station.isCheckpoint,
                 isVisited: station.isVisited,
               );
-              AppLogger.i(
-                'Successfully parsed coordinates for ${station.id}: (${station.latitude}, ${station.longitude})',
-              );
-            } else {
-              AppLogger.i('Failed to parse coordinates for ${station.id}');
             }
-          } else {
-            AppLogger.i(
-              'Station ${station.id} has lat/lng from JSON: (${station.latitude}, ${station.longitude})',
-            );
           }
           return station;
         }).toList();
-        AppLogger.i(
-          'Number of stations loaded into memory: ${_stations.length}',
-        );
+
+        if (kDebugMode) {
+          AppLogger.i('✅ Processed ${_stations.length} stations');
+        }
 
         // Update visited status
         for (var station in _stations) {
@@ -174,8 +164,9 @@ class StationService extends ChangeNotifier {
           }
         }
       } catch (e) {
-        AppLogger.i('Error loading station data: $e');
-        AppLogger.i('Stack trace: ${StackTrace.current}');
+        if (kDebugMode) {
+          AppLogger.e('❌ Error loading station data');
+        }
         _stations = [];
         _loadError = e.toString();
       } finally {

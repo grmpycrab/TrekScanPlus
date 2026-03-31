@@ -90,7 +90,7 @@ class FirebaseAuthService {
       if (userCredential.user != null) {
         await EmailVerificationService.instance.sendVerificationCode(email);
         if (kDebugMode) {
-          AppLogger.i('Verification code sent to $email');
+          AppLogger.i('✉️ Verification code sent');
         }
       }
 
@@ -170,7 +170,7 @@ class FirebaseAuthService {
       );
 
       if (kDebugMode) {
-        AppLogger.i('Email login successful: ${userCredential.user?.email}');
+        AppLogger.i('🔐 Email login successful');
       }
 
       // Update/create the Firestore user document when logging in
@@ -271,7 +271,7 @@ class FirebaseAuthService {
           user.email!,
         );
         if (kDebugMode) {
-          AppLogger.i('Verification code sent to ${user.email}');
+          AppLogger.i('✅ User account verified');
         }
       }
     } catch (e) {
@@ -326,8 +326,8 @@ class FirebaseAuthService {
       }
 
       if (kDebugMode) {
-        AppLogger.i('Google user signed in: ${googleUser.email}');
-        AppLogger.i('Google display name: ${googleUser.displayName}');
+        AppLogger.i('👤 Google user signed in');
+        AppLogger.i('  - Display name: ${googleUser.displayName}');
       }
 
       // Check if this email is already used with email/password authentication

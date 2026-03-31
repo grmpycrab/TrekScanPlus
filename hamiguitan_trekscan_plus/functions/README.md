@@ -177,8 +177,8 @@ No manual intervention needed!
 
 ## Summary
 
-✅ **Automatic**: Buffer days created when bookings approved
-✅ **Real-time**: Updates appear immediately in all clients
-✅ **Reliable**: Cloud Functions run even if app is closed
-✅ **Cost-effective**: Only runs when bookings change
-✅ **Scalable**: Handles thousands of bookings efficiently
+  **Automatic**: Buffer days created when bookings approved
+  **Real-time**: Updates appear immediately in all clients
+  **Reliable**: Cloud Functions run even if app is closed
+  **Cost-effective**: Only runs when bookings change
+  **Scalable**: Handles thousands of bookings efficiently

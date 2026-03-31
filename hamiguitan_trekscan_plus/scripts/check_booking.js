@@ -71,7 +71,7 @@ async function checkBooking() {
 
             if (bufferDoc.exists) {
                 const bufferData = bufferDoc.data();
-                console.log('✅ Buffer day EXISTS in calendar_config:');
+                console.log('  Buffer day EXISTS in calendar_config:');
                 console.log(`   Date: ${bufferDateKey}`);
                 console.log(`   Closed: ${bufferData.isClosed}`);
                 console.log(`   Max Slots: ${bufferData.maxSlots}`);
@@ -93,7 +93,7 @@ async function checkBooking() {
                         originalTrekDate: formatDateKey(trekDate),
                         lastUpdated: admin.firestore.FieldValue.serverTimestamp()
                     });
-                    console.log(`✅ Buffer day created: ${bufferDateKey}`);
+                    console.log(`  Buffer day created: ${bufferDateKey}`);
                 } else {
                     console.log(`⚠️  Skipping - booking is not approved`);
                 }
@@ -129,7 +129,7 @@ async function checkBooking() {
             console.log(`\n⚠️  Found ${missingCount} approved bookings without buffer days`);
             console.log(`💡 Run "node sync_buffer_days.js" to fix this`);
         } else {
-            console.log(`✅ All approved bookings have buffer days`);
+            console.log(`  All approved bookings have buffer days`);
         }
 
     } catch (error) {

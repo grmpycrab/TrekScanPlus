@@ -62,9 +62,11 @@ service cloud.firestore {
       // (relaxed: only require ownership; field validation is done server-side or in client)
       allow create: if request.auth != null && request.resource.data.userId == request.auth.uid;
 
-      // Read: Allow authenticated users to query, but filter to their own bookings or public bookings
-      // Note: The application is responsible for filtering to userId or admin status
-      allow read: if request.auth != null;
+      // Read: Users can only read their own bookings, or admins can read all
+      allow read: if request.auth != null && (
+        request.auth.uid == resource.data.userId ||
+        request.auth.token.admin == true
+      );
 
       // Update: owners can update their booking while it's pending or declined (to allow resubmission)
       // Owners can also cancel their own bookings at any time

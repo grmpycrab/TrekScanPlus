@@ -1210,7 +1210,7 @@ class _HomeScreenState extends State<HomeScreen>
         }
       }
 
-      AppLogger.i('✅ First page loaded: ${posts.length} posts');
+      AppLogger.i('  First page loaded: ${posts.length} posts');
     } catch (e) {
       AppLogger.e('❌ Error loading first page: $e');
       if (mounted) {
@@ -1240,7 +1240,7 @@ class _HomeScreenState extends State<HomeScreen>
         });
       }
 
-      AppLogger.i('✅ Next page loaded: ${posts.length} new posts');
+      AppLogger.i('  Next page loaded: ${posts.length} new posts');
     } catch (e) {
       AppLogger.e('❌ Error loading next page: $e');
       if (mounted) {

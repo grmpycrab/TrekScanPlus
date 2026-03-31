@@ -52,7 +52,7 @@ class EmailVerificationService {
       });
 
       if (kDebugMode) {
-        AppLogger.i('✉️ Verification code sent to $email');
+        AppLogger.i('✉️ Verification code sent');
         AppLogger.i('🔢 CODE (for testing): $code');
       }
     } catch (e) {
@@ -126,7 +126,7 @@ class EmailVerificationService {
         });
 
         if (kDebugMode) {
-          AppLogger.i('✅ Email verified successfully for ${user.email}');
+          AppLogger.i('✅ Email verified successfully');
         }
 
         return true;

@@ -52,18 +52,18 @@ These scripts help you create test data to verify the booking limit functionalit
 Firebase Admin script that creates 30 test bookings for a specific date.
 
 **Advantages:**
-- ✅ No authentication required
-- ✅ Batch writes (faster)
-- ✅ Works from command line
-- ✅ Easy to configure
+-   No authentication required
+-   Batch writes (faster)
+-   Works from command line
+-   Easy to configure
 
 ### 2. `add_test_bookings.dart` (Flutter)
 Flutter script that creates test bookings using the app's context.
 
 **Advantages:**
-- ✅ Uses existing Firebase configuration
-- ✅ Runs with current user's authentication
-- ✅ No additional setup needed
+-   Uses existing Firebase configuration
+-   Runs with current user's authentication
+-   No additional setup needed
 
 ### 3. `delete_test_bookings.js` (Node.js)
 Cleanup script to remove all test bookings.
@@ -294,12 +294,12 @@ Press Ctrl+C to cancel, or wait 3 seconds to continue...
 
 📝 Creating bookings...
 
-✅ Prepared 5/30 bookings...
-✅ Prepared 10/30 bookings...
-✅ Prepared 15/30 bookings...
-✅ Prepared 20/30 bookings...
-✅ Prepared 25/30 bookings...
-✅ Prepared 30/30 bookings...
+  Prepared 5/30 bookings...
+  Prepared 10/30 bookings...
+  Prepared 15/30 bookings...
+  Prepared 20/30 bookings...
+  Prepared 25/30 bookings...
+  Prepared 30/30 bookings...
 
 ⏳ Committing batch write...
 
@@ -307,7 +307,7 @@ Press Ctrl+C to cancel, or wait 3 seconds to continue...
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 📊 Results:
-   ✅ Successful: 30
+     Successful: 30
    ❌ Failed: 0
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 

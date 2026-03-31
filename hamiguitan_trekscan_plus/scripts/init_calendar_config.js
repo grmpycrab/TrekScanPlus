@@ -36,7 +36,7 @@ async function initializeCalendarConfig() {
             advanceBookingDays: 1825, // 5 years in advance
             lastUpdated: admin.firestore.FieldValue.serverTimestamp()
         });
-        console.log('✅ System settings created\n');
+        console.log('  System settings created\n');
 
         // 2. Example: Close Christmas Day
         const christmasDate = new Date('2025-12-25T00:00:00Z');
@@ -50,7 +50,7 @@ async function initializeCalendarConfig() {
             customNote: 'Park closed for holiday observance',
             lastUpdated: admin.firestore.FieldValue.serverTimestamp()
         });
-        console.log('✅ Christmas closed\n');
+        console.log('  Christmas closed\n');
 
         // 3. Example: Set custom limit for New Year's Eve
         const newYearDate = new Date('2025-12-31T00:00:00Z');
@@ -64,7 +64,7 @@ async function initializeCalendarConfig() {
             customNote: 'Extended hours and additional staff (max 45 slots)',
             lastUpdated: admin.firestore.FieldValue.serverTimestamp()
         });
-        console.log('✅ New Years Eve configured with 45 slots\n');
+        console.log('  New Years Eve configured with 45 slots\n');
 
         // 4. Example: Reduce capacity for conservation period
         const conservationDate = new Date('2025-11-30T00:00:00Z');
@@ -78,7 +78,7 @@ async function initializeCalendarConfig() {
             customNote: 'Reforestation activities in progress',
             lastUpdated: admin.firestore.FieldValue.serverTimestamp()
         });
-        console.log('✅ Conservation period set to 15 slots\n');
+        console.log('  Conservation period set to 15 slots\n');
 
         console.log('🎉 Calendar configuration initialized successfully!\n');
         console.log('📊 Summary:');
@@ -109,12 +109,12 @@ async function closeDate(dateString, reason, customNote = null) {
         customNote: customNote,
         lastUpdated: admin.firestore.FieldValue.serverTimestamp()
     });
-    console.log(`✅ Closed ${dateString}: ${reason}`);
+    console.log(`  Closed ${dateString}: ${reason}`);
 }
 
 async function openDate(dateString) {
     await db.collection('calendar_config').doc(dateString).delete();
-    console.log(`✅ Opened ${dateString} (reverted to system defaults)`);
+    console.log(`  Opened ${dateString} (reverted to system defaults)`);
 }
 
 async function setDateMaxSlots(dateString, maxSlots, reason = null) {
@@ -126,7 +126,7 @@ async function setDateMaxSlots(dateString, maxSlots, reason = null) {
         reason: reason || `Custom limit: ${maxSlots} slots`,
         lastUpdated: admin.firestore.FieldValue.serverTimestamp()
     });
-    console.log(`✅ Set ${dateString} to ${maxSlots} slots${reason ? `: ${reason}` : ''}`);
+    console.log(`  Set ${dateString} to ${maxSlots} slots${reason ? `: ${reason}` : ''}`);
 }
 
 async function updateSystemSettings(updates) {
@@ -134,7 +134,7 @@ async function updateSystemSettings(updates) {
         ...updates,
         lastUpdated: admin.firestore.FieldValue.serverTimestamp()
     });
-    console.log('✅ System settings updated:', updates);
+    console.log('  System settings updated:', updates);
 }
 
 // Run initialization

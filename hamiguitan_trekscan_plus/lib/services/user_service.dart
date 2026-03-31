@@ -82,14 +82,14 @@ class UserService {
         data['sentFollowRequests'] = [];
         await docRef.set(data, SetOptions(merge: true));
         if (kDebugMode) {
-          AppLogger.i('User document created for ${user.uid}');
+          AppLogger.i('👤 User document created');
           AppLogger.i('  - firstName: $extractedFirstName');
           AppLogger.i('  - lastName: $extractedLastName');
         }
       } else {
         await docRef.set(data, SetOptions(merge: true));
         if (kDebugMode) {
-          AppLogger.i('User document updated for ${user.uid}');
+          AppLogger.i('👤 User document updated');
           if (extractedFirstName.isNotEmpty || extractedLastName.isNotEmpty) {
             AppLogger.i('  - firstName: $extractedFirstName');
             AppLogger.i('  - lastName: $extractedLastName');
@@ -132,7 +132,7 @@ class UserService {
       final batch = _firestore.batch();
 
       if (kDebugMode) {
-        AppLogger.i('Starting cascade deletion for user: $uid');
+        AppLogger.i('🗑️ Starting cascade deletion for user');
       }
 
       // 1. Delete subcollections under users/{uid}
@@ -352,7 +352,7 @@ class UserService {
       await batch.commit();
 
       if (kDebugMode) {
-        AppLogger.i('Successfully completed cascade deletion for user: $uid');
+        AppLogger.i('✅ Cascade deletion completed');
       }
     } catch (e, st) {
       if (kDebugMode) {
@@ -386,7 +386,7 @@ class UserService {
 
       await _usersCollection.doc(uid).set(data, SetOptions(merge: true));
       if (kDebugMode) {
-        AppLogger.i('User info updated for $uid');
+        AppLogger.i('✏️ User info updated');
       }
     } catch (e, st) {
       if (kDebugMode) {
@@ -431,7 +431,7 @@ class UserService {
       }, SetOptions(merge: true));
 
       if (kDebugMode) {
-        AppLogger.i('User name updated for $uid');
+        AppLogger.i('📝 User name updated');
       }
       return true;
     } catch (e, st) {
@@ -517,7 +517,7 @@ class UserService {
       );
 
       if (kDebugMode) {
-        AppLogger.i('Follow request sent from $followerUid to $followingUid');
+        AppLogger.i('👥 Follow request sent');
       }
     } catch (e, st) {
       if (kDebugMode) {
@@ -751,7 +751,7 @@ class UserService {
         'postsCount': FieldValue.increment(1),
       });
       if (kDebugMode) {
-        AppLogger.i('Post count incremented for $uid');
+        AppLogger.i('📊 Post count incremented');
       }
     } catch (e, st) {
       if (kDebugMode) {
@@ -769,7 +769,7 @@ class UserService {
         'postsCount': FieldValue.increment(-1),
       });
       if (kDebugMode) {
-        AppLogger.i('Post count decremented for $uid');
+        AppLogger.i('📊 Post count decremented');
       }
     } catch (e, st) {
       if (kDebugMode) {
@@ -813,7 +813,7 @@ class UserService {
       if (updates.isNotEmpty) {
         await _usersCollection.doc(uid).update(updates);
         if (kDebugMode) {
-          AppLogger.i('Fixed counts for $uid: $updates');
+          AppLogger.i('🔧 Fixed user counts: ${updates.length} fields');
         }
       }
     } catch (e, st) {
