@@ -496,6 +496,7 @@ class ECertificateBadge extends StatelessWidget {
       }
 
       // Show loading indicator
+      // ignore: use_build_context_synchronously
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Generating PDF...'),

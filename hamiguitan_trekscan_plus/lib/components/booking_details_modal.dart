@@ -425,7 +425,7 @@ class BookingDetailsModal extends StatelessWidget {
               ],
             ),
           );
-        }).toList(),
+        }),
       ],
     );
   }

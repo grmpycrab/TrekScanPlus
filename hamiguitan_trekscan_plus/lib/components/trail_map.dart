@@ -1,3 +1,5 @@
+// ignore_for_file: use_key_in_widget_constructors, deprecated_member_use, use_build_context_synchronously
+
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
@@ -418,7 +420,7 @@ class _TrailMapState extends State<TrailMap> {
                                 ],
                               ),
                             );
-                          }).toList(),
+                          }),
                         ],
                       ),
                     ),

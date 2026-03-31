@@ -7,6 +7,7 @@ import '../../theme/color.dart';
 import '../../services/firebase_auth_service.dart';
 import '../../components/error_feedback.dart';
 
+// ignore_for_file: use_key_in_widget_constructors, deprecated_member_use, use_build_context_synchronously
 class SignUpScreen extends StatefulWidget {
   const SignUpScreen({super.key});
 
@@ -191,7 +192,9 @@ class _SignUpScreenState extends State<SignUpScreen> {
                             ),
                             enabledBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(12),
-                              borderSide: BorderSide(color: AppColors.borderLight),
+                              borderSide: BorderSide(
+                                color: AppColors.borderLight,
+                              ),
                             ),
                             focusedBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(12),
@@ -221,7 +224,9 @@ class _SignUpScreenState extends State<SignUpScreen> {
                             ),
                             enabledBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(12),
-                              borderSide: BorderSide(color: AppColors.borderLight),
+                              borderSide: BorderSide(
+                                color: AppColors.borderLight,
+                              ),
                             ),
                             focusedBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(12),
@@ -264,7 +269,9 @@ class _SignUpScreenState extends State<SignUpScreen> {
                             ),
                             enabledBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(12),
-                              borderSide: BorderSide(color: AppColors.borderLight),
+                              borderSide: BorderSide(
+                                color: AppColors.borderLight,
+                              ),
                             ),
                             focusedBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(12),

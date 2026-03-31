@@ -1,3 +1,6 @@
+// ignore_for_file: unnecessary_brace_in_string_interps
+// ignore_for_file: use_key_in_widget_constructors, deprecated_member_use, use_build_context_synchronously
+
 import 'package:flutter/material.dart';
 import '../../services/climb_session_service.dart';
 import '../../models/climb_session.dart';

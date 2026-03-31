@@ -1,3 +1,5 @@
+// ignore_for_file: constant_identifier_names
+
 import 'package:geolocator/geolocator.dart';
 //import 'package:flutter/foundation.dart';
 import 'dart:math' as math;

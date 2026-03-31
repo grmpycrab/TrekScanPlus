@@ -1,3 +1,5 @@
+// ignore_for_file: use_build_context_synchronously
+
 import 'package:flutter/material.dart';
 import '../../models/user_model.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -495,7 +497,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     ),
                   ),
                 );
-              }).toList(),
+              }),
               if (unlockedAchievements.length > 3)
                 GestureDetector(
                   onTap: () {
@@ -1061,7 +1063,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ),
           const SizedBox(width: 8),
           // Settings button (three dots)
-          Container(
+          SizedBox(
             width: 48,
             child: ElevatedButton(
               onPressed: () => _navigateToSettings(),

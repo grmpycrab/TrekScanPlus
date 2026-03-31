@@ -62,7 +62,7 @@ class CertificateEmailService {
       if (e.message.contains('Authentication Failed') ||
           e.message.contains('BadCredentials')) {
         AppLogger.i(
-          '\Gmail App Password required. See ENV_SETUP.md for setup instructions.',
+          'Gmail App Password required. See ENV_SETUP.md for setup instructions.',
         );
         AppLogger.i(
           '   Generate at: https://myaccount.google.com/apppasswords\n',
@@ -145,7 +145,7 @@ class CertificateEmailService {
   </div>
   
   <div class="content">
-    <p>Dear <strong>${userName}</strong>,</p>
+    <p>Dear <strong>$userName</strong>,</p>
     
     <p>Congratulations on achieving this incredible milestone! We are thrilled to present you with your official certificate for completing:</p>
     
@@ -307,9 +307,9 @@ class CertificateEmailService {
     <p>You've earned ${certificates.length} Mt. Hamiguitan Certificates</p>
   </div>
   <div class="content">
-    <p>Dear <strong>${userName}</strong>,</p>
+    <p>Dear <strong>$userName</strong>,</p>
     <p>Congratulations! You've earned multiple certificates for your trekking achievements:</p>
-    ${certificateItems}
+    $certificateItems
     <p style="margin-top: 30px;">All certificates are attached to this email as PDF files.</p>
     <p>Best regards,<br><strong>The Mt. Hamiguitan TrekScan Team</strong></p>
   </div>

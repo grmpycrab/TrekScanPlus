@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../models/climb_session.dart';
 import '../services/climb_session_service.dart';
 
+// ignore_for_file: use_key_in_widget_constructors, deprecated_member_use, use_build_context_synchronously
 class NewClimbSessionDialog extends StatefulWidget {
   final ClimbSession?
   climbSession; // Non-null for edit mode, null for create mode
@@ -136,9 +137,7 @@ class _NewClimbSessionDialogState extends State<NewClimbSessionDialog> {
         if (isStartDate) {
           _startDate = picked;
           // Auto-set end date to 3 days later if not already set
-          if (_endDate == null) {
-            _endDate = picked.add(const Duration(days: 3));
-          }
+          _endDate ??= picked.add(const Duration(days: 3));
         } else {
           _endDate = picked;
         }

@@ -8,6 +8,7 @@ import '../../theme/color.dart';
 import '../../services/firebase_auth_service.dart';
 import '../../components/error_feedback.dart';
 
+// ignore_for_file: use_key_in_widget_constructors, deprecated_member_use, use_build_context_synchronously
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
 
@@ -204,7 +205,9 @@ class _LoginScreenState extends State<LoginScreen> {
                             ),
                             enabledBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(12),
-                              borderSide: BorderSide(color: AppColors.borderLight),
+                              borderSide: BorderSide(
+                                color: AppColors.borderLight,
+                              ),
                             ),
                             focusedBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(12),
@@ -234,7 +237,9 @@ class _LoginScreenState extends State<LoginScreen> {
                             ),
                             enabledBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(12),
-                              borderSide: BorderSide(color: AppColors.borderLight),
+                              borderSide: BorderSide(
+                                color: AppColors.borderLight,
+                              ),
                             ),
                             focusedBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(12),

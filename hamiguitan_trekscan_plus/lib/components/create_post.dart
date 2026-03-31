@@ -18,7 +18,7 @@ class CreatePostSheet extends StatefulWidget {
 class _CreatePostSheetState extends State<CreatePostSheet> {
   final _captionController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
-  List<File> _selectedImages = [];
+  final List<File> _selectedImages = [];
   PostPrivacy _privacy = PostPrivacy.public; // Default to public
   bool _isUploading = false;
 
@@ -183,21 +183,27 @@ class _CreatePostSheetState extends State<CreatePostSheet> {
               title: const Text('Public'),
               subtitle: const Text('Anyone can see this post'),
               value: PostPrivacy.public,
+              // ignore: deprecated_member_use
               groupValue: _privacy,
+              // ignore: deprecated_member_use
               onChanged: (value) => setState(() => _privacy = value!),
             ),
             RadioListTile<PostPrivacy>(
               title: const Text('Followers Only'),
               subtitle: const Text('Only your followers can see this'),
               value: PostPrivacy.followers,
+              // ignore: deprecated_member_use
               groupValue: _privacy,
+              // ignore: deprecated_member_use
               onChanged: (value) => setState(() => _privacy = value!),
             ),
             RadioListTile<PostPrivacy>(
               title: const Text('Private'),
               subtitle: const Text('Only you can see this'),
               value: PostPrivacy.private,
+              // ignore: deprecated_member_use
               groupValue: _privacy,
+              // ignore: deprecated_member_use
               onChanged: (value) => setState(() => _privacy = value!),
             ),
             const SizedBox(height: 16),

@@ -5,6 +5,7 @@ import 'dart:async';
 
 enum NotificationBannerType { success, info, warning, error }
 
+// ignore_for_file: use_key_in_widget_constructors, deprecated_member_use
 class NotificationBannerData {
   final String title;
   final String message;

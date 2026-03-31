@@ -203,12 +203,15 @@ class CalendarConfigService {
     };
 
     if (defaultMaxSlots != null) updates['defaultMaxSlots'] = defaultMaxSlots;
-    if (criticalThreshold != null)
+    if (criticalThreshold != null) {
       updates['criticalThreshold'] = criticalThreshold;
-    if (allowWeekendBookings != null)
+    }
+    if (allowWeekendBookings != null) {
       updates['allowWeekendBookings'] = allowWeekendBookings;
-    if (advanceBookingDays != null)
+    }
+    if (advanceBookingDays != null) {
       updates['advanceBookingDays'] = advanceBookingDays;
+    }
 
     await _firestore
         .collection('system_settings')

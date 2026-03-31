@@ -972,8 +972,9 @@ class SocialSharingService {
   String _buildLikeMessage(List<String> likers) {
     if (likers.isEmpty) return 'Someone liked your post';
     if (likers.length == 1) return '${likers[0]} liked your post';
-    if (likers.length == 2)
+    if (likers.length == 2) {
       return '${likers[0]} and ${likers[1]} liked your post';
+    }
 
     final others = likers.length - 2;
     return '${likers[0]}, ${likers[1]}, and $others others liked your post';
