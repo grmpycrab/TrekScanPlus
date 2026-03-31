@@ -258,10 +258,10 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       description:
           'The Home screen shows your trek calendar, recent posts from the community, and quick access to important information and tips.',
       features: [
-        '🗓️ View available trek dates',
-        '📸 See community posts and photos',
-        '💡 Access trek tips and guidelines',
-        '🏆 Track your achievements',
+        'View available trek dates',
+        'See community posts and photos',
+        'Access trek tips and guidelines',
+        'Track your achievements',
       ],
     );
   }
@@ -273,10 +273,10 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       description:
           'Explore the various checkpoints and points of interest throughout Mt. Hamiguitan. Track your visits and unlock achievements.',
       features: [
-        '🗺️ View all trek stations on the map',
-        '  Mark stations as visited when you arrive',
-        '🎖️ Unlock badges for visiting stations',
-        '📈 Track your exploration progress',
+        'View all trek stations on the map',
+        'Mark stations as visited when you arrive',
+        'Unlock badges for visiting stations',
+        'Track your exploration progress',
       ],
     );
   }
@@ -288,10 +288,10 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       description:
           'Plan your mountain adventure by booking trek dates, managing your reservations, and tracking approval status.',
       features: [
-        '📝 Submit trek booking requests',
-        '📎 Upload required documents',
-        '🎒 Add porter requirements',
-        '📊 Track booking status and approvals',
+        'Submit trek booking requests',
+        'Upload required documents',
+        'Add porter requirements',
+        'Track booking status and approvals',
       ],
     );
   }
@@ -303,10 +303,10 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       description:
           'Use the built-in scanner to check into stations, verify your trek progress, and access station-specific information.',
       features: [
-        '📱 Scan QR codes at trek stations',
-        '✨ Automatically mark stations as visited',
-        '🎯 Unlock station-specific achievements',
-        '📋 Access detailed station information',
+        'Scan QR codes at trek stations',
+        'Automatically mark stations as visited',
+        'Unlock station-specific achievements',
+        'Access detailed station information',
       ],
     );
   }

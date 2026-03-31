@@ -243,7 +243,7 @@ class CertificatePdfService {
     final file = File('${directory.path}/$fileName');
     await file.writeAsBytes(await pdf.save());
 
-    AppLogger.i('📄 PDF certificate generated: ${file.path}');
+    AppLogger.i('PDF certificate generated: ${file.path}');
     return file;
   }
 

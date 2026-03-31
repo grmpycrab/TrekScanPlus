@@ -148,7 +148,7 @@ class NotificationService {
     // Listen for FCM token changes and update Firestore
     _firebaseMessaging.onTokenRefresh.listen((newToken) {
       if (kDebugMode) {
-        AppLogger.i('[NotificationService] 🗞️ FCM token refreshed');
+        AppLogger.i('[NotificationService] FCM token refreshed');
       }
       _saveFCMTokenToFirestore(newToken);
     });
@@ -166,9 +166,7 @@ class NotificationService {
           'lastTokenUpdate': DateTime.now(),
         }, SetOptions(merge: true));
         if (kDebugMode) {
-          AppLogger.i(
-            '[NotificationService] 🗞️ FCM token updated in Firestore',
-          );
+          AppLogger.i('[NotificationService] FCM token updated in Firestore');
         }
       }
     } catch (e) {
@@ -235,7 +233,7 @@ class NotificationService {
     try {
       final token = await _firebaseMessaging.getToken();
       if (kDebugMode) {
-        AppLogger.i('[NotificationService] 🗞️ FCM Token obtained');
+        AppLogger.i('[NotificationService] FCM Token obtained');
       }
 
       // Save FCM token to Firestore for backend to use
@@ -246,7 +244,7 @@ class NotificationService {
           'lastTokenUpdate': DateTime.now(),
         }, SetOptions(merge: true));
         if (kDebugMode) {
-          AppLogger.i('[NotificationService] 🗞️ FCM token saved to Firestore');
+          AppLogger.i('[NotificationService] FCM token saved to Firestore');
         }
       }
 

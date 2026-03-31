@@ -62,7 +62,7 @@ class CertificateEmailService {
       if (e.message.contains('Authentication Failed') ||
           e.message.contains('BadCredentials')) {
         AppLogger.i(
-          '\n⚠️  Gmail App Password required. See ENV_SETUP.md for setup instructions.',
+          '\Gmail App Password required. See ENV_SETUP.md for setup instructions.',
         );
         AppLogger.i(
           '   Generate at: https://myaccount.google.com/apppasswords\n',
@@ -243,7 +243,7 @@ class CertificateEmailService {
       final appName = dotenv.env['APP_NAME'] ?? 'Mt. Hamiguitan TrekScan';
 
       if (smtpEmail.isEmpty || smtpPassword.isEmpty) {
-        AppLogger.i('❌ SMTP credentials not configured in .env file');
+        AppLogger.i('SMTP credentials not configured in .env file');
         return false;
       }
 
@@ -254,7 +254,7 @@ class CertificateEmailService {
         ..from = Address(appEmailFrom, appName)
         ..recipients.add(user.email!)
         ..subject =
-            '🏆 Your Mt. Hamiguitan Certificates (${certificates.length} earned)'
+            'Your Mt. Hamiguitan Certificates (${certificates.length} earned)'
         ..html = _generateBulkEmailHtml(
           certificates,
           user.displayName ?? 'Trekker',

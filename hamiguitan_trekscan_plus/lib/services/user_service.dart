@@ -82,14 +82,14 @@ class UserService {
         data['sentFollowRequests'] = [];
         await docRef.set(data, SetOptions(merge: true));
         if (kDebugMode) {
-          AppLogger.i('👤 User document created');
+          AppLogger.i('User document created');
           AppLogger.i('  - firstName: $extractedFirstName');
           AppLogger.i('  - lastName: $extractedLastName');
         }
       } else {
         await docRef.set(data, SetOptions(merge: true));
         if (kDebugMode) {
-          AppLogger.i('👤 User document updated');
+          AppLogger.i('User document updated');
           if (extractedFirstName.isNotEmpty || extractedLastName.isNotEmpty) {
             AppLogger.i('  - firstName: $extractedFirstName');
             AppLogger.i('  - lastName: $extractedLastName');
@@ -132,7 +132,7 @@ class UserService {
       final batch = _firestore.batch();
 
       if (kDebugMode) {
-        AppLogger.i('🗑️ Starting cascade deletion for user');
+        AppLogger.i('Starting cascade deletion for user');
       }
 
       // 1. Delete subcollections under users/{uid}
@@ -352,7 +352,7 @@ class UserService {
       await batch.commit();
 
       if (kDebugMode) {
-        AppLogger.i('✅ Cascade deletion completed');
+        AppLogger.i('Cascade deletion completed');
       }
     } catch (e, st) {
       if (kDebugMode) {
@@ -386,7 +386,7 @@ class UserService {
 
       await _usersCollection.doc(uid).set(data, SetOptions(merge: true));
       if (kDebugMode) {
-        AppLogger.i('✏️ User info updated');
+        AppLogger.i('User info updated');
       }
     } catch (e, st) {
       if (kDebugMode) {
