@@ -8,326 +8,102 @@ import '../../theme/color.dart';
 import '../../components/trail_map.dart';
 import '../../utils/app_logger.dart';
 
-class StationDetailScreen extends StatefulWidget {
-  final StationData station;
+// ---------------------------------------------------------------------------
+// Top-level pure functions — no closure allocations per build
+// ---------------------------------------------------------------------------
 
-  const StationDetailScreen({super.key, required this.station});
-
-  @override
-  State<StationDetailScreen> createState() => _StationDetailScreenState();
+Color _getDifficultyColor(String difficulty) {
+  switch (difficulty.toLowerCase()) {
+    case 'easy':
+      return Colors.green;
+    case 'moderate':
+      return Colors.orange;
+    case 'hard':
+      return Colors.red;
+    default:
+      return Colors.blue;
+  }
 }
 
-class _StationDetailScreenState extends State<StationDetailScreen> {
-  StationData get station => widget.station;
-  StationData? nextStationData;
-  List<StationData> allStations = [];
-  late ScrollController _scrollController;
-  late PageController _imagePageController;
-  double _scrollOffset = 0.0;
-  int _currentImageIndex = 0;
+// Set lookup is O(1) vs List.contains O(n)
+bool _isEndStation(String stationId) {
+  const ids = {'i73hl7b7g3', 'r5kntj3sae', 'mr2l529okj'};
+  return ids.contains(stationId);
+}
 
-  @override
-  void initState() {
-    super.initState();
-    _scrollController = ScrollController();
-    _scrollController.addListener(_onScroll);
-    _imagePageController = PageController();
-    _imagePageController.addListener(_onImagePageChanged);
-    _preloadImages();
-    _loadStationData();
-  }
+// ---------------------------------------------------------------------------
+// Extracted stateless widgets — const-constructible, never rebuilt on scroll
+// ---------------------------------------------------------------------------
 
-  @override
-  void dispose() {
-    _scrollController.removeListener(_onScroll);
-    _scrollController.dispose();
-    _imagePageController.removeListener(_onImagePageChanged);
-    _imagePageController.dispose();
-    super.dispose();
-  }
-
-  void _onScroll() {
-    setState(() {
-      _scrollOffset = _scrollController.offset;
-    });
-  }
-
-  void _onImagePageChanged() {
-    setState(() {
-      _currentImageIndex = _imagePageController.page?.round() ?? 0;
-      // Pre-cache the next image
-      _precacheNextImage();
-    });
-  }
-
-  Future<void> _preloadImages() async {
-    if (station.images.isEmpty) return;
-
-    try {
-      // Pre-cache the first two images for smooth experience
-      await precacheImage(
-        AssetImage('assets/images/${station.images[0]}'),
-        context,
-      );
-      if (station.images.length > 1) {
-        await precacheImage(
-          AssetImage('assets/images/${station.images[1]}'),
-          context,
-        );
-      }
-    } catch (e) {
-      AppLogger.e('Error preloading images: $e');
-    }
-  }
-
-  void _precacheNextImage() {
-    final nextIndex = (_currentImageIndex + 1) % station.images.length;
-    precacheImage(
-      AssetImage('assets/images/${station.images[nextIndex]}'),
-      context,
-    ).catchError((e) {
-      AppLogger.e('Error precaching image: $e');
-    });
-  }
-
-  Future<void> _loadStationData() async {
-    try {
-      // Ensure stations are loaded
-      if (!StationService.instance.isLoaded) {
-        await StationService.instance.loadStations();
-      }
-
-      if (mounted) {
-        final allStationsLoaded = StationService.instance.getAllStations();
-        StationData? nextStation;
-
-        if (station.nextStationId != null) {
-          nextStation = StationService.instance.getStationById(
-            station.nextStationId!,
-          );
-        }
-
-        setState(() {
-          allStations = allStationsLoaded;
-          nextStationData = nextStation;
-        });
-      }
-    } catch (e) {
-      AppLogger.e('Error loading station data: $e');
-    }
-  }
-
-  Color _getDifficultyColor(String difficulty) {
-    switch (difficulty.toLowerCase()) {
-      case 'easy':
-        return Colors.green;
-      case 'moderate':
-        return Colors.orange;
-      case 'hard':
-        return Colors.red;
-      default:
-        return Colors.blue;
-    }
-  }
-
-  bool _isEndStation(String stationId) {
-    const endStationIds = [
-      'i73hl7b7g3', // Station 13: Hidden Garden
-      'r5kntj3sae', // Station 16: Twin Falls
-      'mr2l529okj', // Station 14: Peak
-    ];
-    return endStationIds.contains(stationId);
-  }
-
-  Color _getAppBarIconColor() {
-    // Start white over photo, transition to black as user scrolls
-    final progress = (_scrollOffset / 100).clamp(0.0, 1.0);
-    return Color.lerp(Colors.white, Colors.black, progress)!;
-  }
-
-  Color _getAppBarTextColor() {
-    // Same transition for text
-    final progress = (_scrollOffset / 100).clamp(0.0, 1.0);
-    return Color.lerp(Colors.white, AppColors.text, progress)!;
-  }
-
-  Color _getAppBarBackgroundColor() {
-    // Gradually show white background as user scrolls
-    final progress = (_scrollOffset / 150).clamp(0.0, 1.0);
-    return Color.lerp(Colors.transparent, Colors.white, progress)!;
-  }
-
-  Widget _buildImageCarousel() {
-    if (station.images.isEmpty) {
-      return Container(
-        decoration: BoxDecoration(color: AppColors.border),
-        child: const Icon(Icons.image_not_supported, size: 50),
-      );
-    }
-
-    return Stack(
-      fit: StackFit.expand,
-      children: [
-        // PageView carousel with looping
-        PageView.builder(
-          controller: _imagePageController,
-          onPageChanged: (index) {
-            setState(() {
-              _currentImageIndex = index % station.images.length;
-            });
-          },
-          itemBuilder: (context, index) {
-            final imageIndex = index % station.images.length;
-            final imagePath = station.images[imageIndex];
-
-            return GestureDetector(
-              onTap: () => _showFullscreenImage(imageIndex),
-              child: Image.asset(
-                'assets/images/$imagePath',
-                fit: BoxFit.cover,
-                cacheHeight: 800,
-                cacheWidth: 600,
-                errorBuilder: (context, error, stackTrace) {
-                  return Container(
-                    decoration: BoxDecoration(color: AppColors.border),
-                    child: const Icon(Icons.image_not_supported, size: 50),
-                  );
-                },
-              ),
-            );
-          },
-          // Create infinite carousel by using a large number
-          itemCount: station.images.length * 100,
-          physics: const PageScrollPhysics(),
-        ),
-        // Image indicators (dots)
-        if (station.images.length > 1)
-          Positioned(
-            bottom: 80,
-            left: 0,
-            right: 0,
-            child: _buildImageIndicators(),
-          ),
-      ],
-    );
-  }
-
-  Widget _buildImageIndicators() {
-    return Center(
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-        decoration: BoxDecoration(
-          color: Colors.black.withValues(alpha: 0.6),
-          borderRadius: BorderRadius.circular(20),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: List.generate(
-            station.images.length,
-            (index) => Container(
-              margin: const EdgeInsets.symmetric(horizontal: 4),
-              width: _currentImageIndex == index ? 24 : 8,
-              height: 8,
-              decoration: BoxDecoration(
-                color: _currentImageIndex == index
-                    ? Colors.white
-                    : Colors.white.withValues(alpha: 0.5),
-                borderRadius: BorderRadius.circular(4),
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  void _showFullscreenImage(int initialIndex) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (_) => _FullscreenImageViewer(
-          images: station.images,
-          initialIndex: initialIndex,
-        ),
-      ),
-    );
-  }
+/// The two gradient overlays painted over the hero image.
+/// Completely static — extracted so AnimatedBuilder's child arg carries it.
+class _AppBarGradientOverlay extends StatelessWidget {
+  const _AppBarGradientOverlay();
 
   @override
   Widget build(BuildContext context) {
-    try {
-      return Scaffold(
-        backgroundColor: Colors.white,
-        body: CustomScrollView(
-          controller: _scrollController,
-          slivers: [
-            _buildAppBar(),
-            SliverToBoxAdapter(
-              child: ClipRRect(
-                borderRadius: const BorderRadius.only(
-                  topLeft: Radius.circular(20),
-                  topRight: Radius.circular(20),
-                ),
-                child: Material(
-                  color: Colors.white,
-                  elevation: 6,
-                  clipBehavior: Clip.antiAlias,
-                  child: Container(
-                    padding: const EdgeInsets.only(top: 20), // Add top padding
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 20.0),
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          _buildStationInfo(),
-                          _buildDescription(),
-                          if (station.warnings.isNotEmpty) ...[
-                            const SizedBox(height: 32),
-                            _buildWarnings(),
-                          ],
-                          if (station.flora.isNotEmpty ||
-                              station.fauna.isNotEmpty) ...[
-                            const SizedBox(height: 32),
-                            _buildBiodiversity(),
-                          ],
-                          if (allStations.isNotEmpty) ...[
-                            const SizedBox(height: 32),
-                            _buildTrailMap(),
-                          ],
-                          // Show next station or end station card
-                          if (station.nextStationId != null ||
-                              _isEndStation(station.id)) ...[
-                            const SizedBox(height: 32),
-                            _buildNextStation(),
-                          ],
-                          if (station.metadata.isNotEmpty) ...[
-                            const SizedBox(height: 32),
-                            _buildMetadata(),
-                          ],
-                          const SizedBox(height: 40),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
+    return Stack(
+      fit: StackFit.expand,
+      children: const [
+        DecoratedBox(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              stops: [0.0, 0.3, 0.5, 0.7, 1.0],
+              colors: [
+                Color(0x4D000000),
+                Colors.transparent,
+                Colors.transparent,
+                Color(0x80000000),
+                Color(0xCC000000),
+              ],
+            ),
+          ),
+        ),
+        Positioned(
+          bottom: 0,
+          left: 0,
+          right: 0,
+          height: 200,
+          child: DecoratedBox(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.bottomCenter,
+                end: Alignment.topCenter,
+                colors: [
+                  Color(0xCC000000),
+                  Color(0x99000000),
+                  Color(0x4D000000),
+                  Colors.transparent,
+                ],
               ),
             ),
-          ],
+          ),
         ),
-      );
-    } catch (e) {
-      return const Scaffold(
-        body: Center(child: Text('Error: Station data not available')),
-      );
-    }
+      ],
+    );
   }
+}
 
-  Widget _buildMetricBadge(IconData icon, String value, String label) {
+/// Single metric badge (elevation / steps / distance) in the hero.
+class _MetricBadge extends StatelessWidget {
+  const _MetricBadge({
+    required this.icon,
+    required this.value,
+    required this.label,
+  });
+
+  final IconData icon;
+  final String value;
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
-        color: Colors.black.withValues(alpha: 0.6),
+        color: const Color(0x99000000),
         borderRadius: BorderRadius.circular(8),
       ),
       child: Row(
@@ -360,142 +136,520 @@ class _StationDetailScreenState extends State<StationDetailScreen> {
       ),
     );
   }
+}
 
-  Widget _buildAppBar() {
-    return SliverAppBar(
-      expandedHeight: 400.0,
-      pinned: true,
-      backgroundColor: _getAppBarBackgroundColor(),
-      elevation: _scrollOffset > 50 ? 4 : 0,
-      shadowColor: Colors.black.withOpacity(0.1),
-      leading: IconButton(
-        icon: Icon(Icons.arrow_back, color: _getAppBarIconColor()),
-        onPressed: () {
-          // Pop with the station data so parent can update
-          Navigator.pop(context, widget.station);
-        },
-      ),
-      title: Text(
-        " ${station.name}",
-        style: TextStyle(
-          fontSize: 16,
-          fontWeight: FontWeight.w600,
-          color: _getAppBarTextColor(),
-        ),
-      ),
-      flexibleSpace: FlexibleSpaceBar(
-        titlePadding: EdgeInsets.zero,
-        expandedTitleScale: 1.0,
-        background: Stack(
-          fit: StackFit.expand,
-          children: [
-            _buildImageCarousel(),
-            Container(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  stops: const [0.0, 0.3, 0.5, 0.7, 1.0],
-                  colors: [
-                    Colors.black.withValues(alpha: 0.3),
-                    Colors.transparent,
-                    Colors.transparent,
-                    Colors.black.withValues(alpha: 0.5),
-                    Colors.black.withValues(alpha: 0.8),
-                  ],
-                ),
+/// Difficulty badge + name + metric row shown at the bottom of the hero.
+/// Passed as AnimatedBuilder's `child` so it is built once per station load.
+class _HeroStationInfo extends StatelessWidget {
+  const _HeroStationInfo({required this.station});
+
+  final StationData station;
+
+  @override
+  Widget build(BuildContext context) {
+    return Positioned(
+      bottom: 20,
+      left: 20,
+      right: 20,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+            decoration: BoxDecoration(
+              color: _getDifficultyColor(station.difficulty),
+              borderRadius: BorderRadius.circular(4),
+            ),
+            child: Text(
+              station.difficulty.toUpperCase(),
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
               ),
             ),
-            Positioned(
-              bottom: 0,
-              left: 0,
-              right: 0,
-              height: 200,
-              child: Container(
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.bottomCenter,
-                    end: Alignment.topCenter,
-                    colors: [
-                      Colors.black.withValues(alpha: 0.8),
-                      Colors.black.withValues(alpha: 0.6),
-                      Colors.black.withValues(alpha: 0.3),
-                      Colors.transparent,
-                    ],
+          ),
+          const SizedBox(height: 12),
+          Text(
+            station.name,
+            style: const TextStyle(
+              fontSize: 32,
+              fontWeight: FontWeight.bold,
+              color: Colors.white,
+            ),
+          ),
+          const SizedBox(height: 20),
+          Row(
+            children: [
+              _MetricBadge(
+                icon: Icons.height,
+                value: '${station.elevation}m',
+                label: 'ELEVATION',
+              ),
+              const SizedBox(width: 12),
+              _MetricBadge(
+                icon: Icons.directions_walk,
+                value: '${station.steps ?? 0}',
+                label: 'STEPS',
+              ),
+              const SizedBox(width: 12),
+              _MetricBadge(
+                icon: Icons.route,
+                value: '${station.distanceToNextKm ?? 0} km',
+                label: 'DISTANCE',
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Dark coordinate box with a copy button.
+class _CoordBox extends StatelessWidget {
+  const _CoordBox({
+    required this.label,
+    required this.value,
+    required this.onCopy,
+  });
+
+  final String label;
+  final String value;
+  final VoidCallback onCopy;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.grey[900],
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x0D000000),
+            blurRadius: 6,
+            offset: Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  label,
+                  style: TextStyle(
+                    color: Colors.grey[400],
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
                   ),
                 ),
-              ),
+                const SizedBox(height: 6),
+                Text(
+                  value,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 16,
+                    fontWeight: FontWeight.w700,
+                    fontFamily: 'monospace',
+                  ),
+                ),
+              ],
             ),
-            Positioned(
-              bottom: 20,
-              left: 20,
-              right: 20,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 6,
-                    ),
-                    decoration: BoxDecoration(
-                      color: _getDifficultyColor(station.difficulty),
-                      borderRadius: BorderRadius.circular(4),
-                    ),
-                    child: Text(
-                      station.difficulty.toUpperCase(),
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
-                      ),
+          ),
+          IconButton(
+            icon: Icon(Icons.copy, color: AppColors.primary),
+            onPressed: onCopy,
+            tooltip: 'Copy $label',
+            splashRadius: 20,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Bullet-point list item used in the biodiversity section.
+class _BulletItem extends StatelessWidget {
+  const _BulletItem({required this.text, required this.color});
+
+  final String text;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8, left: 28),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            width: 6,
+            height: 6,
+            margin: const EdgeInsets.only(top: 8),
+            decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+          ),
+          const SizedBox(width: 12),
+          Expanded(child: Text(text, style: const TextStyle(height: 1.5))),
+        ],
+      ),
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Main screen
+// ---------------------------------------------------------------------------
+
+class StationDetailScreen extends StatefulWidget {
+  final StationData station;
+
+  const StationDetailScreen({super.key, required this.station});
+
+  @override
+  State<StationDetailScreen> createState() => _StationDetailScreenState();
+}
+
+class _StationDetailScreenState extends State<StationDetailScreen> {
+  StationData get station => widget.station;
+
+  StationData? nextStationData;
+  List<StationData> allStations = [];
+
+  late final ScrollController _scrollController;
+  late final PageController _imagePageController;
+
+  // Only the dot-indicator needs this; rebuilt via setState only on page swipe.
+  int _currentImageIndex = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    _scrollController = ScrollController();
+    _imagePageController = PageController();
+    // No addListener on _scrollController — AnimatedBuilder handles reactivity.
+    _preloadImages();
+    _loadStationData();
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    _imagePageController.dispose();
+    super.dispose();
+  }
+
+  // -------------------------------------------------------------------------
+  // Image helpers
+  // -------------------------------------------------------------------------
+
+  Future<void> _preloadImages() async {
+    if (station.images.isEmpty) return;
+    try {
+      await precacheImage(
+        AssetImage('assets/images/${station.images[0]}'),
+        context,
+      );
+      if (station.images.length > 1) {
+        await precacheImage(
+          AssetImage('assets/images/${station.images[1]}'),
+          context,
+        );
+      }
+    } catch (e) {
+      AppLogger.e('Error preloading images: $e');
+    }
+  }
+
+  void _precacheNextImage(int currentIndex) {
+    if (station.images.isEmpty) return;
+    final nextIndex = (currentIndex + 1) % station.images.length;
+    precacheImage(
+      AssetImage('assets/images/${station.images[nextIndex]}'),
+      context,
+    ).catchError((e) => AppLogger.e('Error precaching image: $e'));
+  }
+
+  // -------------------------------------------------------------------------
+  // Data
+  // -------------------------------------------------------------------------
+
+  Future<void> _loadStationData() async {
+    try {
+      if (!StationService.instance.isLoaded) {
+        await StationService.instance.loadStations();
+      }
+      if (!mounted) return;
+
+      final loaded = StationService.instance.getAllStations();
+      final next = station.nextStationId != null
+          ? StationService.instance.getStationById(station.nextStationId!)
+          : null;
+
+      setState(() {
+        allStations = loaded;
+        nextStationData = next;
+      });
+    } catch (e) {
+      AppLogger.e('Error loading station data: $e');
+    }
+  }
+
+  // -------------------------------------------------------------------------
+  // Root build
+  // -------------------------------------------------------------------------
+
+  @override
+  Widget build(BuildContext context) {
+    try {
+      return Scaffold(
+        backgroundColor: Colors.white,
+        body: CustomScrollView(
+          controller: _scrollController,
+          physics: const BouncingScrollPhysics(
+            parent: AlwaysScrollableScrollPhysics(),
+          ),
+          slivers: [
+            _buildAppBar(),
+            SliverToBoxAdapter(
+              child: ClipRRect(
+                borderRadius: const BorderRadius.only(
+                  topLeft: Radius.circular(20),
+                  topRight: Radius.circular(20),
+                ),
+                child: Material(
+                  color: Colors.white,
+                  elevation: 6,
+                  clipBehavior: Clip.antiAlias,
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        _buildStationInfo(),
+                        _buildDescription(),
+                        if (station.warnings.isNotEmpty) ...[
+                          const SizedBox(height: 32),
+                          _buildWarnings(),
+                        ],
+                        if (station.flora.isNotEmpty ||
+                            station.fauna.isNotEmpty) ...[
+                          const SizedBox(height: 32),
+                          _buildBiodiversity(),
+                        ],
+                        if (allStations.isNotEmpty) ...[
+                          const SizedBox(height: 32),
+                          _buildTrailMap(),
+                        ],
+                        if (station.nextStationId != null ||
+                            _isEndStation(station.id)) ...[
+                          const SizedBox(height: 32),
+                          _buildNextStation(),
+                        ],
+                        if (station.metadata.isNotEmpty) ...[
+                          const SizedBox(height: 32),
+                          _buildMetadata(),
+                        ],
+                        const SizedBox(height: 40),
+                      ],
                     ),
                   ),
-                  const SizedBox(height: 12),
-                  Text(
-                    station.name,
-                    style: const TextStyle(
-                      fontSize: 32,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                    ),
-                  ),
-                  const SizedBox(height: 20),
-                  Row(
-                    children: [
-                      _buildMetricBadge(
-                        Icons.height,
-                        '${station.elevation}m',
-                        'ELEVATION',
-                      ),
-                      const SizedBox(width: 12),
-                      _buildMetricBadge(
-                        Icons.directions_walk,
-                        '${station.steps ?? 0}',
-                        'STEPS',
-                      ),
-                      const SizedBox(width: 12),
-                      _buildMetricBadge(
-                        Icons.route,
-                        '${station.distanceToNextKm ?? 0} km',
-                        'DISTANCE',
-                      ),
-                    ],
-                  ),
-                ],
+                ),
               ),
             ),
           ],
+        ),
+      );
+    } catch (e) {
+      return const Scaffold(
+        body: Center(child: Text('Error: Station data not available')),
+      );
+    }
+  }
+
+  // -------------------------------------------------------------------------
+  // SliverAppBar — performance-critical
+  // -------------------------------------------------------------------------
+
+  Widget _buildAppBar() {
+    // Build the static background subtree ONCE here.
+    // It is passed as AnimatedBuilder's `child` and reused every frame,
+    // so the carousel and overlays are never reconstructed during scroll.
+    final staticBackground = Stack(
+      fit: StackFit.expand,
+      children: [
+        _buildImageCarousel(), // rebuilds only on page swipe
+        const _AppBarGradientOverlay(), // const, never rebuilds
+        _HeroStationInfo(
+          station: station,
+        ), // rebuilds only when station changes
+      ],
+    );
+
+    return AnimatedBuilder(
+      animation: _scrollController,
+      child: staticBackground, // ← zero work here; handed to builder as-is
+      builder: (context, background) {
+        final offset = _scrollController.hasClients
+            ? _scrollController.offset
+            : 0.0;
+
+        // Clamp once, reuse for both color lerps.
+        final iconT = (offset / 100).clamp(0.0, 1.0);
+        final bgT = (offset / 150).clamp(0.0, 1.0);
+
+        return SliverAppBar(
+          expandedHeight: 400.0,
+          pinned: true,
+          elevation: offset > 50 ? 4.0 : 0.0,
+          shadowColor: const Color(0x1A000000),
+          backgroundColor: Color.lerp(Colors.transparent, Colors.white, bgT),
+          leading: IconButton(
+            icon: Icon(
+              Icons.arrow_back,
+              color: Color.lerp(Colors.white, Colors.black, iconT),
+            ),
+            onPressed: () => Navigator.pop(context, widget.station),
+          ),
+          title: Text(
+            ' ${station.name}',
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w600,
+              color: Color.lerp(Colors.white, AppColors.text, iconT),
+            ),
+          ),
+          flexibleSpace: FlexibleSpaceBar(
+            titlePadding: EdgeInsets.zero,
+            expandedTitleScale: 1.0,
+            background: background, // pre-built child — no work done here
+          ),
+        );
+      },
+    );
+  }
+
+  // -------------------------------------------------------------------------
+  // Image carousel
+  // -------------------------------------------------------------------------
+
+  Widget _buildImageCarousel() {
+    if (station.images.isEmpty) {
+      return ColoredBox(
+        color: AppColors.border,
+        child: const Center(child: Icon(Icons.image_not_supported, size: 50)),
+      );
+    }
+
+    final imageCount = station.images.length;
+
+    return Stack(
+      fit: StackFit.expand,
+      children: [
+        PageView.builder(
+          controller: _imagePageController,
+          // SINGLE source of truth for page changes.
+          // Removed the duplicate PageController addListener that caused a
+          // second setState for every fractional-pixel swipe animation frame.
+          onPageChanged: (virtualIndex) {
+            final real = virtualIndex % imageCount;
+            if (_currentImageIndex != real) {
+              setState(() => _currentImageIndex = real);
+              _precacheNextImage(real);
+            }
+          },
+          // Large enough to feel infinite; much smaller than ×100 to reduce
+          // the internal page-offset arithmetic Flutter does every frame.
+          itemCount: imageCount * 999,
+          physics: const PageScrollPhysics(),
+          itemBuilder: (context, virtualIndex) {
+            final real = virtualIndex % imageCount;
+            return GestureDetector(
+              onTap: () => _showFullscreenImage(real),
+              child: Image.asset(
+                'assets/images/${station.images[real]}',
+                fit: BoxFit.cover,
+                // Decode at display width only; height is inferred to preserve
+                // aspect ratio. Halves texture memory vs specifying both dims.
+                cacheWidth: 600,
+                errorBuilder: (_, __, ___) => ColoredBox(
+                  color: AppColors.border,
+                  child: const Center(
+                    child: Icon(Icons.image_not_supported, size: 50),
+                  ),
+                ),
+              ),
+            );
+          },
+        ),
+        if (imageCount > 1)
+          Positioned(
+            bottom: 80,
+            left: 0,
+            right: 0,
+            // RepaintBoundary keeps dot repaints from dirtying the image layer.
+            child: RepaintBoundary(child: _buildImageIndicators()),
+          ),
+      ],
+    );
+  }
+
+  Widget _buildImageIndicators() {
+    return Center(
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        decoration: BoxDecoration(
+          color: const Color(0x99000000),
+          borderRadius: BorderRadius.circular(20),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: List.generate(station.images.length, (index) {
+            final active = _currentImageIndex == index;
+            // AnimatedContainer avoids a janky jump when the active dot changes.
+            return AnimatedContainer(
+              duration: const Duration(milliseconds: 200),
+              curve: Curves.easeOut,
+              margin: const EdgeInsets.symmetric(horizontal: 4),
+              width: active ? 24 : 8,
+              height: 8,
+              decoration: BoxDecoration(
+                color: active ? Colors.white : const Color(0x80FFFFFF),
+                borderRadius: BorderRadius.circular(4),
+              ),
+            );
+          }),
         ),
       ),
     );
   }
 
+  void _showFullscreenImage(int initialIndex) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => _FullscreenImageViewer(
+          images: station.images,
+          initialIndex: initialIndex,
+        ),
+      ),
+    );
+  }
+
+  // -------------------------------------------------------------------------
+  // Content sections — no scroll dependency; rebuilt only by setState
+  // -------------------------------------------------------------------------
+
   Widget _buildStationInfo() {
     final lat = _formatCoordinate(station.coordinates, 'N');
     final lng = _formatCoordinate(station.coordinates, 'E');
 
-    Future<void> copyToClipboard(String text) async {
+    Future<void> copy(String text) async {
       await Clipboard.setData(ClipboardData(text: text));
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -507,115 +661,23 @@ class _StationDetailScreenState extends State<StationDetailScreen> {
       }
     }
 
-    return Container(
-      margin: const EdgeInsets.symmetric(vertical: 20),
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 20),
       child: Row(
         children: [
-          // Latitude box
           Expanded(
-            child: Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: Colors.grey[900],
-                borderRadius: BorderRadius.circular(16),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.05),
-                    blurRadius: 6,
-                    offset: const Offset(0, 2),
-                  ),
-                ],
-              ),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'LATITUDE',
-                          style: TextStyle(
-                            color: Colors.grey[400],
-                            fontSize: 12,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                        const SizedBox(height: 6),
-                        Text(
-                          lat,
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 16,
-                            fontWeight: FontWeight.w700,
-                            fontFamily: 'monospace',
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  IconButton(
-                    icon: Icon(Icons.copy, color: AppColors.primary),
-                    onPressed: () => copyToClipboard(lat),
-                    tooltip: 'Copy latitude',
-                    splashRadius: 20,
-                  ),
-                ],
-              ),
+            child: _CoordBox(
+              label: 'LATITUDE',
+              value: lat,
+              onCopy: () => copy(lat),
             ),
           ),
           const SizedBox(width: 12),
-          // Longitude box
           Expanded(
-            child: Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: Colors.grey[900],
-                borderRadius: BorderRadius.circular(16),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.05),
-                    blurRadius: 6,
-                    offset: const Offset(0, 2),
-                  ),
-                ],
-              ),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'LONGITUDE',
-                          style: TextStyle(
-                            color: Colors.grey[400],
-                            fontSize: 12,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                        const SizedBox(height: 6),
-                        Text(
-                          lng,
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 16,
-                            fontWeight: FontWeight.w700,
-                            fontFamily: 'monospace',
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  IconButton(
-                    icon: Icon(Icons.copy, color: AppColors.primary),
-                    onPressed: () => copyToClipboard(lng),
-                    tooltip: 'Copy longitude',
-                    splashRadius: 20,
-                  ),
-                ],
-              ),
+            child: _CoordBox(
+              label: 'LONGITUDE',
+              value: lng,
+              onCopy: () => copy(lng),
             ),
           ),
         ],
@@ -633,8 +695,8 @@ class _StationDetailScreenState extends State<StationDetailScreen> {
   }
 
   Widget _buildDescription() {
-    return Container(
-      margin: const EdgeInsets.only(top: 8),
+    return Padding(
+      padding: const EdgeInsets.only(top: 8),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -647,7 +709,7 @@ class _StationDetailScreenState extends State<StationDetailScreen> {
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Text(
-                  "1",
+                  '1',
                   style: TextStyle(
                     color: Colors.blue[700],
                     fontWeight: FontWeight.bold,
@@ -676,56 +738,22 @@ class _StationDetailScreenState extends State<StationDetailScreen> {
     );
   }
 
-  IconData _getWarningIcon(String warningType) {
-    switch (warningType.toLowerCase()) {
-      case 'weather':
-        return Icons.wb_cloudy;
-      case 'cliff':
-        return Icons.terrain;
-      case 'slippery':
-        return Icons.waves;
-      case 'wildlife':
-        return Icons.pets;
-      case 'visibility':
-        return Icons.visibility_off;
-      default:
-        return Icons.warning_amber_rounded;
-    }
-  }
-
-  Color _getWarningColor(String warningType) {
-    switch (warningType.toLowerCase()) {
-      case 'weather':
-        return Colors.blue;
-      case 'cliff':
-        return Colors.red;
-      case 'slippery':
-        return Colors.orange;
-      case 'wildlife':
-        return Colors.brown;
-      case 'visibility':
-        return Colors.purple;
-      default:
-        return Colors.orange;
-    }
-  }
-
   Widget _buildWarnings() {
     return Card(
       child: Padding(
-        padding: const EdgeInsets.all(16.0),
+        padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(
+            const Row(
               children: [
-                const Icon(
+                Icon(
                   Icons.warning_amber_rounded,
                   color: Colors.orange,
                   size: 24,
                 ),
-                const SizedBox(width: 8),
-                const Text(
+                SizedBox(width: 8),
+                Text(
                   'Safety Warnings',
                   style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                 ),
@@ -741,49 +769,75 @@ class _StationDetailScreenState extends State<StationDetailScreen> {
                 ),
               )
             else
-              ...station.warnings.entries.map(
-                (warning) => Container(
-                  margin: const EdgeInsets.only(bottom: 12.0),
-                  padding: const EdgeInsets.all(12.0),
+              ...station.warnings.entries.map((e) {
+                final color = _warningColor(e.key);
+                return Container(
+                  margin: const EdgeInsets.only(bottom: 12),
+                  padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: _getWarningColor(warning.key).withValues(alpha: 0.1),
+                    color: color.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(8),
-                    border: Border.all(
-                      color: _getWarningColor(
-                        warning.key,
-                      ).withValues(alpha: 0.3),
-                      width: 1,
-                    ),
+                    border: Border.all(color: color.withValues(alpha: 0.3)),
                   ),
                   child: Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Icon(
-                        _getWarningIcon(warning.key),
-                        color: _getWarningColor(warning.key),
-                        size: 20,
-                      ),
+                      Icon(_warningIcon(e.key), color: color, size: 20),
                       const SizedBox(width: 12),
                       Expanded(
                         child: Text(
-                          warning.value,
+                          e.value,
                           style: TextStyle(color: AppColors.text, height: 1.5),
                         ),
                       ),
                     ],
                   ),
-                ),
-              ),
+                );
+              }),
           ],
         ),
       ),
     );
   }
 
+  IconData _warningIcon(String type) {
+    switch (type.toLowerCase()) {
+      case 'weather':
+        return Icons.wb_cloudy;
+      case 'cliff':
+        return Icons.terrain;
+      case 'slippery':
+        return Icons.waves;
+      case 'wildlife':
+        return Icons.pets;
+      case 'visibility':
+        return Icons.visibility_off;
+      default:
+        return Icons.warning_amber_rounded;
+    }
+  }
+
+  Color _warningColor(String type) {
+    switch (type.toLowerCase()) {
+      case 'weather':
+        return Colors.blue;
+      case 'cliff':
+        return Colors.red;
+      case 'slippery':
+        return Colors.orange;
+      case 'wildlife':
+        return Colors.brown;
+      case 'visibility':
+        return Colors.purple;
+      default:
+        return Colors.orange;
+    }
+  }
+
   Widget _buildBiodiversity() {
     return Card(
       child: Padding(
-        padding: const EdgeInsets.all(16.0),
+        padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -805,27 +859,7 @@ class _StationDetailScreenState extends State<StationDetailScreen> {
               ),
               const SizedBox(height: 8),
               ...station.flora.map(
-                (item) => Padding(
-                  padding: const EdgeInsets.only(bottom: 8.0, left: 28),
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Container(
-                        width: 6,
-                        height: 6,
-                        margin: const EdgeInsets.only(top: 8),
-                        decoration: BoxDecoration(
-                          color: Colors.green[300],
-                          shape: BoxShape.circle,
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Text(item, style: const TextStyle(height: 1.5)),
-                      ),
-                    ],
-                  ),
-                ),
+                (item) => _BulletItem(text: item, color: Colors.green[300]!),
               ),
             ],
             if (station.fauna.isNotEmpty) ...[
@@ -842,26 +876,9 @@ class _StationDetailScreenState extends State<StationDetailScreen> {
               ),
               const SizedBox(height: 8),
               ...station.fauna.map(
-                (item) => Padding(
-                  padding: const EdgeInsets.only(bottom: 8.0, left: 28),
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Container(
-                        width: 6,
-                        height: 6,
-                        margin: const EdgeInsets.only(top: 8),
-                        decoration: BoxDecoration(
-                          color: AppColors.primary.withValues(alpha: 0.5),
-                          shape: BoxShape.circle,
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Text(item, style: const TextStyle(height: 1.5)),
-                      ),
-                    ],
-                  ),
+                (item) => _BulletItem(
+                  text: item,
+                  color: AppColors.primary.withValues(alpha: 0.5),
                 ),
               ),
             ],
@@ -881,10 +898,9 @@ class _StationDetailScreenState extends State<StationDetailScreen> {
 
   Widget _buildMetadata() {
     if (station.metadata.isEmpty) return const SizedBox.shrink();
-
     return Card(
       child: Padding(
-        padding: const EdgeInsets.all(16.0),
+        padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -895,11 +911,11 @@ class _StationDetailScreenState extends State<StationDetailScreen> {
             const SizedBox(height: 12),
             ...station.metadata.entries.map(
               (entry) => Padding(
-                padding: const EdgeInsets.only(bottom: 8.0),
+                padding: const EdgeInsets.only(bottom: 8),
                 child: Row(
                   children: [
                     Icon(
-                      _getMetadataIcon(entry.key),
+                      _metadataIcon(entry.key),
                       size: 16,
                       color: AppColors.primary,
                     ),
@@ -919,7 +935,7 @@ class _StationDetailScreenState extends State<StationDetailScreen> {
     );
   }
 
-  IconData _getMetadataIcon(String key) {
+  IconData _metadataIcon(String key) {
     switch (key) {
       case 'viewingSpots':
         return Icons.landscape;
@@ -940,22 +956,19 @@ class _StationDetailScreenState extends State<StationDetailScreen> {
 
   String _formatMetadataKey(String key) {
     return key
-        .replaceAllMapped(RegExp(r'([A-Z])'), (match) => ' ${match.group(1)}')
+        .replaceAllMapped(RegExp(r'([A-Z])'), (m) => ' ${m.group(1)}')
         .split(' ')
         .map(
-          (word) => word.isEmpty
+          (w) => w.isEmpty
               ? ''
-              : '${word[0].toUpperCase()}${word.substring(1).toLowerCase()}',
+              : '${w[0].toUpperCase()}${w.substring(1).toLowerCase()}',
         )
         .join(' ');
   }
 
   String _formatMetadataValue(dynamic value) {
-    if (value is bool) {
-      return value ? 'Available' : 'Not Available';
-    } else if (value is List) {
-      return value.join(', ');
-    }
+    if (value is bool) return value ? 'Available' : 'Not Available';
+    if (value is List) return value.join(', ');
     return value.toString();
   }
 
@@ -974,14 +987,17 @@ class _StationDetailScreenState extends State<StationDetailScreen> {
           ],
         ),
         const SizedBox(height: 12),
-        ClipRRect(
-          borderRadius: BorderRadius.circular(12),
-          child: SizedBox(
-            height: 320,
-            child: TrailMap(
-              currentStation: station,
-              allStations: allStations,
+        // RepaintBoundary: map canvas stays isolated from scroll layer repaints.
+        RepaintBoundary(
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(12),
+            child: SizedBox(
               height: 320,
+              child: TrailMap(
+                currentStation: station,
+                allStations: allStations,
+                height: 320,
+              ),
             ),
           ),
         ),
@@ -990,11 +1006,10 @@ class _StationDetailScreenState extends State<StationDetailScreen> {
   }
 
   Widget _buildNextStation() {
-    // Don't show next station section for end stations
     if (_isEndStation(station.id)) {
       return Card(
         child: Padding(
-          padding: const EdgeInsets.all(16.0),
+          padding: const EdgeInsets.all(16),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -1040,7 +1055,7 @@ class _StationDetailScreenState extends State<StationDetailScreen> {
 
     return Card(
       child: Padding(
-        padding: const EdgeInsets.all(16.0),
+        padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -1060,7 +1075,6 @@ class _StationDetailScreenState extends State<StationDetailScreen> {
             ),
             const SizedBox(height: 16),
             if (nextStationData != null) ...[
-              // Display actual next station data
               Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -1106,7 +1120,6 @@ class _StationDetailScreenState extends State<StationDetailScreen> {
                 ],
               ),
               const SizedBox(height: 12),
-              // Display elevation and distance info for next station
               Container(
                 width: double.infinity,
                 padding: const EdgeInsets.all(12),
@@ -1148,7 +1161,6 @@ class _StationDetailScreenState extends State<StationDetailScreen> {
                 ),
               ),
               const SizedBox(height: 12),
-              // Steps info
               Container(
                 width: double.infinity,
                 padding: const EdgeInsets.symmetric(
@@ -1181,7 +1193,6 @@ class _StationDetailScreenState extends State<StationDetailScreen> {
                 ),
               ),
             ] else ...[
-              // Loading or no next station
               if (station.nextStationId != null)
                 const Center(child: CircularProgressIndicator())
               else
@@ -1209,6 +1220,10 @@ class _StationDetailScreenState extends State<StationDetailScreen> {
   }
 }
 
+// ---------------------------------------------------------------------------
+// Fullscreen image viewer
+// ---------------------------------------------------------------------------
+
 class _FullscreenImageViewer extends StatefulWidget {
   final List<String> images;
   final int initialIndex;
@@ -1223,16 +1238,16 @@ class _FullscreenImageViewer extends StatefulWidget {
 }
 
 class _FullscreenImageViewerState extends State<_FullscreenImageViewer> {
-  late PageController _pageController;
+  late final PageController _pageController;
   late int _currentIndex;
 
   @override
   void initState() {
     super.initState();
     _currentIndex = widget.initialIndex;
-    // Use a high initial page to support infinite scroll
-    final centerPage = widget.images.length * 50 + widget.initialIndex;
-    _pageController = PageController(initialPage: centerPage);
+    _pageController = PageController(
+      initialPage: widget.images.length * 50 + widget.initialIndex,
+    );
   }
 
   @override
@@ -1261,33 +1276,28 @@ class _FullscreenImageViewerState extends State<_FullscreenImageViewer> {
       body: PageView.builder(
         controller: _pageController,
         onPageChanged: (index) {
-          setState(() {
-            _currentIndex = index % widget.images.length;
-          });
+          final real = index % widget.images.length;
+          if (_currentIndex != real) setState(() => _currentIndex = real);
         },
+        itemCount: widget.images.length * 100,
+        physics: const PageScrollPhysics(),
         itemBuilder: (context, index) {
-          final imageIndex = index % widget.images.length;
-          final imagePath = widget.images[imageIndex];
-
+          final imagePath = widget.images[index % widget.images.length];
           return GestureDetector(
             onTap: () => Navigator.pop(context),
             child: Center(
               child: Image.asset(
                 'assets/images/$imagePath',
                 fit: BoxFit.contain,
-                errorBuilder: (context, error, stackTrace) {
-                  return const Icon(
-                    Icons.image_not_supported,
-                    color: Colors.white,
-                    size: 50,
-                  );
-                },
+                errorBuilder: (_, __, ___) => const Icon(
+                  Icons.image_not_supported,
+                  color: Colors.white,
+                  size: 50,
+                ),
               ),
             ),
           );
         },
-        itemCount: widget.images.length * 100,
-        physics: const PageScrollPhysics(),
       ),
     );
   }
