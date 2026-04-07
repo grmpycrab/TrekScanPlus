@@ -48,7 +48,7 @@ class AboutScreen extends StatelessWidget {
               ),
               const SizedBox(height: 32),
               const Text(
-                'Trek Scan Plus',
+                'Trek Scan+',
                 style: TextStyle(
                   fontSize: 24,
                   fontWeight: FontWeight.bold,
@@ -88,7 +88,7 @@ class AboutScreen extends StatelessWidget {
                     ),
                     const SizedBox(height: 16),
                     Text(
-                      'Trek Scan Plus is a capstone project developed by BSIT students at Davao Oriental State University (DOrSU). This innovative mobile application combines technology and sustainable tourism to enhance the trekking experience on Mt. Hamiguitan, a UNESCO World Heritage Site.\n\n'
+                      'Trek Scan+ is a capstone project developed by BSIT students at Davao Oriental State University (DOrSU). This innovative mobile application combines technology and sustainable tourism to enhance the trekking experience on Mt. Hamiguitan, a UNESCO World Heritage Site.\n\n'
                       'Our mission is to create a seamless bridge between technology and nature, empowering trekkers to explore responsibly while celebrating the unique biodiversity and cultural richness of Mt. Hamiguitan. Through this application, we aim to promote conservation awareness, sustainable trekking practices, and educational engagement with one of the Philippines\' most treasured natural landmarks.\n\n'
                       'Trek Scan Plus features real-time trek scheduling, interactive QR code scanning for educational insights, achievement tracking through our badge system, and comprehensive trek information to inspire and inform every adventurer who chooses to explore the mountain\'s wonders.',
                       style: TextStyle(

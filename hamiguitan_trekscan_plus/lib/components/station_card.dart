@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../theme/color.dart';
 import '../utils/app_logger.dart';
+import '../utils/station_image_path.dart';
 
 class StationCard extends StatelessWidget {
   final String imagePath;
@@ -42,7 +43,7 @@ class StationCard extends StatelessWidget {
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(12),
           image: DecorationImage(
-            image: AssetImage('assets/images/$imagePath'),
+            image: AssetImage(stationImageAssetPath(imagePath)),
             fit: BoxFit.cover,
             colorFilter: isVisited
                 ? null
