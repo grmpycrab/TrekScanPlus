@@ -49,6 +49,26 @@ flutter:
   
   assets:
     - assets/images/
+    - assets/station_images/Black Mountain/
+    - assets/station_images/Camp 3/
+    - assets/station_images/Camp 4/
+    - assets/station_images/Crossing Stampa/
+    - assets/station_images/Hidden Garden/
+    - assets/station_images/Lantawan 1/
+    - assets/station_images/Lantawan 2/
+    - assets/station_images/Lantawan 3/
+    - assets/station_images/Leptospermum amboinense/
+    - assets/station_images/Mossy Forest/
+    - assets/station_images/Nepenthes micromphora/
+    - assets/station_images/Nephentes hamiguiteneses/
+    - assets/station_images/Nephentes peltata/
+    - assets/station_images/Puting Bato/
+    - assets/station_images/Pygmy Field/
+    - assets/station_images/The Peak/
+    - assets/station_images/Tinagong Dagat/
+    - assets/station_images/Twin Falls/
+    - assets/station_images/UNESCO Marker/
+    - assets/station_images/Uwang-Uwang/
     - assets/icons/
     - assets/data/
     - assets/data/badge.json

@@ -9,7 +9,7 @@
         "latitude": 6.7362917,
         "longitude": 126.1416639,
         "images": [
-            "station1.jpg"
+            "station_images/UNESCO Marker/UNESCO MARKER.jpg"
         ],
         "steps": null,
         "distanceToNextKm": null,
@@ -36,7 +36,7 @@
         "latitude": 6.7348722,
         "longitude": 126.1428028,
         "images": [
-            "station2.jpg"
+            "station_images/Crossing Stampa/20241030_093431.jpg"
         ],
         "steps": 948,
         "distanceToNextKm": 0.7,
@@ -61,7 +61,8 @@
         "latitude": 6.7296278,
         "longitude": 126.1561278,
         "images": [
-            "station3.jpg"
+            "station_images/Puting Bato/20241101_141257.jpg",
+            "station_images/Puting Bato/20241101_141325.jpg"
         ],
         "steps": null,
         "distanceToNextKm": null,
@@ -86,7 +87,17 @@
         "latitude": 6.7230722,
         "longitude": 126.1605889,
         "images": [
-            "station4.jpg"
+            "station_images/Lantawan 1/LANTAWAN 1.JPG",
+            "station_images/Lantawan 1/Lantawan1 photo for use.jpg",
+            "station_images/Lantawan 1/20241030_121605.jpg",
+            "station_images/Nepenthes micromphora/IMG_1031.JPG",
+            "station_images/Nepenthes micromphora/IMG_1336.jpg",
+            "station_images/Nephentes hamiguiteneses/20241030_121214.jpg",
+            "station_images/Nephentes hamiguiteneses/20241030_121258.jpg",
+            "station_images/Nephentes hamiguiteneses/20241030_121306.jpg",
+            "station_images/Nephentes hamiguiteneses/20241030_121559.jpg",
+            "station_images/Nephentes peltata/20241030_155529.jpg",
+            "station_images/Nephentes peltata/20241030_155551.jpg"
         ],
         "steps": 5194,
         "distanceToNextKm": 4.0,
@@ -113,7 +124,9 @@
         "latitude": 6.7230722,
         "longitude": 126.1606139,
         "images": [
-            "station5.jpg"
+            "station_images/Camp 4/Camp 4.jpg",
+            "station_images/Camp 4/Camp 4.1.jpg",
+            "station_images/Camp 4/20241030_135003.jpg"
         ],
         "steps": 8200,
         "distanceToNextKm": 6.3,
@@ -138,7 +151,8 @@
         "latitude": 6.7322333,
         "longitude": 126.1773833,
         "images": [
-            "station6.jpg"
+            "station_images/Uwang-Uwang/20241030_152633.jpg",
+            "station_images/Uwang-Uwang/20241030_152653.jpg"
         ],
         "steps": 2,
         "distanceToNextKm": 0.0,
@@ -165,7 +179,11 @@
         "latitude": 6.7314722,
         "longitude": 126.17825,
         "images": [
-            "station7.jpg"
+            "station_images/Lantawan 2/20241030_154550.jpg",
+            "station_images/Lantawan 2/20241030_154600.jpg",
+            "station_images/Lantawan 2/20241030_154645.jpg",
+            "station_images/Lantawan 2/20241030_154649.jpg",
+            "station_images/Lantawan 2/20241030_154722.jpg"
         ],
         "steps": 3767,
         "distanceToNextKm": 2.9,
@@ -190,7 +208,8 @@
         "latitude": 6.7262333,
         "longitude": 126.184375,
         "images": [
-            "station8.jpg"
+            "station_images/Camp 3/Camp 3.jpg",
+            "station_images/Camp 3/Camp 3.1.jpg"
         ],
         "steps": 6627,
         "distanceToNextKm": 5.1,
@@ -215,7 +234,13 @@
         "latitude": 6.7202694,
         "longitude": 126.1833944,
         "images": [
-            "station9.jpg"
+            "station_images/Pygmy Field/Pygmy Forest.jpg",
+            "station_images/Pygmy Field/20241031_084152.jpg",
+            "station_images/Pygmy Field/20241031_085600.jpg",
+            "station_images/Pygmy Field/20241031_085606.jpg",
+            "station_images/Pygmy Field/20241031_093801.jpg",
+            "station_images/Pygmy Field/20241031_093805.jpg",
+            "station_images/Pygmy Field/20241031_093830.jpg"
         ],
         "steps": 1595,
         "distanceToNextKm": 1.2,
@@ -242,7 +267,13 @@
         "latitude": 6.7128,
         "longitude": 126.1872278,
         "images": [
-            "station10.jpg"
+            "station_images/Lantawan 3/Lantawan 3.png",
+            "station_images/Lantawan 3/20241031_101955.jpg",
+            "station_images/Lantawan 3/20241031_110114.jpg",
+            "station_images/Mossy Forest/Mossy Forest.JPG",
+            "station_images/Mossy Forest/Mossy Forest.png",
+            "station_images/Mossy Forest/20241031_114450.jpg",
+            "station_images/Leptospermum amboinense/20241031_093832.jpg"
         ],
         "steps": 5241,
         "distanceToNextKm": 4.0,
@@ -269,7 +300,7 @@
         "latitude": 6.7076528,
         "longitude": 126.1953083,
         "images": [
-            "station12.jpg"
+            "station_images/Tinagong Dagat/tinagong dagat.jpg"
         ],
         "steps": 8895,
         "distanceToNextKm": 6.8,
@@ -296,7 +327,8 @@
         "latitude": 6.70417,
         "longitude": 126.19972,
         "images": [
-            "station13.jpg"
+            "station_images/Hidden Garden/Hidden Garden.JPG",
+            "station_images/Hidden Garden/Hidden Garden.png"
         ],
         "steps": null,
         "distanceToNextKm": null,
@@ -317,7 +349,7 @@
         "latitude": 6.7399722,
         "longitude": 126.1814583,
         "images": [
-            "station14.jpg"
+            "station_images/The Peak/Peak (1).JPG"
         ],
         "steps": 6342,
         "distanceToNextKm": 4.9,
@@ -344,7 +376,11 @@
         "latitude": 6.7265917,
         "longitude": 126.1803722,
         "images": [
-            "station15.jpg"
+            "station_images/Black Mountain/Black Mountain.JPG",
+            "station_images/Black Mountain/20241031_155604.jpg",
+            "station_images/Black Mountain/20241031_155622.jpg",
+            "station_images/Black Mountain/20241031_155633.jpg",
+            "station_images/Black Mountain/20241031_155645.jpg"
         ],
         "steps": 1709,
         "distanceToNextKm": 1.3,
@@ -369,7 +405,7 @@
         "latitude": 6.7238167,
         "longitude": 126.1830611,
         "images": [
-            "station16.jpg"
+            "station_images/Twin Falls/Twin Falls.png"
         ],
         "steps": 4133,
         "distanceToNextKm": 3.2,

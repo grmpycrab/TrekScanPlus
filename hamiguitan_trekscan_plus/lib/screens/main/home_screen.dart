@@ -525,7 +525,7 @@ class _HomeScreenState extends State<HomeScreen>
                                               'Welcome,',
                                               style: TextStyle(
                                                 color: AppColors.textSecondary,
-                                                fontSize: 14,
+                                                fontSize: 12,
                                               ),
                                             ),
                                             Text(
@@ -535,7 +535,7 @@ class _HomeScreenState extends State<HomeScreen>
                                                   : 'Traveler!',
                                               style: const TextStyle(
                                                 fontWeight: FontWeight.w600,
-                                                fontSize: 16,
+                                                fontSize: 14,
                                               ),
                                               maxLines: 1,
                                               overflow: TextOverflow.ellipsis,
@@ -594,7 +594,7 @@ class _HomeScreenState extends State<HomeScreen>
                                         'Traveler!',
                                         style: TextStyle(
                                           fontWeight: FontWeight.w600,
-                                          fontSize: 16,
+                                          fontSize: 14,
                                         ),
                                       ),
                                     ],
@@ -613,10 +613,10 @@ class _HomeScreenState extends State<HomeScreen>
                           hintStyle: TextStyle(color: AppColors.textSecondary),
                           border: InputBorder.none,
                           contentPadding: const EdgeInsets.symmetric(
-                            horizontal: 12,
+                            horizontal: 16,
                           ),
                         ),
-                        style: const TextStyle(fontSize: 16),
+                        style: const TextStyle(fontSize: 14),
                       ),
                     ),
                   Row(
@@ -625,13 +625,13 @@ class _HomeScreenState extends State<HomeScreen>
                         icon: _isSearchExpanded
                             ? Icon(
                                 Icons.close,
-                                size: 24,
+                                size: 20,
                                 color: AppColors.primary,
                               )
                             : Image.asset(
                                 'assets/icons/search.png',
-                                width: 24,
-                                height: 24,
+                                width: 20,
+                                height: 20,
                                 color: _searchQuery.isNotEmpty
                                     ? AppColors.primary
                                     : Colors.black,
@@ -647,8 +647,8 @@ class _HomeScreenState extends State<HomeScreen>
                             IconButton(
                               icon: Image.asset(
                                 'assets/icons/bell.png',
-                                width: 28,
-                                height: 28,
+                                width: 20,
+                                height: 20,
                                 color: Colors.black,
                               ),
                               onPressed: () {
@@ -1190,7 +1190,7 @@ class _HomeScreenState extends State<HomeScreen>
   /// Load the first page of posts (pagination)
   Future<void> _loadFirstPageOfPosts() async {
     try {
-      AppLogger.i('📝 Loading first page of posts...');
+      AppLogger.i('Loading first page of posts...');
       final (posts, hasMore) = await _paginationService
           .loadPublicPostsFirstPage();
 
@@ -1212,7 +1212,7 @@ class _HomeScreenState extends State<HomeScreen>
 
       AppLogger.i('  First page loaded: ${posts.length} posts');
     } catch (e) {
-      AppLogger.e('❌ Error loading first page: $e');
+      AppLogger.e('Error loading first page: $e');
       if (mounted) {
         ScaffoldMessenger.of(
           context,
@@ -1228,7 +1228,7 @@ class _HomeScreenState extends State<HomeScreen>
     setState(() => _isLoadingMore = true);
 
     try {
-      AppLogger.i('📄 Loading next page of posts...');
+      AppLogger.i('Loading next page of posts...');
       final (posts, hasMore) = await _paginationService
           .loadPublicPostsNextPage();
 
@@ -1242,7 +1242,7 @@ class _HomeScreenState extends State<HomeScreen>
 
       AppLogger.i('  Next page loaded: ${posts.length} new posts');
     } catch (e) {
-      AppLogger.e('❌ Error loading next page: $e');
+      AppLogger.e('Error loading next page: $e');
       if (mounted) {
         setState(() => _isLoadingMore = false);
         ScaffoldMessenger.of(

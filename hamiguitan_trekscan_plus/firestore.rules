@@ -224,5 +224,39 @@ service cloud.firestore {
       allow create: if request.auth != null;
     }
 
+    // Station reviews: one document per user per station (doc id = userId)
+    match /station_reviews/{stationId}/reviews/{reviewId} {
+      // Anyone can read (station detail is useful without signing in)
+      allow read: if true;
+
+      allow create: if request.auth != null
+        && reviewId == request.auth.uid
+        && request.resource.data.userId == request.auth.uid
+        && request.resource.data.rating is int
+        && request.resource.data.rating >= 1
+        && request.resource.data.rating <= 5
+        && request.resource.data.userDisplayName is string
+        && request.resource.data.userDisplayName.size() > 0
+        && request.resource.data.userDisplayName.size() <= 120
+        && request.resource.data.comment is string
+        && request.resource.data.comment.size() <= 2000;
+
+      allow update: if request.auth != null
+        && reviewId == request.auth.uid
+        && resource.data.userId == request.auth.uid
+        && request.resource.data.userId == request.auth.uid
+        && request.resource.data.rating is int
+        && request.resource.data.rating >= 1
+        && request.resource.data.rating <= 5
+        && request.resource.data.userDisplayName is string
+        && request.resource.data.userDisplayName.size() > 0
+        && request.resource.data.userDisplayName.size() <= 120
+        && request.resource.data.comment is string
+        && request.resource.data.comment.size() <= 2000;
+
+      allow delete: if request.auth != null
+        && resource.data.userId == request.auth.uid;
+    }
+
   }
 }

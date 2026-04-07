@@ -116,10 +116,10 @@ class _BannerSlideshowState extends State<BannerSlideshow> {
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [
                   const Text(
-                    'Mt. Hamiguitan Trek Scan+',
+                    'Mt. Hamiguitan TrekScan+',
                     style: TextStyle(
                       color: Colors.white,
-                      fontSize: 24,
+                      fontSize: 20,
                       fontWeight: FontWeight.w800,
                       height: 1.2,
                       shadows: [
