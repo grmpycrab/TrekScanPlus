@@ -146,7 +146,6 @@ class StationService extends ChangeNotifier {
                 distanceToNextKm: station.distanceToNextKm,
                 flora: station.flora,
                 fauna: station.fauna,
-                warnings: station.warnings,
                 isCheckpoint: station.isCheckpoint,
                 isVisited: station.isVisited,
               );

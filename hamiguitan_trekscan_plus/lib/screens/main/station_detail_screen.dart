@@ -10,6 +10,7 @@ import '../../services/station_review_service.dart';
 import '../../theme/color.dart';
 import '../../components/trail_map.dart';
 import '../../components/station_review_widgets.dart';
+import '../../components/biodiversity_features_section.dart';
 import '../../utils/app_logger.dart';
 import '../../utils/station_image_path.dart';
 
@@ -74,46 +75,48 @@ class _AppBarGradientOverlay extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Stack(
-      fit: StackFit.expand,
-      children: const [
-        DecoratedBox(
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-              stops: [0.0, 0.3, 0.5, 0.7, 1.0],
-              colors: [
-                Color(0x4D000000),
-                Colors.transparent,
-                Colors.transparent,
-                Color(0x80000000),
-                Color(0xCC000000),
-              ],
-            ),
-          ),
-        ),
-        Positioned(
-          bottom: 0,
-          left: 0,
-          right: 0,
-          height: 200,
-          child: DecoratedBox(
+    return IgnorePointer(
+      child: Stack(
+        fit: StackFit.expand,
+        children: const [
+          DecoratedBox(
             decoration: BoxDecoration(
               gradient: LinearGradient(
-                begin: Alignment.bottomCenter,
-                end: Alignment.topCenter,
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                stops: [0.0, 0.3, 0.5, 0.7, 1.0],
                 colors: [
-                  Color(0xCC000000),
-                  Color(0x99000000),
                   Color(0x4D000000),
                   Colors.transparent,
+                  Colors.transparent,
+                  Color(0x80000000),
+                  Color(0xCC000000),
                 ],
               ),
             ),
           ),
-        ),
-      ],
+          Positioned(
+            bottom: 0,
+            left: 0,
+            right: 0,
+            height: 200,
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.bottomCenter,
+                  end: Alignment.topCenter,
+                  colors: [
+                    Color(0xCC000000),
+                    Color(0x99000000),
+                    Color(0x4D000000),
+                    Colors.transparent,
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
@@ -132,40 +135,28 @@ class _MetricBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-      decoration: BoxDecoration(
-        color: const Color(0x99000000),
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, color: Colors.grey[400], size: 16),
-          const SizedBox(width: 8),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                value,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-              Text(
-                label,
-                style: TextStyle(
-                  color: Colors.grey[400],
-                  fontSize: 10,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-            ],
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        Icon(icon, color: Colors.grey[300], size: 16),
+        const SizedBox(height: 4),
+        Text(
+          value,
+          style: const TextStyle(
+            color: Colors.white,
+            fontSize: 15,
+            fontWeight: FontWeight.w600,
           ),
-        ],
-      ),
+        ),
+        Text(
+          label,
+          style: TextStyle(
+            color: Colors.grey[300],
+            fontSize: 10,
+            fontWeight: FontWeight.w500,
+          ),
+        ),
+      ],
     );
   }
 }
@@ -173,9 +164,21 @@ class _MetricBadge extends StatelessWidget {
 /// Difficulty badge + name + metric row shown at the bottom of the hero.
 /// Passed as AnimatedBuilder's `child` so it is built once per station load.
 class _HeroStationInfo extends StatelessWidget {
-  const _HeroStationInfo({required this.station});
+  const _HeroStationInfo({
+    required this.station,
+    required this.locationPrimary,
+    this.locationSub,
+    required this.averageRating,
+    required this.reviewCount,
+    required this.reviewLoading,
+  });
 
   final StationData station;
+  final String locationPrimary;
+  final String? locationSub;
+  final double averageRating;
+  final int reviewCount;
+  final bool reviewLoading;
 
   @override
   Widget build(BuildContext context) {
@@ -183,84 +186,117 @@ class _HeroStationInfo extends StatelessWidget {
       bottom: 20,
       left: 20,
       right: 20,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-            decoration: BoxDecoration(
-              color: _getDifficultyColor(station.difficulty),
-              borderRadius: BorderRadius.circular(4),
-            ),
-            child: Text(
-              station.difficulty.toUpperCase(),
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 12,
-                fontWeight: FontWeight.w600,
+      child: IgnorePointer(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              decoration: BoxDecoration(
+                color: _getDifficultyColor(station.difficulty),
+                borderRadius: BorderRadius.circular(4),
+              ),
+              child: Text(
+                station.difficulty.toUpperCase(),
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
             ),
-          ),
-          const SizedBox(height: 12),
-          Text(
-            station.name,
-            style: const TextStyle(
-              fontSize: 32,
-              fontWeight: FontWeight.bold,
-              color: Colors.white,
+            const SizedBox(height: 12),
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Expanded(
+                  child: Text(
+                    station.name,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      fontSize: 30,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 10),
+                StationRatingSummaryPill(
+                  loading: reviewLoading,
+                  average: averageRating,
+                  count: reviewCount,
+                ),
+              ],
             ),
-          ),
-          const SizedBox(height: 20),
-          Row(
-            children: [
-              _MetricBadge(
-                icon: Icons.height,
-                value: '${station.elevation}m',
-                label: 'ELEVATION',
-              ),
-              const SizedBox(width: 12),
-              _MetricBadge(
-                icon: Icons.directions_walk,
-                value: '${station.steps ?? 0}',
-                label: 'STEPS',
-              ),
-              const SizedBox(width: 12),
-              _MetricBadge(
-                icon: Icons.route,
-                value: '${station.distanceToNextKm ?? 0} km',
-                label: 'DISTANCE',
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-/// Bullet-point list item used in the biodiversity section.
-class _BulletItem extends StatelessWidget {
-  const _BulletItem({required this.text, required this.color});
-
-  final String text;
-  final Color color;
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 8, left: 28),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            width: 6,
-            height: 6,
-            margin: const EdgeInsets.only(top: 8),
-            decoration: BoxDecoration(color: color, shape: BoxShape.circle),
-          ),
-          const SizedBox(width: 12),
-          Expanded(child: Text(text, style: const TextStyle(height: 1.5))),
-        ],
+            const SizedBox(height: 14),
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(
+                  child: _MetricBadge(
+                    icon: Icons.height,
+                    value: '${station.elevation}m',
+                    label: 'ELEVATION',
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: _MetricBadge(
+                    icon: Icons.directions_walk,
+                    value: '${station.steps ?? 0}',
+                    label: 'STEPS',
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: _MetricBadge(
+                    icon: Icons.route,
+                    value: '${station.distanceToNextKm ?? 0} km',
+                    label: 'DISTANCE',
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Icon(
+                  Icons.location_on_rounded,
+                  size: 15,
+                  color: Colors.grey[300],
+                ),
+                const SizedBox(width: 6),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        locationPrimary,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                          height: 1.3,
+                        ),
+                      ),
+                      if (locationSub != null)
+                        Text(
+                          locationSub!,
+                          style: const TextStyle(
+                            color: AppColors.textLight,
+                            fontSize: 11.5,
+                            height: 1.25,
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -375,80 +411,6 @@ class _WarningsSection extends StatelessWidget {
                 ),
               );
             }),
-        ],
-      ),
-    );
-  }
-}
-
-class _BiodiversitySection extends StatelessWidget {
-  const _BiodiversitySection({required this.flora, required this.fauna});
-  final List<String> flora;
-  final List<String> fauna;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: AppColors.background,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.border),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text(
-            'Local biodiversity',
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-              color: AppColors.text,
-            ),
-          ),
-          if (flora.isNotEmpty) ...[
-            const SizedBox(height: 12),
-            Row(
-              children: [
-                Icon(Icons.eco, size: 20, color: Colors.green[600]),
-                const SizedBox(width: 8),
-                const Text(
-                  'Notable Flora',
-                  style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16),
-                ),
-              ],
-            ),
-            const SizedBox(height: 8),
-            ...flora.map(
-              (item) => _BulletItem(text: item, color: Colors.green[300]!),
-            ),
-          ],
-          if (fauna.isNotEmpty) ...[
-            const SizedBox(height: 16),
-            Row(
-              children: [
-                const Icon(Icons.pets, size: 20, color: AppColors.primary),
-                const SizedBox(width: 8),
-                const Text(
-                  'Notable Fauna',
-                  style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16),
-                ),
-              ],
-            ),
-            const SizedBox(height: 8),
-            ...fauna.map(
-              (item) => _BulletItem(
-                text: item,
-                color: AppColors.primary.withValues(alpha: 0.5),
-              ),
-            ),
-          ],
-          if (flora.isEmpty && fauna.isEmpty)
-            const Text(
-              'No biodiversity information available for this station.',
-              style: TextStyle(color: Colors.grey, fontStyle: FontStyle.italic),
-            ),
         ],
       ),
     );
@@ -823,45 +785,6 @@ class _NextStationSection extends StatelessWidget {
 }
 
 // ---------------------------------------------------------------------------
-// Location subtitle block — extracted so it can be cached as a widget field
-// ---------------------------------------------------------------------------
-
-class _LocationSubtitleBlock extends StatelessWidget {
-  const _LocationSubtitleBlock({required this.primary, this.sub});
-
-  final String primary;
-  final String? sub;
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          primary,
-          style: const TextStyle(
-            fontSize: 13,
-            height: 1.4,
-            fontWeight: FontWeight.w600,
-            color: AppColors.text,
-          ),
-        ),
-        if (sub != null)
-          Text(
-            sub!,
-            style: TextStyle(
-              fontSize: 12.5,
-              height: 1.35,
-              color: Colors.grey[700],
-              fontFeatures: const [FontFeature.tabularFigures()],
-            ),
-          ),
-      ],
-    );
-  }
-}
-
-// ---------------------------------------------------------------------------
 // Main screen
 // ---------------------------------------------------------------------------
 
@@ -899,10 +822,9 @@ class _StationDetailScreenState extends State<StationDetailScreen> {
   late final String? _locationSub;
 
   // Cached static subtree widgets — built once, reused across all rebuilds.
-  late final Widget _locationSubtitleBlock;
   late final Widget _descriptionSection;
   late final Widget _warningsSection;
-  late final Widget _biodiversitySection;
+  late final Widget _biodiversityFeaturesSection;
   late final Widget _metadataSection;
 
   @override
@@ -923,16 +845,13 @@ class _StationDetailScreenState extends State<StationDetailScreen> {
     _locationSub = (_dmsLine != null && _decLine != null) ? _decLine : null;
 
     // Build stream-independent widgets once.
-    _locationSubtitleBlock = _LocationSubtitleBlock(
-      primary: _locationPrimary,
-      sub: _locationSub,
-    );
     _descriptionSection = _DescriptionSection(description: station.description);
-    _warningsSection = _WarningsSection(warnings: station.warnings);
-    _biodiversitySection = _BiodiversitySection(
-      flora: station.flora,
-      fauna: station.fauna,
+    _warningsSection = _WarningsSection(
+      warnings: station.trailDetails?.warnings ?? {},
     );
+    _biodiversityFeaturesSection = station.trailDetails != null
+        ? BiodiversityFeaturesSection(trailDetails: station.trailDetails!)
+        : const SizedBox.shrink();
     _metadataSection = _MetadataSection(metadata: station.metadata);
 
     _preloadImages();
@@ -1088,7 +1007,6 @@ class _StationDetailScreenState extends State<StationDetailScreen> {
                         ),
                         builder: (context, snapshot) {
                           final reviews = snapshot.data ?? [];
-                          final avg = StationReview.averageRating(reviews);
                           final reviewLoading =
                               snapshot.connectionState ==
                                   ConnectionState.waiting &&
@@ -1098,24 +1016,15 @@ class _StationDetailScreenState extends State<StationDetailScreen> {
                             mainAxisSize: MainAxisSize.min,
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              // Only this row re-renders on stream events.
-                              _buildLocationAndRatingRow(
-                                avg,
-                                reviews.length,
-                                reviewLoading,
-                              ),
-                              const SizedBox(height: 28),
                               // All sections below are pre-built widgets —
                               // Flutter's element tree skips diffing them.
                               _descriptionSection,
-                              if (station.warnings.isNotEmpty) ...[
+                              const SizedBox(height: 32),
+                              _biodiversityFeaturesSection,
+                              if ((station.trailDetails?.warnings ?? {})
+                                  .isNotEmpty) ...[
                                 const SizedBox(height: 32),
                                 _warningsSection,
-                              ],
-                              if (station.flora.isNotEmpty ||
-                                  station.fauna.isNotEmpty) ...[
-                                const SizedBox(height: 32),
-                                _biodiversitySection,
                               ],
                               if (allStations.isNotEmpty) ...[
                                 const SizedBox(height: 32),
@@ -1178,9 +1087,25 @@ class _StationDetailScreenState extends State<StationDetailScreen> {
       children: [
         _buildImageCarousel(), // rebuilds only on page swipe
         const _AppBarGradientOverlay(), // const, never rebuilds
-        _HeroStationInfo(
-          station: station,
-        ), // rebuilds only when station changes
+        StreamBuilder<List<StationReview>>(
+          stream: StationReviewService.instance.watchReviews(station.id),
+          builder: (context, snapshot) {
+            final reviews = snapshot.data ?? [];
+            final avg = StationReview.averageRating(reviews);
+            final reviewLoading =
+                snapshot.connectionState == ConnectionState.waiting &&
+                !snapshot.hasData;
+
+            return _HeroStationInfo(
+              station: station,
+              locationPrimary: _locationPrimary,
+              locationSub: _locationSub,
+              averageRating: avg,
+              reviewCount: reviews.length,
+              reviewLoading: reviewLoading,
+            );
+          },
+        ), // rebuilds only on review updates
       ],
     );
 
@@ -1279,38 +1204,6 @@ class _StationDetailScreenState extends State<StationDetailScreen> {
           initialIndex: initialIndex,
         ),
       ),
-    );
-  }
-
-  // -------------------------------------------------------------------------
-  // Location + rating row — only this rebuilds on stream events
-  // -------------------------------------------------------------------------
-
-  Widget _buildLocationAndRatingRow(
-    double averageRating,
-    int reviewCount,
-    bool reviewLoading,
-  ) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Padding(
-          padding: EdgeInsets.only(top: 4),
-          child: Icon(
-            Icons.location_on_rounded,
-            size: 24,
-            color: AppColors.accent,
-          ),
-        ),
-        const SizedBox(width: 10),
-        Expanded(child: _locationSubtitleBlock), // cached widget
-        const SizedBox(width: 8),
-        StationRatingSummaryPill(
-          loading: reviewLoading,
-          average: averageRating,
-          count: reviewCount,
-        ),
-      ],
     );
   }
 }
