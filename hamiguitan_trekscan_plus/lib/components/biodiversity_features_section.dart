@@ -10,12 +10,12 @@ class BiodiversityFeatureItem extends StatelessWidget {
   final Color iconColor;
 
   const BiodiversityFeatureItem({
-    Key? key,
+    super.key,
     required this.label,
     required this.icon,
     required this.items,
     this.iconColor = Colors.blue,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -321,8 +321,7 @@ final Map<String, _FeatureType> _featureTypes = {
 class BiodiversityFeaturesSection extends StatelessWidget {
   final TrailDetails trailDetails;
 
-  const BiodiversityFeaturesSection({Key? key, required this.trailDetails})
-    : super(key: key);
+  const BiodiversityFeaturesSection({super.key, required this.trailDetails});
 
   @override
   Widget build(BuildContext context) {
