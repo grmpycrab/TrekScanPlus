@@ -21,10 +21,17 @@
         "fauna": [
             "Philippine deer"
         ],
-        "warnings": {
-            "general": "Stay with your guide at all times."
-        },
-        "isCheckpoint": true
+        "isCheckpoint": true,
+        "trailDetails": {
+            "trailType": [],
+            "plants": ["Dipterocarp trees"],
+            "animals": ["Philippine deer"],
+            "facilities": [],
+            "utilities": [],
+            "warnings": {
+                "general": "Stay with your guide at all times."
+            }
+        }
     },
     {
         "id": "hu2c5c0kfn",
@@ -48,15 +55,22 @@
         "fauna": [
             "Long-tailed macaque"
         ],
-        "warnings": {},
-        "isCheckpoint": false
+        "isCheckpoint": false,
+        "trailDetails": {
+            "trailType": [],
+            "plants": ["Ferns"],
+            "animals": ["Long-tailed macaque"],
+            "facilities": [],
+            "utilities": [],
+            "warnings": {}
+        }
     },
     {
         "id": "um6j8dnii4",
         "name": "Puting Bato",
         "description": "Nestled roughly 4-5 hours from the Brgy. La Union jump-off, Puting Bato emerges as a shimmering prelude where sunlight dances off pale boulders amid crisscrossing rivers and thick dipterocarp canopies. Trekkers ford shallow streams, their boots slick with mud, while the air thickens with the scent of wet earth and blooming ferns; it's here that the mountain first whispers its wild invitation, easing novices into rhythm with playful water splashes and distant bird calls. Monkeys rustle overhead, and the white rocks—ancient sentinels, offer a natural bench for refueling, marking the threshold from civilized trails to untamed ascent.",
         "difficulty": "Moderate",
-        "elevation": 623,
+        "elevation": 696,
         "coordinates": "N:06°43'46.66'' E:126°09'22.06''",
         "latitude": 6.7296278,
         "longitude": 126.1561278,
@@ -69,20 +83,31 @@
         "nextStationId": "3ko938o2gb",
         "nextStationName": "Lantawan 1",
         "flora": [
-            "Orchids"
+            "Epiphytes",
+            "Angiosperms",
+            "Herbs",
+            "Vines",
+            "Pteridophytes"
         ],
         "fauna": [
-            "Civets"
+            "Frogs"
         ],
-        "warnings": {},
-        "isCheckpoint": false
+        "isCheckpoint": false,
+        "trailDetails": {
+            "trailType": ["Trail with tree roots"],
+            "plants": ["Epiphytes", "Angiosperms", "Herbs", "Vines", "Pteridophytes"],
+            "animals": ["Frogs"],
+            "facilities": [],
+            "utilities": [],
+            "warnings": {}
+        }
     },
     {
         "id": "3ko938o2gb",
         "name": "Lantawan 1",
         "description": "About 5-6 hours in, this first grand viewpoint unfurls like a living tapestry, where massive hardwoods frame endless green ridges rolling toward the Pujada Peninsula. Filtered sunlight spotlights carnivorous pitcher plants dangling like emerald chalices, their veins pulsing with dew, while rare orchids peek from mossy nooks; hikers catch their breath amid panoramic sweeps, feeling the forest's pulse quicken as gradients hint at trials ahead. Breezes carry salty Pacific hints, blending with floral perfumes, creating a meditative pause where the soul syncs with the wild's vast symphony.",
         "difficulty": "Moderate",
-        "elevation": 830,
+        "elevation": 839,
         "coordinates": "N:06°43'23.06'' E:126°09'38.12''",
         "latitude": 6.7230722,
         "longitude": 126.1605889,
@@ -104,25 +129,32 @@
         "nextStationId": "33ii1jrc5s",
         "nextStationName": "Camp 4",
         "flora": [
-            "Rattan"
+            "Pteridophytes",
+            "Angiosperms",
+            "Herbs"
         ],
-        "fauna": [
-            "Hornbills"
-        ],
-        "warnings": {
-            "cliff": "Do not lean over the ledges."
-        },
-        "isCheckpoint": true
+        "fauna": [],
+        "isCheckpoint": true,
+        "trailDetails": {
+            "trailType": ["Trail with rocks"],
+            "plants": ["Pteridophytes", "Angiosperms", "Herbs"],
+            "animals": [],
+            "facilities": [],
+            "utilities": [],
+            "warnings": {
+                "cliff": "Do not lean over the ledges."
+            }
+        }
     },
     {
         "id": "33ii1jrc5s",
         "name": "Camp 4",
         "description": "At ~950 MASL after 7-8 hours of toil, Camp 4 unfolds as a misty haven with natural sinks, toilets fed by trickles, and flat clearings ringed by moss-draped limbs. Twilight brings a chorus of nocturnal life—crickets, owls, and glowing fungi—while campfires flicker against encroaching fog; it's the cusp of mossy realms, where weary bodies mend under star-peeked skies, inhaling the damp alchemy of decaying leaves and rebirth. Provisions taste divine here, fueling dreams of pygmy wonders above.",
         "difficulty": "Moderate",
-        "elevation": 908,
-        "coordinates": "N:06°43'23.06'' E:126°09'38.21''",
-        "latitude": 6.7230722,
-        "longitude": 126.1606139,
+        "elevation": 999,
+        "coordinates": "N:06°43'50.28'' E:126°10'02.04''",
+        "latitude": 6.730633,
+        "longitude": 126.167233,
         "images": [
             "station_images/Camp 4/Camp 4.jpg",
             "station_images/Camp 4/Camp 4.1.jpg",
@@ -133,20 +165,33 @@
         "nextStationId": "vaatj8uomu",
         "nextStationName": "Uwang-Uwang Trail",
         "flora": [
-            "Bamboo"
+            "Pteridophytes",
+            "Angiosperms",
+            "Herbs",
+            "Vines",
+            "Lichen"
         ],
         "fauna": [
-            "Wild pigs"
+            "Beetles",
+            "Insects",
+            "Butterflies"
         ],
-        "warnings": {},
-        "isCheckpoint": true
+        "isCheckpoint": true,
+        "trailDetails": {
+            "trailType": ["Trail with roots", "Soil trail"],
+            "plants": ["Pteridophytes", "Angiosperms", "Herbs", "Vines", "Lichen"],
+            "animals": ["Beetles", "Insects", "Butterflies"],
+            "facilities": ["Cooking area", "Dining tables", "Activity Area"],
+            "utilities": ["Potable Water"],
+            "warnings": {}
+        }
     },
     {
         "id": "vaatj8uomu",
         "name": "Uwang-Uwang Trail",
         "description": "The beast at 997 MASL demands 1-2 grueling hours of root-clinging scrambles and creek-wading plunges, where narrow defiles amplify every slip on slick granite under perpetual mist. Echoing waterfalls roar like jungle spirits, roots form precarious ladders, and the air grows cool with spray; endurance forges character amid primal immersion, with fleeting glimpses of iridescent birds piercing the veil. Emerging triumphant feels mythic, the mountain's raw forge tempering resolve.",
         "difficulty": "Hard",
-        "elevation": 1121,
+        "elevation": 1156,
         "coordinates": "N:06°43'56.04'' E:126°10'38.58''",
         "latitude": 6.7322333,
         "longitude": 126.1773833,
@@ -159,22 +204,33 @@
         "nextStationId": "cbensi5juq",
         "nextStationName": "Lantawan 2",
         "flora": [
-            "Mosses"
+            "Angiosperms",
+            "Bryophytes",
+            "Vines and Lianas",
+            "Shrubs",
+            "Herbs"
         ],
         "fauna": [
-            "Butterflies"
+            "Philippine Bulbul"
         ],
-        "warnings": {
-            "slippery": "Trail may be muddy and slick."
-        },
-        "isCheckpoint": false
+        "isCheckpoint": false,
+        "trailDetails": {
+            "trailType": ["Trail with tree roots"],
+            "plants": ["Angiosperms", "Bryophytes", "Vines and Lianas", "Shrubs", "Herbs"],
+            "animals": ["Philippine Bulbul"],
+            "facilities": [],
+            "utilities": [],
+            "warnings": {
+                "slippery": "Trail may be muddy and slick."
+            }
+        }
     },
     {
         "id": "cbensi5juq",
         "name": "Lantawan 2",
         "description": "Perched at ~1,200 MASL near 8-10 hours total, this upper aerie surveys twisted bonsai fringes framing abyssal valleys and distant ocean shimmer through swirling clouds. Wind sculpts stunted giants into otherworldly shapes, carrying scents of resin and rain; it's a high-altitude trance where silence reigns save for raptor cries, priming the spirit for the surreal plateau beyond. Clear spells gift vertigo-inducing vistas, etching the climb's epic scale into memory.",
         "difficulty": "Moderate",
-        "elevation": 1215,
+        "elevation": 1169,
         "coordinates": "N:06°43'53.30'' E:126°10'41.70''",
         "latitude": 6.7314722,
         "longitude": 126.17825,
@@ -190,20 +246,29 @@
         "nextStationId": "utvrrkfkh9",
         "nextStationName": "Camp 3",
         "flora": [
-            "Wild orchids"
+            "Pteridophytes",
+            "Spermatophytes",
+            "Shrubs",
+            "Vines and Lianas",
+            "Angiosperms"
         ],
-        "fauna": [
-            "Philippine eagle (sightings)"
-        ],
-        "warnings": {},
-        "isCheckpoint": true
+        "fauna": [],
+        "isCheckpoint": true,
+        "trailDetails": {
+            "trailType": ["Soil trail", "Trail with tree roots", "Rock trails"],
+            "plants": ["Pteridophytes", "Spermatophytes", "Shrubs", "Vines and Lianas", "Angiosperms"],
+            "animals": [],
+            "facilities": [],
+            "utilities": [],
+            "warnings": {}
+        }
     },
     {
         "id": "utvrrkfkh9",
         "name": "Camp 3",
         "description": "The pygmy epicenter at 1,151-1,200 MASL after 10-11 hours on Day 1, this plateau cradles tents amid century-old dwarf forests beside enigmatic Tinagong Dagat lake, its surface mirroring starlit voids. Black Forest silhouettes loom nearby, fireflies dance like earth-stars, and night winds hush ancient secrets through bonsai canopies; dawn reveals raptors soaring over mist-shrouded vales, with camp's camaraderie amplifying the magic. It's the climb's enchanted core, blending exhaustion with transcendence.",
         "difficulty": "Moderate",
-        "elevation": 1190,
+        "elevation": 1151,
         "coordinates": "N:06°43'34.44'' E:126°11'03.75''",
         "latitude": 6.7262333,
         "longitude": 126.184375,
@@ -216,13 +281,31 @@
         "nextStationId": "62n05d42d6",
         "nextStationName": "Pygmy Field",
         "flora": [
-            "Tree ferns"
+            "Bryophytes",
+            "Pteridophytes",
+            "Lichen",
+            "Herbs",
+            "Shrubs",
+            "Angiosperms",
+            "Vines",
+            "Gymnosperms"
         ],
         "fauna": [
-            "Owls"
+            "White-eared Brown Dove",
+            "Butterflies",
+            "Forest Frogs",
+            "Philippine Bulbul",
+            "Flowerpecker"
         ],
-        "warnings": {},
-        "isCheckpoint": true
+        "isCheckpoint": true,
+        "trailDetails": {
+            "trailType": ["Trail with tree roots", "Soil trail"],
+            "plants": ["Bryophytes", "Pteridophytes", "Lichen", "Herbs", "Shrubs", "Angiosperms", "Vines", "Gymnosperms"],
+            "animals": ["White-eared Brown Dove", "Butterflies", "Forest Frogs", "Philippine Bulbul", "Flowerpecker"],
+            "facilities": ["Cabin", "Cooking area", "Dining area", "Activity Areas", "Water Supply", "Restrooms", "Handwash station", "Shower"],
+            "utilities": ["Potable water"],
+            "warnings": {}
+        }
     },
     {
         "id": "6mm4kle34g",
@@ -252,17 +335,24 @@
         "fauna": [
             "Mountain shrew"
         ],
-        "warnings": {
-            "plants": "Do not touch or step on pygmy trees."
-        },
-        "isCheckpoint": false
+        "isCheckpoint": false,
+        "trailDetails": {
+            "trailType": ["Trail with tree roots", "Soil trail"],
+            "plants": ["Herbs", "Pteridophytes", "Shrubs", "Vines and Lianas", "Angiosperms", "Epiphytes"],
+            "animals": ["Philippine Deer"],
+            "facilities": [],
+            "utilities": [],
+            "warnings": {
+                "plants": "Do not touch or step on pygmy trees."
+            }
+        }
     },
     {
         "id": "g5uabiveqd",
         "name": "Lantawan 3 / Mossy Forest",
         "description": "At 1363 MASL, this misty fusion unveils a third viewpoint merging into damp mossy realms where thick velvet blankets trunks, rocks, and rare ferns, tree frogs croaking in fog. Cool, enchanting air evokes fairy-tale immersion supporting amphibians and orchids; often slippery, it cloaks trekkers in otherworldly hush, gradients teasing the high-alpine unknown beyond.",
         "difficulty": "Hard",
-        "elevation": 1363,
+        "elevation": 1413,
         "coordinates": "N:06°42'46.08'' E:126°11'14.02''",
         "latitude": 6.7128,
         "longitude": 126.1872278,
@@ -280,22 +370,32 @@
         "nextStationId": "79t42cmo77",
         "nextStationName": "Tinagong Dagat",
         "flora": [
-            "Mosses"
+            "Pteridophytes",
+            "Angiosperms",
+            "Vines and Lianas",
+            "Shrubs",
+            "Herbs",
+            "Lichen"
         ],
-        "fauna": [
-            "Tree frogs"
-        ],
-        "warnings": {
-            "weather": "Area is often foggy and slippery."
-        },
-        "isCheckpoint": true
+        "fauna": [],
+        "isCheckpoint": true,
+        "trailDetails": {
+            "trailType": ["Soil Trail", "Trail with tree roots"],
+            "plants": ["Pteridophytes", "Angiosperms", "Vines and Lianas", "Shrubs", "Herbs", "Lichen"],
+            "animals": [],
+            "facilities": [],
+            "utilities": [],
+            "warnings": {
+                "weather": "Area is often foggy and slippery."
+            }
+        }
     },
     {
         "id": "79t42cmo77",
         "name": "Tinagong Dagat",
         "description": "The 'Hidden Sea' at 1108 MASL, a seasonal lake basin swelling with rains to mimic an inland ocean amid grasses and wading birds, or firm meadows in dry spells (8895 steps prior). Mysterious allure captivates photographers and ecologists, its vast grassy embrace a serene interlude where water's mirror reflects fleeting clouds, evoking timeless seclusion amid the sanctuary's heart.",
         "difficulty": "Moderate",
-        "elevation": 1108,
+        "elevation": 1141,
         "coordinates": "N:06°42'27.55'' E:126°11'43.11''",
         "latitude": 6.7076528,
         "longitude": 126.1953083,
@@ -307,15 +407,23 @@
         "nextStationId": "stn13",
         "nextStationName": "Hidden Garden",
         "flora": [
-            "Grasses"
+            "Pteridophytes",
+            "Shrubs"
         ],
         "fauna": [
-            "Wading birds"
+            "Frogs"
         ],
-        "warnings": {
-            "flood": "Area can be waterlogged during rains."
-        },
-        "isCheckpoint": true
+        "isCheckpoint": true,
+        "trailDetails": {
+            "trailType": ["Soil trail", "Trail with tree roots"],
+            "plants": ["Pteridophytes", "Shrubs"],
+            "animals": ["Frogs"],
+            "facilities": [],
+            "utilities": [],
+            "warnings": {
+                "flood": "Area can be waterlogged during rains."
+            }
+        }
     },
     {
         "id": "i73hl7b7g3",
@@ -334,17 +442,31 @@
         "distanceToNextKm": null,
         "nextStationId": "stn14",
         "nextStationName": "Mt. Hamiguitan Summit",
-        "flora": [],
+        "flora": [
+            "Angiosperms",
+            "Spermatophytes",
+            "Shrubs",
+            "Pteridophytes",
+            "Bryophytes",
+            "Marchantiophyta"
+        ],
         "fauna": [],
-        "warnings": {},
-        "isCheckpoint": false
+        "isCheckpoint": false,
+        "trailDetails": {
+            "trailType": ["Soil Trail", "Trail with tree roots"],
+            "plants": ["Angiosperms", "Spermatophytes", "Shrubs", "Pteridophytes", "Bryophytes", "Marchantiophyta"],
+            "animals": [],
+            "facilities": [],
+            "utilities": [],
+            "warnings": {}
+        }
     },
     {
         "id": "mr2l529okj",
         "name": "Mt. Hamiguitan Summit",
         "description": "The highest point of Mt. Hamiguitan, offering 360-degree views of Davao Oriental and neighboring landscapes. The summit is often shrouded in clouds, but on clear days trekkers can see as far as the Pacific coast. It is a rewarding finale to the climb, with alpine grasses and occasional sightings of raptors. Weather can change rapidly here, adding challenge and excitement. Ultramafic bonsai fields stretch like a lunar garden, Twin Falls cascade nearby, and euphoria peaks amid whipping winds, pure conquest etched in sweat and skyline.",
         "difficulty": "Hard",
-        "elevation": 1641,
+        "elevation": 1610,
         "coordinates": "N:06°44'23.90'' E:126°10'55.25''",
         "latitude": 6.7399722,
         "longitude": 126.1814583,
@@ -356,22 +478,32 @@
         "nextStationId": "44r5tebjrc",
         "nextStationName": "Black Mountain",
         "flora": [
-            "Alpine grasses"
+            "Spermatophytes",
+            "Bryophytes",
+            "Shrubs"
         ],
         "fauna": [
-            "Eagles"
+            "Beetles",
+            "Civet Cat (feces found)"
         ],
-        "warnings": {
-            "weather": "Strong winds and sudden fog may occur."
-        },
-        "isCheckpoint": true
+        "isCheckpoint": true,
+        "trailDetails": {
+            "trailType": ["Trail with roots", "Trail with rocks"],
+            "plants": ["Spermatophytes", "Bryophytes", "Shrubs"],
+            "animals": ["Beetles"],
+            "facilities": [],
+            "utilities": [],
+            "warnings": {
+                "weather": "Strong winds and sudden fog may occur."
+            }
+        }
     },
     {
         "id": "44r5tebjrc",
         "name": "Black Mountain",
         "description": "Rugged dark rock outcrops at 1238 MASL contrast verdant sanctuary, hardy hardwoods clinging to boar-frequented slopes after summit descent. Stark, adventurous terrain tests footing on jagged paths, wild energy pulsing through resilient life; it's a gritty counterpoint, where earth's raw geology meets tenacious green, amplifying the trek's dramatic contrasts.",
         "difficulty": "Moderate",
-        "elevation": 1238,
+        "elevation": 1289,
         "coordinates": "N:06°43'35.73'' E:126°10'49.34''",
         "latitude": 6.7265917,
         "longitude": 126.1803722,
@@ -387,20 +519,30 @@
         "nextStationId": "r5kntj3sae",
         "nextStationName": "Twin Falls",
         "flora": [
-            "Hardwood trees"
+            "Herbs",
+            "Pteridophytes",
+            "Shrubs",
+            "Vines and Lianas",
+            "Angiosperms",
+            "Epiphytes"
         ],
-        "fauna": [
-            "Wild boars"
-        ],
-        "warnings": {},
-        "isCheckpoint": false
+        "fauna": [],
+        "isCheckpoint": false,
+        "trailDetails": {
+            "trailType": ["Soil trail", "Trail with tree roots"],
+            "plants": ["Herbs", "Pteridophytes", "Shrubs", "Vines and Lianas", "Angiosperms", "Epiphytes"],
+            "animals": [],
+            "facilities": [],
+            "utilities": [],
+            "warnings": {}
+        }
     },
     {
         "id": "r5kntj3sae",
         "name": "Twin Falls",
         "description": "Scenic finale at 1130 MASL, twin waterfalls plunge side-by-side into lush pools ringed by Philippine ferns, kingfishers darting with butterflies and frogs (rocks slippery). Cooling refreshment post-hike, its vibrant life symphony—cascades thundering, mist rising—embodies Hamiguitan's beauty; a recreational haven symbolizing nature's harmonious power and trekker triumph.",
         "difficulty": "Moderate",
-        "elevation": 1130,
+        "elevation": 1095,
         "coordinates": "N:06°43'25.74'' E:126°10'59.02''",
         "latitude": 6.7238167,
         "longitude": 126.1830611,
@@ -412,14 +554,25 @@
         "nextStationId": null,
         "nextStationName": null,
         "flora": [
-            "Philippine ferns"
+            "Angiosperms",
+            "Herbs",
+            "Shrubs",
+            "Vines",
+            "Gymnosperms",
+            "Lichen",
+            "Bryophytes"
         ],
-        "fauna": [
-            "Kingfishers"
-        ],
-        "warnings": {
-            "slippery": "Rocks around falls are slippery."
-        },
-        "isCheckpoint": true
+        "fauna": [],
+        "isCheckpoint": true,
+        "trailDetails": {
+            "trailType": ["Trail with tree roots", "Trail with cliffside traverse", "Trail crossing a body of water"],
+            "plants": ["Angiosperms", "Herbs", "Shrubs", "Vines", "Gymnosperms", "Lichen", "Bryophytes"],
+            "animals": [],
+            "facilities": [],
+            "utilities": [],
+            "warnings": {
+                "slippery": "Rocks around falls are slippery."
+            }
+        }
     }
 ]
