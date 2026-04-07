@@ -36,6 +36,33 @@ bool _isEndStation(String stationId) {
   return ids.contains(stationId);
 }
 
+// Top-level const maps replace switch statements in hot build paths — O(1),
+// no closure allocation, and the maps are created exactly once.
+const Map<String, IconData> _kWarningIcons = {
+  'weather': Icons.wb_cloudy,
+  'cliff': Icons.terrain,
+  'slippery': Icons.waves,
+  'wildlife': Icons.pets,
+  'visibility': Icons.visibility_off,
+};
+
+const Map<String, Color> _kWarningColors = {
+  'weather': Colors.blue,
+  'cliff': Colors.red,
+  'slippery': Colors.orange,
+  'wildlife': Colors.brown,
+  'visibility': Colors.purple,
+};
+
+const Map<String, IconData> _kMetadataIcons = {
+  'viewingSpots': Icons.landscape,
+  'restArea': Icons.chair,
+  'waterSource': Icons.water_drop,
+  'summitLog': Icons.book,
+  'shelterType': Icons.house,
+  'signalStrength': Icons.signal_cellular_alt,
+};
+
 // ---------------------------------------------------------------------------
 // Extracted stateless widgets — const-constructible, never rebuilt on scroll
 // ---------------------------------------------------------------------------
@@ -240,6 +267,601 @@ class _BulletItem extends StatelessWidget {
 }
 
 // ---------------------------------------------------------------------------
+// Stream-independent sections as standalone StatelessWidgets
+// Extracted so StreamBuilder rebuilds never touch them.
+// ---------------------------------------------------------------------------
+
+class _DescriptionSection extends StatelessWidget {
+  const _DescriptionSection({required this.description});
+  final String description;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'Description',
+          style: TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+            color: AppColors.text,
+          ),
+        ),
+        const SizedBox(height: 12),
+        Text(
+          description,
+          textAlign: TextAlign.justify,
+          style: const TextStyle(
+            fontSize: 16,
+            height: 1.6,
+            color: Colors.black87,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _WarningsSection extends StatelessWidget {
+  const _WarningsSection({required this.warnings});
+  final Map<String, dynamic> warnings;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppColors.background,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AppColors.border),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(
+                Icons.warning_amber_rounded,
+                color: Colors.orange[800],
+                size: 22,
+              ),
+              const SizedBox(width: 8),
+              const Text(
+                'Safety warnings',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.text,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          if (warnings.isEmpty)
+            const Text(
+              'No specific warnings for this station.',
+              style: TextStyle(color: Colors.grey, fontStyle: FontStyle.italic),
+            )
+          else
+            ...warnings.entries.map((e) {
+              final key = e.key.toLowerCase();
+              final color = _kWarningColors[key] ?? Colors.orange;
+              final icon = _kWarningIcons[key] ?? Icons.warning_amber_rounded;
+              return Container(
+                margin: const EdgeInsets.only(bottom: 12),
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: color.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: color.withValues(alpha: 0.3)),
+                ),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Icon(icon, color: color, size: 20),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        e.value,
+                        style: const TextStyle(
+                          color: AppColors.text,
+                          height: 1.5,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            }),
+        ],
+      ),
+    );
+  }
+}
+
+class _BiodiversitySection extends StatelessWidget {
+  const _BiodiversitySection({required this.flora, required this.fauna});
+  final List<String> flora;
+  final List<String> fauna;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppColors.background,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AppColors.border),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Local biodiversity',
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: AppColors.text,
+            ),
+          ),
+          if (flora.isNotEmpty) ...[
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                Icon(Icons.eco, size: 20, color: Colors.green[600]),
+                const SizedBox(width: 8),
+                const Text(
+                  'Notable Flora',
+                  style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            ...flora.map(
+              (item) => _BulletItem(text: item, color: Colors.green[300]!),
+            ),
+          ],
+          if (fauna.isNotEmpty) ...[
+            const SizedBox(height: 16),
+            Row(
+              children: [
+                const Icon(Icons.pets, size: 20, color: AppColors.primary),
+                const SizedBox(width: 8),
+                const Text(
+                  'Notable Fauna',
+                  style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            ...fauna.map(
+              (item) => _BulletItem(
+                text: item,
+                color: AppColors.primary.withValues(alpha: 0.5),
+              ),
+            ),
+          ],
+          if (flora.isEmpty && fauna.isEmpty)
+            const Text(
+              'No biodiversity information available for this station.',
+              style: TextStyle(color: Colors.grey, fontStyle: FontStyle.italic),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+class _MetadataSection extends StatelessWidget {
+  const _MetadataSection({required this.metadata});
+  final Map<String, dynamic> metadata;
+
+  static String _formatKey(String key) {
+    return key
+        .replaceAllMapped(RegExp(r'([A-Z])'), (m) => ' ${m.group(1)}')
+        .split(' ')
+        .map(
+          (w) => w.isEmpty
+              ? ''
+              : '${w[0].toUpperCase()}${w.substring(1).toLowerCase()}',
+        )
+        .join(' ');
+  }
+
+  static String _formatValue(dynamic value) {
+    if (value is bool) return value ? 'Available' : 'Not Available';
+    if (value is List) return value.join(', ');
+    return value.toString();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (metadata.isEmpty) return const SizedBox.shrink();
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppColors.background,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AppColors.border),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Additional information',
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: AppColors.text,
+            ),
+          ),
+          const SizedBox(height: 12),
+          ...metadata.entries.map(
+            (entry) => Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: Row(
+                children: [
+                  Icon(
+                    _kMetadataIcons[entry.key] ?? Icons.info,
+                    size: 16,
+                    color: AppColors.primary,
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    '${_formatKey(entry.key)}: ',
+                    style: const TextStyle(fontWeight: FontWeight.w600),
+                  ),
+                  Text(_formatValue(entry.value)),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _TrailMapSection extends StatelessWidget {
+  const _TrailMapSection({
+    required this.currentStation,
+    required this.allStations,
+  });
+  final StationData currentStation;
+  final List<StationData> allStations;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: const [
+            Icon(Icons.map_outlined, size: 22, color: AppColors.primary),
+            SizedBox(width: 8),
+            Text(
+              'Trail map',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: AppColors.text,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 12),
+        // RepaintBoundary: map canvas stays isolated from scroll layer repaints.
+        RepaintBoundary(
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(12),
+            child: SizedBox(
+              height: 320,
+              child: TrailMap(
+                currentStation: currentStation,
+                allStations: allStations,
+                height: 320,
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _NextStationSection extends StatelessWidget {
+  const _NextStationSection({
+    required this.station,
+    required this.nextStationData,
+  });
+  final StationData station;
+  final StationData? nextStationData;
+
+  @override
+  Widget build(BuildContext context) {
+    if (_isEndStation(station.id)) {
+      return Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: AppColors.background,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: AppColors.border),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: const [
+                Icon(Icons.flag_outlined, size: 22, color: AppColors.primary),
+                SizedBox(width: 8),
+                Text(
+                  'End station',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.text,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: AppColors.primary.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: const Row(
+                children: [
+                  Icon(Icons.celebration, color: AppColors.primary, size: 24),
+                  SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      'This is the final station on this route!',
+                      style: TextStyle(
+                        fontWeight: FontWeight.w500,
+                        color: AppColors.primary,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppColors.background,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AppColors.border),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: const [
+              Icon(
+                Icons.arrow_circle_right_outlined,
+                size: 22,
+                color: AppColors.primary,
+              ),
+              SizedBox(width: 8),
+              Text(
+                'Next station',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.text,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          if (nextStationData != null) ...[
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Icon(
+                  Icons.flag_outlined,
+                  size: 20,
+                  color: AppColors.primary,
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        nextStationData!.name,
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 4,
+                        ),
+                        decoration: BoxDecoration(
+                          color: _getDifficultyColor(
+                            nextStationData!.difficulty,
+                          ).withValues(alpha: 0.2),
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                        child: Text(
+                          nextStationData!.difficulty.toUpperCase(),
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            color: _getDifficultyColor(
+                              nextStationData!.difficulty,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: AppColors.background,
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      const Icon(
+                        Icons.height,
+                        size: 18,
+                        color: AppColors.primary,
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        'Elevation: ${nextStationData!.elevation}m',
+                        style: const TextStyle(
+                          fontWeight: FontWeight.w500,
+                          fontSize: 14,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  Row(
+                    children: [
+                      const Icon(
+                        Icons.route,
+                        size: 18,
+                        color: AppColors.primary,
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        'Distance: ${station.distanceToNextKm ?? 0} km',
+                        style: const TextStyle(
+                          fontWeight: FontWeight.w500,
+                          fontSize: 14,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 12),
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              decoration: BoxDecoration(
+                color: AppColors.primary.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Icon(
+                    Icons.directions_walk,
+                    size: 20,
+                    color: AppColors.primary,
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    station.steps != null
+                        ? '${station.steps} steps to next station'
+                        : 'Distance in steps not available',
+                    style: const TextStyle(
+                      color: AppColors.primary,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ] else ...[
+            if (station.nextStationId != null)
+              const Center(child: CircularProgressIndicator())
+            else
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: AppColors.background,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: const Text(
+                  'This is the final station!',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontStyle: FontStyle.italic,
+                    color: Colors.grey,
+                  ),
+                ),
+              ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Location subtitle block — extracted so it can be cached as a widget field
+// ---------------------------------------------------------------------------
+
+class _LocationSubtitleBlock extends StatelessWidget {
+  const _LocationSubtitleBlock({required this.primary, this.sub});
+
+  final String primary;
+  final String? sub;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          primary,
+          style: const TextStyle(
+            fontSize: 13,
+            height: 1.4,
+            fontWeight: FontWeight.w600,
+            color: AppColors.text,
+          ),
+        ),
+        if (sub != null)
+          Text(
+            sub!,
+            style: TextStyle(
+              fontSize: 12.5,
+              height: 1.35,
+              color: Colors.grey[700],
+              fontFeatures: const [FontFeature.tabularFigures()],
+            ),
+          ),
+      ],
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
 // Main screen
 // ---------------------------------------------------------------------------
 
@@ -266,12 +888,53 @@ class _StationDetailScreenState extends State<StationDetailScreen> {
   static const _heroSlideshowInterval = Duration(seconds: 4);
   static const _heroSlideDuration = Duration(milliseconds: 500);
 
+  // -------------------------------------------------------------------------
+  // Cached per-station derived values — computed once in initState, never
+  // recomputed during StreamBuilder or scroll rebuilds.
+  // -------------------------------------------------------------------------
+  late final List<String> _imagePaths; // stationImageAssetPath resolved once
+  late final String? _dmsLine;
+  late final String? _decLine;
+  late final String _locationPrimary;
+  late final String? _locationSub;
+
+  // Cached static subtree widgets — built once, reused across all rebuilds.
+  late final Widget _locationSubtitleBlock;
+  late final Widget _descriptionSection;
+  late final Widget _warningsSection;
+  late final Widget _biodiversitySection;
+  late final Widget _metadataSection;
+
   @override
   void initState() {
     super.initState();
     _scrollController = ScrollController();
     _imagePageController = PageController();
-    // No addListener on _scrollController — AnimatedBuilder handles reactivity.
+
+    // Resolve asset paths once — stationImageAssetPath may do string work.
+    _imagePaths = station.images
+        .map((img) => stationImageAssetPath(img))
+        .toList(growable: false);
+
+    // Compute coordinate strings once.
+    _dmsLine = _computeDmsLine();
+    _decLine = _computeDecimalLine();
+    _locationPrimary = _dmsLine ?? _decLine ?? station.coordinates.trim();
+    _locationSub = (_dmsLine != null && _decLine != null) ? _decLine : null;
+
+    // Build stream-independent widgets once.
+    _locationSubtitleBlock = _LocationSubtitleBlock(
+      primary: _locationPrimary,
+      sub: _locationSub,
+    );
+    _descriptionSection = _DescriptionSection(description: station.description);
+    _warningsSection = _WarningsSection(warnings: station.warnings);
+    _biodiversitySection = _BiodiversitySection(
+      flora: station.flora,
+      fauna: station.fauna,
+    );
+    _metadataSection = _MetadataSection(metadata: station.metadata);
+
     _preloadImages();
     _loadStationData();
     WidgetsBinding.instance.addPostFrameCallback((_) => _startHeroSlideshow());
@@ -314,17 +977,11 @@ class _StationDetailScreenState extends State<StationDetailScreen> {
   // -------------------------------------------------------------------------
 
   Future<void> _preloadImages() async {
-    if (station.images.isEmpty) return;
+    if (_imagePaths.isEmpty) return;
     try {
-      await precacheImage(
-        AssetImage(stationImageAssetPath(station.images[0])),
-        context,
-      );
-      if (station.images.length > 1) {
-        await precacheImage(
-          AssetImage(stationImageAssetPath(station.images[1])),
-          context,
-        );
+      await precacheImage(AssetImage(_imagePaths[0]), context);
+      if (_imagePaths.length > 1) {
+        await precacheImage(AssetImage(_imagePaths[1]), context);
       }
     } catch (e) {
       AppLogger.e('Error preloading images: $e');
@@ -332,10 +989,10 @@ class _StationDetailScreenState extends State<StationDetailScreen> {
   }
 
   void _precacheNextImage(int currentIndex) {
-    if (station.images.isEmpty) return;
-    final nextIndex = (currentIndex + 1) % station.images.length;
+    if (_imagePaths.isEmpty) return;
+    final nextIndex = (currentIndex + 1) % _imagePaths.length;
     precacheImage(
-      AssetImage(stationImageAssetPath(station.images[nextIndex])),
+      AssetImage(_imagePaths[nextIndex]),
       context,
     ).catchError((e) => AppLogger.e('Error precaching image: $e'));
   }
@@ -363,6 +1020,35 @@ class _StationDetailScreenState extends State<StationDetailScreen> {
     } catch (e) {
       AppLogger.e('Error loading station data: $e');
     }
+  }
+
+  // -------------------------------------------------------------------------
+  // Coordinate helpers — called once in initState
+  // -------------------------------------------------------------------------
+
+  String? _computeDmsLine() {
+    final c = station.coordinates;
+    final n = RegExp(
+      r"N:\s*(\d+)°(\d+)'([\d.]+)''",
+      caseSensitive: false,
+    ).firstMatch(c);
+    final e = RegExp(
+      r"E:\s*(\d+)°(\d+)'([\d.]+)''",
+      caseSensitive: false,
+    ).firstMatch(c);
+    if (n != null && e != null) {
+      return '${n[1]}° ${n[2]}′ ${n[3]}″ N · ${e[1]}° ${e[2]}′ ${e[3]}″ E';
+    }
+    return null;
+  }
+
+  String? _computeDecimalLine() {
+    final lat = station.latitude;
+    final lng = station.longitude;
+    if (lat == null || lng == null) return null;
+    final ns = lat >= 0 ? 'N' : 'S';
+    final ew = lng >= 0 ? 'E' : 'W';
+    return '${lat.abs().toStringAsFixed(5)}° $ns, ${lng.abs().toStringAsFixed(5)}° $ew';
   }
 
   // -------------------------------------------------------------------------
@@ -412,34 +1098,45 @@ class _StationDetailScreenState extends State<StationDetailScreen> {
                             mainAxisSize: MainAxisSize.min,
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
+                              // Only this row re-renders on stream events.
                               _buildLocationAndRatingRow(
                                 avg,
                                 reviews.length,
                                 reviewLoading,
                               ),
                               const SizedBox(height: 28),
-                              _buildDescription(),
+                              // All sections below are pre-built widgets —
+                              // Flutter's element tree skips diffing them.
+                              _descriptionSection,
                               if (station.warnings.isNotEmpty) ...[
                                 const SizedBox(height: 32),
-                                _buildWarnings(),
+                                _warningsSection,
                               ],
                               if (station.flora.isNotEmpty ||
                                   station.fauna.isNotEmpty) ...[
                                 const SizedBox(height: 32),
-                                _buildBiodiversity(),
+                                _biodiversitySection,
                               ],
                               if (allStations.isNotEmpty) ...[
                                 const SizedBox(height: 32),
-                                _buildTrailMap(),
+                                _TrailMapSection(
+                                  currentStation: station,
+                                  allStations: allStations,
+                                ),
                               ],
                               if (station.nextStationId != null ||
                                   _isEndStation(station.id)) ...[
                                 const SizedBox(height: 32),
-                                _buildNextStation(),
+                                // Rebuilds only when nextStationData changes
+                                // (i.e. after _loadStationData setState).
+                                _NextStationSection(
+                                  station: station,
+                                  nextStationData: nextStationData,
+                                ),
                               ],
                               if (station.metadata.isNotEmpty) ...[
                                 const SizedBox(height: 32),
-                                _buildMetadata(),
+                                _metadataSection,
                               ],
                               const SizedBox(height: 32),
                               StationReviewsSectionBody(
@@ -535,14 +1232,14 @@ class _StationDetailScreenState extends State<StationDetailScreen> {
   // -------------------------------------------------------------------------
 
   Widget _buildImageCarousel() {
-    if (station.images.isEmpty) {
-      return ColoredBox(
+    if (_imagePaths.isEmpty) {
+      return const ColoredBox(
         color: AppColors.border,
-        child: const Center(child: Icon(Icons.image_not_supported, size: 50)),
+        child: Center(child: Icon(Icons.image_not_supported, size: 50)),
       );
     }
 
-    final imageCount = station.images.length;
+    final imageCount = _imagePaths.length;
 
     return PageView.builder(
       controller: _imagePageController,
@@ -558,16 +1255,14 @@ class _StationDetailScreenState extends State<StationDetailScreen> {
         return GestureDetector(
           onTap: () => _showFullscreenImage(real),
           child: Image.asset(
-            stationImageAssetPath(station.images[real]),
+            _imagePaths[real], // pre-resolved path — no function call per frame
             fit: BoxFit.cover,
             // Decode at display width only; height is inferred to preserve
             // aspect ratio. Halves texture memory vs specifying both dims.
             cacheWidth: 600,
-            errorBuilder: (_, __, ___) => ColoredBox(
+            errorBuilder: (_, __, ___) => const ColoredBox(
               color: AppColors.border,
-              child: const Center(
-                child: Icon(Icons.image_not_supported, size: 50),
-              ),
+              child: Center(child: Icon(Icons.image_not_supported, size: 50)),
             ),
           ),
         );
@@ -580,7 +1275,7 @@ class _StationDetailScreenState extends State<StationDetailScreen> {
       context,
       MaterialPageRoute(
         builder: (_) => _FullscreenImageViewer(
-          images: station.images,
+          imagePaths: _imagePaths, // pass pre-resolved paths
           initialIndex: initialIndex,
         ),
       ),
@@ -588,81 +1283,8 @@ class _StationDetailScreenState extends State<StationDetailScreen> {
   }
 
   // -------------------------------------------------------------------------
-  // Content sections — no scroll dependency; rebuilt only by setState
+  // Location + rating row — only this rebuilds on stream events
   // -------------------------------------------------------------------------
-
-  /// Degrees/minutes/seconds line when the station string matches trail format.
-  String? _locationDmsLine() {
-    final c = station.coordinates;
-    final n = RegExp(
-      r"N:\s*(\d+)°(\d+)'([\d.]+)''",
-      caseSensitive: false,
-    ).firstMatch(c);
-    final e = RegExp(
-      r"E:\s*(\d+)°(\d+)'([\d.]+)''",
-      caseSensitive: false,
-    ).firstMatch(c);
-    if (n != null && e != null) {
-      return '${n[1]}° ${n[2]}′ ${n[3]}″ N · ${e[1]}° ${e[2]}′ ${e[3]}″ E';
-    }
-    return null;
-  }
-
-  /// Decimal degrees with hemisphere labels (WGS 84).
-  String? _locationDecimalLine() {
-    final lat = station.latitude;
-    final lng = station.longitude;
-    if (lat == null || lng == null) return null;
-    final ns = lat >= 0 ? 'N' : 'S';
-    final ew = lng >= 0 ? 'E' : 'W';
-    final la = lat.abs();
-    final lo = lng.abs();
-    return '${la.toStringAsFixed(5)}° $ns, ${lo.toStringAsFixed(5)}° $ew';
-  }
-
-  Widget _buildLocationSubtitleBlock() {
-    final dms = _locationDmsLine();
-    final dec = _locationDecimalLine();
-    final raw = station.coordinates.trim();
-
-    // String fallback() {
-    //   if (raw.isEmpty) {
-    //     return 'Open the trail map below for this station’s position.';
-    //   }
-    //   final cleaned = raw.replaceAll(RegExp(r'\s+'), ' ');
-    //   if (cleaned.length > 88) return '${cleaned.substring(0, 85)}…';
-    //   return cleaned;
-    // }
-
-    final primary = dms ?? dec ?? raw;
-    final sub = (dms != null && dec != null) ? dec : null;
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          primary,
-          style: const TextStyle(
-            fontSize: 13,
-            height: 1.4,
-            fontWeight: FontWeight.w600,
-            color: AppColors.text,
-          ),
-        ),
-        if (sub != null) ...[
-          Text(
-            sub,
-            style: TextStyle(
-              fontSize: 12.5,
-              height: 1.35,
-              color: Colors.grey[700],
-              fontFeatures: const [FontFeature.tabularFigures()],
-            ),
-          ),
-        ],
-      ],
-    );
-  }
 
   Widget _buildLocationAndRatingRow(
     double averageRating,
@@ -672,8 +1294,8 @@ class _StationDetailScreenState extends State<StationDetailScreen> {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Padding(
-          padding: const EdgeInsets.only(top: 4),
+        const Padding(
+          padding: EdgeInsets.only(top: 4),
           child: Icon(
             Icons.location_on_rounded,
             size: 24,
@@ -681,7 +1303,7 @@ class _StationDetailScreenState extends State<StationDetailScreen> {
           ),
         ),
         const SizedBox(width: 10),
-        Expanded(child: _buildLocationSubtitleBlock()),
+        Expanded(child: _locationSubtitleBlock), // cached widget
         const SizedBox(width: 8),
         StationRatingSummaryPill(
           loading: reviewLoading,
@@ -691,510 +1313,6 @@ class _StationDetailScreenState extends State<StationDetailScreen> {
       ],
     );
   }
-
-  Widget _contentSectionTitle(String title) {
-    return Text(
-      title,
-      style: const TextStyle(
-        fontSize: 18,
-        fontWeight: FontWeight.bold,
-        color: AppColors.text,
-      ),
-    );
-  }
-
-  Widget _buildDescription() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        _contentSectionTitle('Description'),
-        const SizedBox(height: 12),
-        Text(
-          station.description,
-          textAlign: TextAlign.justify,
-          style: const TextStyle(
-            fontSize: 16,
-            height: 1.6,
-            color: Colors.black87,
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildWarnings() {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: AppColors.background,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.border),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Icon(
-                Icons.warning_amber_rounded,
-                color: Colors.orange[800],
-                size: 22,
-              ),
-              const SizedBox(width: 8),
-              _contentSectionTitle('Safety warnings'),
-            ],
-          ),
-          const SizedBox(height: 16),
-          if (station.warnings.isEmpty)
-            const Text(
-              'No specific warnings for this station.',
-              style: TextStyle(color: Colors.grey, fontStyle: FontStyle.italic),
-            )
-          else
-            ...station.warnings.entries.map((e) {
-              final color = _warningColor(e.key);
-              return Container(
-                margin: const EdgeInsets.only(bottom: 12),
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: color.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: color.withValues(alpha: 0.3)),
-                ),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Icon(_warningIcon(e.key), color: color, size: 20),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Text(
-                        e.value,
-                        style: TextStyle(color: AppColors.text, height: 1.5),
-                      ),
-                    ),
-                  ],
-                ),
-              );
-            }),
-        ],
-      ),
-    );
-  }
-
-  IconData _warningIcon(String type) {
-    switch (type.toLowerCase()) {
-      case 'weather':
-        return Icons.wb_cloudy;
-      case 'cliff':
-        return Icons.terrain;
-      case 'slippery':
-        return Icons.waves;
-      case 'wildlife':
-        return Icons.pets;
-      case 'visibility':
-        return Icons.visibility_off;
-      default:
-        return Icons.warning_amber_rounded;
-    }
-  }
-
-  Color _warningColor(String type) {
-    switch (type.toLowerCase()) {
-      case 'weather':
-        return Colors.blue;
-      case 'cliff':
-        return Colors.red;
-      case 'slippery':
-        return Colors.orange;
-      case 'wildlife':
-        return Colors.brown;
-      case 'visibility':
-        return Colors.purple;
-      default:
-        return Colors.orange;
-    }
-  }
-
-  Widget _buildBiodiversity() {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: AppColors.background,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.border),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _contentSectionTitle('Local biodiversity'),
-          if (station.flora.isNotEmpty) ...[
-            const SizedBox(height: 12),
-            Row(
-              children: [
-                Icon(Icons.eco, size: 20, color: Colors.green[600]),
-                const SizedBox(width: 8),
-                const Text(
-                  'Notable Flora',
-                  style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16),
-                ),
-              ],
-            ),
-            const SizedBox(height: 8),
-            ...station.flora.map(
-              (item) => _BulletItem(text: item, color: Colors.green[300]!),
-            ),
-          ],
-          if (station.fauna.isNotEmpty) ...[
-            const SizedBox(height: 16),
-            Row(
-              children: [
-                Icon(Icons.pets, size: 20, color: AppColors.primary),
-                const SizedBox(width: 8),
-                const Text(
-                  'Notable Fauna',
-                  style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16),
-                ),
-              ],
-            ),
-            const SizedBox(height: 8),
-            ...station.fauna.map(
-              (item) => _BulletItem(
-                text: item,
-                color: AppColors.primary.withValues(alpha: 0.5),
-              ),
-            ),
-          ],
-          if (station.flora.isEmpty && station.fauna.isEmpty)
-            const Text(
-              'No biodiversity information available for this station.',
-              style: TextStyle(color: Colors.grey, fontStyle: FontStyle.italic),
-            ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildMetadata() {
-    if (station.metadata.isEmpty) return const SizedBox.shrink();
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: AppColors.background,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.border),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _contentSectionTitle('Additional information'),
-          const SizedBox(height: 12),
-          ...station.metadata.entries.map(
-            (entry) => Padding(
-              padding: const EdgeInsets.only(bottom: 8),
-              child: Row(
-                children: [
-                  Icon(
-                    _metadataIcon(entry.key),
-                    size: 16,
-                    color: AppColors.primary,
-                  ),
-                  const SizedBox(width: 8),
-                  Text(
-                    '${_formatMetadataKey(entry.key)}: ',
-                    style: const TextStyle(fontWeight: FontWeight.w600),
-                  ),
-                  Text(_formatMetadataValue(entry.value)),
-                ],
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  IconData _metadataIcon(String key) {
-    switch (key) {
-      case 'viewingSpots':
-        return Icons.landscape;
-      case 'restArea':
-        return Icons.chair;
-      case 'waterSource':
-        return Icons.water_drop;
-      case 'summitLog':
-        return Icons.book;
-      case 'shelterType':
-        return Icons.house;
-      case 'signalStrength':
-        return Icons.signal_cellular_alt;
-      default:
-        return Icons.info;
-    }
-  }
-
-  String _formatMetadataKey(String key) {
-    return key
-        .replaceAllMapped(RegExp(r'([A-Z])'), (m) => ' ${m.group(1)}')
-        .split(' ')
-        .map(
-          (w) => w.isEmpty
-              ? ''
-              : '${w[0].toUpperCase()}${w.substring(1).toLowerCase()}',
-        )
-        .join(' ');
-  }
-
-  String _formatMetadataValue(dynamic value) {
-    if (value is bool) return value ? 'Available' : 'Not Available';
-    if (value is List) return value.join(', ');
-    return value.toString();
-  }
-
-  Widget _buildTrailMap() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          children: [
-            Icon(Icons.map_outlined, size: 22, color: AppColors.primary),
-            const SizedBox(width: 8),
-            _contentSectionTitle('Trail map'),
-          ],
-        ),
-        const SizedBox(height: 12),
-        // RepaintBoundary: map canvas stays isolated from scroll layer repaints.
-        RepaintBoundary(
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(12),
-            child: SizedBox(
-              height: 320,
-              child: TrailMap(
-                currentStation: station,
-                allStations: allStations,
-                height: 320,
-              ),
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildNextStation() {
-    if (_isEndStation(station.id)) {
-      return Container(
-        width: double.infinity,
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: AppColors.background,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: AppColors.border),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Icon(Icons.flag_outlined, size: 22, color: AppColors.primary),
-                const SizedBox(width: 8),
-                _contentSectionTitle('End station'),
-              ],
-            ),
-            const SizedBox(height: 16),
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: AppColors.primary.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Row(
-                children: [
-                  Icon(Icons.celebration, color: AppColors.primary, size: 24),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Text(
-                      'This is the final station on this route!',
-                      style: TextStyle(
-                        fontWeight: FontWeight.w500,
-                        color: AppColors.primary,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      );
-    }
-
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: AppColors.background,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.border),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Icon(
-                Icons.arrow_circle_right_outlined,
-                size: 22,
-                color: AppColors.primary,
-              ),
-              const SizedBox(width: 8),
-              _contentSectionTitle('Next station'),
-            ],
-          ),
-          const SizedBox(height: 16),
-          if (nextStationData != null) ...[
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Icon(Icons.flag_outlined, size: 20, color: AppColors.primary),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        nextStationData!.name,
-                        style: const TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 4,
-                        ),
-                        decoration: BoxDecoration(
-                          color: _getDifficultyColor(
-                            nextStationData!.difficulty,
-                          ).withValues(alpha: 0.2),
-                          borderRadius: BorderRadius.circular(4),
-                        ),
-                        child: Text(
-                          nextStationData!.difficulty.toUpperCase(),
-                          style: TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w600,
-                            color: _getDifficultyColor(
-                              nextStationData!.difficulty,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 12),
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: AppColors.background,
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Icon(Icons.height, size: 18, color: AppColors.primary),
-                      const SizedBox(width: 8),
-                      Text(
-                        'Elevation: ${nextStationData!.elevation}m',
-                        style: const TextStyle(
-                          fontWeight: FontWeight.w500,
-                          fontSize: 14,
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 8),
-                  Row(
-                    children: [
-                      Icon(Icons.route, size: 18, color: AppColors.primary),
-                      const SizedBox(width: 8),
-                      Text(
-                        'Distance: ${station.distanceToNextKm ?? 0} km',
-                        style: const TextStyle(
-                          fontWeight: FontWeight.w500,
-                          fontSize: 14,
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 12),
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-              decoration: BoxDecoration(
-                color: AppColors.primary.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(
-                    Icons.directions_walk,
-                    size: 20,
-                    color: AppColors.primary,
-                  ),
-                  const SizedBox(width: 8),
-                  Text(
-                    station.steps != null
-                        ? '${station.steps} steps to next station'
-                        : 'Distance in steps not available',
-                    style: TextStyle(
-                      color: AppColors.primary,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ] else ...[
-            if (station.nextStationId != null)
-              const Center(child: CircularProgressIndicator())
-            else
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: AppColors.background,
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: const Text(
-                  'This is the final station!',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontStyle: FontStyle.italic,
-                    color: Colors.grey,
-                  ),
-                ),
-              ),
-          ],
-        ],
-      ),
-    );
-  }
 }
 
 // ---------------------------------------------------------------------------
@@ -1202,11 +1320,12 @@ class _StationDetailScreenState extends State<StationDetailScreen> {
 // ---------------------------------------------------------------------------
 
 class _FullscreenImageViewer extends StatefulWidget {
-  final List<String> images;
+  // Accepts pre-resolved paths instead of raw image names.
+  final List<String> imagePaths;
   final int initialIndex;
 
   const _FullscreenImageViewer({
-    required this.images,
+    required this.imagePaths,
     required this.initialIndex,
   });
 
@@ -1223,7 +1342,7 @@ class _FullscreenImageViewerState extends State<_FullscreenImageViewer> {
     super.initState();
     _currentIndex = widget.initialIndex;
     _pageController = PageController(
-      initialPage: widget.images.length * 50 + widget.initialIndex,
+      initialPage: widget.imagePaths.length * 50 + widget.initialIndex,
     );
   }
 
@@ -1235,6 +1354,7 @@ class _FullscreenImageViewerState extends State<_FullscreenImageViewer> {
 
   @override
   Widget build(BuildContext context) {
+    final imageCount = widget.imagePaths.length;
     return Scaffold(
       backgroundColor: Colors.black,
       appBar: AppBar(
@@ -1245,7 +1365,7 @@ class _FullscreenImageViewerState extends State<_FullscreenImageViewer> {
           onPressed: () => Navigator.pop(context),
         ),
         title: Text(
-          '${(_currentIndex % widget.images.length) + 1} / ${widget.images.length}',
+          '${(_currentIndex % imageCount) + 1} / $imageCount',
           style: const TextStyle(color: Colors.white),
         ),
         centerTitle: true,
@@ -1253,18 +1373,17 @@ class _FullscreenImageViewerState extends State<_FullscreenImageViewer> {
       body: PageView.builder(
         controller: _pageController,
         onPageChanged: (index) {
-          final real = index % widget.images.length;
+          final real = index % imageCount;
           if (_currentIndex != real) setState(() => _currentIndex = real);
         },
-        itemCount: widget.images.length * 100,
+        itemCount: imageCount * 100,
         physics: const PageScrollPhysics(),
         itemBuilder: (context, index) {
-          final imagePath = widget.images[index % widget.images.length];
           return GestureDetector(
             onTap: () => Navigator.pop(context),
             child: Center(
               child: Image.asset(
-                stationImageAssetPath(imagePath),
+                widget.imagePaths[index % imageCount],
                 fit: BoxFit.contain,
                 errorBuilder: (_, __, ___) => const Icon(
                   Icons.image_not_supported,
