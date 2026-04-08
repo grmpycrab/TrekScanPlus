@@ -64,6 +64,16 @@ const Map<String, IconData> _kMetadataIcons = {
   'signalStrength': Icons.signal_cellular_alt,
 };
 
+// Station IDs where the trail branches into multiple routes.
+// Maps hub station ID → ordered list of first-station IDs on each branch.
+const Map<String, List<String>> _kBranchHubs = {
+  'utvrrkfkh9': [
+    '6mm4kle34g', // Pygmy Field → Mossy Forest → Tinagong Dagat → Hidden Garden
+    'mr2l529okj', // Mt. Hamiguitan Summit
+    '44r5tebjrc', // Black Mountain ↔ Twin Falls
+  ],
+};
+
 // ---------------------------------------------------------------------------
 // Extracted stateless widgets — const-constructible, never rebuilt on scroll
 // ---------------------------------------------------------------------------
@@ -549,6 +559,7 @@ class _StationDetailScreenState extends State<StationDetailScreen> {
 
   StationData? nextStationData;
   List<StationData> allStations = [];
+  List<StationData> _branchNextStations = [];
 
   late final ScrollController _scrollController;
   late final PageController _imagePageController;
@@ -679,9 +690,17 @@ class _StationDetailScreenState extends State<StationDetailScreen> {
           ? StationService.instance.getStationById(station.nextStationId!)
           : null;
 
+      // For branching hubs (e.g. Camp 3), collect the first station of each branch.
+      final branchIds = _kBranchHubs[station.id] ?? [];
+      final branches = branchIds
+          .map(StationService.instance.getStationById)
+          .whereType<StationData>()
+          .toList();
+
       setState(() {
         allStations = loaded;
         nextStationData = next;
+        _branchNextStations = branches;
       });
     } catch (e) {
       AppLogger.e('Error loading station data: $e');
@@ -715,6 +734,379 @@ class _StationDetailScreenState extends State<StationDetailScreen> {
     final ns = lat >= 0 ? 'N' : 'S';
     final ew = lng >= 0 ? 'E' : 'W';
     return '${lat.abs().toStringAsFixed(5)}° $ns, ${lng.abs().toStringAsFixed(5)}° $ew';
+  }
+
+  Widget _buildRouteSection({
+    required bool hasNext,
+    required bool isEnd,
+    required Color routeDiffColor,
+  }) {
+    return Container(
+      width: double.infinity,
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.07),
+            blurRadius: 14,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            height: 4,
+            decoration: const BoxDecoration(
+              color: AppColors.accent,
+              borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 14, 16, 16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _buildRouteHeader(),
+                const SizedBox(height: 12),
+                if (allStations.isNotEmpty) _buildRouteMap(),
+                if (hasNext) ...[
+                  if (allStations.isNotEmpty)
+                    Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      child: Divider(height: 1, color: AppColors.border),
+                    )
+                  else
+                    const SizedBox(height: 14),
+                  if (isEnd)
+                    _buildEndRouteCard()
+                  else if (nextStationData != null)
+                    _buildNextRouteCard(routeDiffColor)
+                  else if (_branchNextStations.isNotEmpty)
+                    _buildBranchRoutesCard()
+                  else if (station.nextStationId != null && allStations.isEmpty)
+                    const Center(child: CircularProgressIndicator()),
+                ],
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildRouteHeader() {
+    return Row(
+      children: [
+        Container(
+          width: 3,
+          height: 20,
+          decoration: BoxDecoration(
+            color: AppColors.accent,
+            borderRadius: BorderRadius.circular(2),
+          ),
+        ),
+        const SizedBox(width: 10),
+        const Icon(Icons.map_outlined, size: 22, color: AppColors.primary),
+        const SizedBox(width: 8),
+        const Text(
+          'Trail Route',
+          style: TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+            color: AppColors.text,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildRouteMap() {
+    return RepaintBoundary(
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(12),
+        child: SizedBox(
+          height: 240,
+          child: TrailMap(
+            currentStation: station,
+            allStations: allStations,
+            height: 240,
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildEndRouteCard() {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: AppColors.accent.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: const Row(
+        children: [
+          Icon(Icons.celebration, color: AppColors.accent, size: 24),
+          SizedBox(width: 12),
+          Expanded(
+            child: Text(
+              "You've reached the final station on this route!",
+              style: TextStyle(
+                fontWeight: FontWeight.w600,
+                color: AppColors.accent,
+                height: 1.4,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildNextRouteCard(Color routeDiffColor) {
+    final next = nextStationData!;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Expanded(
+              child: Text(
+                next.name,
+                style: const TextStyle(
+                  fontSize: 17,
+                  fontWeight: FontWeight.w700,
+                  color: AppColors.text,
+                ),
+              ),
+            ),
+            const SizedBox(width: 8),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+              decoration: BoxDecoration(
+                color: routeDiffColor.withValues(alpha: 0.15),
+                borderRadius: BorderRadius.circular(6),
+                border: Border.all(
+                  color: routeDiffColor.withValues(alpha: 0.4),
+                  width: 1,
+                ),
+              ),
+              child: Text(
+                next.difficulty.toUpperCase(),
+                style: TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w700,
+                  color: routeDiffColor,
+                  letterSpacing: 0.6,
+                ),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 12),
+        Container(
+          decoration: BoxDecoration(
+            color: AppColors.background,
+            borderRadius: BorderRadius.circular(10),
+          ),
+          padding: const EdgeInsets.symmetric(vertical: 12),
+          child: Row(
+            children: [
+              Expanded(
+                child: _buildRouteMetric(
+                  icon: Icons.height,
+                  value: '${next.elevation}m',
+                  label: 'ELEVATION',
+                ),
+              ),
+              Container(width: 1, height: 36, color: AppColors.border),
+              Expanded(
+                child: _buildRouteMetric(
+                  icon: Icons.route,
+                  value: '${station.distanceToNextKm ?? 0} km',
+                  label: 'DISTANCE',
+                ),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 10),
+        Container(
+          width: double.infinity,
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 13),
+          decoration: BoxDecoration(
+            color: AppColors.accent,
+            borderRadius: BorderRadius.circular(10),
+          ),
+          child: Row(
+            children: [
+              const Icon(Icons.directions_walk, size: 20, color: Colors.white),
+              const SizedBox(width: 8),
+              Text(
+                station.steps != null
+                    ? '${station.steps} steps to next station'
+                    : 'Distance in steps not available',
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w600,
+                  fontSize: 14,
+                ),
+              ),
+              const Spacer(),
+              const Icon(Icons.arrow_forward, size: 18, color: Colors.white70),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildBranchRoutesCard() {
+    const routeLabels = {
+      '6mm4kle34g': 'Hidden Garden Route',
+      'mr2l529okj': 'Summit Route',
+      '44r5tebjrc': 'Black Mountain & Twin Falls',
+    };
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(7),
+              decoration: BoxDecoration(
+                color: AppColors.accent.withValues(alpha: 0.12),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: const Icon(
+                Icons.fork_right,
+                color: AppColors.accent,
+                size: 18,
+              ),
+            ),
+            const SizedBox(width: 10),
+            const Expanded(
+              child: Text(
+                'Multiple routes branch from here',
+                style: TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w700,
+                  color: AppColors.text,
+                ),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 12),
+        ..._branchNextStations.map((branch) {
+          final color = _getDifficultyColor(branch.difficulty);
+          final routeLabel = routeLabels[branch.id];
+          return Container(
+            margin: const EdgeInsets.only(bottom: 8),
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+            decoration: BoxDecoration(
+              color: AppColors.background,
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(color: AppColors.border),
+            ),
+            child: Row(
+              children: [
+                Container(
+                  width: 36,
+                  height: 36,
+                  decoration: BoxDecoration(
+                    color: color.withValues(alpha: 0.12),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(Icons.directions_walk, size: 18, color: color),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        branch.name,
+                        style: const TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.text,
+                        ),
+                      ),
+                      if (routeLabel != null)
+                        Text(
+                          routeLabel,
+                          style: TextStyle(
+                            fontSize: 11,
+                            color: AppColors.textSecondary,
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 4,
+                  ),
+                  decoration: BoxDecoration(
+                    color: color.withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(5),
+                    border: Border.all(color: color.withValues(alpha: 0.4)),
+                  ),
+                  child: Text(
+                    branch.difficulty.toUpperCase(),
+                    style: TextStyle(
+                      fontSize: 10,
+                      fontWeight: FontWeight.w700,
+                      color: color,
+                      letterSpacing: 0.5,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          );
+        }),
+      ],
+    );
+  }
+
+  Widget _buildRouteMetric({
+    required IconData icon,
+    required String value,
+    required String label,
+  }) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(icon, size: 20, color: AppColors.primary),
+        const SizedBox(height: 4),
+        Text(
+          value,
+          style: const TextStyle(
+            fontSize: 15,
+            fontWeight: FontWeight.w700,
+            color: AppColors.text,
+          ),
+        ),
+        Text(
+          label,
+          style: TextStyle(
+            fontSize: 10,
+            color: Colors.grey[500],
+            fontWeight: FontWeight.w500,
+            letterSpacing: 0.5,
+          ),
+        ),
+      ],
+    );
   }
 
   // -------------------------------------------------------------------------
@@ -755,10 +1147,12 @@ class _StationDetailScreenState extends State<StationDetailScreen> {
                         final hasRouteSection =
                             allStations.isNotEmpty ||
                             station.nextStationId != null ||
-                            _isEndStation(station.id);
+                            _isEndStation(station.id) ||
+                            _kBranchHubs.containsKey(station.id);
                         final hasNext =
                             station.nextStationId != null ||
-                            _isEndStation(station.id);
+                            _isEndStation(station.id) ||
+                            _kBranchHubs.containsKey(station.id);
                         final isEnd = _isEndStation(station.id);
                         final routeDiffColor = _getDifficultyColor(
                           nextStationData?.difficulty ?? '',
@@ -778,354 +1172,10 @@ class _StationDetailScreenState extends State<StationDetailScreen> {
                             ],
                             if (hasRouteSection) ...[
                               const SizedBox(height: 32),
-                              Container(
-                                width: double.infinity,
-                                decoration: BoxDecoration(
-                                  color: Colors.white,
-                                  borderRadius: BorderRadius.circular(16),
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: Colors.black.withValues(
-                                        alpha: 0.07,
-                                      ),
-                                      blurRadius: 14,
-                                      offset: const Offset(0, 4),
-                                    ),
-                                  ],
-                                ),
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Container(
-                                      height: 4,
-                                      decoration: const BoxDecoration(
-                                        color: AppColors.accent,
-                                        borderRadius: BorderRadius.vertical(
-                                          top: Radius.circular(16),
-                                        ),
-                                      ),
-                                    ),
-                                    Padding(
-                                      padding: const EdgeInsets.fromLTRB(
-                                        16,
-                                        14,
-                                        16,
-                                        16,
-                                      ),
-                                      child: Column(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
-                                        children: [
-                                          Row(
-                                            children: [
-                                              Container(
-                                                width: 3,
-                                                height: 20,
-                                                decoration: BoxDecoration(
-                                                  color: AppColors.accent,
-                                                  borderRadius:
-                                                      BorderRadius.circular(2),
-                                                ),
-                                              ),
-                                              const SizedBox(width: 10),
-                                              const Icon(
-                                                Icons.map_outlined,
-                                                size: 22,
-                                                color: AppColors.primary,
-                                              ),
-                                              const SizedBox(width: 8),
-                                              const Text(
-                                                'Trail map & next station',
-                                                style: TextStyle(
-                                                  fontSize: 18,
-                                                  fontWeight: FontWeight.bold,
-                                                  color: AppColors.text,
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                          const SizedBox(height: 12),
-                                          if (allStations.isNotEmpty)
-                                            RepaintBoundary(
-                                              child: ClipRRect(
-                                                borderRadius:
-                                                    BorderRadius.circular(12),
-                                                child: SizedBox(
-                                                  height: 240,
-                                                  child: TrailMap(
-                                                    currentStation: station,
-                                                    allStations: allStations,
-                                                    height: 240,
-                                                  ),
-                                                ),
-                                              ),
-                                            ),
-                                          if (hasNext) ...[
-                                            if (allStations.isNotEmpty)
-                                              Padding(
-                                                padding:
-                                                    const EdgeInsets.symmetric(
-                                                      vertical: 14,
-                                                    ),
-                                                child: Divider(
-                                                  height: 1,
-                                                  color: AppColors.border,
-                                                ),
-                                              )
-                                            else
-                                              const SizedBox(height: 14),
-                                            if (isEnd) ...[
-                                              Container(
-                                                width: double.infinity,
-                                                padding: const EdgeInsets.all(
-                                                  14,
-                                                ),
-                                                decoration: BoxDecoration(
-                                                  color: AppColors.accent
-                                                      .withValues(alpha: 0.08),
-                                                  borderRadius:
-                                                      BorderRadius.circular(12),
-                                                ),
-                                                child: const Row(
-                                                  children: [
-                                                    Icon(
-                                                      Icons.celebration,
-                                                      color: AppColors.accent,
-                                                      size: 24,
-                                                    ),
-                                                    SizedBox(width: 12),
-                                                    Expanded(
-                                                      child: Text(
-                                                        "You've reached the final station on this route!",
-                                                        style: TextStyle(
-                                                          fontWeight:
-                                                              FontWeight.w600,
-                                                          color:
-                                                              AppColors.accent,
-                                                          height: 1.4,
-                                                        ),
-                                                      ),
-                                                    ),
-                                                  ],
-                                                ),
-                                              ),
-                                            ] else if (nextStationData !=
-                                                null) ...[
-                                              Row(
-                                                crossAxisAlignment:
-                                                    CrossAxisAlignment.center,
-                                                children: [
-                                                  Expanded(
-                                                    child: Text(
-                                                      nextStationData!.name,
-                                                      style: const TextStyle(
-                                                        fontSize: 17,
-                                                        fontWeight:
-                                                            FontWeight.w700,
-                                                        color: AppColors.text,
-                                                      ),
-                                                    ),
-                                                  ),
-                                                  const SizedBox(width: 8),
-                                                  Container(
-                                                    padding:
-                                                        const EdgeInsets.symmetric(
-                                                          horizontal: 10,
-                                                          vertical: 5,
-                                                        ),
-                                                    decoration: BoxDecoration(
-                                                      color: routeDiffColor
-                                                          .withValues(
-                                                            alpha: 0.15,
-                                                          ),
-                                                      borderRadius:
-                                                          BorderRadius.circular(
-                                                            6,
-                                                          ),
-                                                      border: Border.all(
-                                                        color: routeDiffColor
-                                                            .withValues(
-                                                              alpha: 0.4,
-                                                            ),
-                                                        width: 1,
-                                                      ),
-                                                    ),
-                                                    child: Text(
-                                                      nextStationData!
-                                                          .difficulty
-                                                          .toUpperCase(),
-                                                      style: TextStyle(
-                                                        fontSize: 11,
-                                                        fontWeight:
-                                                            FontWeight.w700,
-                                                        color: routeDiffColor,
-                                                        letterSpacing: 0.6,
-                                                      ),
-                                                    ),
-                                                  ),
-                                                ],
-                                              ),
-                                              const SizedBox(height: 12),
-                                              Container(
-                                                decoration: BoxDecoration(
-                                                  color: AppColors.background,
-                                                  borderRadius:
-                                                      BorderRadius.circular(10),
-                                                ),
-                                                padding:
-                                                    const EdgeInsets.symmetric(
-                                                      vertical: 12,
-                                                    ),
-                                                child: Row(
-                                                  children: [
-                                                    Expanded(
-                                                      child: Column(
-                                                        mainAxisSize:
-                                                            MainAxisSize.min,
-                                                        children: [
-                                                          const Icon(
-                                                            Icons.height,
-                                                            size: 20,
-                                                            color: AppColors
-                                                                .primary,
-                                                          ),
-                                                          const SizedBox(
-                                                            height: 4,
-                                                          ),
-                                                          Text(
-                                                            '${nextStationData!.elevation}m',
-                                                            style:
-                                                                const TextStyle(
-                                                                  fontSize: 15,
-                                                                  fontWeight:
-                                                                      FontWeight
-                                                                          .w700,
-                                                                  color:
-                                                                      AppColors
-                                                                          .text,
-                                                                ),
-                                                          ),
-                                                          Text(
-                                                            'ELEVATION',
-                                                            style: TextStyle(
-                                                              fontSize: 10,
-                                                              color: Colors
-                                                                  .grey[500],
-                                                              fontWeight:
-                                                                  FontWeight
-                                                                      .w500,
-                                                              letterSpacing:
-                                                                  0.5,
-                                                            ),
-                                                          ),
-                                                        ],
-                                                      ),
-                                                    ),
-                                                    Container(
-                                                      width: 1,
-                                                      height: 36,
-                                                      color: AppColors.border,
-                                                    ),
-                                                    Expanded(
-                                                      child: Column(
-                                                        mainAxisSize:
-                                                            MainAxisSize.min,
-                                                        children: [
-                                                          const Icon(
-                                                            Icons.route,
-                                                            size: 20,
-                                                            color: AppColors
-                                                                .primary,
-                                                          ),
-                                                          const SizedBox(
-                                                            height: 4,
-                                                          ),
-                                                          Text(
-                                                            '${station.distanceToNextKm ?? 0} km',
-                                                            style:
-                                                                const TextStyle(
-                                                                  fontSize: 15,
-                                                                  fontWeight:
-                                                                      FontWeight
-                                                                          .w700,
-                                                                  color:
-                                                                      AppColors
-                                                                          .text,
-                                                                ),
-                                                          ),
-                                                          Text(
-                                                            'DISTANCE',
-                                                            style: TextStyle(
-                                                              fontSize: 10,
-                                                              color: Colors
-                                                                  .grey[500],
-                                                              fontWeight:
-                                                                  FontWeight
-                                                                      .w500,
-                                                              letterSpacing:
-                                                                  0.5,
-                                                            ),
-                                                          ),
-                                                        ],
-                                                      ),
-                                                    ),
-                                                  ],
-                                                ),
-                                              ),
-                                              const SizedBox(height: 10),
-                                              Container(
-                                                width: double.infinity,
-                                                padding:
-                                                    const EdgeInsets.symmetric(
-                                                      horizontal: 16,
-                                                      vertical: 13,
-                                                    ),
-                                                decoration: BoxDecoration(
-                                                  color: AppColors.accent,
-                                                  borderRadius:
-                                                      BorderRadius.circular(10),
-                                                ),
-                                                child: Row(
-                                                  children: [
-                                                    const Icon(
-                                                      Icons.directions_walk,
-                                                      size: 20,
-                                                      color: Colors.white,
-                                                    ),
-                                                    const SizedBox(width: 8),
-                                                    Text(
-                                                      station.steps != null
-                                                          ? '${station.steps} steps to next station'
-                                                          : 'Distance in steps not available',
-                                                      style: const TextStyle(
-                                                        color: Colors.white,
-                                                        fontWeight:
-                                                            FontWeight.w600,
-                                                        fontSize: 14,
-                                                      ),
-                                                    ),
-                                                    const Spacer(),
-                                                    const Icon(
-                                                      Icons.arrow_forward,
-                                                      size: 18,
-                                                      color: Colors.white70,
-                                                    ),
-                                                  ],
-                                                ),
-                                              ),
-                                            ] else if (station.nextStationId !=
-                                                null) ...[
-                                              const Center(
-                                                child:
-                                                    CircularProgressIndicator(),
-                                              ),
-                                            ],
-                                          ],
-                                        ],
-                                      ),
-                                    ),
-                                  ],
-                                ),
+                              _buildRouteSection(
+                                hasNext: hasNext,
+                                isEnd: isEnd,
+                                routeDiffColor: routeDiffColor,
                               ),
                             ],
                             if (station.metadata.isNotEmpty) ...[
