@@ -1,12 +1,29 @@
 // ignore_for_file: use_key_in_widget_constructors, deprecated_member_use, use_build_context_synchronously
 
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import '../utils/app_logger.dart';
 import '../../theme/new_color.dart';
 import '../../models/station_data.dart';
+
+/// A named section of the trail. Camp 3 is the hub where the trail branches
+/// into separate segments; each is represented as an independent instance.
+class _TrailSegment {
+  final String id;
+  final List<String> stationIds;
+  final List<LatLng> path;
+
+  const _TrailSegment({
+    required this.id,
+    required this.stationIds,
+    required this.path,
+  });
+}
 
 class TrailMap extends StatefulWidget {
   final StationData currentStation;
@@ -24,17 +41,35 @@ class TrailMap extends StatefulWidget {
   State<TrailMap> createState() => _TrailMapState();
 }
 
-class _TrailMapState extends State<TrailMap> {
+class _TrailMapState extends State<TrailMap>
+    with SingleTickerProviderStateMixin {
   late MapController _mapController;
   bool _isOnline = true;
   late final Connectivity _connectivity;
+  late final AnimationController _pulseController;
+  late final Animation<double> _pulseScale;
+  late final Animation<double> _pulseOpacity;
+  List<_TrailSegment> _segments = [];
 
   @override
   void initState() {
     super.initState();
     _mapController = MapController();
     _connectivity = Connectivity();
+    _pulseController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1400),
+    )..repeat();
+    _pulseScale = Tween<double>(
+      begin: 1.0,
+      end: 1.95,
+    ).animate(CurvedAnimation(parent: _pulseController, curve: Curves.easeOut));
+    _pulseOpacity = Tween<double>(
+      begin: 0.30,
+      end: 0.0,
+    ).animate(CurvedAnimation(parent: _pulseController, curve: Curves.easeOut));
     _checkConnectivity();
+    _loadTrailPath();
   }
 
   Future<void> _checkConnectivity() async {
@@ -73,14 +108,136 @@ class _TrailMapState extends State<TrailMap> {
     }
   }
 
+  Future<void> _loadTrailPath() async {
+    try {
+      final jsonStr = await rootBundle.loadString(
+        'assets/data/trail_path.json',
+      );
+      final data = jsonDecode(jsonStr) as Map<String, dynamic>;
+      final segmentsData = data['segments'] as List<dynamic>;
+      final segments = segmentsData.map((s) {
+        final stationIds = (s['stationIds'] as List<dynamic>).cast<String>();
+        final pathData = s['path'] as List<dynamic>;
+        final path = pathData
+            .map(
+              (p) => LatLng(
+                (p['lat'] as num).toDouble(),
+                (p['lng'] as num).toDouble(),
+              ),
+            )
+            .toList();
+        return _TrailSegment(
+          id: s['id'] as String,
+          stationIds: stationIds,
+          path: path,
+        );
+      }).toList();
+      if (mounted) setState(() => _segments = segments);
+    } catch (e) {
+      AppLogger.e('Failed to load trail path: $e');
+      // _segments stays empty — falls back to straight station-to-station lines
+    }
+  }
+
   @override
   void dispose() {
+    _pulseController.dispose();
     _mapController.dispose();
     super.dispose();
   }
 
-  /// Build trail polylines connecting all stations in order
+  /// Build trail polylines for the branching trail.
+  /// Uses segments from trail_path.json when loaded, otherwise falls back
+  /// to straight station-to-station lines.
   List<Polyline> _buildTrailPolylines() {
+    if (_segments.isEmpty) {
+      return _buildStraightPolylines();
+    }
+
+    // Identify the "active" segment — the one where the current station
+    // appears at the highest index. This correctly resolves Camp 3:
+    // it is the LAST entry of the main segment (index 7) but the FIRST
+    // entry of every branch (index 0), so the main segment wins when the
+    // trekker is at Camp 3. Branch segments win once the trekker enters them.
+    int activeSegIdx = 0;
+    int bestStationIdx = -1;
+    for (int i = 0; i < _segments.length; i++) {
+      final idx = _segments[i].stationIds.indexOf(widget.currentStation.id);
+      if (idx > bestStationIdx) {
+        bestStationIdx = idx;
+        activeSegIdx = i;
+      }
+    }
+
+    final visitedIds = widget.allStations
+        .where((s) => s.isVisited)
+        .map((s) => s.id)
+        .toSet();
+
+    final polylines = <Polyline>[];
+
+    for (int i = 0; i < _segments.length; i++) {
+      final seg = _segments[i];
+
+      if (i == activeSegIdx) {
+        // Split the active segment at the current station's closest point.
+        final lat = widget.currentStation.latitude;
+        final lng = widget.currentStation.longitude;
+        int splitIdx = 0;
+        if (lat != null && lng != null && seg.path.isNotEmpty) {
+          final pt = LatLng(lat, lng);
+          double bestDist = _sqDist(seg.path[0], pt);
+          for (int j = 1; j < seg.path.length; j++) {
+            final d = _sqDist(seg.path[j], pt);
+            if (d < bestDist) {
+              bestDist = d;
+              splitIdx = j;
+            }
+          }
+        }
+
+        // Completed portion (before current position) — solid green.
+        if (splitIdx > 0) {
+          polylines.add(
+            Polyline(
+              points: seg.path.sublist(0, splitIdx + 1),
+              color: Colors.green.shade500,
+              strokeWidth: 5.0,
+            ),
+          );
+        }
+
+        // Current/upcoming portion — accent colour.
+        if (splitIdx < seg.path.length - 1) {
+          polylines.add(
+            Polyline(
+              points: seg.path.sublist(splitIdx),
+              color: AppColors.accent,
+              strokeWidth: 4.5,
+            ),
+          );
+        }
+      } else {
+        // Non-active segment: green if its last station has been visited,
+        // otherwise blue dotted (upcoming / not taken yet).
+        final lastId = seg.stationIds.last;
+        final isCompleted = visitedIds.contains(lastId);
+        polylines.add(
+          Polyline(
+            points: seg.path,
+            color: isCompleted ? Colors.green.shade500 : Colors.blue.shade400,
+            strokeWidth: isCompleted ? 5.0 : 3.0,
+            isDotted: !isCompleted,
+          ),
+        );
+      }
+    }
+
+    return polylines;
+  }
+
+  /// Fallback: straight lines between each consecutive station pair.
+  List<Polyline> _buildStraightPolylines() {
     final polylines = <Polyline>[];
     final stations = widget.allStations;
 
@@ -100,9 +257,27 @@ class _TrailMapState extends State<TrailMap> {
             currentStationData.longitude != null &&
             nextStation.latitude != null &&
             nextStation.longitude != null) {
-          // Determine color based on whether this segment is ahead or behind current station
           final isCompleted = _isStationBefore(currentStationData.id);
-          final color = isCompleted ? Colors.green[300] : Colors.blue[400];
+          final isCurrentSegment =
+              currentStationData.id == widget.currentStation.id;
+
+          final Color segmentColor;
+          final double strokeWidth;
+          final bool dotted;
+
+          if (isCompleted) {
+            segmentColor = Colors.green.shade500;
+            strokeWidth = 5.0;
+            dotted = false;
+          } else if (isCurrentSegment) {
+            segmentColor = AppColors.accent;
+            strokeWidth = 4.5;
+            dotted = false;
+          } else {
+            segmentColor = Colors.blue.shade400;
+            strokeWidth = 3.0;
+            dotted = true;
+          }
 
           polylines.add(
             Polyline(
@@ -113,9 +288,9 @@ class _TrailMapState extends State<TrailMap> {
                 ),
                 LatLng(nextStation.latitude!, nextStation.longitude!),
               ],
-              color: color ?? Colors.blue,
-              strokeWidth: 4.0,
-              isDotted: !isCompleted, // Dotted line for upcoming trail
+              color: segmentColor,
+              strokeWidth: strokeWidth,
+              isDotted: dotted,
             ),
           );
         }
@@ -123,6 +298,13 @@ class _TrailMapState extends State<TrailMap> {
     }
 
     return polylines;
+  }
+
+  /// Squared lat/lng distance (sufficient for closest-point lookup).
+  double _sqDist(LatLng a, LatLng b) {
+    final dlat = a.latitude - b.latitude;
+    final dlng = a.longitude - b.longitude;
+    return dlat * dlat + dlng * dlng;
   }
 
   /// Check if a station is before the current station in the trail
@@ -141,7 +323,7 @@ class _TrailMapState extends State<TrailMap> {
   List<Marker> _buildStationMarkers() {
     return widget.allStations.map((station) {
       final isCurrentStation = station.id == widget.currentStation.id;
-      final isCompletedStation = _isStationBefore(station.id);
+      final isVisitedStation = station.isVisited;
 
       if (station.latitude == null || station.longitude == null) {
         return Marker(point: LatLng(0, 0), child: Container());
@@ -156,31 +338,71 @@ class _TrailMapState extends State<TrailMap> {
               _mapController.camera.zoom,
             );
           },
-          child: Container(
-            width: isCurrentStation ? 28 : 22,
-            height: isCurrentStation ? 28 : 22,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: isCurrentStation
-                  ? Colors.red
-                  : isCompletedStation
-                  ? Colors.green
-                  : Colors.blue,
-              border: Border.all(
-                color: Colors.white,
-                width: isCurrentStation ? 3 : 2,
-              ),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black26,
-                  blurRadius: 4,
-                  offset: const Offset(0, 2),
-                ),
-              ],
-            ),
-            child: isCurrentStation
-                ? const Icon(Icons.location_on, color: Colors.white, size: 14)
-                : Center(
+          child: isCurrentStation
+              ? AnimatedBuilder(
+                  animation: _pulseController,
+                  builder: (context, _) {
+                    return SizedBox(
+                      width: 40,
+                      height: 40,
+                      child: Stack(
+                        alignment: Alignment.center,
+                        children: [
+                          Transform.scale(
+                            scale: _pulseScale.value,
+                            child: Container(
+                              width: 22,
+                              height: 22,
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                color: Colors.red.withValues(
+                                  alpha: _pulseOpacity.value,
+                                ),
+                              ),
+                            ),
+                          ),
+                          Container(
+                            width: 28,
+                            height: 28,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: Colors.red,
+                              border: Border.all(color: Colors.white, width: 3),
+                              boxShadow: const [
+                                BoxShadow(
+                                  color: Colors.black26,
+                                  blurRadius: 4,
+                                  offset: Offset(0, 2),
+                                ),
+                              ],
+                            ),
+                            child: const Icon(
+                              Icons.location_on,
+                              color: Colors.white,
+                              size: 14,
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
+                  },
+                )
+              : Container(
+                  width: 22,
+                  height: 22,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: isVisitedStation ? Colors.green : Colors.blue,
+                    border: Border.all(color: Colors.white, width: 2),
+                    boxShadow: const [
+                      BoxShadow(
+                        color: Colors.black26,
+                        blurRadius: 4,
+                        offset: Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                  child: Center(
                     child: Container(
                       width: 6,
                       height: 6,
@@ -190,7 +412,7 @@ class _TrailMapState extends State<TrailMap> {
                       ),
                     ),
                   ),
-          ),
+                ),
         ),
       );
     }).toList();
@@ -256,7 +478,12 @@ class _TrailMapState extends State<TrailMap> {
                   // Fit all stations in view
                   Future.delayed(const Duration(milliseconds: 100), () {
                     if (mounted && _isOnline) {
-                      _mapController.fitBounds(bounds);
+                      _mapController.fitCamera(
+                        CameraFit.bounds(
+                          bounds: bounds,
+                          padding: const EdgeInsets.fromLTRB(24, 64, 24, 110),
+                        ),
+                      );
                     }
                   });
                 },

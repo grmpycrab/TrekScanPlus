@@ -1,0 +1,74 @@
+{
+  "_note": "Trail path for Mt. Hamiguitan Range Wildlife Sanctuary. Camp 3 (utvrrkfkh9) is the hub where the trail branches into three routes. Replace each segment's 'path' waypoints with a real GPS track (exported from AllTrails / Strava / Garmin) for the actual mountain path shape.",
+  "trailName": "Mt. Hamiguitan Range Wildlife Sanctuary",
+  "segments": [
+    {
+      "id": "main",
+      "label": "Trailhead → Camp 3",
+      "stationIds": [
+        "56okrkt0pb",
+        "hu2c5c0kfn",
+        "um6j8dnii4",
+        "3ko938o2gb",
+        "33ii1jrc5s",
+        "vaatj8uomu",
+        "cbensi5juq",
+        "utvrrkfkh9"
+      ],
+      "path": [
+        { "lat": 6.7362917, "lng": 126.1416639 },
+        { "lat": 6.7348722, "lng": 126.1428028 },
+        { "lat": 6.7296278, "lng": 126.1561278 },
+        { "lat": 6.7230722, "lng": 126.1605889 },
+        { "lat": 6.7306330, "lng": 126.1672330 },
+        { "lat": 6.7322333, "lng": 126.1773833 },
+        { "lat": 6.7314722, "lng": 126.1782500 },
+        { "lat": 6.7262333, "lng": 126.1843750 }
+      ]
+    },
+    {
+      "id": "hidden_garden",
+      "label": "Camp 3 → Pygmy Field → Mossy Forest → Tinagong Dagat → Hidden Garden",
+      "stationIds": [
+        "utvrrkfkh9",
+        "6mm4kle34g",
+        "g5uabiveqd",
+        "79t42cmo77",
+        "i73hl7b7g3"
+      ],
+      "path": [
+        { "lat": 6.7262333, "lng": 126.1843750 },
+        { "lat": 6.7202694, "lng": 126.1833944 },
+        { "lat": 6.7128000, "lng": 126.1872278 },
+        { "lat": 6.7076528, "lng": 126.1953083 },
+        { "lat": 6.7041700, "lng": 126.1997200 }
+      ]
+    },
+    {
+      "id": "summit",
+      "label": "Camp 3 → Summit",
+      "stationIds": [
+        "utvrrkfkh9",
+        "mr2l529okj"
+      ],
+      "path": [
+        { "lat": 6.7262333, "lng": 126.1843750 },
+        { "lat": 6.7399722, "lng": 126.1814583 }
+      ]
+    },
+    {
+      "id": "black_mountain_twin_falls",
+      "label": "Camp 3 ↔ Black Mountain ↔ Twin Falls (bidirectional)",
+      "stationIds": [
+        "utvrrkfkh9",
+        "44r5tebjrc",
+        "r5kntj3sae"
+      ],
+      "path": [
+        { "lat": 6.7262333, "lng": 126.1843750 },
+        { "lat": 6.7265917, "lng": 126.1803722 },
+        { "lat": 6.7238167, "lng": 126.1830611 }
+      ]
+    }
+  ]
+}
