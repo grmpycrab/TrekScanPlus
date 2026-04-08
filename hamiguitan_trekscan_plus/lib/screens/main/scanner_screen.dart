@@ -332,12 +332,7 @@ class _ScannerScreenState extends State<ScannerScreen>
                       // Geofencing passed or disabled - navigate
                       if (mounted) {
                         AppLogger.i('Navigating to station detail screen...');
-                        Navigator.of(context).push(
-                          MaterialPageRoute(
-                            builder: (context) =>
-                                StationDetailScreen(station: station),
-                          ),
-                        );
+                        await _navigateToStation(station);
                       }
                       return; // Exit after navigation
                     } else {
@@ -447,12 +442,7 @@ class _ScannerScreenState extends State<ScannerScreen>
                       // Geofencing passed or disabled - navigate
                       if (mounted) {
                         AppLogger.i('Navigating to station detail screen...');
-                        Navigator.of(context).push(
-                          MaterialPageRoute(
-                            builder: (context) =>
-                                StationDetailScreen(station: station),
-                          ),
-                        );
+                        await _navigateToStation(station);
                       }
                       return; // Exit after navigation
                     }
@@ -477,6 +467,19 @@ class _ScannerScreenState extends State<ScannerScreen>
         ],
       ),
     );
+  }
+
+  /// Stops the camera, navigates to the station detail screen,
+  /// then restarts the camera when the user pops back.
+  Future<void> _navigateToStation(StationData station) async {
+    await controller?.stop();
+    if (!mounted) return;
+    await Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => StationDetailScreen(station: station),
+      ),
+    );
+    if (mounted) await controller?.start();
   }
 
   Widget _buildOverlay() {
