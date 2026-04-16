@@ -12,7 +12,7 @@ import 'screens/auth/login_screen.dart';
 import 'screens/auth/signup_screen.dart';
 import 'screens/auth/email_verification_screen.dart';
 import 'screens/main/main_screen.dart';
-import 'screens/main/book_a_climb.dart';
+import 'features/booking/screens/book_a_climb_screen.dart';
 import 'screens/social/post_detail_screen.dart';
 import 'screens/splash_screen.dart';
 import 'services/firebase_auth_service.dart';
@@ -486,7 +486,7 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
               final bookingId = settings.arguments as String?;
               return MaterialPageRoute(
                 builder: (context) =>
-                    BookAClimbScreen(highlightBookingId: bookingId),
+                    BookAClimbScreenRefactored(highlightBookingId: bookingId),
               );
             }
 

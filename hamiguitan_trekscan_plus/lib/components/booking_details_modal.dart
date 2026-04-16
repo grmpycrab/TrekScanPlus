@@ -3,6 +3,7 @@ import 'package:intl/intl.dart';
 import '../models/climb.dart';
 import '../models/booking_model.dart';
 import '../theme/color.dart';
+import '../features/booking/widgets/price_summary_widget.dart';
 
 class BookingDetailsModal extends StatelessWidget {
   final Climb climb;
@@ -162,7 +163,14 @@ class BookingDetailsModal extends StatelessWidget {
                               'Hometown:',
                               booking?.hometown ?? 'Not provided',
                             ),
-                            const SizedBox(height: 12),
+                            const SizedBox(height: 24),
+                            // Price Summary Section
+                            if (booking != null)
+                              PriceSummaryWidget(
+                                members: booking!.members,
+                                estimatedTotalPrice: 0.0,
+                              ),
+                            if (booking != null) const SizedBox(height: 24),
                             // Attachments section
                             if (booking != null &&
                                 booking!.attachments.isNotEmpty)

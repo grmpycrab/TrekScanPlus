@@ -9,7 +9,7 @@ import 'home_screen.dart';
 import 'station_screen.dart';
 import 'scanner_screen.dart';
 import 'settings_screen.dart';
-import 'book_a_climb.dart';
+import '../../features/booking/screens/book_a_climb_screen.dart';
 
 // ignore_for_file: unnecessary_brace_in_string_interps
 // ignore_for_file: use_key_in_widget_constructors, deprecated_member_use, use_build_context_synchronously
@@ -32,11 +32,13 @@ class _MainScreenState extends State<MainScreen> {
   final AchievementService _achievementService = AchievementService();
   DateTime? _selectedDateForBooking;
   bool _autoShowBookingForm = false;
+  bool _bookingFormShown = false; // Track if form has been auto-shown
 
   void _navigateToBookingWithDate(DateTime date) {
     setState(() {
       _selectedDateForBooking = date;
       _autoShowBookingForm = true;
+      _bookingFormShown = false; // Reset when new date is selected
       _currentIndex = 3; // Index of BookAClimbScreen
     });
   }
@@ -45,10 +47,17 @@ class _MainScreenState extends State<MainScreen> {
     HomeScreen(onNavigateToBooking: _navigateToBookingWithDate),
     const StationScreen(),
     const ScannerScreen(),
-    BookAClimbScreen(
+    BookAClimbScreenRefactored(
       selectedDate: _selectedDateForBooking,
-      autoShowBookingForm: _autoShowBookingForm,
+      autoShowBookingForm: _autoShowBookingForm && !_bookingFormShown,
       highlightBookingId: widget.highlightBookingId,
+      onFormShown: () {
+        // Called when the booking form is auto-shown
+        setState(() {
+          _bookingFormShown = true;
+          _autoShowBookingForm = false;
+        });
+      },
     ),
     const SettingsScreen(),
   ];
