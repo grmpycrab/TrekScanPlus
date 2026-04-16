@@ -16,7 +16,7 @@ import '../../services/calendar_config_service.dart';
 import '../../services/validators.dart';
 import '../../services/user_service.dart';
 import '../../models/climb.dart';
-import '../../components/climb_card.dart';
+import '../../features/booking/widgets/climb_card.dart';
 import '../../components/member_form_card.dart';
 import '../../components/app_dialogue_handler.dart';
 import '../../theme/color.dart';
