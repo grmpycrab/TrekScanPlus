@@ -1316,9 +1316,6 @@ class _StationDetailScreenState extends State<StationDetailScreen> {
           child: Image.asset(
             _imagePaths[real], // pre-resolved path — no function call per frame
             fit: BoxFit.cover,
-            // Decode at display width only; height is inferred to preserve
-            // aspect ratio. Halves texture memory vs specifying both dims.
-            cacheWidth: 600,
             errorBuilder: (_, __, ___) => const ColoredBox(
               color: AppColors.border,
               child: Center(child: Icon(Icons.image_not_supported, size: 50)),
