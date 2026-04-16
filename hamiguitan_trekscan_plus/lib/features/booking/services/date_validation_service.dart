@@ -109,6 +109,7 @@ class DateValidationService {
 
       final snapshot = await _firestore
           .collection('bookings')
+          .where('status', isEqualTo: 'approved')
           .where(
             'trekDate',
             isGreaterThanOrEqualTo: Timestamp.fromDate(startOfDay),
@@ -116,14 +117,8 @@ class DateValidationService {
           .where('trekDate', isLessThanOrEqualTo: Timestamp.fromDate(endOfDay))
           .get();
 
-      // Count approved bookings only (pending don't reserve slots)
-      int slotsUsed = 0;
-      for (final doc in snapshot.docs) {
-        final status = (doc['status'] as String?)?.toLowerCase() ?? '';
-        if (status == 'approved') {
-          slotsUsed += 1; // One slot per booking (trekker count only)
-        }
-      }
+      // Count approved bookings (all docs in snapshot are already approved due to filter)
+      int slotsUsed = snapshot.docs.length;
 
       final slotsNeeded = 1; // Only count primary trekker
       final available = (slotsUsed + slotsNeeded) <= maxSlots;

@@ -62,18 +62,23 @@ service cloud.firestore {
       // (relaxed: only require ownership; field validation is done server-side or in client)
       allow create: if request.auth != null && request.resource.data.userId == request.auth.uid;
 
-      // Read: Users can only read their own bookings, or admins can read all
+      // Read: Users can read their own bookings, approved bookings (for date availability checks), or admins can read all
       allow read: if request.auth != null && (
         request.auth.uid == resource.data.userId ||
+        resource.data.status == 'approved' ||
         request.auth.token.admin == true
       );
 
       // Update: owners can update their booking while it's pending or declined (to allow resubmission)
       // Owners can also cancel their own bookings at any time
+      // Owners can add attachments to their own bookings at any time
       // Admins can update anytime
       allow update: if request.auth != null && (
-        // owner may update while booking is pending, declined/rejected, or changes required
+        // owner may update attachments at any time (for file uploads)
         (resource.data.userId == request.auth.uid && 
+         request.resource.data.diff(resource.data).affectedKeys().hasOnly(['attachments', 'updatedAt']))
+        // owner may update while booking is pending, declined/rejected, or changes required
+        || (resource.data.userId == request.auth.uid && 
          (resource.data.status == 'pending' || 
           resource.data.status == 'declined' || 
           resource.data.status == 'rejected' ||
@@ -99,6 +104,14 @@ service cloud.firestore {
       allow read: if request.auth != null && (request.auth.uid == userId || request.auth.token.admin == true);
       allow update: if request.auth != null && request.auth.uid == userId;
       allow delete: if request.auth != null && (request.auth.uid == userId || request.auth.token.admin == true);
+    }
+
+    // Climb sessions subcollection: users can read/write their own climb sessions
+    match /users/{userId}/climbs/{climbId} {
+      allow create: if request.auth != null && request.auth.uid == userId;
+      allow read: if request.auth != null && request.auth.uid == userId;
+      allow update: if request.auth != null && request.auth.uid == userId;
+      allow delete: if request.auth != null && request.auth.uid == userId;
     }
 
     // Social posts collection

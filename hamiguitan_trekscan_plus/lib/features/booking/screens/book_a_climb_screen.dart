@@ -1,3 +1,5 @@
+// ignore_for_file: use_build_context_synchronously
+
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -9,7 +11,7 @@ import '../../../models/booking_model.dart';
 import '../../../models/member.dart';
 import '../../../models/climb.dart';
 import '../../../services/booking_service.dart';
-import '../../../components/climb_card.dart';
+import '../widgets/climb_card.dart';
 import '../../../components/app_dialogue_handler.dart';
 import '../../../theme/color.dart';
 import '../../../utils/app_logger.dart';
@@ -104,6 +106,7 @@ class _BookAClimbScreenRefactoredState
         setState(() => _bookings = []);
         return;
       }
+      // Always load drafts when auth state changes or user logs in
       _loadDraftBookings();
       _subscribeToUserBookings(user.uid);
     });
@@ -141,7 +144,7 @@ class _BookAClimbScreenRefactoredState
       if (mounted) {
         setState(() {
           final firebaseBookings = _mapBookingsToDisplay(bookings);
-          // Get fresh drafts from provider (already loaded)
+          // Always reload fresh drafts from provider to ensure they're in sync
           final draftBookings = _mapDraftBookingsToDisplay(
             _bookingProvider.draftBookings,
           );
@@ -155,19 +158,24 @@ class _BookAClimbScreenRefactoredState
 
   /// Refresh bookings including drafts from provider
   void _refreshBookingsWithDrafts() {
-    setState(() {
-      final firebaseBookings = _bookings.where((item) {
-        if (item is Map<String, dynamic>) {
-          return (item['isDraft'] as bool?) == false ||
-              (item['isDraft'] as bool?) == null;
-        }
-        return false;
-      }).toList();
+    // Reload drafts fresh from provider (reads from SharedPreferences)
+    _bookingProvider.loadDraftBookings().then((_) {
+      if (mounted) {
+        setState(() {
+          final firebaseBookings = _bookings.where((item) {
+            if (item is Map<String, dynamic>) {
+              return (item['isDraft'] as bool?) == false ||
+                  (item['isDraft'] as bool?) == null;
+            }
+            return false;
+          }).toList();
 
-      final draftBookings = _mapDraftBookingsToDisplay(
-        _bookingProvider.draftBookings,
-      );
-      _bookings = [...firebaseBookings, ...draftBookings];
+          final draftBookings = _mapDraftBookingsToDisplay(
+            _bookingProvider.draftBookings,
+          );
+          _bookings = [...firebaseBookings, ...draftBookings];
+        });
+      }
     });
   }
 
@@ -625,7 +633,36 @@ class _BookAClimbScreenRefactoredState
       }
 
       final submittedBooking = draft.copyWith(submissionStatus: 'submitted');
+
+      // Create booking in Firestore first (to get the booking ID for file uploads)
       await BookingService.instance.createBooking(submittedBooking);
+
+      // Upload files if any exist for this draft
+      // Collect all files from memberDocuments Map
+      final memberDocuments = _bookingProvider.state.memberDocuments;
+      int uploadedCount = 0;
+
+      if (memberDocuments.isNotEmpty) {
+        for (final docMap in memberDocuments.values) {
+          for (final files in docMap.values) {
+            for (final file in files) {
+              try {
+                await BookingService.instance.uploadAttachment(draft.id, file);
+                uploadedCount++;
+              } catch (e) {
+                AppLogger.e('Error uploading file ${file.name}: $e');
+                // Continue uploading other files
+              }
+            }
+          }
+        }
+
+        if (uploadedCount > 0 && mounted) {
+          AppLogger.i('Successfully uploaded $uploadedCount file(s)');
+        }
+      }
+
+      // Remove from drafts after successful submission and upload
       await _bookingProvider.removeDraftBooking(draft.id);
 
       if (mounted) {
@@ -642,7 +679,11 @@ class _BookAClimbScreenRefactoredState
         });
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: const Text('Booking submitted successfully!'),
+            content: Text(
+              uploadedCount > 0
+                  ? 'Booking submitted with $uploadedCount file(s)!'
+                  : 'Booking submitted successfully!',
+            ),
             backgroundColor: AppColors.statusApproved,
           ),
         );
@@ -654,6 +695,7 @@ class _BookAClimbScreenRefactoredState
           context,
         ).showSnackBar(SnackBar(content: Text('Error: $e')));
       }
+      AppLogger.e('Error submitting draft booking: $e');
     }
   }
 
@@ -692,7 +734,7 @@ class _BookAClimbScreenRefactoredState
         );
       }
 
-      // Update the booking in Firestore
+      // Update the booking in Firestore (only specific fields, not attachments)
       await BookingService.instance.updateBooking(
         updatedBooking.id,
         affiliation: updatedBooking.affiliation,
@@ -701,12 +743,41 @@ class _BookAClimbScreenRefactoredState
         phoneNumber: updatedBooking.phoneNumber,
       );
 
+      // Upload any new files that were added during editing
+      final memberDocuments = _bookingProvider.state.memberDocuments;
+      int uploadedCount = 0;
+
+      if (memberDocuments.isNotEmpty) {
+        for (final docMap in memberDocuments.values) {
+          for (final files in docMap.values) {
+            for (final file in files) {
+              try {
+                await BookingService.instance.uploadAttachment(
+                  updatedBooking.id,
+                  file,
+                );
+                uploadedCount++;
+              } catch (e) {
+                AppLogger.e(
+                  'Error uploading file ${file.name} during edit: $e',
+                );
+                // Continue uploading other files
+              }
+            }
+          }
+        }
+      }
+
       if (mounted) {
         Navigator.pop(context); // Close loading dialog
         Navigator.pop(context); // Close form modal
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: const Text('Booking updated successfully!'),
+            content: Text(
+              uploadedCount > 0
+                  ? 'Booking updated with $uploadedCount new file(s)!'
+                  : 'Booking updated successfully!',
+            ),
             backgroundColor: AppColors.statusApproved,
           ),
         );
@@ -826,7 +897,7 @@ class _BuildBookingFormModalState extends State<_BuildBookingFormModal> {
                     TrekDatePicker(
                       selectedDate: state.selectedDate,
                       onDateSelected: provider.setTrekDate,
-                      totalMembers: state.bookingMembers.length > 0
+                      totalMembers: state.bookingMembers.isNotEmpty
                           ? state.bookingMembers.length
                           : 1,
                     ),
@@ -865,16 +936,34 @@ class _BuildBookingFormModalState extends State<_BuildBookingFormModal> {
                       ),
                     ),
                     const SizedBox(height: 12),
-                    ...state.bookingMembers.asMap().entries.map((entry) {
-                      final index = entry.key;
-                      final member = entry.value;
-                      return _buildTrekkerFileUploadSection(
-                        context,
-                        index,
-                        member,
-                        provider,
-                      );
-                    }),
+                    if (state.bookingMembers.isEmpty)
+                      Container(
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          border: Border.all(color: AppColors.borderBlack26),
+                          borderRadius: BorderRadius.circular(12),
+                          color: AppColors.background,
+                        ),
+                        child: const Text(
+                          'No trekkers added yet. Add members below to upload documents.',
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: AppColors.textSecondary,
+                          ),
+                        ),
+                      )
+                    else
+                      ...state.bookingMembers.asMap().entries.map((entry) {
+                        final index = entry.key;
+                        final member = entry.value;
+                        return _buildTrekkerFileUploadSection(
+                          context,
+                          index,
+                          member,
+                          provider,
+                          existingBooking: widget.existingBooking,
+                        );
+                      }),
                     const SizedBox(height: 24),
                     // Trekkers List
                     const Text(
@@ -1007,9 +1096,9 @@ class _BuildBookingFormModalState extends State<_BuildBookingFormModal> {
     BuildContext context,
     int memberIndex,
     Member member,
-
-    BookingProvider provider,
-  ) {
+    BookingProvider provider, {
+    BookingModel? existingBooking,
+  }) {
     final docRequirements = DocumentRequirements.getDocumentsForCategory(
       member.category,
     );
@@ -1036,6 +1125,68 @@ class _BuildBookingFormModalState extends State<_BuildBookingFormModal> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  // Show existing attachments if editing
+                  if (existingBooking != null &&
+                      existingBooking.attachments.isNotEmpty)
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: AppColors.statusApproved.withOpacity(0.1),
+                            border: Border.all(
+                              color: AppColors.statusApproved.withOpacity(0.3),
+                            ),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Text(
+                                'Previously Uploaded Files:',
+                                style: TextStyle(
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: 13,
+                                ),
+                              ),
+                              const SizedBox(height: 8),
+                              ...existingBooking.attachments.map((attachment) {
+                                return Padding(
+                                  padding: const EdgeInsets.only(bottom: 4),
+                                  child: Row(
+                                    children: [
+                                      const Icon(
+                                        Icons.check_circle,
+                                        size: 16,
+                                        color: AppColors.statusApproved,
+                                      ),
+                                      const SizedBox(width: 8),
+                                      Expanded(
+                                        child: Text(
+                                          attachment.fileName,
+                                          style: const TextStyle(fontSize: 12),
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                );
+                              }),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        const Text(
+                          'Add More Files (Optional):',
+                          style: TextStyle(
+                            fontWeight: FontWeight.w600,
+                            fontSize: 13,
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                      ],
+                    ),
                   // Show category-specific document uploads
                   if (docRequirements != null)
                     ...docRequirements.requiredDocs.map((docField) {
