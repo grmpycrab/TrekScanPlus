@@ -229,10 +229,11 @@ class BookingService {
           : 'application/octet-stream',
     );
 
-    if (file.path != null) {
-      uploadTask = ref.putFile(File(file.path!), metadata);
-    } else if (file.bytes != null) {
+    if (file.bytes != null) {
+      // Prefer bytes (loaded with withData:true) — always in-memory, never stale
       uploadTask = ref.putData(file.bytes!, metadata);
+    } else if (file.path != null) {
+      uploadTask = ref.putFile(File(file.path!), metadata);
     } else {
       throw ArgumentError('File has neither path nor bytes');
     }

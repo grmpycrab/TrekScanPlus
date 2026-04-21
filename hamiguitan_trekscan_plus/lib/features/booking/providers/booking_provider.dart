@@ -21,6 +21,9 @@ class BookingProvider extends ChangeNotifier {
   bool _isLoading = false;
   String? _errorMessage;
   bool _isPrimaryContactInitialized = false;
+  // Store file metadata for draft bookings: bookingId -> memberIndex -> documentFieldName -> file metadata
+  Map<String, Map<String, Map<String, List<Map<String, dynamic>>>>>
+  _draftBookingMetadata = {};
 
   // Getters
   BookingFormState get state => _state;
@@ -28,6 +31,13 @@ class BookingProvider extends ChangeNotifier {
   bool get isLoading => _isLoading;
   String? get errorMessage => _errorMessage;
   bool get isPrimaryContactInitialized => _isPrimaryContactInitialized;
+
+  /// Get file metadata for a specific draft booking
+  Map<String, Map<String, List<Map<String, dynamic>>>> getDraftBookingMetadata(
+    String bookingId,
+  ) {
+    return _draftBookingMetadata[bookingId] ?? {};
+  }
 
   /// Update climb/trek type
   void setClimbType(String type) {
@@ -84,6 +94,7 @@ class BookingProvider extends ChangeNotifier {
 
   /// Set files for a specific document type of a specific member
   /// Structure: memberIndex -> documentFieldName -> List<PlatformFile>
+  /// Also stores metadata for persistence across sessions
   void setMemberDocumentFiles(
     int memberIndex,
     String documentFieldName,
@@ -99,7 +110,31 @@ class BookingProvider extends ChangeNotifier {
     );
     memberDocs[documentFieldName] = files;
     updatedMemberDocuments[memberKey] = memberDocs;
-    _state = _state.copyWith(memberDocuments: updatedMemberDocuments);
+
+    // Also store file metadata for persistence
+    final updatedMetadata =
+        Map<String, Map<String, List<Map<String, dynamic>>>>.from(
+          _state.memberDocumentMetadata,
+        );
+    final memberMetadata = Map<String, List<Map<String, dynamic>>>.from(
+      updatedMetadata[memberKey] ?? {},
+    );
+    memberMetadata[documentFieldName] = files
+        .map(
+          (f) => {
+            'name': f.name,
+            'size': f.size,
+            'path': f.path,
+            'extension': f.extension,
+          },
+        )
+        .toList();
+    updatedMetadata[memberKey] = memberMetadata;
+
+    _state = _state.copyWith(
+      memberDocuments: updatedMemberDocuments,
+      memberDocumentMetadata: updatedMetadata,
+    );
     notifyListeners();
   }
 
@@ -122,6 +157,10 @@ class BookingProvider extends ChangeNotifier {
         Map<String, Map<String, List<PlatformFile>>>.from(
           _state.memberDocuments,
         );
+    final updatedMetadata =
+        Map<String, Map<String, List<Map<String, dynamic>>>>.from(
+          _state.memberDocumentMetadata,
+        );
     final memberKey = memberIndex.toString();
     final memberDocs = updatedMemberDocuments[memberKey];
 
@@ -131,21 +170,41 @@ class BookingProvider extends ChangeNotifier {
 
       if (docFiles.isEmpty) {
         memberDocs.remove(documentFieldName);
+        updatedMetadata[memberKey]?.remove(documentFieldName);
         if (memberDocs.isEmpty) {
           updatedMemberDocuments.remove(memberKey);
+          updatedMetadata.remove(memberKey);
         }
       } else {
         memberDocs[documentFieldName] = docFiles;
+        // Update metadata to match
+        final memberMetadata = Map<String, List<Map<String, dynamic>>>.from(
+          updatedMetadata[memberKey] ?? {},
+        );
+        memberMetadata[documentFieldName] = docFiles
+            .map(
+              (f) => {
+                'name': f.name,
+                'size': f.size,
+                'path': f.path,
+                'extension': f.extension,
+              },
+            )
+            .toList();
+        updatedMetadata[memberKey] = memberMetadata;
       }
 
-      _state = _state.copyWith(memberDocuments: updatedMemberDocuments);
+      _state = _state.copyWith(
+        memberDocuments: updatedMemberDocuments,
+        memberDocumentMetadata: updatedMetadata,
+      );
       notifyListeners();
     }
   }
 
   /// Clear all member documents
   void clearMemberDocuments() {
-    _state = _state.copyWith(memberDocuments: {});
+    _state = _state.copyWith(memberDocuments: {}, memberDocumentMetadata: {});
     notifyListeners();
   }
 
@@ -280,6 +339,7 @@ class BookingProvider extends ChangeNotifier {
   }
 
   /// Load draft bookings from local storage
+  /// Also loads previously selected file metadata
   Future<void> loadDraftBookings() async {
     try {
       final prefs = await SharedPreferences.getInstance();
@@ -287,13 +347,96 @@ class BookingProvider extends ChangeNotifier {
       if (currentUser == null) return;
 
       final key = 'draft_bookings_${currentUser.uid}';
+      final metadataKey = 'draft_bookings_metadata_${currentUser.uid}';
       final jsonString = prefs.getString(key);
+      final metadataJsonString = prefs.getString(metadataKey);
+
+      // Load metadata with proper type reconstruction
+      if (metadataJsonString != null && metadataJsonString.isNotEmpty) {
+        try {
+          final metadataJson = jsonDecode(metadataJsonString) as Map;
+          _draftBookingMetadata = {};
+
+          // Properly reconstruct nested map structure from JSON
+          metadataJson.forEach((bookingId, memberDocsJson) {
+            if (memberDocsJson is Map) {
+              final memberDocs =
+                  <String, Map<String, List<Map<String, dynamic>>>>{};
+              memberDocsJson.forEach((memberIndex, docFieldsJson) {
+                if (docFieldsJson is Map) {
+                  final docFields = <String, List<Map<String, dynamic>>>{};
+                  docFieldsJson.forEach((docFieldName, filesJson) {
+                    if (filesJson is List) {
+                      docFields[docFieldName] = filesJson
+                          .cast<Map<String, dynamic>>()
+                          .toList();
+                    }
+                  });
+                  memberDocs[memberIndex] = docFields;
+                }
+              });
+              _draftBookingMetadata[bookingId as String] = memberDocs;
+            }
+          });
+        } catch (e) {
+          AppLogger.e('Error loading draft booking metadata: $e');
+        }
+      }
 
       if (jsonString != null && jsonString.isNotEmpty) {
         final jsonData = jsonDecode(jsonString) as List;
-        _draftBookings = jsonData
-            .map((item) => BookingModel.fromJson(item as Map<String, dynamic>))
-            .toList();
+        _draftBookings = jsonData.map((item) {
+          final map = item as Map<String, dynamic>;
+
+          // Convert ISO date strings back to Timestamp objects
+          if (map['trekDate'] is String) {
+            try {
+              map['trekDate'] = Timestamp.fromDate(
+                DateTime.parse(map['trekDate']),
+              );
+            } catch (e) {
+              AppLogger.e('Error parsing trekDate: $e');
+            }
+          }
+          if (map['createdAt'] is String) {
+            try {
+              map['createdAt'] = Timestamp.fromDate(
+                DateTime.parse(map['createdAt']),
+              );
+            } catch (e) {
+              AppLogger.e('Error parsing createdAt: $e');
+            }
+          }
+
+          // Convert member timestamps
+          if (map['members'] is List) {
+            map['members'] = (map['members'] as List).map((member) {
+              if (member is Map<String, dynamic>) {
+                if (member['createdAt'] is String) {
+                  try {
+                    member['createdAt'] = Timestamp.fromDate(
+                      DateTime.parse(member['createdAt']),
+                    );
+                  } catch (e) {
+                    AppLogger.e('Error parsing member createdAt: $e');
+                  }
+                }
+                if (member['updatedAt'] is String) {
+                  try {
+                    member['updatedAt'] = Timestamp.fromDate(
+                      DateTime.parse(member['updatedAt']),
+                    );
+                  } catch (e) {
+                    AppLogger.e('Error parsing member updatedAt: $e');
+                  }
+                }
+              }
+              return member;
+            }).toList();
+          }
+
+          return BookingModel.fromJson(map);
+        }).toList();
         notifyListeners();
       }
     } catch (e) {
@@ -302,6 +445,7 @@ class BookingProvider extends ChangeNotifier {
   }
 
   /// Save draft bookings to local storage
+  /// Also saves file metadata so user can see previously selected files
   Future<void> saveDraftBooking(BookingModel booking) async {
     try {
       final prefs = await SharedPreferences.getInstance();
@@ -312,13 +456,115 @@ class BookingProvider extends ChangeNotifier {
       _draftBookings.add(booking);
 
       final key = 'draft_bookings_${currentUser.uid}';
-      final jsonData = _draftBookings.map((b) => b.toMap()).toList();
+      final metadataKey = 'draft_bookings_metadata_${currentUser.uid}';
+
+      // Convert bookings to JSON-serializable format
+      final jsonData = _draftBookings.map((b) {
+        final map = b.toMap();
+        // Convert Timestamp objects to ISO strings for JSON serialization
+        if (map['trekDate'] is Timestamp) {
+          map['trekDate'] = (map['trekDate'] as Timestamp)
+              .toDate()
+              .toIso8601String();
+        }
+        if (map['createdAt'] is Timestamp) {
+          map['createdAt'] = (map['createdAt'] as Timestamp)
+              .toDate()
+              .toIso8601String();
+        }
+        // Convert member timestamps
+        if (map['members'] is List) {
+          map['members'] = (map['members'] as List).map((member) {
+            if (member is Map<String, dynamic>) {
+              if (member['createdAt'] is Timestamp) {
+                member['createdAt'] = (member['createdAt'] as Timestamp)
+                    .toDate()
+                    .toIso8601String();
+              }
+              if (member['updatedAt'] is Timestamp) {
+                member['updatedAt'] = (member['updatedAt'] as Timestamp)
+                    .toDate()
+                    .toIso8601String();
+              }
+            }
+            return member;
+          }).toList();
+        }
+        return map;
+      }).toList();
+
       await prefs.setString(key, jsonEncode(jsonData));
+
+      // Save/update file metadata for this booking
+      _draftBookingMetadata[booking.id] = _state.memberDocumentMetadata;
+      await prefs.setString(metadataKey, jsonEncode(_draftBookingMetadata));
 
       notifyListeners();
     } catch (e) {
       AppLogger.e('Error saving draft booking: $e');
       _setError('Failed to save draft booking');
+    }
+  }
+
+  /// Update an existing draft booking in local storage
+  Future<void> updateDraftBooking(BookingModel updatedBooking) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final currentUser = FirebaseAuth.instance.currentUser;
+      if (currentUser == null) return;
+
+      // Replace the existing draft entry
+      final index = _draftBookings.indexWhere((b) => b.id == updatedBooking.id);
+      if (index >= 0) {
+        _draftBookings[index] = updatedBooking;
+      } else {
+        _draftBookings.add(updatedBooking);
+      }
+
+      // Update metadata for this booking
+      _draftBookingMetadata[updatedBooking.id] = _state.memberDocumentMetadata;
+
+      final key = 'draft_bookings_${currentUser.uid}';
+      final metadataKey = 'draft_bookings_metadata_${currentUser.uid}';
+
+      // Persist the updated draft list
+      final jsonData = _draftBookings.map((b) {
+        final map = b.toMap();
+        if (map['trekDate'] is Timestamp) {
+          map['trekDate'] = (map['trekDate'] as Timestamp)
+              .toDate()
+              .toIso8601String();
+        }
+        if (map['createdAt'] is Timestamp) {
+          map['createdAt'] = (map['createdAt'] as Timestamp)
+              .toDate()
+              .toIso8601String();
+        }
+        if (map['members'] is List) {
+          map['members'] = (map['members'] as List).map((member) {
+            if (member is Map<String, dynamic>) {
+              if (member['createdAt'] is Timestamp) {
+                member['createdAt'] = (member['createdAt'] as Timestamp)
+                    .toDate()
+                    .toIso8601String();
+              }
+              if (member['updatedAt'] is Timestamp) {
+                member['updatedAt'] = (member['updatedAt'] as Timestamp)
+                    .toDate()
+                    .toIso8601String();
+              }
+            }
+            return member;
+          }).toList();
+        }
+        return map;
+      }).toList();
+
+      await prefs.setString(key, jsonEncode(jsonData));
+      await prefs.setString(metadataKey, jsonEncode(_draftBookingMetadata));
+      notifyListeners();
+    } catch (e) {
+      AppLogger.e('Error updating draft booking: $e');
     }
   }
 
@@ -330,13 +576,51 @@ class BookingProvider extends ChangeNotifier {
       if (currentUser == null) return;
 
       _draftBookings.removeWhere((b) => b.id == bookingId);
+      _draftBookingMetadata.remove(bookingId);
 
       final key = 'draft_bookings_${currentUser.uid}';
+      final metadataKey = 'draft_bookings_metadata_${currentUser.uid}';
       if (_draftBookings.isEmpty) {
         await prefs.remove(key);
+        await prefs.remove(metadataKey);
       } else {
-        final jsonData = _draftBookings.map((b) => b.toMap()).toList();
+        // Convert bookings to JSON-serializable format
+        final jsonData = _draftBookings.map((b) {
+          final map = b.toMap();
+          // Convert Timestamp objects to ISO strings for JSON serialization
+          if (map['trekDate'] is Timestamp) {
+            map['trekDate'] = (map['trekDate'] as Timestamp)
+                .toDate()
+                .toIso8601String();
+          }
+          if (map['createdAt'] is Timestamp) {
+            map['createdAt'] = (map['createdAt'] as Timestamp)
+                .toDate()
+                .toIso8601String();
+          }
+          // Convert member timestamps
+          if (map['members'] is List) {
+            map['members'] = (map['members'] as List).map((member) {
+              if (member is Map<String, dynamic>) {
+                if (member['createdAt'] is Timestamp) {
+                  member['createdAt'] = (member['createdAt'] as Timestamp)
+                      .toDate()
+                      .toIso8601String();
+                }
+                if (member['updatedAt'] is Timestamp) {
+                  member['updatedAt'] = (member['updatedAt'] as Timestamp)
+                      .toDate()
+                      .toIso8601String();
+                }
+              }
+              return member;
+            }).toList();
+          }
+          return map;
+        }).toList();
+
         await prefs.setString(key, jsonEncode(jsonData));
+        await prefs.setString(metadataKey, jsonEncode(_draftBookingMetadata));
       }
 
       notifyListeners();
@@ -353,7 +637,11 @@ class BookingProvider extends ChangeNotifier {
   }
 
   /// Load existing booking for editing
-  void loadBookingForEdit(BookingModel booking) {
+  /// Preserves file metadata so user can see previously selected files
+  void loadBookingForEdit(
+    BookingModel booking, [
+    Map<String, Map<String, List<Map<String, dynamic>>>>? savedMetadata,
+  ]) {
     _state = _state.copyWith(
       climbType: booking.trekType.toLowerCase(),
       hometown: booking.hometown,
@@ -365,7 +653,14 @@ class BookingProvider extends ChangeNotifier {
       selectedDate: booking.trekDate.toDate(),
       bookingMembers: booking.members,
       pickedFiles: [],
-      memberDocuments: {}, // Clear member documents when loading for edit
+      // Preserve existing in-memory files so they survive Edit→Submit flow.
+      // Only clear memberDocuments if there are no current files already loaded.
+      memberDocuments: _state.memberDocuments.isNotEmpty
+          ? _state.memberDocuments
+          : {},
+      memberDocumentMetadata:
+          savedMetadata ??
+          {}, // Preserve metadata to show user which files were selected
     );
     _clearError();
     notifyListeners();
