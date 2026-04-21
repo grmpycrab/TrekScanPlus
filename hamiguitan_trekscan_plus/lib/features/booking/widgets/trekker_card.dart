@@ -34,14 +34,21 @@ class TrekkerCard extends StatelessWidget {
       ),
       child: Padding(
         padding: const EdgeInsets.all(12.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            _buildHeader(),
-            const SizedBox(height: 8),
-            _buildDetails(),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _buildHeader(),
+                  const SizedBox(height: 8),
+                  _buildDetails(),
+                ],
+              ),
+            ),
             if (!isPrimary) ...[
-              const SizedBox(height: 12),
+              const SizedBox(width: 12),
               _buildActionButtons(),
             ],
           ],
@@ -114,26 +121,40 @@ class TrekkerCard extends StatelessWidget {
 
   /// Build action buttons for non-primary members
   Widget _buildActionButtons() {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      spacing: 8,
       children: [
-        ElevatedButton.icon(
-          onPressed: onEdit,
-          icon: const Icon(Icons.edit, size: 16),
-          label: const Text('Edit'),
-          style: ElevatedButton.styleFrom(
-            backgroundColor: AppColors.primary,
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        SizedBox(
+          width: 40,
+          height: 40,
+          child: Tooltip(
+            message: 'Edit',
+            child: IconButton(
+              onPressed: onEdit,
+              icon: Icon(Icons.edit, size: 18),
+              style: IconButton.styleFrom(
+                backgroundColor: AppColors.primary.withOpacity(0.1),
+                foregroundColor: AppColors.primary,
+                padding: EdgeInsets.zero,
+              ),
+            ),
           ),
         ),
-        OutlinedButton.icon(
-          onPressed: onRemove,
-          icon: const Icon(Icons.delete_outline, size: 16),
-          label: const Text('Remove'),
-          style: OutlinedButton.styleFrom(
-            foregroundColor: Colors.red.shade700,
-            side: BorderSide(color: Colors.red.shade300),
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        SizedBox(
+          width: 40,
+          height: 40,
+          child: Tooltip(
+            message: 'Remove',
+            child: IconButton(
+              onPressed: onRemove,
+              icon: Icon(Icons.delete_outline, size: 18),
+              style: IconButton.styleFrom(
+                backgroundColor: Colors.red.shade50,
+                foregroundColor: Colors.red.shade700,
+                padding: EdgeInsets.zero,
+              ),
+            ),
           ),
         ),
       ],

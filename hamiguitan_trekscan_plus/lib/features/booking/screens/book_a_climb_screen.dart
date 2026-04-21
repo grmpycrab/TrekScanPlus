@@ -636,29 +636,35 @@ class _BookAClimbScreenRefactoredState
       final submittedBooking = draft.copyWith(submissionStatus: 'submitted');
 
       // Create booking in Firestore first (to get the booking ID for file uploads)
-      await BookingService.instance.createBooking(submittedBooking);
+      final firestoreBookingId = await BookingService.instance.createBooking(
+        submittedBooking,
+      );
 
       // Upload files if any exist for this draft
       // Collect all files from memberDocuments Map
       final memberDocuments = _bookingProvider.state.memberDocuments;
       int uploadedCount = 0;
+      int failedCount = 0;
 
       if (memberDocuments.isNotEmpty) {
         for (final docMap in memberDocuments.values) {
           for (final files in docMap.values) {
             for (final file in files) {
               try {
-                await BookingService.instance.uploadAttachment(draft.id, file);
+                await BookingService.instance.uploadAttachment(
+                  firestoreBookingId,
+                  file,
+                );
                 uploadedCount++;
               } catch (e) {
+                failedCount++;
                 AppLogger.e('Error uploading file ${file.name}: $e');
-                // Continue uploading other files
               }
             }
           }
         }
 
-        if (uploadedCount > 0 && mounted) {
+        if (uploadedCount > 0) {
           AppLogger.i('Successfully uploaded $uploadedCount file(s)');
         }
       }
@@ -681,11 +687,16 @@ class _BookAClimbScreenRefactoredState
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              uploadedCount > 0
+              failedCount > 0
+                  ? 'Booking submitted — $uploadedCount file(s) uploaded, $failedCount failed. Please re-attach failed files.'
+                  : uploadedCount > 0
                   ? 'Booking submitted with $uploadedCount file(s)!'
                   : 'Booking submitted successfully!',
             ),
-            backgroundColor: AppColors.statusApproved,
+            backgroundColor: failedCount > 0
+                ? Colors.orange
+                : AppColors.statusApproved,
+            duration: Duration(seconds: failedCount > 0 ? 5 : 3),
           ),
         );
       }
@@ -702,7 +713,8 @@ class _BookAClimbScreenRefactoredState
 
   /// Show edit booking sheet
   void _showEditBookingSheet(BookingModel booking) {
-    _bookingProvider.loadBookingForEdit(booking);
+    final savedMetadata = _bookingProvider.getDraftBookingMetadata(booking.id);
+    _bookingProvider.loadBookingForEdit(booking, savedMetadata);
     _updateContactFromProvider();
 
     if (!mounted) return;
@@ -735,7 +747,30 @@ class _BookAClimbScreenRefactoredState
         );
       }
 
-      // Update the booking in Firestore (only specific fields, not attachments)
+      // Draft bookings are stored locally — update the draft instead of Firestore
+      final isDraft =
+          updatedBooking.id.startsWith('draft_') ||
+          !RegExp(r'^[a-zA-Z0-9]{20}$').hasMatch(updatedBooking.id);
+
+      if (isDraft) {
+        // Update the local draft in SharedPreferences
+        await _bookingProvider.updateDraftBooking(updatedBooking);
+
+        if (mounted) {
+          Navigator.pop(context); // Close loading dialog
+          Navigator.pop(context); // Close form modal
+          _refreshBookingsWithDrafts();
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Draft updated successfully!'),
+              backgroundColor: AppColors.statusApproved,
+            ),
+          );
+        }
+        return;
+      }
+
+      // Firestore booking: update fields + upload any newly added files
       await BookingService.instance.updateBooking(
         updatedBooking.id,
         affiliation: updatedBooking.affiliation,
@@ -1263,13 +1298,19 @@ class _BuildBookingFormModalState extends State<_BuildBookingFormModal> {
                             const SizedBox(height: 8),
                             DocumentUploadWidget(
                               pickedFiles: docFiles,
+                              previouslySelectedFiles:
+                                  provider
+                                      .state
+                                      .memberDocumentMetadata[memberIndex
+                                      .toString()]?[docField.name],
                               onPickFiles: () async {
-                                final result = await FilePicker.platform
-                                    .pickFiles(
-                                      allowMultiple: true,
-                                      type: FileType.custom,
-                                      allowedExtensions: docField.extension,
-                                    );
+                                final result = await FilePicker.platform.pickFiles(
+                                  allowMultiple: true,
+                                  type: FileType.custom,
+                                  allowedExtensions: docField.extension,
+                                  withData:
+                                      true, // Load bytes into memory so files survive navigation
+                                );
                                 if (result != null && mounted) {
                                   provider.setMemberDocumentFiles(
                                     memberIndex,

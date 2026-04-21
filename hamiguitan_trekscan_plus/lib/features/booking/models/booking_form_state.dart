@@ -13,6 +13,9 @@ class BookingFormState {
   final List<PlatformFile> pickedFiles;
   // Map structure: memberIndex -> documentFieldName -> List<PlatformFile>
   final Map<String, Map<String, List<PlatformFile>>> memberDocuments;
+  // Store file metadata for persistence: memberIndex -> documentFieldName -> List<{name, size}>
+  final Map<String, Map<String, List<Map<String, dynamic>>>>
+  memberDocumentMetadata;
   final String? notes;
 
   BookingFormState({
@@ -25,6 +28,7 @@ class BookingFormState {
     this.bookingMembers = const [],
     this.pickedFiles = const [],
     this.memberDocuments = const {},
+    this.memberDocumentMetadata = const {},
     this.notes,
   });
 
@@ -39,6 +43,8 @@ class BookingFormState {
     List<Member>? bookingMembers,
     List<PlatformFile>? pickedFiles,
     Map<String, Map<String, List<PlatformFile>>>? memberDocuments,
+    Map<String, Map<String, List<Map<String, dynamic>>>>?
+    memberDocumentMetadata,
     String? notes,
   }) {
     return BookingFormState(
@@ -52,6 +58,8 @@ class BookingFormState {
       bookingMembers: bookingMembers ?? this.bookingMembers,
       pickedFiles: pickedFiles ?? this.pickedFiles,
       memberDocuments: memberDocuments ?? this.memberDocuments,
+      memberDocumentMetadata:
+          memberDocumentMetadata ?? this.memberDocumentMetadata,
       notes: notes ?? this.notes,
     );
   }

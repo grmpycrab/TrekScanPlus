@@ -4,14 +4,17 @@ import '../../../theme/color.dart';
 
 /// Widget for uploading and managing documents
 /// Displays file picker and list of selected/existing files
+/// Also shows previously selected files from metadata if current files not available
 class DocumentUploadWidget extends StatelessWidget {
   final List<PlatformFile> pickedFiles;
+  final List<Map<String, dynamic>>? previouslySelectedFiles;
   final VoidCallback onPickFiles;
   final Function(PlatformFile) onRemoveFile;
 
   const DocumentUploadWidget({
     super.key,
     required this.pickedFiles,
+    this.previouslySelectedFiles,
     required this.onPickFiles,
     required this.onRemoveFile,
   });
@@ -49,10 +52,101 @@ class DocumentUploadWidget extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 12),
-            if (pickedFiles.isEmpty) _buildEmptyState() else _buildFilesList(),
+            if (pickedFiles.isNotEmpty)
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: pickedFiles
+                    .map((file) => _buildFileItem(file))
+                    .toList(),
+              )
+            else if (previouslySelectedFiles != null &&
+                previouslySelectedFiles!.isNotEmpty)
+              _buildPreviousFilesList()
+            else
+              _buildEmptyState(),
           ],
         ),
       ),
+    );
+  }
+
+  /// Build list of previously selected files (for draft reference)
+  Widget _buildPreviousFilesList() {
+    if (previouslySelectedFiles == null || previouslySelectedFiles!.isEmpty) {
+      return _buildEmptyState();
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: Colors.blue.shade50,
+            border: Border.all(color: Colors.blue.shade300),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Icon(Icons.info, size: 16, color: Colors.blue.shade700),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      'Previously selected files (please re-select)',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Colors.blue.shade700,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              ...previouslySelectedFiles!.map((fileData) {
+                final fileName = fileData['name'] as String? ?? 'Unknown';
+                final fileSize = fileData['size'] as int? ?? 0;
+                return Padding(
+                  padding: const EdgeInsets.only(bottom: 4),
+                  child: Row(
+                    children: [
+                      const Icon(
+                        Icons.insert_drive_file,
+                        size: 16,
+                        color: Colors.grey,
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              fileName,
+                              style: const TextStyle(fontSize: 12),
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            Text(
+                              '${(fileSize / 1024).toStringAsFixed(1)} KB',
+                              style: TextStyle(
+                                fontSize: 10,
+                                color: Colors.grey.shade600,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              }),
+            ],
+          ),
+        ),
+      ],
     );
   }
 
@@ -75,14 +169,6 @@ class DocumentUploadWidget extends StatelessWidget {
           ),
         ),
       ),
-    );
-  }
-
-  /// Build list of selected files with remove buttons
-  Widget _buildFilesList() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: pickedFiles.map((file) => _buildFileItem(file)).toList(),
     );
   }
 
