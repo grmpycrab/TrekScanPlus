@@ -21,6 +21,7 @@ import '../widgets/trek_date_picker.dart';
 import '../widgets/category_selector.dart';
 import '../widgets/document_upload_widget.dart';
 import '../widgets/trekker_card.dart';
+import '../widgets/member_edit_dialog.dart';
 import '../services/date_validation_service.dart';
 import '../models/document_requirements.dart';
 
@@ -981,11 +982,46 @@ class _BuildBookingFormModalState extends State<_BuildBookingFormModal> {
                         member: member,
                         index: index,
                         isPrimary: member.isPrimaryContact,
-                        onEdit: () {},
+                        onEdit: () {
+                          showDialog(
+                            context: context,
+                            builder: (dialogContext) => MemberEditDialog(
+                              member: member,
+                              memberIndex: index,
+                              isPrimaryContact: member.isPrimaryContact,
+                              onSave: (updatedMember) {
+                                provider.updateMember(index, updatedMember);
+                              },
+                            ),
+                          );
+                        },
                         onRemove: () => provider.removeMember(index),
                       );
                     }),
                     const SizedBox(height: 12),
+                    // Helper button to apply primary contact address to all members
+                    if (state.bookingMembers.length > 1)
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 12),
+                        child: TextButton.icon(
+                          onPressed: () {
+                            provider.applyPrimaryAddressToAll();
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text(
+                                  'Applied primary contact address to all members',
+                                ),
+                                duration: Duration(seconds: 2),
+                              ),
+                            );
+                          },
+                          icon: const Icon(Icons.copy),
+                          label: const Text('Use Same Address for All'),
+                          style: TextButton.styleFrom(
+                            foregroundColor: AppColors.primary,
+                          ),
+                        ),
+                      ),
                     OutlinedButton.icon(
                       onPressed: () {
                         final newMember = Member(
@@ -1001,7 +1037,17 @@ class _BuildBookingFormModalState extends State<_BuildBookingFormModal> {
                           hasAccount: false,
                           createdAt: Timestamp.now(),
                         );
-                        provider.addMember(newMember);
+                        showDialog(
+                          context: context,
+                          builder: (dialogContext) => MemberEditDialog(
+                            member: newMember,
+                            memberIndex: provider.state.bookingMembers.length,
+                            isPrimaryContact: false,
+                            onSave: (savedMember) {
+                              provider.addMember(savedMember);
+                            },
+                          ),
+                        );
                       },
                       icon: const Icon(Icons.add),
                       label: const Text('Add Member'),

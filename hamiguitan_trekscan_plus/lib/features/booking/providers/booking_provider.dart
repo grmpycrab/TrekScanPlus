@@ -1,3 +1,5 @@
+// ignore_for_file: unintended_html_in_doc_comment
+
 import 'package:flutter/foundation.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -175,6 +177,30 @@ class BookingProvider extends ChangeNotifier {
       _updateEstimatedPrice();
       notifyListeners();
     }
+  }
+
+  /// Apply primary contact's home address to all other members
+  void applyPrimaryAddressToAll() {
+    if (_state.bookingMembers.isEmpty ||
+        !_state.bookingMembers[0].isPrimaryContact) {
+      return;
+    }
+
+    final primaryAddress = _state.bookingMembers[0].homeAddress;
+    final updated = _state.bookingMembers.asMap().entries.map((entry) {
+      final index = entry.key;
+      final member = entry.value;
+
+      // Skip primary contact, update others
+      if (index == 0) {
+        return member;
+      }
+
+      return member.copyWith(homeAddress: primaryAddress);
+    }).toList();
+
+    _state = _state.copyWith(bookingMembers: updated);
+    notifyListeners();
   }
 
   /// Initialize form with authenticated user as primary contact
