@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_app_check/firebase_app_check.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'dart:async';
 import 'package:firebase_messaging/firebase_messaging.dart';
@@ -59,6 +61,15 @@ void main() async {
       options: DefaultFirebaseOptions.currentPlatform,
     );
     AppLogger.i('  Firebase initialized successfully');
+
+    // Activate App Check to secure Firebase Storage and Firestore
+    // Use debug provider on dev builds, Play Integrity on release
+    await FirebaseAppCheck.instance.activate(
+      androidProvider: kDebugMode
+          ? AndroidProvider.debug
+          : AndroidProvider.playIntegrity,
+    );
+    AppLogger.i('  App Check activated');
 
     // Enable Firestore offline persistence and caching
     try {

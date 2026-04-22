@@ -434,6 +434,9 @@ class _BookAClimbScreenRefactoredState
               onCancel: isDraft ? _confirmCancelDraft : _confirmCancelBooking,
               onEditBooking: _showEditBookingSheet,
               onSubmitBooking: _submitDraftBooking,
+              onArchive: isDraft
+                  ? _confirmArchiveDraft
+                  : _confirmArchiveBooking,
             );
           }
           return const SizedBox.shrink();
@@ -610,6 +613,71 @@ class _BookAClimbScreenRefactoredState
         }
       } catch (e) {
         AppLogger.e('Error deleting draft: $e');
+      }
+    }
+  }
+
+  /// Archive a Firestore booking (hide from main list)
+  Future<void> _confirmArchiveBooking(BookingModel booking) async {
+    final confirmed = await AppDialogueHandler.showConfirmation(
+      context: context,
+      title: 'Archive Booking',
+      message:
+          'This booking will be hidden from your main list. You can view it anytime in Settings → Archived Bookings.',
+      confirmText: 'Archive',
+      cancelText: 'Cancel',
+    );
+
+    if (confirmed == true) {
+      try {
+        await BookingService.instance.archiveBooking(booking.id);
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Booking archived'),
+              backgroundColor: AppColors.textSecondary,
+            ),
+          );
+        }
+      } catch (e) {
+        AppLogger.e('Error archiving booking: $e');
+      }
+    }
+  }
+
+  /// Archive a local draft booking
+  Future<void> _confirmArchiveDraft(BookingModel booking) async {
+    final confirmed = await AppDialogueHandler.showConfirmation(
+      context: context,
+      title: 'Archive Draft',
+      message:
+          'This draft will be hidden from your main list. You can view it in Settings → Archived Bookings.',
+      confirmText: 'Archive',
+      cancelText: 'Cancel',
+    );
+
+    if (confirmed == true) {
+      try {
+        await _bookingProvider.archiveDraftBooking(booking.id);
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Draft archived'),
+              backgroundColor: AppColors.textSecondary,
+            ),
+          );
+          setState(() {
+            _bookings.removeWhere((item) {
+              if (item is Map<String, dynamic>) {
+                final b = item['booking'] as BookingModel?;
+                return b?.id == booking.id;
+              }
+              return false;
+            });
+          });
+        }
+      } catch (e) {
+        AppLogger.e('Error archiving draft: $e');
       }
     }
   }

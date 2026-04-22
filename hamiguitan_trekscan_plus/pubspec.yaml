@@ -1,6 +1,6 @@
 name: hamiguitan_trekscan_plus
 description: "A new Flutter project."
-publish_to: 'none'
+publish_to: "none"
 version: 0.1.0
 
 environment:
@@ -19,6 +19,7 @@ dependencies:
   google_sign_in: ^5.4.4
   cloud_firestore: ^4.9.0
   firebase_storage: ^11.3.0
+  firebase_app_check: ^0.2.2
   firebase_messaging: ^14.6.0
   flutter_local_notifications: ^17.0.0
   intl: ^0.20.2
@@ -46,7 +47,7 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
-  
+
   assets:
     - assets/images/
     - assets/station_images/Black Mountain/
