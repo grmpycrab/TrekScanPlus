@@ -400,13 +400,13 @@ class _BookAClimbScreenRefactoredState
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.list_alt, size: 64, color: Colors.grey.shade400),
+                  Icon(Icons.list_alt, size: 64, color: AppColors.iconGrey400),
                   const SizedBox(height: 16),
                   const Text('No bookings', style: TextStyle(fontSize: 16)),
                   const SizedBox(height: 8),
                   const Text(
                     'Tap the + button to create a booking',
-                    style: TextStyle(color: Colors.grey),
+                    style: TextStyle(color: AppColors.textSecondary),
                   ),
                 ],
               ),
@@ -640,29 +640,50 @@ class _BookAClimbScreenRefactoredState
         submittedBooking,
       );
 
-      // Upload files if any exist for this draft
-      // Collect all files from memberDocuments Map
+      // Upload files if any exist for this draft — all in parallel
       final memberDocuments = _bookingProvider.state.memberDocuments;
       int uploadedCount = 0;
       int failedCount = 0;
 
       if (memberDocuments.isNotEmpty) {
-        for (final docMap in memberDocuments.values) {
-          for (final files in docMap.values) {
-            for (final file in files) {
-              try {
-                await BookingService.instance.uploadAttachment(
-                  firestoreBookingId,
+        // Build (file, memberName) pairs so each upload knows which member it belongs to
+        final allFilesWithMember = <(PlatformFile, String)>[
+          for (final memberEntry in memberDocuments.entries)
+            for (final files in memberEntry.value.values)
+              for (final file in files)
+                (
                   file,
-                );
-                uploadedCount++;
-              } catch (e) {
-                failedCount++;
-                AppLogger.e('Error uploading file ${file.name}: $e');
-              }
+                  () {
+                    final idx = int.tryParse(memberEntry.key) ?? -1;
+                    if (idx >= 0 && idx < draft.members.length) {
+                      final m = draft.members[idx];
+                      return '${m.firstName} ${m.lastName}'.trim();
+                    }
+                    return 'Member ${memberEntry.key}';
+                  }(),
+                ),
+        ];
+
+        // Upload all files concurrently
+        final results = await Future.wait(
+          allFilesWithMember.map(((PlatformFile, String) pair) async {
+            final (file, memberName) = pair;
+            try {
+              await BookingService.instance.uploadAttachment(
+                firestoreBookingId,
+                file,
+                memberName: memberName,
+              );
+              return true;
+            } catch (e) {
+              AppLogger.e('Error uploading file ${file.name}: $e');
+              return false;
             }
-          }
-        }
+          }),
+        );
+
+        uploadedCount = results.where((ok) => ok).length;
+        failedCount = results.where((ok) => !ok).length;
 
         if (uploadedCount > 0) {
           AppLogger.i('Successfully uploaded $uploadedCount file(s)');
@@ -694,7 +715,7 @@ class _BookAClimbScreenRefactoredState
                   : 'Booking submitted successfully!',
             ),
             backgroundColor: failedCount > 0
-                ? Colors.orange
+                ? AppColors.statusPending
                 : AppColors.statusApproved,
             duration: Duration(seconds: failedCount > 0 ? 5 : 3),
           ),
@@ -784,24 +805,41 @@ class _BookAClimbScreenRefactoredState
       int uploadedCount = 0;
 
       if (memberDocuments.isNotEmpty) {
-        for (final docMap in memberDocuments.values) {
-          for (final files in docMap.values) {
-            for (final file in files) {
-              try {
-                await BookingService.instance.uploadAttachment(
-                  updatedBooking.id,
+        final allFilesWithMember = <(PlatformFile, String)>[
+          for (final memberEntry in memberDocuments.entries)
+            for (final files in memberEntry.value.values)
+              for (final file in files)
+                (
                   file,
-                );
-                uploadedCount++;
-              } catch (e) {
-                AppLogger.e(
-                  'Error uploading file ${file.name} during edit: $e',
-                );
-                // Continue uploading other files
-              }
+                  () {
+                    final idx = int.tryParse(memberEntry.key) ?? -1;
+                    if (idx >= 0 && idx < updatedBooking.members.length) {
+                      final m = updatedBooking.members[idx];
+                      return '${m.firstName} ${m.lastName}'.trim();
+                    }
+                    return 'Member ${memberEntry.key}';
+                  }(),
+                ),
+        ];
+
+        final results = await Future.wait(
+          allFilesWithMember.map(((PlatformFile, String) pair) async {
+            final (file, memberName) = pair;
+            try {
+              await BookingService.instance.uploadAttachment(
+                updatedBooking.id,
+                file,
+                memberName: memberName,
+              );
+              return true;
+            } catch (e) {
+              AppLogger.e('Error uploading file ${file.name} during edit: $e');
+              return false;
             }
-          }
-        }
+          }),
+        );
+
+        uploadedCount = results.where((ok) => ok).length;
       }
 
       if (mounted) {
@@ -1101,7 +1139,7 @@ class _BuildBookingFormModalState extends State<_BuildBookingFormModal> {
                             ScaffoldMessenger.of(context).showSnackBar(
                               const SnackBar(
                                 content: Text('Please select a trek date'),
-                                backgroundColor: Colors.red,
+                                backgroundColor: AppColors.statusRejected,
                               ),
                             );
                             return;
@@ -1138,7 +1176,7 @@ class _BuildBookingFormModalState extends State<_BuildBookingFormModal> {
                       child: Text(
                         widget.isEditMode ? 'Update Booking' : 'Save as Draft',
                         style: const TextStyle(
-                          color: Colors.white,
+                          color: SharedColors.white,
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
                         ),

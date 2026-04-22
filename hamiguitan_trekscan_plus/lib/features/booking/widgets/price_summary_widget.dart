@@ -83,20 +83,20 @@ class PriceSummaryWidget extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(10),
       decoration: BoxDecoration(
-        color: Colors.green.withOpacity(0.1),
-        border: Border.all(color: Colors.green.shade600),
+        color: AppColors.statusApproved.withValues(alpha: 0.1),
+        border: Border.all(color: AppColors.green700),
         borderRadius: BorderRadius.circular(8),
       ),
       child: Row(
         children: [
-          Icon(Icons.discount, color: Colors.green.shade600, size: 18),
+          Icon(Icons.discount, color: AppColors.green700, size: 18),
           const SizedBox(width: 8),
           Expanded(
             child: Text(
               discountDescription,
-              style: TextStyle(
+              style: const TextStyle(
                 fontSize: 12,
-                color: Colors.green.shade700,
+                color: AppColors.green700,
                 fontWeight: FontWeight.w600,
               ),
             ),
@@ -143,9 +143,9 @@ class PriceSummaryWidget extends StatelessWidget {
                   if (discountPercent > 0)
                     Text(
                       '(${discountPercent.toStringAsFixed(0)}% off)',
-                      style: TextStyle(
+                      style: const TextStyle(
                         fontSize: 11,
-                        color: Colors.green.shade700,
+                        color: AppColors.green700,
                       ),
                     ),
                 ],

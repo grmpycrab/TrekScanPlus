@@ -4,6 +4,7 @@
 import 'package:flutter/material.dart';
 import '../../models/climb_session.dart';
 import '../../theme/color.dart';
+import '../../utils/status_helpers.dart';
 
 class ClimbSessionDetailScreen extends StatefulWidget {
   final ClimbSession session;
@@ -90,7 +91,9 @@ class _ClimbSessionDetailScreenState extends State<ClimbSessionDetailScreen> {
                           vertical: 6,
                         ),
                         decoration: BoxDecoration(
-                          color: _getStatusColor(_session.status),
+                          color: ClimbSessionStatusHelper.color(
+                            _session.status,
+                          ),
                           borderRadius: BorderRadius.circular(20),
                         ),
                         child: Text(
@@ -386,18 +389,5 @@ class _ClimbSessionDetailScreenState extends State<ClimbSessionDetailScreen> {
         ),
       ],
     );
-  }
-
-  Color _getStatusColor(String status) {
-    switch (status) {
-      case 'ongoing':
-        return Colors.blue;
-      case 'completed':
-        return Colors.green;
-      case 'abandoned':
-        return Colors.red;
-      default:
-        return Colors.grey;
-    }
   }
 }

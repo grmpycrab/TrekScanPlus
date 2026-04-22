@@ -10,6 +10,7 @@ class Attachment {
   final String? mimeType;
   final int size;
   final Timestamp uploadedAt;
+  final String? memberName; // Which member this file belongs to
 
   Attachment({
     required this.storagePath,
@@ -18,6 +19,7 @@ class Attachment {
     this.mimeType,
     required this.size,
     required this.uploadedAt,
+    this.memberName,
   });
 
   Map<String, dynamic> toMap() => {
@@ -27,6 +29,7 @@ class Attachment {
     'mimeType': mimeType,
     'size': size,
     'uploadedAt': uploadedAt,
+    'memberName': memberName,
   };
 
   factory Attachment.fromMap(Map<String, dynamic> m) => Attachment(
@@ -36,6 +39,7 @@ class Attachment {
     mimeType: m['mimeType'] as String?,
     size: (m['size'] as num).toInt(),
     uploadedAt: m['uploadedAt'] as Timestamp,
+    memberName: m['memberName'] as String?,
   );
 }
 

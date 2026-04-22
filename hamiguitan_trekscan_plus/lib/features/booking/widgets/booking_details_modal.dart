@@ -4,6 +4,7 @@ import '../../../models/climb.dart';
 import '../../../models/booking_model.dart';
 import '../../../models/member.dart';
 import '../../../theme/color.dart';
+import '../../../utils/status_helpers.dart';
 import 'price_summary_widget.dart';
 import '../models/document_requirements.dart';
 
@@ -99,7 +100,7 @@ class BookingDetailsModal extends StatelessWidget {
                     ),
                     Divider(
                       height: 1,
-                      color: Colors.grey.shade200,
+                      color: AppColors.border,
                       indent: 20,
                       endIndent: 20,
                     ),
@@ -174,21 +175,14 @@ class BookingDetailsModal extends StatelessWidget {
                               const SizedBox(height: 20),
                             if (booking != null &&
                                 booking!.attachments.isNotEmpty)
-                              Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  _buildSectionTitle('Attachments'),
-                                  const SizedBox(height: 12),
-                                  ..._buildAttachmentsList(),
-                                ],
-                              ),
+                              _buildAttachmentsSection(),
                           ],
                         ),
                       ),
                     ),
                     Divider(
                       height: 1,
-                      color: Colors.grey.shade200,
+                      color: AppColors.border,
                       indent: 20,
                       endIndent: 20,
                     ),
@@ -210,7 +204,8 @@ class BookingDetailsModal extends StatelessWidget {
                                   shape: RoundedRectangleBorder(
                                     borderRadius: BorderRadius.circular(8),
                                   ),
-                                  disabledForegroundColor: Colors.grey.shade400,
+                                  disabledForegroundColor:
+                                      AppColors.iconGrey400,
                                 ),
                                 child: const Text(
                                   'Edit',
@@ -233,7 +228,7 @@ class BookingDetailsModal extends StatelessWidget {
                                       booking != null &&
                                           booking!.isDraft &&
                                           onSubmit != null
-                                      ? Colors.green
+                                      ? AppColors.statusApproved
                                       : AppColors.primary,
                                   shape: RoundedRectangleBorder(
                                     borderRadius: BorderRadius.circular(8),
@@ -274,7 +269,7 @@ class BookingDetailsModal extends StatelessWidget {
 
   Widget _buildStatusSection() {
     final status = climb.computedStatus();
-    final statusColor = _getStatusColor(status);
+    final statusColor = BookingStatusHelper.color(status);
 
     return Container(
       padding: const EdgeInsets.all(12),
@@ -285,7 +280,7 @@ class BookingDetailsModal extends StatelessWidget {
       ),
       child: Row(
         children: [
-          Icon(_getStatusIcon(status), color: statusColor, size: 24),
+          Icon(BookingStatusHelper.icon(status), color: statusColor, size: 24),
           const SizedBox(width: 10),
           Expanded(
             child: Column(
@@ -389,7 +384,7 @@ class BookingDetailsModal extends StatelessWidget {
               ),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.03),
+                  color: SharedColors.black.withValues(alpha: 0.03),
                   blurRadius: 4,
                   offset: const Offset(0, 1),
                 ),
@@ -441,8 +436,8 @@ class BookingDetailsModal extends StatelessWidget {
                   ),
                   decoration: BoxDecoration(
                     color: docStatus['isComplete']
-                        ? Colors.green.withValues(alpha: 0.1)
-                        : Colors.orange.withValues(alpha: 0.1),
+                        ? AppColors.statusApproved.withValues(alpha: 0.1)
+                        : AppColors.statusPending.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(6),
                   ),
                   child: Row(
@@ -454,8 +449,8 @@ class BookingDetailsModal extends StatelessWidget {
                             : Icons.pending,
                         size: 14,
                         color: docStatus['isComplete']
-                            ? Colors.green
-                            : Colors.orange,
+                            ? AppColors.statusApproved
+                            : AppColors.statusPending,
                       ),
                       const SizedBox(width: 6),
                       Text(
@@ -464,8 +459,8 @@ class BookingDetailsModal extends StatelessWidget {
                           fontSize: 11,
                           fontWeight: FontWeight.w600,
                           color: docStatus['isComplete']
-                              ? Colors.green
-                              : Colors.orange,
+                              ? AppColors.statusApproved
+                              : AppColors.statusPending,
                         ),
                       ),
                     ],
@@ -487,64 +482,131 @@ class BookingDetailsModal extends StatelessWidget {
     );
   }
 
-  List<Widget> _buildAttachmentsList() {
+  Widget _buildAttachmentsSection() {
     if (booking == null || booking!.attachments.isEmpty) {
-      return [];
+      return const SizedBox.shrink();
     }
 
-    return booking!.attachments.map((attachment) {
-      final icon = _getFileIcon(attachment.fileName);
-      return Padding(
-        padding: const EdgeInsets.only(bottom: 12),
-        child: Container(
-          padding: const EdgeInsets.all(12),
-          decoration: BoxDecoration(
-            color: SharedColors.white,
-            borderRadius: BorderRadius.circular(10),
-            border: Border.all(color: Colors.grey.shade200, width: 1),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.02),
-                blurRadius: 4,
-                offset: const Offset(0, 1),
-              ),
-            ],
-          ),
-          child: Row(
-            children: [
-              Icon(icon, color: AppColors.primary, size: 20),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      attachment.fileName,
-                      style: const TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
-                        color: AppColors.text,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      '${_formatBytes(attachment.size)} • ${DateFormat('MMM dd').format(attachment.uploadedAt.toDate())}',
-                      style: TextStyle(
-                        fontSize: 11,
-                        color: AppColors.textSecondary,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              Icon(Icons.download, color: AppColors.primary, size: 18),
-            ],
-          ),
+    // Group attachments by memberName (old uploads without a name go under 'Other')
+    final grouped = <String, List<Attachment>>{};
+    for (final att in booking!.attachments) {
+      final key = (att.memberName != null && att.memberName!.isNotEmpty)
+          ? att.memberName!
+          : 'Other Documents';
+      grouped.putIfAbsent(key, () => []).add(att);
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _buildSectionTitle('Attachments'),
+        const SizedBox(height: 12),
+        ...grouped.entries.map(
+          (entry) => _buildMemberAttachmentGroup(entry.key, entry.value),
         ),
-      );
-    }).toList();
+      ],
+    );
+  }
+
+  Widget _buildMemberAttachmentGroup(
+    String memberName,
+    List<Attachment> attachments,
+  ) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 10),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AppColors.border),
+        color: SharedColors.white,
+        boxShadow: [
+          BoxShadow(
+            color: SharedColors.black.withValues(alpha: 0.03),
+            blurRadius: 4,
+            offset: const Offset(0, 1),
+          ),
+        ],
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(12),
+        child: ExpansionTile(
+          tilePadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
+          childrenPadding: const EdgeInsets.fromLTRB(14, 0, 14, 12),
+          leading: CircleAvatar(
+            radius: 16,
+            backgroundColor: AppColors.primary.withValues(alpha: 0.12),
+            child: Icon(Icons.person, color: AppColors.primary, size: 16),
+          ),
+          title: Text(
+            memberName,
+            style: const TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+              color: AppColors.text,
+            ),
+          ),
+          subtitle: Text(
+            '${attachments.length} file${attachments.length == 1 ? '' : 's'}',
+            style: TextStyle(fontSize: 11, color: AppColors.textSecondary),
+          ),
+          iconColor: AppColors.primary,
+          collapsedIconColor: AppColors.textSecondary,
+          initiallyExpanded: true,
+          shape: const Border(), // removes ExpansionTile's own border
+          children: attachments
+              .map((att) => _buildAttachmentTile(att))
+              .toList(),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildAttachmentTile(Attachment attachment) {
+    final icon = _getFileIcon(attachment.fileName);
+    return Container(
+      margin: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      decoration: BoxDecoration(
+        color: AppColors.surfaceVariant,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: AppColors.border),
+      ),
+      child: Row(
+        children: [
+          Icon(icon, color: AppColors.primary, size: 20),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  attachment.fileName,
+                  style: const TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.text,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  '${_formatBytes(attachment.size)} • ${DateFormat('MMM dd, yyyy').format(attachment.uploadedAt.toDate())}',
+                  style: TextStyle(
+                    fontSize: 11,
+                    color: AppColors.textSecondary,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Icon(
+            Icons.insert_drive_file_outlined,
+            color: AppColors.iconGrey400,
+            size: 16,
+          ),
+        ],
+      ),
+    );
   }
 
   IconData _getFileIcon(String fileName) {
@@ -623,36 +685,5 @@ class BookingDetailsModal extends StatelessWidget {
           ? '✓ Documents complete'
           : '$uploadedCount/$requiredCount documents',
     };
-  }
-
-  Color _getStatusColor(String status) {
-    switch (status) {
-      case 'Approved':
-        return Colors.green;
-      case 'Cancelled':
-        return Colors.grey;
-      case 'Completed':
-        return Colors.blue;
-      case 'Declined':
-      case 'Rejected':
-        return Colors.red;
-      case 'Pending':
-        return Colors.orange;
-      default:
-        return AppColors.primary;
-    }
-  }
-
-  IconData _getStatusIcon(String status) {
-    switch (status) {
-      case 'Approved':
-        return Icons.check_circle;
-      case 'Cancelled':
-        return Icons.cancel;
-      case 'Completed':
-        return Icons.check_circle;
-      default:
-        return Icons.schedule;
-    }
   }
 }

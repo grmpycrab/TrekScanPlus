@@ -76,7 +76,7 @@ class _MemberEditDialogState extends State<MemberEditDialog> {
               padding: const EdgeInsets.fromLTRB(28, 24, 16, 24),
               decoration: BoxDecoration(
                 border: Border(
-                  bottom: BorderSide(color: Colors.grey.shade100, width: 1),
+                  bottom: BorderSide(color: AppColors.borderLight, width: 1),
                 ),
               ),
               child: Row(
@@ -112,9 +112,9 @@ class _MemberEditDialogState extends State<MemberEditDialog> {
                   ),
                   const SizedBox(width: 12),
                   IconButton(
-                    icon: Icon(
+                    icon: const Icon(
                       Icons.close,
-                      color: Colors.grey.shade500,
+                      color: AppColors.textSecondary,
                       size: 24,
                     ),
                     onPressed: () => Navigator.pop(context),
@@ -156,7 +156,7 @@ class _MemberEditDialogState extends State<MemberEditDialog> {
               padding: const EdgeInsets.fromLTRB(28, 20, 28, 28),
               decoration: BoxDecoration(
                 border: Border(
-                  top: BorderSide(color: Colors.grey.shade100, width: 1),
+                  top: BorderSide(color: AppColors.borderLight, width: 1),
                 ),
               ),
               child: Row(
@@ -170,10 +170,7 @@ class _MemberEditDialogState extends State<MemberEditDialog> {
                           horizontal: 32,
                           vertical: 14,
                         ),
-                        side: BorderSide(
-                          color: Colors.grey.shade300,
-                          width: 1.5,
-                        ),
+                        side: BorderSide(color: AppColors.border, width: 1.5),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),
                         ),
@@ -211,7 +208,7 @@ class _MemberEditDialogState extends State<MemberEditDialog> {
                       child: const Text(
                         'Save Member',
                         style: TextStyle(
-                          color: Colors.white,
+                          color: SharedColors.white,
                           fontWeight: FontWeight.w600,
                           fontSize: 14,
                         ),
