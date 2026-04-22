@@ -229,7 +229,10 @@ class _MemberFormCardState extends State<MemberFormCard> {
             ),
             if (!widget.isPrimaryContact)
               IconButton(
-                icon: const Icon(Icons.delete_outline, color: Colors.red),
+                icon: const Icon(
+                  Icons.delete_outline,
+                  color: AppColors.statusRejected,
+                ),
                 onPressed: widget.onRemoveMember,
                 tooltip: 'Remove member',
               ),
@@ -356,8 +359,8 @@ class _MemberFormCardState extends State<MemberFormCard> {
                           if (error != null) {
                             return Text(
                               error,
-                              style: TextStyle(
-                                color: Colors.red.shade600,
+                              style: const TextStyle(
+                                color: AppColors.statusRejectedDark,
                                 fontSize: 12,
                               ),
                             );

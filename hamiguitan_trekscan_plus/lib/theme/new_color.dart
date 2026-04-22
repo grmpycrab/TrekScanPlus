@@ -207,6 +207,27 @@ class AppColors {
   static const Color statusPending = Colors.orange;
   static const Color statusRejected = Colors.red;
 
+  // Status shade variants (replaces raw Colors.xxx.shadeN usage)
+  static const Color statusPendingLight = Color(0xFFFFF3E0); // orange.shade50
+  static const Color statusPendingBorder = Color(0xFFFFCC80); // orange.shade300
+  static const Color statusPendingDark = Color(0xFFE65100); // orange.shade700
+  static const Color statusRejectedLight = Color(0xFFFFEBEE); // red.shade50
+  static const Color statusRejectedDark = Color(0xFFC62828); // red.shade700
+  static const Color statusCancelled = Color(0xFF9E9E9E); // grey.shade500
+
+  // Info colors (blue tones for info/notification banners)
+  static const Color infoLight = Color(0xFFE3F2FD); // blue.shade50
+  static const Color infoBorder = Color(0xFF90CAF9); // blue.shade300
+  static const Color info = Color(0xFF1565C0); // blue.shade800
+
+  // Warning colors (amber — for critical date indicators)
+  static const Color warningLight = Color(0xFFFFF8E1); // amber.shade50
+  static const Color warningBorder = Color(0xFFFFD54F); // amber.shade300
+  static const Color warning = Color(0xFFF57F17); // amber.shade700
+
+  // Surface variant (very light grey for tile/chip backgrounds)
+  static const Color surfaceVariant = Color(0xFFFAFAFA); // grey.shade50
+
   // Difficulty Colors (should come from SharedColors but mapped here for compatibility)
   static const Color difficultyEasy = Colors.green;
   static const Color difficultyModerate = Colors.orange;

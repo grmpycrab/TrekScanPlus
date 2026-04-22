@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import '../../services/climb_session_service.dart';
 import '../../models/climb_session.dart';
 import '../../theme/color.dart';
+import '../../utils/status_helpers.dart';
 import 'climb_session_detail_screen.dart';
 
 class ClimbSessionsListScreen extends StatefulWidget {
@@ -176,7 +177,9 @@ class _ClimbSessionsListScreenState extends State<ClimbSessionsListScreen>
                         vertical: 4,
                       ),
                       decoration: BoxDecoration(
-                        color: _getStatusColor(session.status).withOpacity(0.2),
+                        color: ClimbSessionStatusHelper.color(
+                          session.status,
+                        ).withOpacity(0.2),
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: Text(
@@ -184,7 +187,7 @@ class _ClimbSessionsListScreenState extends State<ClimbSessionsListScreen>
                         style: TextStyle(
                           fontSize: 11,
                           fontWeight: FontWeight.bold,
-                          color: _getStatusColor(session.status),
+                          color: ClimbSessionStatusHelper.color(session.status),
                         ),
                       ),
                     ),
@@ -273,18 +276,5 @@ class _ClimbSessionsListScreenState extends State<ClimbSessionsListScreen>
 
   String _formatDate(DateTime date) {
     return '${date.day}/${date.month}/${date.year}';
-  }
-
-  Color _getStatusColor(String status) {
-    switch (status) {
-      case 'ongoing':
-        return Colors.blue;
-      case 'completed':
-        return Colors.green;
-      case 'abandoned':
-        return Colors.red;
-      default:
-        return Colors.grey;
-    }
   }
 }

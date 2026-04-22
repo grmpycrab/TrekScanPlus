@@ -107,9 +107,9 @@ class _TrekDatePickerState extends State<TrekDatePicker> {
     if (isClosed) {
       return Container(
         decoration: BoxDecoration(
-          color: Colors.red.shade50,
+          color: AppColors.statusRejectedLight,
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: Colors.red.shade300),
+          border: Border.all(color: AppColors.red200),
         ),
         padding: const EdgeInsets.all(12),
         child: Column(
@@ -117,13 +117,17 @@ class _TrekDatePickerState extends State<TrekDatePicker> {
           children: [
             Row(
               children: [
-                Icon(Icons.cancel, color: Colors.red.shade700, size: 20),
+                Icon(
+                  Icons.cancel,
+                  color: AppColors.statusRejectedDark,
+                  size: 20,
+                ),
                 const SizedBox(width: 8),
                 Text(
                   'Date Unavailable',
-                  style: TextStyle(
+                  style: const TextStyle(
                     fontWeight: FontWeight.w600,
-                    color: Colors.red.shade700,
+                    color: AppColors.statusRejectedDark,
                     fontSize: 14,
                   ),
                 ),
@@ -132,7 +136,10 @@ class _TrekDatePickerState extends State<TrekDatePicker> {
             const SizedBox(height: 4),
             Text(
               closureReason ?? 'This date is closed for bookings',
-              style: TextStyle(color: Colors.red.shade600, fontSize: 13),
+              style: const TextStyle(
+                color: AppColors.statusRejectedDark,
+                fontSize: 13,
+              ),
             ),
           ],
         ),
@@ -143,9 +150,9 @@ class _TrekDatePickerState extends State<TrekDatePicker> {
     if (isBufferDay) {
       return Container(
         decoration: BoxDecoration(
-          color: Colors.orange.shade50,
+          color: AppColors.statusPendingLight,
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: Colors.orange.shade300),
+          border: Border.all(color: AppColors.statusPendingBorder),
         ),
         padding: const EdgeInsets.all(12),
         child: Column(
@@ -153,13 +160,17 @@ class _TrekDatePickerState extends State<TrekDatePicker> {
           children: [
             Row(
               children: [
-                Icon(Icons.warning, color: Colors.orange.shade700, size: 20),
+                Icon(
+                  Icons.warning,
+                  color: AppColors.statusPendingDark,
+                  size: 20,
+                ),
                 const SizedBox(width: 8),
                 Text(
                   'Buffer Day - Trek Down',
-                  style: TextStyle(
+                  style: const TextStyle(
                     fontWeight: FontWeight.w600,
-                    color: Colors.orange.shade700,
+                    color: AppColors.statusPendingDark,
                     fontSize: 14,
                   ),
                 ),
@@ -168,7 +179,10 @@ class _TrekDatePickerState extends State<TrekDatePicker> {
             const SizedBox(height: 4),
             Text(
               'Trekkers from trek on $conflictDate are coming down. No new bookings allowed.',
-              style: TextStyle(color: Colors.orange.shade600, fontSize: 13),
+              style: const TextStyle(
+                color: AppColors.statusPendingDark,
+                fontSize: 13,
+              ),
             ),
           ],
         ),
@@ -180,10 +194,10 @@ class _TrekDatePickerState extends State<TrekDatePicker> {
       final isCritical = remaining <= 5;
       return Container(
         decoration: BoxDecoration(
-          color: isCritical ? Colors.amber.shade50 : Colors.green.shade50,
+          color: isCritical ? AppColors.warningLight : AppColors.green50,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
-            color: isCritical ? Colors.amber.shade300 : Colors.green.shade300,
+            color: isCritical ? AppColors.warningBorder : AppColors.green200,
           ),
         ),
         padding: const EdgeInsets.all(12),
@@ -194,9 +208,7 @@ class _TrekDatePickerState extends State<TrekDatePicker> {
               children: [
                 Icon(
                   isCritical ? Icons.info : Icons.check_circle,
-                  color: isCritical
-                      ? Colors.amber.shade700
-                      : Colors.green.shade700,
+                  color: isCritical ? AppColors.warning : AppColors.green700,
                   size: 20,
                 ),
                 const SizedBox(width: 8),
@@ -204,9 +216,7 @@ class _TrekDatePickerState extends State<TrekDatePicker> {
                   isCritical ? 'Limited Slots Available' : 'Date Available',
                   style: TextStyle(
                     fontWeight: FontWeight.w600,
-                    color: isCritical
-                        ? Colors.amber.shade700
-                        : Colors.green.shade700,
+                    color: isCritical ? AppColors.warning : AppColors.green700,
                     fontSize: 14,
                   ),
                 ),
@@ -251,8 +261,8 @@ class _TrekDatePickerState extends State<TrekDatePicker> {
                         fontWeight: FontWeight.w600,
                         fontSize: 14,
                         color: isCritical
-                            ? Colors.amber.shade700
-                            : Colors.green.shade700,
+                            ? AppColors.warning
+                            : AppColors.green700,
                       ),
                     ),
                   ],
@@ -267,20 +277,20 @@ class _TrekDatePickerState extends State<TrekDatePicker> {
     // Not available
     return Container(
       decoration: BoxDecoration(
-        color: Colors.red.shade50,
+        color: AppColors.statusRejectedLight,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.red.shade300),
+        border: Border.all(color: AppColors.red200),
       ),
       padding: const EdgeInsets.all(12),
       child: Row(
         children: [
-          Icon(Icons.cancel, color: Colors.red.shade700, size: 20),
+          Icon(Icons.cancel, color: AppColors.statusRejectedDark, size: 20),
           const SizedBox(width: 8),
           Expanded(
             child: Text(
               'No slots available for this date',
-              style: TextStyle(
-                color: Colors.red.shade600,
+              style: const TextStyle(
+                color: AppColors.statusRejectedDark,
                 fontSize: 13,
                 fontWeight: FontWeight.w500,
               ),
@@ -317,13 +327,13 @@ class _TrekDatePickerState extends State<TrekDatePicker> {
               border: Border.all(
                 color: _selectedDate != null && _availabilityInfo != null
                     ? ((_availabilityInfo!['available'] as bool?) ?? false)
-                          ? Colors.green.shade300
-                          : Colors.red.shade300
+                          ? AppColors.green200
+                          : AppColors.red200
                     : AppColors.borderBlack12,
               ),
               boxShadow: [
                 BoxShadow(
-                  color: SharedColors.black.withOpacity(0.05),
+                  color: SharedColors.black.withValues(alpha: 0.05),
                   blurRadius: 4,
                   offset: const Offset(0, 2),
                 ),

@@ -4,6 +4,7 @@ import '../../../models/climb.dart';
 import '../../../models/booking_model.dart';
 import 'booking_details_modal.dart';
 import '../../../theme/color.dart';
+import '../../../utils/status_helpers.dart';
 
 typedef ClimbCallback = void Function(Climb);
 
@@ -35,8 +36,7 @@ class ClimbCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final status = climb.computedStatus();
-    final statusColor = _getStatusColor(status);
-    _getStatusTextColor(status);
+    final statusColor = BookingStatusHelper.color(status);
 
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
@@ -46,7 +46,7 @@ class ClimbCard extends StatelessWidget {
         color: SharedColors.white,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
+            color: AppColors.shadowLight,
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -196,15 +196,15 @@ class ClimbCard extends StatelessWidget {
                       vertical: 4,
                     ),
                     decoration: BoxDecoration(
-                      color: Colors.orange.shade50,
+                      color: AppColors.statusPendingLight,
                       borderRadius: BorderRadius.circular(6),
                     ),
                     child: Text(
                       'Draft',
-                      style: TextStyle(
+                      style: const TextStyle(
                         fontSize: 11,
                         fontWeight: FontWeight.w600,
-                        color: Colors.orange.shade700,
+                        color: AppColors.statusPendingDark,
                       ),
                     ),
                   )
@@ -215,15 +215,15 @@ class ClimbCard extends StatelessWidget {
                       vertical: 4,
                     ),
                     decoration: BoxDecoration(
-                      color: Colors.green.shade50,
+                      color: AppColors.green50,
                       borderRadius: BorderRadius.circular(6),
                     ),
                     child: Text(
                       'Submitted',
-                      style: TextStyle(
+                      style: const TextStyle(
                         fontSize: 11,
                         fontWeight: FontWeight.w600,
-                        color: Colors.green.shade700,
+                        color: AppColors.green700,
                       ),
                     ),
                   ),
@@ -279,40 +279,6 @@ class ClimbCard extends StatelessWidget {
         ),
       ),
     );
-  }
-
-  Color _getStatusColor(String status) {
-    switch (status) {
-      case 'Approved':
-        return AppColors.difficultyEasy;
-      case 'Declined':
-      case 'Rejected':
-        return AppColors.difficultyHard;
-      case 'Cancelled':
-        return Colors.grey;
-      case 'Completed':
-        return const Color.fromARGB(255, 100, 149, 237);
-      case 'Pending':
-        return const Color.fromARGB(255, 247, 201, 104);
-      default:
-        return AppColors.difficultyModerate;
-    }
-  }
-
-  Color _getStatusTextColor(String status) {
-    switch (status) {
-      case 'Approved':
-        return AppColors.textLight;
-      case 'Declined':
-      case 'Rejected':
-        return AppColors.textLight;
-      case 'Cancelled':
-        return AppColors.textLight;
-      case 'Completed':
-        return AppColors.textLight;
-      default:
-        return AppColors.textLight;
-    }
   }
 
   void _showBookingDetails(BuildContext context) {

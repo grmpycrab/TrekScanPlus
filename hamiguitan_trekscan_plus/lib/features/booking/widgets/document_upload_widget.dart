@@ -46,7 +46,7 @@ class DocumentUploadWidget extends StatelessWidget {
                 icon: const Icon(Icons.upload_file, color: SharedColors.white),
                 label: const Text(
                   'Upload Docx, PDF, or Image',
-                  style: TextStyle(color: Colors.white),
+                  style: TextStyle(color: SharedColors.white),
                 ),
                 onPressed: onPickFiles,
               ),
@@ -83,8 +83,8 @@ class DocumentUploadWidget extends StatelessWidget {
           width: double.infinity,
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
-            color: Colors.blue.shade50,
-            border: Border.all(color: Colors.blue.shade300),
+            color: AppColors.infoLight,
+            border: Border.all(color: AppColors.infoBorder),
             borderRadius: BorderRadius.circular(8),
           ),
           child: Column(
@@ -92,14 +92,14 @@ class DocumentUploadWidget extends StatelessWidget {
             children: [
               Row(
                 children: [
-                  Icon(Icons.info, size: 16, color: Colors.blue.shade700),
+                  Icon(Icons.info, size: 16, color: AppColors.info),
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
                       'Previously selected files (please re-select)',
-                      style: TextStyle(
+                      style: const TextStyle(
                         fontSize: 12,
-                        color: Colors.blue.shade700,
+                        color: AppColors.info,
                         fontWeight: FontWeight.w500,
                       ),
                     ),
@@ -117,7 +117,7 @@ class DocumentUploadWidget extends StatelessWidget {
                       const Icon(
                         Icons.insert_drive_file,
                         size: 16,
-                        color: Colors.grey,
+                        color: AppColors.textSecondary,
                       ),
                       const SizedBox(width: 8),
                       Expanded(
@@ -131,9 +131,9 @@ class DocumentUploadWidget extends StatelessWidget {
                             ),
                             Text(
                               '${(fileSize / 1024).toStringAsFixed(1)} KB',
-                              style: TextStyle(
+                              style: const TextStyle(
                                 fontSize: 10,
-                                color: Colors.grey.shade600,
+                                color: AppColors.iconGrey600,
                               ),
                             ),
                           ],
@@ -156,15 +156,15 @@ class DocumentUploadWidget extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.symmetric(vertical: 16),
       decoration: BoxDecoration(
-        color: const Color(0xFFFFEBEE),
-        border: Border.all(color: Colors.red.shade300),
+        color: AppColors.statusRejectedLight,
+        border: Border.all(color: AppColors.red200),
         borderRadius: BorderRadius.circular(12),
       ),
       child: Center(
         child: Text(
           'No files uploaded.',
-          style: TextStyle(
-            color: Colors.red.shade700,
+          style: const TextStyle(
+            color: AppColors.statusRejectedDark,
             fontWeight: FontWeight.w500,
           ),
         ),
@@ -199,7 +199,7 @@ class DocumentUploadWidget extends StatelessWidget {
               padding: EdgeInsets.zero,
               iconSize: 18,
               icon: const Icon(Icons.close),
-              color: Colors.red.shade700,
+              color: AppColors.statusRejectedDark,
               onPressed: () => onRemoveFile(file),
               tooltip: 'Remove file',
             ),

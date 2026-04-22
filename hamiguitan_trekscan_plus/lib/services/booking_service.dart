@@ -213,6 +213,7 @@ class BookingService {
     String bookingId,
     PlatformFile file, {
     void Function(int, int)? onProgress,
+    String? memberName,
   }) async {
     final rand = Random().nextInt(100000);
     final name =
@@ -254,6 +255,7 @@ class BookingService {
         mimeType: snapshot.metadata?.contentType,
         size: snapshot.totalBytes,
         uploadedAt: Timestamp.now(),
+        memberName: memberName,
       );
 
       // Append metadata to booking doc with retry logic for reliability

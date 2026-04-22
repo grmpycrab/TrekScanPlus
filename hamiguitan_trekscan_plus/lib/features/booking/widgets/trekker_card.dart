@@ -108,7 +108,7 @@ class TrekkerCard extends StatelessWidget {
         children: [
           Text(
             '$label: ',
-            style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
+            style: TextStyle(fontSize: 12, color: AppColors.iconGrey600),
           ),
           Text(
             value,
@@ -150,8 +150,8 @@ class TrekkerCard extends StatelessWidget {
               onPressed: onRemove,
               icon: Icon(Icons.delete_outline, size: 18),
               style: IconButton.styleFrom(
-                backgroundColor: Colors.red.shade50,
-                foregroundColor: Colors.red.shade700,
+                backgroundColor: AppColors.statusRejectedLight,
+                foregroundColor: AppColors.statusRejectedDark,
                 padding: EdgeInsets.zero,
               ),
             ),

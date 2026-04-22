@@ -8,6 +8,7 @@ import '../../theme/color.dart';
 import '../../models/climb_session.dart';
 import '../../dialogs/new_climb_session_dialog.dart';
 import '../../utils/app_logger.dart';
+import '../../utils/status_helpers.dart';
 import 'station_detail_screen.dart';
 import 'climb_session_detail_screen.dart';
 
@@ -475,14 +476,14 @@ class _StationScreenState extends State<StationScreen> {
                             color: Colors.white,
                             borderRadius: BorderRadius.circular(12),
                             border: Border.all(
-                              color: _getStatusColor(
+                              color: ClimbSessionStatusHelper.color(
                                 session.status,
                               ).withOpacity(0.2),
                               width: 1.5,
                             ),
                             boxShadow: [
                               BoxShadow(
-                                color: _getStatusColor(
+                                color: ClimbSessionStatusHelper.color(
                                   session.status,
                                 ).withOpacity(0.08),
                                 blurRadius: 8,
@@ -603,7 +604,7 @@ class _StationScreenState extends State<StationScreen> {
                                         vertical: 5,
                                       ),
                                       decoration: BoxDecoration(
-                                        color: _getStatusColor(
+                                        color: ClimbSessionStatusHelper.color(
                                           session.status,
                                         ).withOpacity(0.15),
                                         borderRadius: BorderRadius.circular(16),
@@ -613,7 +614,7 @@ class _StationScreenState extends State<StationScreen> {
                                         style: TextStyle(
                                           fontSize: 12,
                                           fontWeight: FontWeight.w600,
-                                          color: _getStatusColor(
+                                          color: ClimbSessionStatusHelper.color(
                                             session.status,
                                           ),
                                         ),
@@ -711,19 +712,6 @@ class _StationScreenState extends State<StationScreen> {
         ],
       ),
     );
-  }
-
-  Color _getStatusColor(String status) {
-    switch (status) {
-      case 'ongoing':
-        return Colors.blue;
-      case 'completed':
-        return Colors.green;
-      case 'abandoned':
-        return Colors.red;
-      default:
-        return Colors.grey;
-    }
   }
 
   String _formatTime(DateTime dateTime) {
