@@ -8,6 +8,7 @@ import '../settings/account_settings.dart';
 import '../settings/notification_settings.dart';
 import '../settings/security_screen.dart';
 import '../settings/appearance_settings.dart';
+import '../settings/archived_bookings_screen.dart';
 import '../../services/firebase_auth_service.dart';
 import '../../services/onboarding_service.dart';
 import '../auth/login_screen.dart';
@@ -87,6 +88,19 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         context,
                         MaterialPageRoute(
                           builder: (context) => const BadgesScreen(),
+                        ),
+                      );
+                    },
+                  ),
+                  _buildSettingItem(
+                    icon: Icons.archive_outlined,
+                    title: 'Archived Bookings',
+                    subtitle: 'View bookings you\'ve archived',
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const ArchivedBookingsScreen(),
                         ),
                       );
                     },

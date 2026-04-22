@@ -28,6 +28,12 @@ class BookingProvider extends ChangeNotifier {
   // Getters
   BookingFormState get state => _state;
   List<BookingModel> get draftBookings => _draftBookings;
+
+  /// Returns only archived draft bookings (for the Archived Bookings screen)
+  List<BookingModel> get archivedDraftBookings =>
+      _allDraftBookings.where((b) => b.isArchived).toList();
+
+  List<BookingModel> _allDraftBookings = [];
   bool get isLoading => _isLoading;
   String? get errorMessage => _errorMessage;
   bool get isPrimaryContactInitialized => _isPrimaryContactInitialized;
@@ -437,10 +443,46 @@ class BookingProvider extends ChangeNotifier {
 
           return BookingModel.fromJson(map);
         }).toList();
+        // Exclude archived drafts from the active list
+        _draftBookings = _draftBookings.where((b) => !b.isArchived).toList();
         notifyListeners();
       }
     } catch (e) {
       AppLogger.e('Error loading draft bookings: $e');
+    }
+  }
+
+  /// Load all drafts including archived ones (for the Archived Bookings screen)
+  Future<void> loadAllDraftBookings() async {
+    await loadDraftBookings();
+    _allDraftBookings = List.from(_draftBookings);
+    // Also load archived ones from persistent storage
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final currentUser = FirebaseAuth.instance.currentUser;
+      if (currentUser == null) return;
+      final key = 'draft_bookings_${currentUser.uid}';
+      final jsonString = prefs.getString(key);
+      if (jsonString != null && jsonString.isNotEmpty) {
+        final jsonData = jsonDecode(jsonString) as List;
+        final all = jsonData.map((item) {
+          final map = item as Map<String, dynamic>;
+          if (map['trekDate'] is String) {
+            map['trekDate'] = Timestamp.fromDate(
+              DateTime.parse(map['trekDate']),
+            );
+          }
+          if (map['createdAt'] is String) {
+            map['createdAt'] = Timestamp.fromDate(
+              DateTime.parse(map['createdAt']),
+            );
+          }
+          return BookingModel.fromJson(map);
+        }).toList();
+        _allDraftBookings = all;
+      }
+    } catch (e) {
+      AppLogger.e('Error loading all draft bookings: $e');
     }
   }
 
@@ -627,6 +669,15 @@ class BookingProvider extends ChangeNotifier {
     } catch (e) {
       AppLogger.e('Error removing draft booking: $e');
     }
+  }
+
+  /// Archive a local draft booking (mark isArchived = true, persist)
+  Future<void> archiveDraftBooking(String bookingId) async {
+    await updateDraftBooking(
+      _draftBookings
+          .firstWhere((b) => b.id == bookingId)
+          .copyWith(isArchived: true),
+    );
   }
 
   /// Reset form to initial state

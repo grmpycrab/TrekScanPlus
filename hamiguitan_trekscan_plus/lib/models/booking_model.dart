@@ -59,6 +59,7 @@ class BookingModel {
   String status;
   String
   submissionStatus; // 'draft' (saved locally) or 'submitted' (sent to system)
+  bool isArchived;
   final Timestamp createdAt;
   Timestamp? updatedAt;
 
@@ -76,6 +77,7 @@ class BookingModel {
     this.members = const [],
     this.status = 'pending',
     this.submissionStatus = 'draft', // Default to draft when creating
+    this.isArchived = false,
     Timestamp? createdAt,
     this.updatedAt,
   }) : id = id ?? _generateDraftId(),
@@ -97,6 +99,7 @@ class BookingModel {
       'totalMembers': members.length,
       'status': status,
       'submissionStatus': submissionStatus,
+      'isArchived': isArchived,
       'createdAt': createdAt,
       'updatedAt': updatedAt,
     };
@@ -190,6 +193,7 @@ class BookingModel {
       members: const [], // Members loaded separately from subcollection
       status: data['status'] as String? ?? 'pending',
       submissionStatus: data['submissionStatus'] as String? ?? 'submitted',
+      isArchived: data['isArchived'] as bool? ?? false,
       createdAt: data['createdAt'] as Timestamp? ?? Timestamp.now(),
       updatedAt: data['updatedAt'] as Timestamp?,
     );
@@ -219,6 +223,7 @@ class BookingModel {
           [],
       status: data['status'] as String? ?? 'pending',
       submissionStatus: data['submissionStatus'] as String? ?? 'draft',
+      isArchived: data['isArchived'] as bool? ?? false,
       createdAt: _parseTimestamp(data['createdAt']),
       updatedAt: data['updatedAt'] != null
           ? _parseTimestamp(data['updatedAt'])
@@ -277,6 +282,7 @@ class BookingModel {
     List<Member>? members,
     String? status,
     String? submissionStatus,
+    bool? isArchived,
     Timestamp? createdAt,
     Timestamp? updatedAt,
   }) {
@@ -294,6 +300,7 @@ class BookingModel {
       members: members ?? this.members,
       status: status ?? this.status,
       submissionStatus: submissionStatus ?? this.submissionStatus,
+      isArchived: isArchived ?? this.isArchived,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
     );

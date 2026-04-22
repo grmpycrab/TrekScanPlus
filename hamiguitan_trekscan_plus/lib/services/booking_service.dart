@@ -3,8 +3,10 @@
 import 'dart:async';
 import 'dart:io';
 import 'dart:math';
+import 'dart:typed_data';
 
-//import 'package:flutter/foundation.dart';
+import 'package:flutter/foundation.dart' show compute;
+import 'package:image/image.dart' as img;
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:file_picker/file_picker.dart';
@@ -16,6 +18,29 @@ import 'notification_manager.dart';
 import 'e_certificate_service.dart';
 import 'station_service.dart';
 import '../utils/app_logger.dart';
+
+/// Top-level function so it can be run via [compute] on a background isolate.
+/// Decodes the image, resizes to at most 1920px on the longest side, and
+/// re-encodes as JPEG at 85% quality. Returns the original bytes unchanged if
+/// decoding fails (e.g. for animated GIFs or unsupported formats).
+Uint8List _compressImageBytes(Uint8List bytes) {
+  final decoded = img.decodeImage(bytes);
+  if (decoded == null) return bytes;
+
+  const int maxDimension = 1920;
+  img.Image resized;
+  if (decoded.width > maxDimension || decoded.height > maxDimension) {
+    if (decoded.width >= decoded.height) {
+      resized = img.copyResize(decoded, width: maxDimension);
+    } else {
+      resized = img.copyResize(decoded, height: maxDimension);
+    }
+  } else {
+    resized = decoded;
+  }
+
+  return Uint8List.fromList(img.encodeJpg(resized, quality: 85));
+}
 
 class BookingService {
   BookingService._();
@@ -232,7 +257,22 @@ class BookingService {
 
     if (file.bytes != null) {
       // Prefer bytes (loaded with withData:true) — always in-memory, never stale
-      uploadTask = ref.putData(file.bytes!, metadata);
+      Uint8List uploadBytes = file.bytes!;
+
+      // Compress images before uploading to reduce upload time
+      if (_isImageExtension(file.extension)) {
+        try {
+          final compressed = await compute(_compressImageBytes, uploadBytes);
+          if (compressed.length < uploadBytes.length) {
+            uploadBytes = compressed;
+          }
+        } catch (e) {
+          // Compression failed — fall back to original bytes
+          AppLogger.w('Image compression failed for ${file.name}: $e');
+        }
+      }
+
+      uploadTask = ref.putData(uploadBytes, metadata);
     } else if (file.path != null) {
       uploadTask = ref.putFile(File(file.path!), metadata);
     } else {
@@ -284,6 +324,20 @@ class BookingService {
     }
   }
 
+  /// Returns true for image extensions that benefit from compression.
+  bool _isImageExtension(String? extension) {
+    if (extension == null) return false;
+    switch (extension.toLowerCase()) {
+      case 'jpg':
+      case 'jpeg':
+      case 'png':
+      case 'webp':
+        return true;
+      default:
+        return false;
+    }
+  }
+
   /// Helper to determine MIME type from file extension
   String _getMimeType(String extension) {
     final ext = extension.toLowerCase();
@@ -329,7 +383,43 @@ class BookingService {
         .where('userId', isEqualTo: uid)
         .orderBy('createdAt', descending: true)
         .snapshots()
-        .map((snap) => snap.docs.map((d) => BookingModel.fromDoc(d)).toList());
+        .map(
+          (snap) => snap.docs
+              .map((d) => BookingModel.fromDoc(d))
+              .where((b) => !b.isArchived)
+              .toList(),
+        );
+  }
+
+  /// Stream archived Firestore bookings for a user
+  Stream<List<BookingModel>> streamArchivedBookingsForUser(String uid) {
+    return _firestore
+        .collection('bookings')
+        .where('userId', isEqualTo: uid)
+        .orderBy('createdAt', descending: true)
+        .snapshots()
+        .map(
+          (snap) => snap.docs
+              .map((d) => BookingModel.fromDoc(d))
+              .where((b) => b.isArchived)
+              .toList(),
+        );
+  }
+
+  /// Archive a Firestore booking (soft-delete — hidden from main list)
+  Future<void> archiveBooking(String bookingId) async {
+    await _firestore.collection('bookings').doc(bookingId).update({
+      'isArchived': true,
+      'updatedAt': FieldValue.serverTimestamp(),
+    });
+  }
+
+  /// Restore an archived Firestore booking back to the main list
+  Future<void> unarchiveBooking(String bookingId) async {
+    await _firestore.collection('bookings').doc(bookingId).update({
+      'isArchived': false,
+      'updatedAt': FieldValue.serverTimestamp(),
+    });
   }
 
   /// Start listening to booking status changes for notifications
