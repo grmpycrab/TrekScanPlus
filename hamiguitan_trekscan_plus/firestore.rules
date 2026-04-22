@@ -59,10 +59,10 @@ service cloud.firestore {
     // Top-level bookings collection
     match /bookings/{bookingId} {
       // Create: allow authenticated users to create bookings for themselves
-      // (relaxed: only require ownership; field validation is done server-side or in client)
       allow create: if request.auth != null && request.resource.data.userId == request.auth.uid;
 
-      // Read: Users can read their own bookings, approved bookings (for date availability checks), or admins can read all
+      // Read (documents): Users can read their own bookings, approved bookings, or admins can read all
+      // This rule applies to individual document reads and collection queries
       allow read: if request.auth != null && (
         request.auth.uid == resource.data.userId ||
         resource.data.status == 'approved' ||
