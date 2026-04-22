@@ -42,6 +42,14 @@ void main() async {
     dotenv.load(fileName: ".env"),
   ]);
 
+  // Configure logging for cleaner output
+  AppLogger.setLogLevel(
+    LogLevel.info,
+  ); // Only show INFO and above (suppress DEBUG/VERBOSE)
+  AppLogger.suppressTag('GoogleApiManager');
+  AppLogger.suppressTag('FlagStore');
+  AppLogger.suppressTag('FlagRegistrar');
+
   // Start lightweight connectivity monitoring
   ConnectivityService.instance.start();
 

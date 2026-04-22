@@ -338,6 +338,7 @@ class _BookAClimbScreenState extends State<BookAClimbScreen> {
 
       final querySnapshot = await FirebaseFirestore.instance
           .collection('bookings')
+          .where('status', isEqualTo: 'approved')
           .where(
             'trekDate',
             isGreaterThanOrEqualTo: Timestamp.fromDate(startOfDay),

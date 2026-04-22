@@ -155,6 +155,7 @@ class _HomeScreenState extends State<HomeScreen>
 
     _bookingsSubscription = FirebaseFirestore.instance
         .collection('bookings')
+        .where('status', isEqualTo: 'approved')
         .where('trekDate', isGreaterThanOrEqualTo: startTs)
         .where('trekDate', isLessThanOrEqualTo: endTs)
         .snapshots()
@@ -777,6 +778,7 @@ class _HomeScreenState extends State<HomeScreen>
 
     final snap = await FirebaseFirestore.instance
         .collection('bookings')
+        .where('status', isEqualTo: 'approved')
         .where('trekDate', isGreaterThanOrEqualTo: startTs)
         .where('trekDate', isLessThanOrEqualTo: endTs)
         .get();

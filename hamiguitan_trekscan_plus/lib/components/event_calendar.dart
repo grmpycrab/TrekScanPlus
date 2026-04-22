@@ -57,6 +57,7 @@ class _EventCalendarState extends State<EventCalendar> {
 
     _bookingsSubscription = FirebaseFirestore.instance
         .collection('bookings')
+        .where('status', isEqualTo: 'approved')
         .where('trekDate', isGreaterThanOrEqualTo: startTs)
         .where('trekDate', isLessThanOrEqualTo: endTs)
         .snapshots()
