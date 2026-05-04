@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import '../../theme/color.dart';
-import '../../components/error_feedback.dart';
+import '../../../theme/color.dart';
+import '../../../components/error_feedback.dart';
 
 // ignore_for_file: use_key_in_widget_constructors, deprecated_member_use, use_build_context_synchronously
 class ForgotPasswordScreen extends StatefulWidget {

@@ -14,23 +14,31 @@ class PresenceService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   Timer? _presenceTimer;
   StreamSubscription<User?>? _authSubscription;
+  // Tracks the userId whose presence is actively being updated so we can
+  // fire markOffline when the session ends (logout or app dispose).
+  String? _currentUserId;
 
-  /// Initialize presence tracking for the current user
-  /// Updates Firestore every 30 seconds while app is active
+  /// Initialize presence tracking for the current user.
+  /// Updates Firestore every 30 seconds while the app is active.
   void initialize() {
     _authSubscription?.cancel();
     _authSubscription = FirebaseAuth.instance.authStateChanges().listen((user) {
       if (user != null) {
         _startPresenceUpdates(user.uid);
       } else {
+        // Mark offline before clearing state so logout is reflected immediately.
+        if (_currentUserId != null) {
+          unawaited(markOffline(_currentUserId!));
+        }
         _stopPresenceUpdates();
       }
     });
   }
 
-  /// Start updating user presence every 30 seconds
+  /// Start updating user presence every 30 seconds.
   void _startPresenceUpdates(String userId) {
-    _stopPresenceUpdates(); // Cancel any existing timer
+    _stopPresenceUpdates(); // Cancel any existing timer first.
+    _currentUserId = userId;
 
     // Update immediately
     _updatePresence(userId, isOnline: true);
@@ -41,10 +49,13 @@ class PresenceService {
     });
   }
 
-  /// Stop presence updates (when user logs out)
+  /// Stop presence updates. Does NOT write to Firestore — callers that need
+  /// to mark the user offline must do so explicitly (see [markOffline] and
+  /// [pausePresence]).
   void _stopPresenceUpdates() {
     _presenceTimer?.cancel();
     _presenceTimer = null;
+    _currentUserId = null;
   }
 
   /// Update user's online status in Firestore
@@ -77,6 +88,15 @@ class PresenceService {
     }
   }
 
+  /// Call when the app goes to background.
+  ///
+  /// Cancels the presence timer **before** writing to Firestore so the timer
+  /// cannot fire within the next 30 s and re-mark the user as online.
+  Future<void> pausePresence(String userId) async {
+    _stopPresenceUpdates();
+    await markOffline(userId);
+  }
+
   /// Check if a user is online
   /// Returns true if user was active in the last 2 minutes
   Stream<bool> userOnlineStatus(String userId) {
@@ -106,6 +126,11 @@ class PresenceService {
 
   /// Dispose of subscriptions
   void dispose() {
+    // Mark offline before disposal so the user's status is correct even if
+    // the app is terminated without going through a proper lifecycle pause.
+    if (_currentUserId != null) {
+      unawaited(markOffline(_currentUserId!));
+    }
     _presenceTimer?.cancel();
     _authSubscription?.cancel();
   }

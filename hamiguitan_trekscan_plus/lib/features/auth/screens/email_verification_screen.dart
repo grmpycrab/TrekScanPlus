@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'dart:async';
-import '../../theme/color.dart';
-import '../../services/firebase_auth_service.dart';
-import '../../services/email_verification_service.dart';
+import '../../../theme/color.dart';
+import '../../../services/firebase_auth_service.dart';
+import '../../../services/email_verification_service.dart';
 import 'additional_information.dart';
 import 'login_screen.dart';
 
@@ -351,7 +351,10 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
                   Text(
                     'We sent a 6-digit code to',
                     textAlign: TextAlign.center,
-                    style: TextStyle(fontSize: 16, color: AppColors.textSecondary),
+                    style: TextStyle(
+                      fontSize: 16,
+                      color: AppColors.textSecondary,
+                    ),
                   ),
                   const SizedBox(height: 8),
                   Text(
@@ -663,7 +666,10 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
                     onPressed: _signOut,
                     child: Text(
                       'Use a different account',
-                      style: TextStyle(color: AppColors.textSecondary, fontSize: 16),
+                      style: TextStyle(
+                        color: AppColors.textSecondary,
+                        fontSize: 16,
+                      ),
                     ),
                   ),
                 ],

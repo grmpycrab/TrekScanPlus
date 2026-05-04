@@ -1,6 +1,8 @@
 import 'dart:async';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import '../services/achievement_service.dart';
+import '../services/onboarding_service.dart';
 import '../services/station_service.dart';
 import '../services/booking_service.dart';
 import '../services/permission_service.dart';
@@ -76,6 +78,35 @@ class AppStartupController {
       Future.microtask(() => NotificationService().listenToBookingUpdates()),
     );
 
+    // Achievement init — no context needed, silent fail on error
+    unawaited(
+      Future.microtask(() async {
+        try {
+          await AchievementService().init(userId: userId);
+          AppLogger.i('  AchievementService initialized');
+        } catch (e) {
+          AppLogger.w('AchievementService: $e');
+        }
+      }),
+    );
+
+    // Onboarding check — uses getContext() for navigation
+    unawaited(
+      Future.delayed(const Duration(milliseconds: 300), () async {
+        if (!isMounted()) return;
+        try {
+          final hasSeenOnboarding = await OnboardingService.hasSeenOnboarding(
+            userId,
+          );
+          if (!hasSeenOnboarding && isMounted()) {
+            await OnboardingService.showOnboarding(getContext(), userId);
+          }
+        } catch (e) {
+          AppLogger.e('Onboarding check error: $e');
+        }
+      }),
+    );
+
     if (!_permissionsRequested) {
       _permissionsRequested = true;
       unawaited(
@@ -104,7 +135,9 @@ class AppStartupController {
 
     if (state == AppLifecycleState.paused ||
         state == AppLifecycleState.detached) {
-      PresenceService.instance.markOffline(user.uid);
+      // pausePresence cancels the timer AND marks offline, preventing the
+      // timer from firing within the next 30 s and re-marking the user online.
+      unawaited(PresenceService.instance.pausePresence(user.uid));
     } else if (state == AppLifecycleState.resumed) {
       PresenceService.instance.initialize();
     }
