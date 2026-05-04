@@ -1,85 +1,72 @@
 import 'package:flutter/material.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-import '../../services/firebase_auth_service.dart';
+import 'package:provider/provider.dart';
+import '../viewmodels/auth_view_model.dart';
 import '../../screens/auth/login_screen.dart';
 import '../../screens/auth/email_verification_screen.dart';
 import '../../screens/main/main_screen.dart';
 import 'app_shell.dart';
 
-/// Callback fired when a verified (or OAuth) user session is confirmed.
-/// The [userId] is passed so the caller can initialize user-scoped services.
+/// Callback fired once when a fully authenticated session is confirmed.
 typedef OnServicesInitNeeded = void Function(String userId);
 
-/// Listens to the Firebase auth stream and resolves the correct initial screen.
+/// Maps [AuthViewModel] state to the correct initial screen.
 ///
-/// Decision tree:
-/// - Auth loading  → loading spinner
-/// - No user       → [LoginScreen]
-/// - Email user, unverified → [EmailVerificationScreen]
-/// - Verified / OAuth user  → [MainScreen] + fires [onServicesInitNeeded]
+/// Decision table:
+/// | [AuthStatus]         | Screen                    |
+/// |----------------------|---------------------------|
+/// | loading              | loading spinner           |
+/// | unauthenticated      | [LoginScreen]             |
+/// | unverified           | [EmailVerificationScreen] |
+/// | authenticated        | [MainScreen]              |
 ///
-/// All screens are mounted inside [AppShell] so theme and navigation
-/// infrastructure are always present.
+/// When status transitions to [AuthStatus.authenticated], fires
+/// [onServicesInitNeeded] exactly once per session so the caller can
+/// initialize user-scoped services without this widget knowing about them.
 ///
-/// MVVM role: View. No business logic — purely translates auth state
-/// to the appropriate screen. Service init is delegated via callback.
-class AuthGate extends StatelessWidget {
-  /// Called (once per verified session) with the authenticated user's UID.
+/// MVVM role: View — zero business logic, zero Firebase imports.
+class AuthGate extends StatefulWidget {
   final OnServicesInitNeeded? onServicesInitNeeded;
 
   const AuthGate({super.key, this.onServicesInitNeeded});
 
   @override
+  State<AuthGate> createState() => _AuthGateState();
+}
+
+class _AuthGateState extends State<AuthGate> {
+  bool _serviceInitFired = false;
+
+  @override
   Widget build(BuildContext context) {
-    return StreamBuilder<User?>(
-      stream: FirebaseAuthService.instance.authStateChanges,
-      initialData: FirebaseAuthService.instance.currentUser,
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return AppShell(
+    return Consumer<AuthViewModel>(
+      builder: (context, vm, _) {
+        // Fire service init once when user becomes authenticated
+        if (vm.status == AuthStatus.authenticated &&
+            vm.userId != null &&
+            !_serviceInitFired) {
+          _serviceInitFired = true;
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (mounted) widget.onServicesInitNeeded?.call(vm.userId!);
+          });
+        }
+
+        // Reset flag when user signs out so next login re-initialises services
+        if (vm.status == AuthStatus.unauthenticated) {
+          _serviceInitFired = false;
+        }
+
+        return switch (vm.status) {
+          AuthStatus.loading => AppShell(
             home: const Scaffold(
               body: Center(child: CircularProgressIndicator()),
             ),
-          );
-        }
-
-        final user = snapshot.data;
-
-        if (user == null) {
-          return const AppShell(home: LoginScreen());
-        }
-
-        return FutureBuilder<bool>(
-          future: FirebaseAuthService.instance.isEmailVerified(),
-          builder: (context, verificationSnapshot) {
-            if (verificationSnapshot.connectionState ==
-                ConnectionState.waiting) {
-              return AppShell(
-                home: const Scaffold(
-                  body: Center(child: CircularProgressIndicator()),
-                ),
-              );
-            }
-
-            final isVerified = verificationSnapshot.data ?? false;
-            final isEmailPasswordUser = user.providerData.any(
-              (info) => info.providerId == 'password',
-            );
-
-            if (isEmailPasswordUser && !isVerified) {
-              return const AppShell(home: EmailVerificationScreen());
-            }
-
-            // Verified user (email or OAuth) — trigger service init once.
-            if (isVerified) {
-              WidgetsBinding.instance.addPostFrameCallback((_) {
-                onServicesInitNeeded?.call(user.uid);
-              });
-            }
-
-            return const AppShell(home: MainScreen());
-          },
-        );
+          ),
+          AuthStatus.unauthenticated => const AppShell(home: LoginScreen()),
+          AuthStatus.unverified => const AppShell(
+            home: EmailVerificationScreen(),
+          ),
+          AuthStatus.authenticated => const AppShell(home: MainScreen()),
+        };
       },
     );
   }

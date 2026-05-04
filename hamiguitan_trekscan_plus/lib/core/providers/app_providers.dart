@@ -1,14 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../services/theme_service.dart';
+import '../viewmodels/auth_view_model.dart';
 
 /// Wraps the widget tree with all top-level state providers.
 ///
-/// Extraction reason: provider declarations were inlined in `main()`, mixing
-/// bootstrap concerns with state wiring. All providers now live here.
+/// Providers registered here:
+/// - [ThemeService]  — active theme / mode
+/// - [AuthViewModel] — authentication state (loading, authed, unverified, etc.)
 ///
-/// Future: when migrating to Riverpod, replace [ChangeNotifierProvider] with
-/// a [ProviderScope] and add feature-level providers in this file.
+/// Future: when migrating to Riverpod, replace with a [ProviderScope] and
+/// add feature-level providers in this file.
 class AppProviders extends StatelessWidget {
   final Widget child;
 
@@ -16,6 +18,12 @@ class AppProviders extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ChangeNotifierProvider(create: (_) => ThemeService(), child: child);
+    return MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => ThemeService()),
+        ChangeNotifierProvider(create: (_) => AuthViewModel()),
+      ],
+      child: child,
+    );
   }
 }
