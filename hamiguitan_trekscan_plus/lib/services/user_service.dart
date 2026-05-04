@@ -2,7 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/foundation.dart';
-import 'notification_services.dart';
+import 'FirestoreNotificationService.dart';
 import '../../utils/app_logger.dart';
 
 class UserService {
@@ -510,7 +510,7 @@ class UserService {
       });
 
       // Send follow request notification
-      await NotificationService().sendFollowRequest(
+      await InAppNotificationService().sendFollowRequest(
         followingUid,
         followerUid,
         followerName,

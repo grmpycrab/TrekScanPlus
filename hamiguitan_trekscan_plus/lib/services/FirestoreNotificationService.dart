@@ -1,12 +1,14 @@
+// ignore_for_file: file_names
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 //import 'package:flutter/foundation.dart';
 import '../models/notification_model.dart';
 import '../utils/app_logger.dart';
 
-class NotificationService {
+class InAppNotificationService {
   final FirebaseFirestore _firestore;
 
-  NotificationService({FirebaseFirestore? firestore})
+  InAppNotificationService({FirebaseFirestore? firestore})
     : _firestore = firestore ?? FirebaseFirestore.instance;
 
   CollectionReference<Map<String, dynamic>> _userNotificationsRef(
