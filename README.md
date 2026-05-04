@@ -9,6 +9,7 @@ Mt. Hamiguitan TrekScan+ is an enhanced mobile application designed to improve e
 ## 🌟 Key Features
 
 ### Mobile Application
+
 - **Offline GPS Navigation**: Reliable trail guidance with elevation tracking for remote areas
 - **QR Code Eco-Stations**: Location-verified educational content and interactive tasks
 - **Automated E-Certificate Generation**: Personalized certificates upon completion of designated stations
@@ -18,6 +19,7 @@ Mt. Hamiguitan TrekScan+ is an enhanced mobile application designed to improve e
 - **Secure Authentication**: Google Sign-In and biometric verification support
 
 ### Web-Based Admin Dashboard
+
 - **Booking Management**: Confirm and manage trekker reservations
 - **User Management**: Monitor and verify trekker accounts
 - **Analytics & Reporting**: Track usage patterns and generate insights
@@ -26,6 +28,7 @@ Mt. Hamiguitan TrekScan+ is an enhanced mobile application designed to improve e
 ## 🛠️ Technology Stack
 
 ### Mobile Development
+
 - **Framework**: Flutter
 - **Language**: Dart
 - **Local Database**: SQLite
@@ -33,16 +36,19 @@ Mt. Hamiguitan TrekScan+ is an enhanced mobile application designed to improve e
 - **QR Code Scanner**: flutter_barcode_scanner
 
 ### Backend & Cloud Services
+
 - **Backend**: Firebase (Authentication, Firestore, Cloud Functions)
 - **Storage**: Firebase Cloud Storage
 - **Analytics**: Firebase Analytics
 
 ### Web Dashboard
+
 - **Frontend**: React.js
 - **Backend**: Node.js with Firebase Functions
 - **Database**: Firebase Firestore
 
 ### Development Tools
+
 - **IDE**: Visual Studio Code / Cursor
 - **Version Control**: GitHub
 - **Testing**: Flutter Test Framework
@@ -61,12 +67,14 @@ Before you begin, ensure you have:
 ## 🚀 Installation & Setup
 
 ### 1. Clone the Repository
+
 ```bash
 git clone https://github.com/your-username/mt-hamiguitan-trekscan-plus.git
 cd mt-hamiguitan-trekscan-plus
 ```
 
 ### 2. Mobile App Setup
+
 ```bash
 # Navigate to mobile app directory
 cd mobile_app
@@ -79,6 +87,7 @@ flutter run
 ```
 
 ### 3. Web Dashboard Setup
+
 ```bash
 # Navigate to web dashboard directory
 cd web_dashboard
@@ -91,6 +100,7 @@ npm start
 ```
 
 ### 4. Firebase Configuration
+
 1. Create a new Firebase project
 2. Enable Authentication, Firestore, and Storage
 3. Add configuration files:
@@ -101,6 +111,7 @@ npm start
 ## 📱 Usage
 
 ### For Trekkers
+
 1. **Sign Up/Login**: Use Google authentication or create an account
 2. **Book a Trek**: Submit booking documents for verification
 3. **Download Offline Maps**: Sync trail data before your trek
@@ -110,6 +121,7 @@ npm start
 7. **Share Experience**: Upload photos and journal entries
 
 ### For Administrators
+
 1. **Access Dashboard**: Login to web-based admin panel
 2. **Manage Bookings**: Review and approve trek requests
 3. **Monitor Activity**: Track real-time trekker locations and progress
@@ -119,15 +131,18 @@ npm start
 ## 🔧 Configuration
 
 ### Environment Variables
+
 Create `.env` files in respective directories:
 
 **Mobile App** (`mobile_app/.env`):
+
 ```
 GOOGLE_MAPS_API_KEY=your_maps_api_key
 FIREBASE_API_KEY=your_firebase_api_key
 ```
 
 **Web Dashboard** (`web_dashboard/.env`):
+
 ```
 REACT_APP_FIREBASE_API_KEY=your_firebase_api_key
 REACT_APP_FIREBASE_AUTH_DOMAIN=your_project.firebaseapp.com
@@ -137,48 +152,29 @@ REACT_APP_FIREBASE_PROJECT_ID=your_project_id
 ## 🧪 Testing
 
 ### Run Mobile Tests
+
 ```bash
 cd mobile_app
 flutter test
 ```
 
 ### Run Web Tests
+
 ```bash
 cd web_dashboard
 npm test
 ```
 
-## 📂 Project Structure
-
-```
-mt-hamiguitan-trekscan-plus/
-├── mobile_app/
-│   ├── lib/
-│   │   ├── screens/
-│   │   ├── widgets/
-│   │   ├── services/
-│   │   └── models/
-│   ├── assets/
-│   └── test/
-├── web_dashboard/
-│   ├── src/
-│   │   ├── components/
-│   │   ├── pages/
-│   │   └── services/
-│   └── public/
-├── firebase_functions/
-│   └── functions/
-└── docs/
-```
-
 ## 🌐 API Documentation
 
 ### Mobile App Endpoints
+
 - Authentication: Firebase Auth REST API
 - Database: Firestore REST API
 - Storage: Firebase Storage REST API
 
 ### Admin Dashboard Endpoints
+
 - User Management: `/api/users`
 - Booking Management: `/api/bookings`
 - Analytics: `/api/analytics`
@@ -204,6 +200,7 @@ mt-hamiguitan-trekscan-plus/
 This project is currently in active development as part of a BSIT Capstone Project at Davao Oriental State University, targeting completion in May 2025.
 
 ### Current Phase: Development & Testing
+
 - ✅ System design and mockups
 - 🔄 Core feature implementation
 - ⏳ Field testing
@@ -214,6 +211,7 @@ This project is currently in active development as part of a BSIT Capstone Proje
 This is an academic capstone project. For collaboration inquiries, please contact the development team through the university.
 
 ### Development Team
+
 - **Shannen G. Mendoza**
 - **Keynt Harly S. Adol**
 
@@ -227,7 +225,8 @@ This project is developed for academic purposes as part of a Bachelor of Science
 ## 📧 Contact
 
 For questions or collaboration opportunities:
-- Email: 
+
+- Email: keyntharly.adol@dorsu.edu.ph
 - Institution: Davao Oriental State University
 - Location: City of Mati, Davao Oriental, Philippines
 

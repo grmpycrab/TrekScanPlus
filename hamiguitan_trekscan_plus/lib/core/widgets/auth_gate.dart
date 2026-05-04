@@ -9,6 +9,9 @@ import 'app_shell.dart';
 /// Callback fired once when a fully authenticated session is confirmed.
 typedef OnServicesInitNeeded = void Function(String userId);
 
+/// Callback fired when the user signs out.
+typedef OnLogout = void Function();
+
 /// Maps [AuthViewModel] state to the correct initial screen.
 ///
 /// Decision table:
@@ -26,8 +29,9 @@ typedef OnServicesInitNeeded = void Function(String userId);
 /// MVVM role: View — zero business logic, zero Firebase imports.
 class AuthGate extends StatefulWidget {
   final OnServicesInitNeeded? onServicesInitNeeded;
+  final OnLogout? onLogout;
 
-  const AuthGate({super.key, this.onServicesInitNeeded});
+  const AuthGate({super.key, this.onServicesInitNeeded, this.onLogout});
 
   @override
   State<AuthGate> createState() => _AuthGateState();
@@ -53,6 +57,7 @@ class _AuthGateState extends State<AuthGate> {
         // Reset flag when user signs out so next login re-initialises services
         if (vm.status == AuthStatus.unauthenticated) {
           _serviceInitFired = false;
+          widget.onLogout?.call();
         }
 
         return switch (vm.status) {

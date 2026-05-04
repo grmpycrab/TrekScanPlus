@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import '../services/firebase_auth_service.dart';
 import '../services/station_service.dart';
 import '../services/booking_service.dart';
 import '../services/permission_service.dart';
@@ -41,7 +40,6 @@ class AppStartupController {
   ///
   /// Call once from the first post-frame callback in [_MyAppState.initState].
   void start() {
-    _setupAuthListener();
     _handleOfflineFallback();
     _initializeCriticalServices();
     _deferredInitializeStations();
@@ -90,6 +88,15 @@ class AppStartupController {
     _servicesInitialized = true;
   }
 
+  /// Resets service-init flags when the user signs out.
+  ///
+  /// Called by [AuthGate] when [AuthStatus.unauthenticated] is observed,
+  /// so the next login triggers a fresh [initializeUserServices] call.
+  void resetForLogout() {
+    _servicesInitialized = false;
+    _permissionsRequested = false;
+  }
+
   /// Handles app foreground/background transitions for presence tracking.
   void handleLifecycle(AppLifecycleState state) {
     final user = FirebaseAuth.instance.currentUser;
@@ -106,32 +113,6 @@ class AppStartupController {
   // ---------------------------------------------------------------------------
   // Private
   // ---------------------------------------------------------------------------
-
-  void _setupAuthListener() {
-    try {
-      FirebaseAuthService.instance.authStateChanges.listen((user) async {
-        if (user != null) {
-          WidgetsBinding.instance.addPostFrameCallback((_) {
-            initializeUserServices(user.uid);
-          });
-
-          final isVerified = await FirebaseAuthService.instance
-              .isEmailVerified();
-          AppLogger.i(
-            isVerified
-                ? '  User email verified'
-                : 'User email not yet verified',
-          );
-        } else {
-          // User logged out — reset so next login re-initializes services.
-          _servicesInitialized = false;
-          _permissionsRequested = false;
-        }
-      });
-    } catch (e) {
-      AppLogger.w('Auth listener error: $e');
-    }
-  }
 
   /// Ensures ClimbSessionService starts even when there is no network user.
   void _handleOfflineFallback() {
