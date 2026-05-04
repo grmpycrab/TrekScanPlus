@@ -206,6 +206,29 @@ This project is currently in active development as part of a BSIT Capstone Proje
 - ⏳ Field testing
 - ⏳ User acceptance testing
 
+## 📂 Project Structure
+
+```
+mt-hamiguitan-trekscan-plus/
+├── mobile_app/
+│   ├── lib/
+│   │   ├── screens/
+│   │   ├── widgets/
+│   │   ├── services/
+│   │   └── models/
+│   ├── assets/
+│   └── test/
+├── web_dashboard/
+│   ├── src/
+│   │   ├── components/
+│   │   ├── pages/
+│   │   └── services/
+│   └── public/
+├── firebase_functions/
+│   └── functions/
+└── docs/
+```
+
 ## 👥 Contributing
 
 This is an academic capstone project. For collaboration inquiries, please contact the development team through the university.
