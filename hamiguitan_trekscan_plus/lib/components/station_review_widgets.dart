@@ -4,7 +4,7 @@ import 'package:intl/intl.dart';
 import '../models/station_review.dart';
 import '../services/station_review_service.dart';
 import '../theme/color.dart';
-import '../screens/auth/login_screen.dart';
+import '../features/auth/screens/login_screen.dart';
 
 /// Pill showing average rating (reference-style), or a neutral state when empty.
 class StationRatingSummaryPill extends StatelessWidget {
@@ -33,9 +33,7 @@ class StationRatingSummaryPill extends StatelessWidget {
     }
 
     final hasReviews = count > 0;
-    final label = hasReviews
-        ? '${average.toStringAsFixed(1)}/5'
-        : '—';
+    final label = hasReviews ? '${average.toStringAsFixed(1)}/5' : '—';
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
@@ -128,15 +126,15 @@ class _StationReviewsSectionBodyState extends State<StationReviewsSectionBody> {
       );
       if (mounted) {
         FocusScope.of(context).unfocus();
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Review saved')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('Review saved')));
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(e.toString())),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(e.toString())));
       }
     } finally {
       if (mounted) setState(() => _submitting = false);
@@ -151,15 +149,15 @@ class _StationReviewsSectionBodyState extends State<StationReviewsSectionBody> {
       if (mounted) {
         _commentController.clear();
         setState(() => _draftRating = 5);
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Review removed')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('Review removed')));
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(e.toString())),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(e.toString())));
       }
     }
   }
@@ -185,7 +183,11 @@ class _StationReviewsSectionBodyState extends State<StationReviewsSectionBody> {
           const SizedBox(height: 8),
           Text(
             'No reviews yet. Be the first to share your experience.',
-            style: TextStyle(color: Colors.grey[600], fontSize: 15, height: 1.4),
+            style: TextStyle(
+              color: Colors.grey[600],
+              fontSize: 15,
+              height: 1.4,
+            ),
           ),
         ] else ...[
           const SizedBox(height: 12),
@@ -282,7 +284,10 @@ class _StationReviewsSectionBodyState extends State<StationReviewsSectionBody> {
               ),
               focusedBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(10),
-                borderSide: const BorderSide(color: AppColors.accent, width: 1.5),
+                borderSide: const BorderSide(
+                  color: AppColors.accent,
+                  width: 1.5,
+                ),
               ),
             ),
           ),
@@ -364,10 +369,7 @@ class _ReviewTile extends StatelessWidget {
                     ),
                     Text(
                       dateFmt.format(review.updatedAt),
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: Colors.grey[600],
-                      ),
+                      style: TextStyle(fontSize: 12, color: Colors.grey[600]),
                     ),
                   ],
                 ),
@@ -376,7 +378,9 @@ class _ReviewTile extends StatelessWidget {
                   children: List.generate(
                     5,
                     (i) => Icon(
-                      i < review.rating ? Icons.star_rounded : Icons.star_border_rounded,
+                      i < review.rating
+                          ? Icons.star_rounded
+                          : Icons.star_border_rounded,
                       size: 16,
                       color: Colors.amber[700],
                     ),

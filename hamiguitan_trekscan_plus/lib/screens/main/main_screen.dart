@@ -1,10 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-import 'dart:async';
 import '../../components/bottom_navigation.dart';
-import '../../services/achievement_service.dart';
-import '../../services/onboarding_service.dart';
-import '../../utils/app_logger.dart';
 import 'home_screen.dart';
 import 'station_screen.dart';
 import 'scanner_screen.dart';
@@ -29,7 +24,6 @@ class MainScreen extends StatefulWidget {
 
 class _MainScreenState extends State<MainScreen> {
   late int _currentIndex;
-  final AchievementService _achievementService = AchievementService();
   DateTime? _selectedDateForBooking;
   bool _autoShowBookingForm = false;
   bool _bookingFormShown = false; // Track if form has been auto-shown
@@ -66,44 +60,6 @@ class _MainScreenState extends State<MainScreen> {
   void initState() {
     super.initState();
     _currentIndex = widget.initialTabIndex;
-
-    // Initialize non-critical services asynchronously
-    _initializeServicesAsync();
-  }
-
-  Future<void> _initializeServicesAsync() async {
-    // Run achievement initialization in background
-    unawaited(
-      Future.microtask(() async {
-        try {
-          await _achievementService.init();
-        } catch (e) {
-          // Silent fail - non-critical
-        }
-      }),
-    );
-
-    // Check and show onboarding with reduced delay
-    unawaited(
-      Future.delayed(const Duration(milliseconds: 300), () async {
-        if (!mounted) return;
-
-        final user = FirebaseAuth.instance.currentUser;
-        if (user == null) return;
-
-        try {
-          final hasSeenOnboarding = await OnboardingService.hasSeenOnboarding(
-            user.uid,
-          );
-
-          if (!hasSeenOnboarding && mounted) {
-            await OnboardingService.showOnboarding(context, user.uid);
-          }
-        } catch (e) {
-          AppLogger.e('Onboarding check error: $e');
-        }
-      }),
-    );
   }
 
   @override

@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../config/app_router.dart';
 import '../viewmodels/auth_view_model.dart';
-import '../../screens/auth/login_screen.dart';
-import '../../screens/auth/email_verification_screen.dart';
+import '../../features/auth/screens/login_screen.dart';
+import '../../features/auth/screens/email_verification_screen.dart';
 import '../../screens/main/main_screen.dart';
 import 'app_shell.dart';
 

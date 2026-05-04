@@ -27,7 +27,14 @@ service cloud.firestore {
       match /notifications/{notificationId} {
         allow create: if request.auth != null; // Any authenticated user can create notifications (for other users)
         allow read: if request.auth != null && request.auth.uid == userId; // Users can only read their own
-        allow write: if request.auth != null && request.auth.uid == userId; // Users can only update their own
+        // Users can always update their own notifications.
+        // Any authenticated user may also update like-aggregation documents
+        // (id starts with "like_") because set(merge:true) on a deterministic
+        // like_<postId> document is treated as an update when the doc exists.
+        allow update: if request.auth != null && (
+          request.auth.uid == userId ||
+          notificationId.matches('like_.*')
+        );
         allow delete: if request.auth != null && request.auth.uid == userId; // Users can only delete their own
       }
 

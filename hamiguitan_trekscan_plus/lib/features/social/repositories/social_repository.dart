@@ -814,45 +814,18 @@ class SocialRepository {
     String postId,
   ) async {
     try {
-      AppLogger.d(
-        'Sending like notification to $postOwnerId from $likerName on post $postId',
-      );
-      final notificationRef = _firestore
+      // Use a deterministic document ID so we can call set(merge:true) without
+      // a prior read. A plain query+get requires the caller to have read
+      // permission on the target user's notifications, which is denied for
+      // cross-user writes. One like-notification per post; subsequent likes
+      // from different users append to the likers array in-place.
+      final notifDoc = _firestore
           .collection('users')
           .doc(postOwnerId)
-          .collection('notifications');
+          .collection('notifications')
+          .doc('like_$postId');
 
-      try {
-        final existingNotifications = await notificationRef
-            .where('actionData', isEqualTo: postId)
-            .where('actionType', isEqualTo: 'post')
-            .where('title', isEqualTo: 'New Like')
-            .orderBy('timestamp', descending: true)
-            .limit(1)
-            .get();
-
-        if (existingNotifications.docs.isNotEmpty) {
-          final notifDoc = existingNotifications.docs.first;
-          final notifData = notifDoc.data();
-          final likers = List<String>.from(notifData['likers'] as List? ?? []);
-          if (!likers.contains(likerName)) likers.add(likerName);
-
-          await notifDoc.reference.update({
-            'message': _buildLikeMessage(likers),
-            'likers': likers,
-            'timestamp': FieldValue.serverTimestamp(),
-            'isRead': false,
-          });
-          AppLogger.i(
-            '  Updated like notification for post $postId with likers: $likers',
-          );
-          return;
-        }
-      } catch (e) {
-        AppLogger.w('⚠️  Error checking existing notifications: $e');
-      }
-
-      await notificationRef.add({
+      await notifDoc.set({
         'title': 'New Like',
         'message': '$likerName liked your post',
         'type': 'info',
@@ -860,10 +833,11 @@ class SocialRepository {
         'isRead': false,
         'actionType': 'post',
         'actionData': postId,
-        'likers': [likerName],
-      });
+        'likers': FieldValue.arrayUnion([likerName]),
+      }, SetOptions(merge: true));
+
       AppLogger.i(
-        '  Created new like notification for post $postId from $likerName',
+        '  Like notification updated for post $postId from $likerName',
       );
     } catch (e) {
       AppLogger.e('Error sending like notification: $e');
@@ -895,16 +869,6 @@ class SocialRepository {
       AppLogger.e('Error sending comment notification: $e');
       rethrow;
     }
-  }
-
-  String _buildLikeMessage(List<String> likers) {
-    if (likers.isEmpty) return 'Someone liked your post';
-    if (likers.length == 1) return '${likers[0]} liked your post';
-    if (likers.length == 2) {
-      return '${likers[0]} and ${likers[1]} liked your post';
-    }
-    final others = likers.length - 2;
-    return '${likers[0]}, ${likers[1]}, and $others others liked your post';
   }
 }
 

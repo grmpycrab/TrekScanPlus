@@ -1,50 +1,77 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'signup_screen.dart';
-import 'forgot_password_screen.dart';
-import '../../theme/color.dart';
-import '../../services/firebase_auth_service.dart';
-import '../../components/error_feedback.dart';
+import 'login_screen.dart';
+import 'email_verification_screen.dart';
+import 'additional_information.dart';
+import '../../../theme/color.dart';
+import '../../../services/firebase_auth_service.dart';
+import '../../../components/error_feedback.dart';
 
 // ignore_for_file: use_key_in_widget_constructors, deprecated_member_use, use_build_context_synchronously
-class LoginScreen extends StatefulWidget {
-  const LoginScreen({super.key});
+class SignUpScreen extends StatefulWidget {
+  const SignUpScreen({super.key});
 
   @override
-  State<LoginScreen> createState() => _LoginScreenState();
+  State<SignUpScreen> createState() => _SignUpScreenState();
 }
 
-class _LoginScreenState extends State<LoginScreen> {
+class _SignUpScreenState extends State<SignUpScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
+  final _confirmPasswordController = TextEditingController();
   bool _isLoading = false;
   bool _obscurePassword = true;
+  bool _obscureConfirmPassword = true;
+  bool _agreeToTerms = false;
   String? _errorMessage;
 
   @override
   void dispose() {
     _emailController.dispose();
     _passwordController.dispose();
+    _confirmPasswordController.dispose();
     super.dispose();
   }
 
-  Future<void> _handleLogin() async {
+  Future<void> _handleSignUp() async {
+    if (!_agreeToTerms) {
+      ErrorHandler.showErrorSnackBar(
+        context,
+        'Please agree to the terms and conditions',
+        type: ErrorType.warning,
+      );
+      return;
+    }
+
+    if (_passwordController.text != _confirmPasswordController.text) {
+      ErrorHandler.showErrorSnackBar(
+        context,
+        'Passwords do not match',
+        type: ErrorType.warning,
+      );
+      return;
+    }
+
     setState(() {
       _isLoading = true;
       _errorMessage = null;
     });
 
     try {
-      await FirebaseAuthService.instance.logIn(
+      await FirebaseAuthService.instance.signUp(
         email: _emailController.text.trim(),
         password: _passwordController.text.trim(),
       );
-
-      // DO NOTHING HERE
-      // AuthViewModel + AuthGate will handle navigation
+      if (mounted) {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (context) => const EmailVerificationScreen(),
+          ),
+        );
+      }
     } catch (e) {
       final errorMessage = ErrorHandler.getErrorMessage(e.toString());
-
       setState(() {
         _errorMessage = errorMessage;
       });
@@ -101,7 +128,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
                   // Welcome text
                   const Text(
-                    'Welcome Back!',
+                    'Create Account',
                     style: TextStyle(
                       fontSize: 32,
                       fontWeight: FontWeight.bold,
@@ -110,7 +137,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                   const SizedBox(height: 8),
                   const Text(
-                    'Sign in to continue your adventure',
+                    'Start your trekking journey today',
                     style: TextStyle(
                       fontSize: 16,
                       color: AppColors.textSecondary,
@@ -131,7 +158,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                   if (_errorMessage != null) const SizedBox(height: 20),
 
-                  // Login form card
+                  // Signup form card
                   Container(
                     padding: const EdgeInsets.all(24),
                     decoration: BoxDecoration(
@@ -186,7 +213,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           enabled: !_isLoading,
                           obscureText: _obscurePassword,
                           decoration: InputDecoration(
-                            hintText: 'Enter your password',
+                            hintText: 'Create a password',
                             labelText: 'Password',
                             prefixIcon: const Icon(Icons.lock_outline),
                             filled: true,
@@ -223,36 +250,92 @@ class _LoginScreenState extends State<LoginScreen> {
                             ),
                           ),
                         ),
+                        const SizedBox(height: 20),
 
-                        // Forgot password
-                        Align(
-                          alignment: Alignment.centerRight,
-                          child: TextButton(
-                            onPressed: _isLoading
-                                ? null
-                                : () {
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (context) =>
-                                            const ForgotPasswordScreen(),
-                                      ),
-                                    );
-                                  },
-                            child: const Text(
-                              'Forgot password?',
-                              style: TextStyle(
-                                color: AppColors.primary,
-                                fontWeight: FontWeight.w600,
+                        // Confirm password field
+                        TextFormField(
+                          controller: _confirmPasswordController,
+                          enabled: !_isLoading,
+                          obscureText: _obscureConfirmPassword,
+                          decoration: InputDecoration(
+                            hintText: 'Confirm your password',
+                            labelText: 'Confirm Password',
+                            prefixIcon: const Icon(Icons.lock_outline),
+                            filled: true,
+                            fillColor: Color(0xFFFAFAFA),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: BorderSide.none,
+                            ),
+                            enabledBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: BorderSide(
+                                color: AppColors.borderLight,
                               ),
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: const BorderSide(
+                                color: AppColors.primary,
+                                width: 2,
+                              ),
+                            ),
+                            suffixIcon: IconButton(
+                              icon: Icon(
+                                _obscureConfirmPassword
+                                    ? Icons.visibility_off_outlined
+                                    : Icons.visibility_outlined,
+                                color: AppColors.textSecondary,
+                              ),
+                              onPressed: () {
+                                setState(() {
+                                  _obscureConfirmPassword =
+                                      !_obscureConfirmPassword;
+                                });
+                              },
                             ),
                           ),
                         ),
-                        const SizedBox(height: 8),
+                        const SizedBox(height: 16),
 
-                        // Login button
+                        // Terms checkbox
+                        Row(
+                          children: [
+                            SizedBox(
+                              height: 24,
+                              width: 24,
+                              child: Checkbox(
+                                value: _agreeToTerms,
+                                onChanged: _isLoading
+                                    ? null
+                                    : (value) {
+                                        setState(() {
+                                          _agreeToTerms = value ?? false;
+                                        });
+                                      },
+                                activeColor: AppColors.primary,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(4),
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Text(
+                                'I agree to the Terms & Conditions',
+                                style: TextStyle(
+                                  color: AppColors.textSecondary,
+                                  fontSize: 14,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 24),
+
+                        // Sign up button
                         ElevatedButton(
-                          onPressed: _isLoading ? null : _handleLogin,
+                          onPressed: _isLoading ? null : _handleSignUp,
                           style: ElevatedButton.styleFrom(
                             backgroundColor: AppColors.primary,
                             padding: const EdgeInsets.symmetric(vertical: 16),
@@ -273,7 +356,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                   ),
                                 )
                               : const Text(
-                                  'Login',
+                                  'Sign up',
                                   style: TextStyle(
                                     color: SharedColors.white,
                                     fontSize: 16,
@@ -319,8 +402,13 @@ class _LoginScreenState extends State<LoginScreen> {
                                         .instance
                                         .signInWithGoogle();
                                     if (user != null && mounted) {
-                                      await FirebaseAuthService.instance
-                                          .signInWithGoogle();
+                                      Navigator.pushReplacement(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (context) =>
+                                              const AdditionalInformationScreen(),
+                                        ),
+                                      );
                                     } else if (mounted) {
                                       setState(() {
                                         _isLoading = false;
@@ -382,12 +470,12 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                   const SizedBox(height: 32),
 
-                  // Sign up link
+                  // Sign in link
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Text(
-                        "Don't have an account? ",
+                        'Already have an account? ',
                         style: TextStyle(color: AppColors.textSecondary),
                       ),
                       TextButton(
@@ -397,12 +485,12 @@ class _LoginScreenState extends State<LoginScreen> {
                                 Navigator.pushReplacement(
                                   context,
                                   MaterialPageRoute(
-                                    builder: (context) => const SignUpScreen(),
+                                    builder: (context) => const LoginScreen(),
                                   ),
                                 );
                               },
                         child: const Text(
-                          'Sign up',
+                          'Sign in',
                           style: TextStyle(
                             color: AppColors.primary,
                             fontWeight: FontWeight.bold,
