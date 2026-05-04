@@ -4,37 +4,21 @@ import 'package:hamiguitan_trekscan_plus/features/social/models/social_model.dar
 import 'package:hamiguitan_trekscan_plus/features/social/repositories/social_repository.dart';
 import 'package:hamiguitan_trekscan_plus/features/social/widgets/comments_sheet.dart';
 import 'package:hamiguitan_trekscan_plus/features/social/widgets/create_post_sheet.dart';
-import 'package:hamiguitan_trekscan_plus/features/social/widgets/social_card.dart';
-import 'notification_screen.dart';
 import '../../components/event_calendar.dart';
 import '../../components/connectivity_banner.dart';
 import '../../components/app_dialogue_handler.dart';
-//import '../../components/create_post.dart';
-//import '../../components/comments_sheet.dart';
 import '../../components/do_and_dont.dart';
 import '../../components/trek_tips.dart';
 import '../../components/banner_slideshow.dart';
-import '../../components/profile_avatar_with_status.dart';
-import '../../services/presence_service.dart';
-import '../../models/calendar_model.dart';
-//import '../../models/social_model.dart';
 import '../../theme/color.dart';
-import '../../services/firebase_auth_service.dart';
-import '../../services/user_service.dart';
-//import '../../services/social_sharing_service.dart';
-import '../../services/feed_pagination_service.dart';
-import '../../services/calendar_config_service.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'dart:async';
 import 'profile_screen.dart';
-import '../../utils/image_cache_manager.dart';
 import '../../utils/app_logger.dart';
-
-//TODO: Refactor HomeScreen into separate widgets and viewmodels, e.g. HomeHeader, SocialFeed, etc. to reduce complexity and improve maintainability. HomeScreen should ideally just compose these widgets and manage high-level state like user authentication and calendar data.
-//TODO: Implement proper error handling and loading states for feed loading, calendar loading, etc. Currently there are some basic loading indicators but they could be improved with better UX and error messages.
-//TODO: Add analytics tracking for key user interactions on the home screen (e.g. post likes, calendar views, etc.) to gather insights on user behavior and improve the app over time.
-// TODO: Remove any unused imports and code (e.g. social sharing service, old create post dialog) to keep the codebase clean and maintainable.
+import '../../utils/image_cache_manager.dart';
+import '../../features/home/viewmodels/home_view_model.dart';
+import '../../features/home/widgets/home_header.dart';
+import '../../features/home/widgets/home_social_feed.dart';
+import '../../features/home/widgets/home_action_buttons.dart';
 
 class HomeScreen extends StatefulWidget {
   final Function(DateTime)? onNavigateToBooking;
@@ -47,51 +31,27 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen>
     with SingleTickerProviderStateMixin {
-  //int _selectedNavIndex = 0;
-  late ValueNotifier<List<TrekDay>> _trekDaysNotifier;
-  User? _firebaseUser;
-  StreamSubscription<User?>? _authSubscription;
-  StreamSubscription<QuerySnapshot>? _bookingsSubscription;
-  final UserService _userService = UserService.instance;
+  late final HomeViewModel _viewModel;
 
-  // Search functionality
+  // Search
   bool _isSearchExpanded = false;
   final TextEditingController _searchController = TextEditingController();
   final FocusNode _searchFocusNode = FocusNode();
   String _searchQuery = '';
 
-  // FAB expansion
-  bool _isFabExpanded = false;
-
   // Banner animation
   late AnimationController _bannerAnimationController;
   late Animation<double> _bannerSlideAnimation;
 
-  // Collapsible sections
+  // Collapsible sections toggle
   bool _areSectionsVisible = true;
-
-  // Pagination variables for optimized feed loading
-  final List<SocialPost> _loadedPosts = [];
-  bool _isLoadingMore = false;
-  bool _hasMorePosts = true;
-  late ScrollController _feedScrollController;
-  final FeedPaginationService _paginationService =
-      FeedPaginationService.instance;
 
   @override
   void initState() {
     super.initState();
-    _initializeTrekDays();
-    _firebaseUser = FirebaseAuthService.instance.currentUser;
 
-    // Initialize pagination scroll controller
-    _feedScrollController = ScrollController();
-    _feedScrollController.addListener(_onFeedScroll);
+    _viewModel = HomeViewModel();
 
-    // Load first page of posts
-    _loadFirstPageOfPosts();
-
-    // Initialize banner animation controller
     _bannerAnimationController = AnimationController(
       duration: const Duration(milliseconds: 300),
       vsync: this,
@@ -102,15 +62,6 @@ class _HomeScreenState extends State<HomeScreen>
         curve: Curves.easeInOut,
       ),
     );
-    _authSubscription = FirebaseAuthService.instance.authStateChanges.listen((
-      user,
-    ) {
-      setState(() {
-        _firebaseUser = user;
-      });
-    });
-    // Subscribe to bookings for the current month to update calendar availability
-    _subscribeBookingsForMonth(DateTime.now());
 
     _searchController.addListener(() {
       setState(() {
@@ -120,648 +71,68 @@ class _HomeScreenState extends State<HomeScreen>
   }
 
   @override
-  void dispose() {
-    _authSubscription?.cancel();
-    _bookingsSubscription?.cancel();
-    _trekDaysNotifier.dispose();
-    _searchController.dispose();
-    _searchFocusNode.dispose();
-    _bannerAnimationController.dispose();
-    _feedScrollController.dispose();
-
-    super.dispose();
-  }
-
-  void _initializeTrekDays() {
-    // Sample trek days for the current month
-    final now = DateTime.now();
-    final daysInMonth = DateTime(now.year, now.month + 1, 0).day;
-
-    // Initialize with closed status; real statuses will be set when bookings
-    // snapshot is received.
-    final initialDays = List.generate(daysInMonth, (index) {
-      final date = DateTime(now.year, now.month, index + 1);
-      final isResearchDay = date.weekday == DateTime.wednesday;
-      return TrekDay(
-        date: date,
-        status: TrekDayStatus.closed,
-        isResearchDay: isResearchDay,
-        bookedSlots: 0,
-      );
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _viewModel.addListener(_onViewModelChanged);
+    _viewModel.initialize();
+    // Load first page and preload images in the widget layer where
+    // a valid BuildContext is available.
+    _viewModel.loadFirstPage().then((_) {
+      if (!mounted) return;
+      for (int i = 0; i < _viewModel.loadedPosts.length && i < 3; i++) {
+        final urls = _viewModel.loadedPosts[i].imageUrls;
+        if (urls.isNotEmpty) {
+          ImageCacheManager.preloadImages(urls, context);
+        }
+      }
     });
-    _trekDaysNotifier = ValueNotifier(initialDays);
   }
 
-  void _subscribeBookingsForMonth(DateTime month) {
-    _bookingsSubscription?.cancel();
-    final firstDay = DateTime(month.year, month.month, 1);
-    final lastDay = DateTime(month.year, month.month + 1, 0, 23, 59, 59);
-
-    final startTs = Timestamp.fromDate(
-      DateTime(firstDay.year, firstDay.month, firstDay.day),
-    );
-    final endTs = Timestamp.fromDate(lastDay);
-
-    _bookingsSubscription = FirebaseFirestore.instance
-        .collection('bookings')
-        .where('status', isEqualTo: 'approved')
-        .where('trekDate', isGreaterThanOrEqualTo: startTs)
-        .where('trekDate', isLessThanOrEqualTo: endTs)
-        .snapshots()
-        .listen((snap) async {
-          // Map date -> booked slots. Count each booking as 1 + numberOfPorters
-          // Only count approved bookings - pending bookings don't reserve slots
-          final Map<String, int> slotsPerDay = {};
-
-          for (final doc in snap.docs) {
-            final data = doc.data();
-            final status = (data['status'] as String?)?.toLowerCase() ?? '';
-
-            // Only count approved bookings toward the slot limit
-            if (status != 'approved') continue;
-
-            final Timestamp? t = data['trekDate'] as Timestamp?;
-            if (t == null) continue;
-            final d = t.toDate();
-            final key =
-                '${d.year}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
-            // Only count trekker, not porters
-            final used = 1;
-            slotsPerDay[key] = (slotsPerDay[key] ?? 0) + used;
-          }
-
-          // Get calendar configuration for the month
-          final calendarService = CalendarConfigService();
-          final systemSettings = await calendarService.getSystemSettings();
-          final defaultMaxSlots =
-              systemSettings['defaultMaxSlots'] as int? ?? 30;
-          final criticalThreshold =
-              systemSettings['criticalThreshold'] as int? ?? 5;
-
-          // Get date configs for the month
-          final dateConfigMap = await calendarService.getDateRangeConfig(
-            firstDay,
-            lastDay,
-          );
-
-          // Rebuild trekDays for the month using calendar config
-          // Use ValueNotifier instead of setState to avoid rebuilding social feed
-          final now = month;
-          final daysInMonth = DateTime(now.year, now.month + 1, 0).day;
-
-          // Check if widget is still mounted before updating notifier
-          if (!mounted) return;
-
-          _trekDaysNotifier.value = List.generate(daysInMonth, (index) {
-            final date = DateTime(now.year, now.month, index + 1);
-            final key =
-                '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
-            final booked = slotsPerDay[key] ?? 0;
-            final dateConfig = dateConfigMap[key];
-
-            // Get max slots for this date (date-specific or system default)
-            final maxSlots = dateConfig?.maxSlots ?? defaultMaxSlots;
-            var isClosed = dateConfig?.isClosed ?? false;
-            var closureReason = dateConfig?.reason;
-
-            // Buffer days are now stored directly in Firebase calendar_config
-            // with isTrekDownDay flag, so they come through dateConfig
-
-            final isResearchDay = date.weekday == DateTime.wednesday;
-
-            // Use factory method to create TrekDay with proper status
-            return TrekDay.fromBookingData(
-              date: date,
-              bookedSlots: booked,
-              maxSlots: maxSlots,
-              criticalThreshold: criticalThreshold,
-              isClosed: isClosed,
-              closureReason: closureReason,
-              isResearchDay: isResearchDay,
-            );
-          });
-        });
+  void _onViewModelChanged() {
+    if (mounted) setState(() {});
   }
 
   @override
-  Widget build(BuildContext context) {
-    // Set status bar color to match header
-    SystemChrome.setSystemUIOverlayStyle(
-      SystemUiOverlayStyle(
-        statusBarColor: Colors.white,
-        statusBarIconBrightness: Brightness.dark,
-        statusBarBrightness: Brightness.light,
-      ),
-    );
-
-    return Scaffold(
-      backgroundColor: AppColors.background,
-      body: SafeArea(
-        child: Column(
-          children: [
-            const ConnectivityBanner(),
-            _buildHeader(),
-            _buildCollapsibleSections(),
-            _buildSectionToggle(),
-            Expanded(
-              child: RefreshIndicator(
-                onRefresh: _refreshAll,
-                child: _buildSocialFeed(),
-              ),
-            ),
-          ],
-        ),
-      ),
-      floatingActionButton: _firebaseUser != null
-          ? _buildExpandableFab()
-          : null,
-    );
+  void dispose() {
+    _viewModel.removeListener(_onViewModelChanged);
+    _viewModel.dispose();
+    _searchController.dispose();
+    _searchFocusNode.dispose();
+    _bannerAnimationController.dispose();
+    super.dispose();
   }
 
-  Widget _buildExpandableFab() {
-    return StatefulBuilder(
-      builder: (context, setFabState) {
-        return Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.end,
-          children: [
-            // Calendar button (animated)
-            AnimatedSwitcher(
-              duration: const Duration(milliseconds: 200),
-              switchInCurve: Curves.easeOut,
-              switchOutCurve: Curves.easeIn,
-              transitionBuilder: (child, animation) {
-                final offsetAnim = Tween<Offset>(
-                  begin: const Offset(0, 0.2),
-                  end: Offset.zero,
-                ).animate(animation);
-                return FadeTransition(
-                  opacity: animation,
-                  child: SlideTransition(position: offsetAnim, child: child),
-                );
-              },
-              child: _isFabExpanded
-                  ? Container(
-                      key: const ValueKey('calendar_row'),
-                      margin: const EdgeInsets.only(bottom: 16),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          AnimatedSlide(
-                            duration: const Duration(milliseconds: 220),
-                            curve: Curves.easeOut,
-                            offset: _isFabExpanded
-                                ? Offset.zero
-                                : const Offset(0.25, 0),
-                            child: AnimatedOpacity(
-                              duration: const Duration(milliseconds: 220),
-                              curve: Curves.easeOut,
-                              opacity: _isFabExpanded ? 1 : 0,
-                              child: Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 12,
-                                  vertical: 6,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: SharedColors.white,
-                                  borderRadius: BorderRadius.circular(8),
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: Colors.black.withValues(
-                                        alpha: 0.1,
-                                      ),
-                                      blurRadius: 8,
-                                      offset: const Offset(0, 2),
-                                    ),
-                                  ],
-                                ),
-                                child: const Text(
-                                  'View Calendar',
-                                  style: TextStyle(
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.w500,
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                          FloatingActionButton(
-                            heroTag: 'calendar_fab',
-                            onPressed: () {
-                              setFabState(() {
-                                _isFabExpanded = false;
-                              });
-                              _showCalendarOverlay();
-                            },
-                            backgroundColor: AppColors.primary,
-                            child: Image.asset(
-                              'assets/icons/calendar.png',
-                              width: 24,
-                              height: 24,
-                              color: Colors.white,
-                            ),
-                          ),
-                        ],
-                      ),
-                    )
-                  : const SizedBox.shrink(key: ValueKey('calendar_row_empty')),
-            ),
-            // Create post button (animated)
-            AnimatedSwitcher(
-              duration: const Duration(milliseconds: 200),
-              switchInCurve: Curves.easeOut,
-              switchOutCurve: Curves.easeIn,
-              transitionBuilder: (child, animation) {
-                final offsetAnim = Tween<Offset>(
-                  begin: const Offset(0, 0.2),
-                  end: Offset.zero,
-                ).animate(animation);
-                return FadeTransition(
-                  opacity: animation,
-                  child: SlideTransition(position: offsetAnim, child: child),
-                );
-              },
-              child: _isFabExpanded
-                  ? Container(
-                      key: const ValueKey('create_row'),
-                      margin: const EdgeInsets.only(bottom: 16),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          AnimatedSlide(
-                            duration: const Duration(milliseconds: 220),
-                            curve: Curves.easeOut,
-                            offset: _isFabExpanded
-                                ? Offset.zero
-                                : const Offset(0.25, 0),
-                            child: AnimatedOpacity(
-                              duration: const Duration(milliseconds: 220),
-                              curve: Curves.easeOut,
-                              opacity: _isFabExpanded ? 1 : 0,
-                              child: Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 12,
-                                  vertical: 6,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: SharedColors.white,
-                                  borderRadius: BorderRadius.circular(8),
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: Colors.black.withValues(
-                                        alpha: 0.1,
-                                      ),
-                                      blurRadius: 8,
-                                      offset: const Offset(0, 2),
-                                    ),
-                                  ],
-                                ),
-                                child: const Text(
-                                  'Create Post',
-                                  style: TextStyle(
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.w500,
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                          FloatingActionButton(
-                            heroTag: 'create_post_fab',
-                            onPressed: () {
-                              setFabState(() {
-                                _isFabExpanded = false;
-                              });
-                              _showCreatePostDialog();
-                            },
-                            backgroundColor: AppColors.primary,
-                            child: const Icon(Icons.edit, color: Colors.white),
-                          ),
-                        ],
-                      ),
-                    )
-                  : const SizedBox.shrink(key: ValueKey('create_row_empty')),
-            ),
-            // Main FAB
-            FloatingActionButton(
-              heroTag: 'main_fab',
-              onPressed: () {
-                setFabState(() {
-                  _isFabExpanded = !_isFabExpanded;
-                });
-              },
-              backgroundColor: AppColors.primary,
-              child: AnimatedRotation(
-                turns: _isFabExpanded ? 0.125 : 0.0,
-                duration: const Duration(milliseconds: 200),
-                child: Icon(
-                  _isFabExpanded ? Icons.close : Icons.add,
-                  color: Colors.white,
-                ),
-              ),
-            ),
-          ],
-        );
-      },
-    );
-  }
-
-  Widget _buildHeader() {
-    return StatefulBuilder(
-      builder: (context, setHeaderState) {
-        return Column(
-          children: [
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
-              color: Colors.white,
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  if (!_isSearchExpanded)
-                    Expanded(
-                      child: GestureDetector(
-                        onTap: () {
-                          Navigator.of(context).push(
-                            MaterialPageRoute(
-                              builder: (context) => const ProfileScreen(),
-                            ),
-                          );
-                        },
-                        child: _firebaseUser != null
-                            ? StreamBuilder<
-                                DocumentSnapshot<Map<String, dynamic>>
-                              >(
-                                stream: _userService.streamUser(
-                                  _firebaseUser!.uid,
-                                ),
-                                builder: (context, snapshot) {
-                                  String firstName = '';
-                                  String lastName = '';
-
-                                  if (snapshot.hasData &&
-                                      snapshot.data != null) {
-                                    final userData =
-                                        snapshot.data!.data() ?? {};
-                                    firstName = userData['firstName'] ?? '';
-                                    lastName = userData['lastName'] ?? '';
-                                  }
-
-                                  // Fallback to Firebase displayName if no Firestore data
-                                  if (firstName.isEmpty && lastName.isEmpty) {
-                                    firstName =
-                                        _firebaseUser!.displayName ??
-                                        _firebaseUser!.email
-                                            ?.split('@')
-                                            .first ??
-                                        'Traveler';
-                                  }
-
-                                  return Row(
-                                    children: [
-                                      ProfileAvatarWithStatus(
-                                        userId: _firebaseUser!.uid,
-                                        photoUrl: _firebaseUser?.photoURL,
-                                        radius: 20,
-                                      ),
-                                      const SizedBox(width: 4),
-                                      Expanded(
-                                        child: Column(
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.start,
-                                          children: [
-                                            const Text(
-                                              'Welcome,',
-                                              style: TextStyle(
-                                                color: AppColors.textSecondary,
-                                                fontSize: 12,
-                                              ),
-                                            ),
-                                            Text(
-                                              firstName.isNotEmpty
-                                                  ? '$firstName ${lastName.isNotEmpty ? lastName : ''}'
-                                                        .trim()
-                                                  : 'Traveler!',
-                                              style: const TextStyle(
-                                                fontWeight: FontWeight.w600,
-                                                fontSize: 14,
-                                              ),
-                                              maxLines: 1,
-                                              overflow: TextOverflow.ellipsis,
-                                            ),
-                                            StreamBuilder<bool>(
-                                              stream: PresenceService.instance
-                                                  .userOnlineStatus(
-                                                    _firebaseUser!.uid,
-                                                  ),
-                                              builder: (context, snapshot) {
-                                                final isOnline =
-                                                    snapshot.data ?? false;
-                                                return Text(
-                                                  isOnline
-                                                      ? 'Online'
-                                                      : 'Offline',
-                                                  style: TextStyle(
-                                                    color: isOnline
-                                                        ? Colors.green
-                                                        : Colors.red,
-                                                    fontSize: 10,
-                                                    fontWeight: FontWeight.w500,
-                                                  ),
-                                                );
-                                              },
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                    ],
-                                  );
-                                },
-                              )
-                            : Row(
-                                children: [
-                                  CircleAvatar(
-                                    backgroundColor: AppColors.primary,
-                                    child: const Icon(
-                                      Icons.person,
-                                      color: AppColors.primary,
-                                    ),
-                                  ),
-                                  const SizedBox(width: 12),
-                                  Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: const [
-                                      Text(
-                                        'Welcome,',
-                                        style: TextStyle(
-                                          color: AppColors.textSecondary,
-                                          fontSize: 14,
-                                        ),
-                                      ),
-                                      Text(
-                                        'Traveler!',
-                                        style: TextStyle(
-                                          fontWeight: FontWeight.w600,
-                                          fontSize: 14,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ],
-                              ),
-                      ),
-                    ),
-                  if (_isSearchExpanded)
-                    Expanded(
-                      child: TextField(
-                        controller: _searchController,
-                        focusNode: _searchFocusNode,
-                        decoration: InputDecoration(
-                          hintText: 'Search posts and users...',
-                          hintStyle: TextStyle(color: AppColors.textSecondary),
-                          border: InputBorder.none,
-                          contentPadding: const EdgeInsets.symmetric(
-                            horizontal: 16,
-                          ),
-                        ),
-                        style: const TextStyle(fontSize: 14),
-                      ),
-                    ),
-                  Row(
-                    children: [
-                      IconButton(
-                        icon: _isSearchExpanded
-                            ? Icon(
-                                Icons.close,
-                                size: 20,
-                                color: AppColors.primary,
-                              )
-                            : Image.asset(
-                                'assets/icons/search.png',
-                                width: 20,
-                                height: 20,
-                                color: _searchQuery.isNotEmpty
-                                    ? AppColors.primary
-                                    : Colors.black,
-                              ),
-                        tooltip: _isSearchExpanded
-                            ? 'Close search'
-                            : 'Search posts',
-                        onPressed: _toggleSearch,
-                      ),
-                      if (!_isSearchExpanded)
-                        Stack(
-                          children: [
-                            IconButton(
-                              icon: Image.asset(
-                                'assets/icons/bell.png',
-                                width: 20,
-                                height: 20,
-                                color: Colors.black,
-                              ),
-                              onPressed: () {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) =>
-                                        const NotificationScreen(),
-                                  ),
-                                );
-                              },
-                            ),
-                            // Show red dot only when there are unread notifications for the signed-in user
-                            if (_firebaseUser != null)
-                              StreamBuilder<
-                                QuerySnapshot<Map<String, dynamic>>
-                              >(
-                                stream: FirebaseFirestore.instance
-                                    .collection('users')
-                                    .doc(_firebaseUser!.uid)
-                                    .collection('notifications')
-                                    .where('isRead', isEqualTo: false)
-                                    .limit(1)
-                                    .snapshots(),
-                                builder: (context, snapshot) {
-                                  if (_firebaseUser == null) {
-                                    return const SizedBox.shrink();
-                                  }
-                                  final hasUnread =
-                                      snapshot.hasData &&
-                                      snapshot.data!.docs.isNotEmpty;
-                                  return hasUnread
-                                      ? const Positioned(
-                                          right: 12,
-                                          top: 12,
-                                          child: SizedBox(
-                                            width: 8,
-                                            height: 8,
-                                            child: DecoratedBox(
-                                              decoration: BoxDecoration(
-                                                color:
-                                                    AppColors.notificationDot,
-                                                shape: BoxShape.circle,
-                                              ),
-                                            ),
-                                          ),
-                                        )
-                                      : const SizedBox.shrink();
-                                },
-                              ),
-                          ],
-                        ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-          ],
-        );
-      },
-    );
-  }
+  // -- Helpers --------------------------------------------------------------
 
   void _toggleSearch() {
     _isSearchExpanded = !_isSearchExpanded;
     if (_isSearchExpanded) {
-      // Hide banner with slide up animation (FAB remains independent)
       _bannerAnimationController.forward();
       Future.delayed(const Duration(milliseconds: 100), () {
-        if (mounted) {
-          _searchFocusNode.requestFocus();
-        }
+        if (mounted) _searchFocusNode.requestFocus();
       });
     } else {
-      // Show banner with slide down animation (FAB remains independent)
       _bannerAnimationController.reverse();
       _searchController.clear();
       _searchFocusNode.unfocus();
     }
-    // Force header rebuild only - FAB state remains unchanged
-    if (mounted) {
-      setState(() {});
-    }
+    if (mounted) setState(() {});
   }
 
   void _showCalendarOverlay() {
+    _viewModel.trackCalendarViewed();
     showDialog(
       context: context,
       barrierDismissible: true,
       builder: (context) {
-        return ValueListenableBuilder<List<TrekDay>>(
-          valueListenable: _trekDaysNotifier,
+        return ValueListenableBuilder(
+          valueListenable: _viewModel.trekDaysNotifier,
           builder: (context, trekDays, _) {
             return EventCalendar(
               trekDays: trekDays,
               onDaySelected: (date) {
-                // Close the calendar dialog
                 Navigator.of(context).pop();
-
-                // Switch to booking tab with selected date
-                if (widget.onNavigateToBooking != null) {
-                  widget.onNavigateToBooking!(date);
-                }
+                widget.onNavigateToBooking?.call(date);
               },
             );
           },
@@ -770,95 +141,129 @@ class _HomeScreenState extends State<HomeScreen>
     );
   }
 
-  /// Pull-to-refresh handler for the Home screen. Performs a one-time
-  /// query for the current month and updates the calendar immediately.
-  Future<void> _refreshAll() async {
-    final month = DateTime.now();
-    final firstDay = DateTime(month.year, month.month, 1);
-    final lastDay = DateTime(month.year, month.month + 1, 0, 23, 59, 59);
-
-    final startTs = Timestamp.fromDate(
-      DateTime(firstDay.year, firstDay.month, firstDay.day),
+  void _showCreatePostDialog() {
+    _viewModel.trackPostCreated();
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => CreatePostSheet(
+        onPostCreated: () => AppLogger.i('Post created successfully'),
+      ),
     );
-    final endTs = Timestamp.fromDate(lastDay);
-
-    // Cancel current subscription to avoid stale data
-    _bookingsSubscription?.cancel();
-
-    final snap = await FirebaseFirestore.instance
-        .collection('bookings')
-        .where('status', isEqualTo: 'approved')
-        .where('trekDate', isGreaterThanOrEqualTo: startTs)
-        .where('trekDate', isLessThanOrEqualTo: endTs)
-        .get();
-
-    final Map<String, int> slotsPerDay = {};
-
-    for (final doc in snap.docs) {
-      final data = doc.data();
-      final status = (data['status'] as String?)?.toLowerCase() ?? '';
-
-      // Only count approved bookings - pending bookings don't reserve slots
-      if (status != 'approved') continue;
-
-      final Timestamp? t = data['trekDate'] as Timestamp?;
-      if (t == null) continue;
-      final d = t.toDate();
-      final key =
-          '${d.year}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
-      // Only count trekker, not porters
-      final used = 1;
-      slotsPerDay[key] = (slotsPerDay[key] ?? 0) + used;
-    }
-
-    // Get calendar configuration for the month
-    final calendarService = CalendarConfigService();
-    final systemSettings = await calendarService.getSystemSettings();
-    final defaultMaxSlots = systemSettings['defaultMaxSlots'] as int? ?? 30;
-    final criticalThreshold = systemSettings['criticalThreshold'] as int? ?? 5;
-
-    // Get date configs for the month
-    final dateConfigMap = await calendarService.getDateRangeConfig(
-      firstDay,
-      lastDay,
-    );
-
-    if (!mounted) return;
-    // Use ValueNotifier instead of setState to avoid rebuilding social feed
-    final now = month;
-    final daysInMonth = DateTime(now.year, now.month + 1, 0).day;
-    _trekDaysNotifier.value = List.generate(daysInMonth, (index) {
-      final date = DateTime(now.year, now.month, index + 1);
-      final key =
-          '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
-      final booked = slotsPerDay[key] ?? 0;
-      final dateConfig = dateConfigMap[key];
-
-      // Get max slots for this date (date-specific or system default)
-      final maxSlots = dateConfig?.maxSlots ?? defaultMaxSlots;
-      var isClosed = dateConfig?.isClosed ?? false;
-      var closureReason = dateConfig?.reason;
-
-      // Buffer days are now stored directly in Firebase calendar_config
-      // with isTrekDownDay flag, so they come through dateConfig
-
-      final isResearchDay = date.weekday == DateTime.wednesday;
-
-      // Use factory method to create TrekDay with proper status
-      return TrekDay.fromBookingData(
-        date: date,
-        bookedSlots: booked,
-        maxSlots: maxSlots,
-        criticalThreshold: criticalThreshold,
-        isClosed: isClosed,
-        closureReason: closureReason,
-        isResearchDay: isResearchDay,
-      );
-    });
-
-    // Re-subscribe to live updates for the month
-    _subscribeBookingsForMonth(month);
   }
+
+  void _showCommentsDialog(SocialPost post) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => CommentsSheet(postId: post.id!, post: post),
+    );
+  }
+
+  Future<void> _handleDeletePost(SocialPost post) async {
+    if (post.id == null) return;
+
+    final confirmed = await AppDialogueHandler.showConfirmation(
+      context: context,
+      title: 'Delete Post',
+      message: 'Are you sure you want to delete this post?',
+      confirmText: 'Delete',
+      cancelText: 'Cancel',
+      isDestructive: true,
+    );
+
+    if (confirmed == true) {
+      try {
+        await SocialSharingService.instance.deletePost(post.id!);
+        if (mounted) {
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(const SnackBar(content: Text('Post deleted')));
+        }
+      } catch (e) {
+        if (mounted) {
+          await AppDialogueHandler.showError(
+            context: context,
+            title: 'Delete Failed',
+            message: 'Unable to delete post. Please try again.',
+          );
+        }
+      }
+    }
+  }
+
+  Future<void> _refreshAll() async {
+    try {
+      await _viewModel.refreshAll();
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Error refreshing: $e')));
+      }
+    }
+  }
+
+  // -- Build -----------------------------------------------------------------
+
+  @override
+  Widget build(BuildContext context) {
+    SystemChrome.setSystemUIOverlayStyle(
+      const SystemUiOverlayStyle(
+        statusBarColor: Colors.white,
+        statusBarIconBrightness: Brightness.dark,
+        statusBarBrightness: Brightness.light,
+      ),
+    );
+
+    final user = _viewModel.firebaseUser;
+
+    return Scaffold(
+      backgroundColor: AppColors.background,
+      body: SafeArea(
+        child: Column(
+          children: [
+            const ConnectivityBanner(),
+            HomeHeader(
+              userId: user?.uid,
+              userPhotoUrl: user?.photoURL,
+              isSearchExpanded: _isSearchExpanded,
+              searchController: _searchController,
+              searchFocusNode: _searchFocusNode,
+              searchQuery: _searchQuery,
+              onToggleSearch: _toggleSearch,
+              onProfileTap: () => Navigator.of(
+                context,
+              ).push(MaterialPageRoute(builder: (_) => const ProfileScreen())),
+            ),
+            _buildCollapsibleSections(),
+            _buildSectionToggle(),
+            Expanded(
+              child: RefreshIndicator(
+                onRefresh: _refreshAll,
+                child: HomeSocialFeed(
+                  viewModel: _viewModel,
+                  searchQuery: _searchQuery,
+                  onShowComments: _showCommentsDialog,
+                  onDeletePost: _handleDeletePost,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+      floatingActionButton: user != null
+          ? HomeActionButtons(
+              onCreatePost: _showCreatePostDialog,
+              onShowCalendar: _showCalendarOverlay,
+            )
+          : null,
+    );
+  }
+
+  // -- Collapsible banner + info buttons -------------------------------------
 
   Widget _buildCollapsibleSections() {
     return AnimatedContainer(
@@ -963,7 +368,11 @@ class _HomeScreenState extends State<HomeScreen>
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
               ),
-              onTap: () => _showDosAndDontsOverlay(),
+              onTap: () => showDialog(
+                context: context,
+                barrierDismissible: true,
+                builder: (_) => const DoAndDontOverlay(),
+              ),
             ),
           ),
           const SizedBox(width: 12),
@@ -971,12 +380,16 @@ class _HomeScreenState extends State<HomeScreen>
             child: _buildInfoButton(
               title: 'Tips & Tricks',
               icon: Icons.lightbulb_outline,
-              gradient: LinearGradient(
-                colors: [AppColors.accent, const Color(0xFF053821)],
+              gradient: const LinearGradient(
+                colors: [AppColors.accent, Color(0xFF053821)],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
               ),
-              onTap: () => _showTipsAndTricksOverlay(),
+              onTap: () => showDialog(
+                context: context,
+                barrierDismissible: true,
+                builder: (_) => const TrekTipsOverlay(),
+              ),
             ),
           ),
         ],
@@ -1030,308 +443,5 @@ class _HomeScreenState extends State<HomeScreen>
         ),
       ),
     );
-  }
-
-  void _showDosAndDontsOverlay() {
-    showDialog(
-      context: context,
-      barrierDismissible: true,
-      builder: (context) => const DoAndDontOverlay(),
-    );
-  }
-
-  Widget _buildSocialFeed() {
-    if (_firebaseUser == null) {
-      return const Padding(
-        padding: EdgeInsets.all(16),
-        child: Center(child: Text('Sign in to view posts')),
-      );
-    }
-
-    // Show loading if no posts loaded yet
-    if (_loadedPosts.isEmpty) {
-      return const Padding(
-        padding: EdgeInsets.all(16),
-        child: Center(child: CircularProgressIndicator()),
-      );
-    }
-
-    // Filter posts based on search query
-    final filteredPosts = _searchQuery.isEmpty
-        ? _loadedPosts
-        : _loadedPosts.where((post) {
-            final captionMatch = post.caption.toLowerCase().contains(
-              _searchQuery,
-            );
-            final userNameMatch = post.userName.toLowerCase().contains(
-              _searchQuery,
-            );
-            return captionMatch || userNameMatch;
-          }).toList();
-
-    return ListView.builder(
-      controller: _feedScrollController,
-      padding: const EdgeInsets.symmetric(
-        vertical: 8,
-      ).copyWith(top: 20, bottom: 30),
-      itemCount:
-          filteredPosts.length +
-          (filteredPosts.isEmpty ? 1 : 0) +
-          (_isLoadingMore ? 1 : 0), // Add loading indicator at bottom
-      itemBuilder: (context, index) {
-        // Show "Community Feed" header
-        if (index == 0) {
-          return Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            child: Row(
-              children: [
-                const Text(
-                  'Community Feed',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                ),
-                if (_isLoadingMore)
-                  const Padding(
-                    padding: EdgeInsets.only(left: 12),
-                    child: SizedBox(
-                      width: 16,
-                      height: 16,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        valueColor: AlwaysStoppedAnimation<Color>(Colors.grey),
-                      ),
-                    ),
-                  ),
-              ],
-            ),
-          );
-        }
-
-        // Show "no posts found" message
-        if (filteredPosts.isEmpty) {
-          return Padding(
-            padding: const EdgeInsets.all(16),
-            child: Center(
-              child: Text(
-                _searchQuery.isNotEmpty
-                    ? 'No posts found for "$_searchQuery"'
-                    : 'No posts yet. Be the first to share your experience!',
-                style: TextStyle(color: AppColors.textSecondary),
-              ),
-            ),
-          );
-        }
-
-        // Show loading indicator at bottom
-        if (index == filteredPosts.length + 1) {
-          return Padding(
-            padding: const EdgeInsets.all(16),
-            child: Center(
-              child: _isLoadingMore
-                  ? const CircularProgressIndicator()
-                  : _hasMorePosts
-                  ? ElevatedButton(
-                      onPressed: _loadNextPageOfPosts,
-                      child: const Text('Load More Posts'),
-                    )
-                  : Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(
-                            Icons.sentiment_satisfied_alt,
-                            size: 48,
-                            color: Colors.grey[400],
-                          ),
-                          const SizedBox(height: 16),
-                          Text(
-                            'You\'ve reached the end!',
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w600,
-                              color: AppColors.textSecondary,
-                            ),
-                            textAlign: TextAlign.center,
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            'Share your Hamiguitan adventure to inspire others',
-                            style: TextStyle(
-                              fontSize: 14,
-                              color: Colors.grey[500],
-                            ),
-                            textAlign: TextAlign.center,
-                          ),
-                          const SizedBox(height: 20),
-                          ElevatedButton.icon(
-                            onPressed: () {
-                              // Navigate to post creation
-                              // This assumes you have a navigation method or FAB
-                            },
-                            icon: const Icon(Icons.add),
-                            label: const Text('Share Your Experience'),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: AppColors.accent,
-                              foregroundColor: Colors.white,
-                            ),
-                          ),
-                          const SizedBox(height: 24),
-                        ],
-                      ),
-                    ),
-            ),
-          );
-        }
-
-        final post = filteredPosts[index - 1];
-
-        return Padding(
-          key: ValueKey(post.id ?? index),
-          padding: const EdgeInsets.symmetric(horizontal: 16),
-          child: SocialCard(
-            post: post,
-            onCommentTap: () => _showCommentsDialog(post),
-            onDelete: () => _handleDeletePost(post),
-          ),
-        );
-      },
-    );
-  }
-
-  /// Load the first page of posts (pagination)
-  Future<void> _loadFirstPageOfPosts() async {
-    try {
-      AppLogger.i('Loading first page of posts...');
-      final (posts, hasMore) = await _paginationService
-          .loadPublicPostsFirstPage();
-
-      if (mounted) {
-        setState(() {
-          _loadedPosts.clear();
-          _loadedPosts.addAll(posts);
-          _hasMorePosts = hasMore;
-          _isLoadingMore = false;
-        });
-      }
-
-      // Preload first 3 images for better UX
-      for (int i = 0; i < _loadedPosts.length && i < 3; i++) {
-        if (_loadedPosts[i].imageUrls.isNotEmpty && mounted) {
-          ImageCacheManager.preloadImages(_loadedPosts[i].imageUrls, context);
-        }
-      }
-
-      AppLogger.i('  First page loaded: ${posts.length} posts');
-    } catch (e) {
-      AppLogger.e('Error loading first page: $e');
-      if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Error loading posts: $e')));
-      }
-    }
-  }
-
-  /// Load next page of posts when user scrolls near bottom
-  Future<void> _loadNextPageOfPosts() async {
-    if (_isLoadingMore || !_hasMorePosts) return;
-
-    setState(() => _isLoadingMore = true);
-
-    try {
-      AppLogger.i('Loading next page of posts...');
-      final (posts, hasMore) = await _paginationService
-          .loadPublicPostsNextPage();
-
-      if (mounted) {
-        setState(() {
-          _loadedPosts.addAll(posts);
-          _hasMorePosts = hasMore;
-          _isLoadingMore = false;
-        });
-      }
-
-      AppLogger.i('  Next page loaded: ${posts.length} new posts');
-    } catch (e) {
-      AppLogger.e('Error loading next page: $e');
-      if (mounted) {
-        setState(() => _isLoadingMore = false);
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Error loading more posts: $e')));
-      }
-    }
-  }
-
-  /// Detect when user scrolls near bottom and load more posts
-  void _onFeedScroll() {
-    if (_feedScrollController.position.pixels >
-        _feedScrollController.position.maxScrollExtent - 500) {
-      // User is near the bottom, load more posts
-      _loadNextPageOfPosts();
-    }
-  }
-
-  void _showTipsAndTricksOverlay() {
-    showDialog(
-      context: context,
-      barrierDismissible: true,
-      builder: (context) => const TrekTipsOverlay(),
-    );
-  }
-
-  void _showCreatePostDialog() {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (context) => CreatePostSheet(
-        onPostCreated: () {
-          // Optionally refresh the feed or show a notification
-          AppLogger.i('Post created successfully');
-        },
-      ),
-    );
-  }
-
-  void _showCommentsDialog(SocialPost post) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (context) => CommentsSheet(postId: post.id!, post: post),
-    );
-  }
-
-  Future<void> _handleDeletePost(SocialPost post) async {
-    if (post.id == null) return;
-
-    final confirmed = await AppDialogueHandler.showConfirmation(
-      context: context,
-      title: 'Delete Post',
-      message: 'Are you sure you want to delete this post?',
-      confirmText: 'Delete',
-      cancelText: 'Cancel',
-      isDestructive: true,
-    );
-
-    if (confirmed == true) {
-      try {
-        await SocialSharingService.instance.deletePost(post.id!);
-        if (mounted) {
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(const SnackBar(content: Text('Post deleted')));
-        }
-      } catch (e) {
-        if (mounted) {
-          await AppDialogueHandler.showError(
-            context: context,
-            title: 'Delete Failed',
-            message: 'Unable to delete post. Please try again.',
-          );
-        }
-      }
-    }
   }
 }
