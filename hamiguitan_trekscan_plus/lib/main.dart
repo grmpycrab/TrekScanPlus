@@ -63,6 +63,9 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
         home: SplashScreen(),
       );
     }
-    return AuthGate(onServicesInitNeeded: _controller.initializeUserServices);
+    return AuthGate(
+      onServicesInitNeeded: _controller.initializeUserServices,
+      onLogout: _controller.resetForLogout,
+    );
   }
 }

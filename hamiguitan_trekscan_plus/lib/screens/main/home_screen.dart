@@ -1,23 +1,27 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:hamiguitan_trekscan_plus/features/social/models/social_model.dart';
+import 'package:hamiguitan_trekscan_plus/features/social/repositories/social_repository.dart';
+import 'package:hamiguitan_trekscan_plus/features/social/widgets/comments_sheet.dart';
+import 'package:hamiguitan_trekscan_plus/features/social/widgets/create_post_sheet.dart';
+import 'package:hamiguitan_trekscan_plus/features/social/widgets/social_card.dart';
 import 'notification_screen.dart';
 import '../../components/event_calendar.dart';
 import '../../components/connectivity_banner.dart';
-import '../../components/social_card.dart';
 import '../../components/app_dialogue_handler.dart';
-import '../../components/create_post.dart';
-import '../../components/comments_sheet.dart';
+//import '../../components/create_post.dart';
+//import '../../components/comments_sheet.dart';
 import '../../components/do_and_dont.dart';
 import '../../components/trek_tips.dart';
 import '../../components/banner_slideshow.dart';
 import '../../components/profile_avatar_with_status.dart';
 import '../../services/presence_service.dart';
 import '../../models/calendar_model.dart';
-import '../../models/social_model.dart';
+//import '../../models/social_model.dart';
 import '../../theme/color.dart';
 import '../../services/firebase_auth_service.dart';
 import '../../services/user_service.dart';
-import '../../services/social_sharing_service.dart';
+//import '../../services/social_sharing_service.dart';
 import '../../services/feed_pagination_service.dart';
 import '../../services/calendar_config_service.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -26,6 +30,11 @@ import 'dart:async';
 import 'profile_screen.dart';
 import '../../utils/image_cache_manager.dart';
 import '../../utils/app_logger.dart';
+
+//TODO: Refactor HomeScreen into separate widgets and viewmodels, e.g. HomeHeader, SocialFeed, etc. to reduce complexity and improve maintainability. HomeScreen should ideally just compose these widgets and manage high-level state like user authentication and calendar data.
+//TODO: Implement proper error handling and loading states for feed loading, calendar loading, etc. Currently there are some basic loading indicators but they could be improved with better UX and error messages.
+//TODO: Add analytics tracking for key user interactions on the home screen (e.g. post likes, calendar views, etc.) to gather insights on user behavior and improve the app over time.
+// TODO: Remove any unused imports and code (e.g. social sharing service, old create post dialog) to keep the codebase clean and maintainable.
 
 class HomeScreen extends StatefulWidget {
   final Function(DateTime)? onNavigateToBooking;

@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:hamiguitan_trekscan_plus/features/social/models/social_model.dart';
 //import 'package:flutter/foundation.dart';
-import '../models/social_model.dart';
+//import '../models/social_model.dart';
 import '../utils/app_logger.dart';
 
 /// Manages paginated feed loading with in-memory caching

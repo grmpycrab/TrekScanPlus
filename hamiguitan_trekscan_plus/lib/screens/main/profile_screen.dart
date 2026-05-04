@@ -1,22 +1,22 @@
 // ignore_for_file: use_build_context_synchronously
 
 import 'package:flutter/material.dart';
+import 'package:hamiguitan_trekscan_plus/features/social/models/social_model.dart';
+import 'package:hamiguitan_trekscan_plus/features/social/repositories/social_repository.dart';
+import 'package:hamiguitan_trekscan_plus/features/social/screens/favorites_screen.dart';
+import 'package:hamiguitan_trekscan_plus/features/social/widgets/social_card.dart';
 import '../../models/user_model.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../services/firebase_auth_service.dart';
 import '../../services/achievement_service.dart';
 import '../../services/user_service.dart';
-import '../../services/social_sharing_service.dart';
 import '../../services/e_certificate_service.dart';
 import '../../services/station_service.dart';
-import '../../models/social_model.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import '../../components/social_card.dart';
 import '../../components/e_certificate_badge.dart';
 import '../../components/app_dialogue_handler.dart';
 import '../../theme/color.dart';
 import '../../utils/app_logger.dart';
-import 'favorites_screen.dart';
 import 'settings_screen.dart';
 import '../settings/account_settings.dart';
 
