@@ -11,7 +11,6 @@ import '../settings/appearance_settings.dart';
 import '../settings/archived_bookings_screen.dart';
 import '../../services/firebase_auth_service.dart';
 import '../../services/onboarding_service.dart';
-import '../auth/login_screen.dart';
 import '../../components/app_dialogue_handler.dart';
 
 class SettingsScreen extends StatefulWidget {
@@ -35,13 +34,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
     if (confirmed == true) {
       try {
         await FirebaseAuthService.instance.signOut();
-        if (mounted) {
-          Navigator.pushAndRemoveUntil(
-            context,
-            MaterialPageRoute(builder: (context) => const LoginScreen()),
-            (route) => false,
-          );
-        }
+        // AuthGate reacts to AuthViewModel.unauthenticated and navigates
+        // to LoginScreen automatically — no manual push needed here.
       } catch (e) {
         if (mounted) {
           await AppDialogueHandler.showError(

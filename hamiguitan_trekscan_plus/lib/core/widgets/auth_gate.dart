@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../../config/app_router.dart';
 import '../viewmodels/auth_view_model.dart';
 import '../../screens/auth/login_screen.dart';
 import '../../screens/auth/email_verification_screen.dart';
@@ -39,27 +40,68 @@ class AuthGate extends StatefulWidget {
 
 class _AuthGateState extends State<AuthGate> {
   bool _serviceInitFired = false;
+  AuthStatus? _prevStatus;
+
+  /// Called on every Consumer rebuild. Detects status transitions and
+  /// drives navigation imperatively via [navigatorKey] so that any
+  /// existing navigator stack is correctly replaced — not just the
+  /// MaterialApp.home property (which only affects the initial route).
+  void _handleStatusTransition(AuthViewModel vm) {
+    if (vm.status == _prevStatus) return;
+    final incoming = vm.status;
+    _prevStatus = incoming;
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+
+      // Fire lifecycle callbacks once per transition
+      if (incoming == AuthStatus.authenticated &&
+          vm.userId != null &&
+          !_serviceInitFired) {
+        _serviceInitFired = true;
+        widget.onServicesInitNeeded?.call(vm.userId!);
+      }
+      if (incoming == AuthStatus.unauthenticated) {
+        _serviceInitFired = false;
+        widget.onLogout?.call();
+      }
+
+      // Imperative navigation — works regardless of what is currently
+      // on the navigator stack (e.g. after a manual pushAndRemoveUntil
+      // in a settings screen, or after a cold start).
+      final nav = navigatorKey.currentState;
+      if (nav == null) return;
+      switch (incoming) {
+        case AuthStatus.unauthenticated:
+          nav.pushAndRemoveUntil(
+            MaterialPageRoute(builder: (_) => const LoginScreen()),
+            (route) => false,
+          );
+        case AuthStatus.unverified:
+          nav.pushAndRemoveUntil(
+            MaterialPageRoute(builder: (_) => const EmailVerificationScreen()),
+            (route) => false,
+          );
+        case AuthStatus.authenticated:
+          nav.pushAndRemoveUntil(
+            MaterialPageRoute(builder: (_) => const MainScreen()),
+            (route) => false,
+          );
+        case AuthStatus.loading:
+          break;
+      }
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
     return Consumer<AuthViewModel>(
       builder: (context, vm, _) {
-        // Fire service init once when user becomes authenticated
-        if (vm.status == AuthStatus.authenticated &&
-            vm.userId != null &&
-            !_serviceInitFired) {
-          _serviceInitFired = true;
-          WidgetsBinding.instance.addPostFrameCallback((_) {
-            if (mounted) widget.onServicesInitNeeded?.call(vm.userId!);
-          });
-        }
+        _handleStatusTransition(vm);
 
-        // Reset flag when user signs out so next login re-initialises services
-        if (vm.status == AuthStatus.unauthenticated) {
-          _serviceInitFired = false;
-          widget.onLogout?.call();
-        }
-
+        // The switch below provides the correct initial screen on cold
+        // start (before navigatorKey has a state). Subsequent transitions
+        // are handled imperatively in _handleStatusTransition.
         return switch (vm.status) {
           AuthStatus.loading => AppShell(
             home: const Scaffold(

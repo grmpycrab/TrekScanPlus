@@ -12,7 +12,7 @@ import 'package:firebase_storage/firebase_storage.dart';
 import 'package:file_picker/file_picker.dart';
 import '../models/booking_model.dart';
 import '../models/notification_model.dart';
-import 'notification_services.dart';
+import 'FirestoreNotificationService.dart';
 import 'fcm_service.dart';
 import 'notification_manager.dart';
 import 'e_certificate_service.dart';
@@ -48,7 +48,7 @@ class BookingService {
 
   final _firestore = FirebaseFirestore.instance;
   final _storage = FirebaseStorage.instance;
-  final _notificationService = NotificationService();
+  final _notificationService = InAppNotificationService();
 
   /// Check if user already has an active booking on the same date
   /// Returns true if an active (non-cancelled) booking exists for that date, false otherwise

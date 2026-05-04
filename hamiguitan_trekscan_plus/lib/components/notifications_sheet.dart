@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../models/notification_model.dart';
-import '../services/notification_services.dart';
+import '../services/FirestoreNotificationService.dart';
 import '../screens/main/main_screen.dart';
 import '../theme/color.dart';
 import 'app_dialogue_handler.dart';
@@ -17,7 +17,7 @@ class NotificationsSheet extends StatefulWidget {
 }
 
 class _NotificationsSheetState extends State<NotificationsSheet> {
-  final _notificationService = NotificationService();
+  final _notificationService = InAppNotificationService();
   bool _isSelectionMode = false;
   final Set<String> _selectedNotifications = {};
 

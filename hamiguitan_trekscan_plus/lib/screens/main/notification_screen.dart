@@ -2,7 +2,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import '../../theme/color.dart';
 import '../../models/notification_model.dart';
-import '../../services/notification_services.dart';
+import '../../services/FirestoreNotificationService.dart';
 import '../../services/user_service.dart';
 import '../../components/app_dialogue_handler.dart';
 import 'main_screen.dart';
@@ -15,7 +15,7 @@ class NotificationScreen extends StatefulWidget {
 }
 
 class _NotificationScreenState extends State<NotificationScreen> {
-  final NotificationService _service = NotificationService();
+  final InAppNotificationService _service = InAppNotificationService();
   final UserService _userService = UserService.instance;
   bool _isSelectionMode = false;
   final Set<String> _selectedNotifications = {};

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
+import '../services/FirestoreNotificationService.dart';
 import '../models/notification_model.dart';
-import '../services/notification_services.dart';
 import 'notifications_sheet.dart';
 
 class NotificationIcon extends StatefulWidget {
@@ -13,7 +13,7 @@ class NotificationIcon extends StatefulWidget {
 }
 
 class _NotificationIconState extends State<NotificationIcon> {
-  final _notificationService = NotificationService();
+  final _notificationService = InAppNotificationService();
 
   @override
   Widget build(BuildContext context) {
