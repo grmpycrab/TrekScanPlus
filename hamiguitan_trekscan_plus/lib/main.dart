@@ -1,99 +1,17 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/foundation.dart' show kDebugMode;
-import 'package:firebase_core/firebase_core.dart';
-import 'package:firebase_app_check/firebase_app_check.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'dart:async';
-import 'package:firebase_messaging/firebase_messaging.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'package:app_links/app_links.dart';
-import 'package:provider/provider.dart';
-import 'firebase_options.dart';
-import 'utils/app_logger.dart';
-import 'screens/auth/login_screen.dart';
-import 'screens/auth/signup_screen.dart';
-import 'screens/auth/email_verification_screen.dart';
-import 'screens/main/main_screen.dart';
-import 'features/booking/screens/book_a_climb_screen.dart';
-import 'screens/social/post_detail_screen.dart';
-import 'screens/splash_screen.dart';
-import 'services/firebase_auth_service.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-import 'services/station_service.dart';
-import 'services/connectivity_service.dart';
-import 'services/booking_service.dart';
-import 'services/permission_service.dart';
-import 'services/fcm_service.dart';
-import 'services/notification_manager.dart';
-import 'services/presence_service.dart';
-import 'services/notification_service.dart';
-import 'services/theme_service.dart';
-import 'services/app_theme_builder.dart';
-import 'services/climb_session_service.dart';
-import 'components/notification_banner.dart';
 
-// Global navigator key for deep linking
-final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
+import 'config/app_init.dart';
+import 'core/app_startup_controller.dart';
+import 'core/providers/app_providers.dart';
+import 'core/widgets/auth_gate.dart';
+
+import 'services/presence_service.dart';
+import 'screens/splash_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-
-  // Initialize only essential services (parallel operations)
-  await Future.wait([
-    ThemeService().initialize(),
-    dotenv.load(fileName: ".env"),
-  ]);
-
-  // Configure logging for cleaner output
-  AppLogger.setLogLevel(
-    LogLevel.info,
-  ); // Only show INFO and above (suppress DEBUG/VERBOSE)
-  AppLogger.suppressTag('GoogleApiManager');
-  AppLogger.suppressTag('FlagStore');
-  AppLogger.suppressTag('FlagRegistrar');
-
-  // Start lightweight connectivity monitoring
-  ConnectivityService.instance.start();
-
-  // Initialize Firebase (MUST complete before running app)
-  try {
-    await Firebase.initializeApp(
-      options: DefaultFirebaseOptions.currentPlatform,
-    );
-    AppLogger.i('  Firebase initialized successfully');
-
-    // Activate App Check to secure Firebase Storage and Firestore
-    // Use debug provider on dev builds, Play Integrity on release
-    await FirebaseAppCheck.instance.activate(
-      androidProvider: kDebugMode
-          ? AndroidProvider.debug
-          : AndroidProvider.playIntegrity,
-    );
-    AppLogger.i('  App Check activated');
-
-    // Enable Firestore offline persistence and caching
-    try {
-      final firestore = FirebaseFirestore.instance;
-      // Enable offline persistence (already enabled by default on mobile)
-      // Set cache size to 100 MB for better caching of frequently accessed data
-      firestore.settings = const Settings(
-        persistenceEnabled: true,
-        cacheSizeBytes: 104857600, // 100 MB cache
-      );
-      AppLogger.d('  Firestore offline persistence and caching enabled');
-    } catch (e) {
-      AppLogger.w('Could not configure Firestore caching: $e');
-    }
-  } catch (e) {
-    AppLogger.e('Firebase init error: $e');
-    // Don't continue if Firebase fails - it's critical for auth
-    rethrow;
-  }
-
-  // Run app - Firebase is guaranteed to be ready
-  runApp(
-    ChangeNotifierProvider(create: (_) => ThemeService(), child: const MyApp()),
-  );
+  await AppInit.initialize();
+  runApp(AppProviders(child: const MyApp()));
 }
 
 class MyApp extends StatefulWidget {
@@ -104,8 +22,7 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
-  bool _permissionsRequested = false;
-  bool _servicesInitialized = false;
+  late final AppStartupController _controller;
   bool _showSplash = true;
 
   @override
@@ -113,62 +30,16 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
 
-    // Hide splash screen quickly
+    _controller = AppStartupController(
+      isMounted: () => mounted,
+      getContext: () => context,
+    );
+
     Future.delayed(const Duration(milliseconds: 1200), () {
-      if (mounted) {
-        setState(() {
-          _showSplash = false;
-        });
-      }
+      if (mounted) setState(() => _showSplash = false);
     });
 
-    // Listen to auth changes (Firebase is ready)
-    try {
-      FirebaseAuthService.instance.authStateChanges.listen((user) async {
-        if (user != null) {
-          // Initialize ClimbSessionService for any authenticated user (verified or not)
-          // This allows app to work even if email verification is pending
-          WidgetsBinding.instance.addPostFrameCallback((_) {
-            _initializeVerifiedUserServices(user.uid);
-          });
-
-          // Check if user is verified for additional verification-only services
-          final isVerified = await FirebaseAuthService.instance
-              .isEmailVerified();
-          if (isVerified) {
-            // Additional services for verified users can go here if needed
-            AppLogger.i('  User email verified');
-          } else {
-            AppLogger.i('User email not yet verified');
-          }
-        } else {
-          // User logged out, reset flags
-          _servicesInitialized = false;
-          _permissionsRequested = false;
-        }
-      });
-    } catch (e) {
-      AppLogger.w('Auth listener error: $e');
-    }
-
-    // Initialize ClimbSessionService immediately in offline mode if no user
-    // This ensures the app works even before auth listener fires
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!ClimbSessionService.isInitialized &&
-          FirebaseAuth.instance.currentUser == null) {
-        AppLogger.i('Initializing ClimbSessionService in offline mode...');
-        _initializeVerifiedUserServices(
-          'offline_${DateTime.now().millisecondsSinceEpoch}',
-        );
-      }
-    });
-
-    // Defer all heavy initialization to after frame is rendered
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _initializeCriticalServices();
-      _deferredInitializeStations();
-      _deferredHandleDeepLinks();
-    });
+    WidgetsBinding.instance.addPostFrameCallback((_) => _controller.start());
   }
 
   @override
@@ -181,360 +52,17 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     super.didChangeAppLifecycleState(state);
-    final user = FirebaseAuth.instance.currentUser;
-
-    if (user != null) {
-      if (state == AppLifecycleState.paused ||
-          state == AppLifecycleState.detached) {
-        // App going to background or closing
-        PresenceService.instance.markOffline(user.uid);
-      } else if (state == AppLifecycleState.resumed) {
-        // App coming back to foreground
-        PresenceService.instance.initialize();
-      }
-    }
-  }
-
-  /// Initialize critical services asynchronously
-  Future<void> _initializeCriticalServices() async {
-    // Run these in background without blocking UI
-    unawaited(
-      Future.delayed(const Duration(milliseconds: 500), () async {
-        try {
-          await NotificationService().initialize();
-          PresenceService.instance.initialize();
-        } catch (e) {
-          AppLogger.w('Non-critical service initialization: $e (offline mode)');
-        }
-      }),
-    );
-  }
-
-  /// Initialize services for verified users
-  Future<void> _initializeVerifiedUserServices(String userId) async {
-    if (_servicesInitialized) return;
-
-    AppLogger.i('Initializing services for verified user: $userId');
-
-    // Initialize ClimbSessionService with user ID (offline-first)
-    try {
-      await ClimbSessionService.init(userId: userId);
-      AppLogger.i('  ClimbSessionService initialized (offline-first)');
-    } catch (e) {
-      AppLogger.w('ClimbSessionService: $e (offline mode available)');
-    }
-
-    // Start booking listener in background (non-blocking)
-    unawaited(
-      Future.delayed(const Duration(milliseconds: 300), () async {
-        try {
-          BookingService.instance.startBookingStatusListener(userId);
-        } catch (e) {
-          AppLogger.w('Booking service: $e');
-        }
-      }),
-    );
-
-    // Initialize FCM and notifications in background
-    unawaited(_initializeFCM());
-    unawaited(
-      Future.microtask(() => NotificationService().listenToBookingUpdates()),
-    );
-
-    if (!_permissionsRequested) {
-      _permissionsRequested = true;
-      // Defer permission requests to avoid blocking startup
-      unawaited(
-        Future.delayed(const Duration(milliseconds: 1000), () {
-          if (mounted) _requestPermissions();
-        }),
-      );
-    }
-
-    _servicesInitialized = true;
-  }
-
-  Future<void> _initializeFCM() async {
-    try {
-      await FCMService().initialize(
-        onMessageReceived: (message) {
-          // Show in-app banner for foreground notifications
-          final title = message.notification?.title ?? 'Notification';
-          final body = message.notification?.body ?? '';
-          final actionType = message.data['actionType'] as String?;
-
-          // Determine notification type based on actionType
-          final notificationType = _getNotificationType(actionType);
-
-          if (notificationType == NotificationBannerType.success) {
-            NotificationManager.showSuccess(title: title, message: body);
-          } else if (notificationType == NotificationBannerType.warning) {
-            NotificationManager.showWarning(title: title, message: body);
-          } else if (notificationType == NotificationBannerType.error) {
-            NotificationManager.showError(title: title, message: body);
-          } else {
-            NotificationManager.showInfo(title: title, message: body);
-          }
-        },
-        onMessageOpened: (message) {
-          // Handle navigation when notification is tapped
-          AppLogger.d('Notification opened: ${message.data}');
-          _handleNotificationNavigation(message);
-        },
-      );
-      AppLogger.i('FCM initialized successfully');
-    } catch (e) {
-      AppLogger.e('FCM initialization error: $e');
-    }
-  }
-
-  NotificationBannerType _getNotificationType(String? actionType) {
-    return switch (actionType) {
-      'booking_approved' => NotificationBannerType.success,
-      'booking_rejected' => NotificationBannerType.error,
-      'booking_pending' => NotificationBannerType.warning,
-      'follow_request' => NotificationBannerType.info,
-      'post_liked' => NotificationBannerType.success,
-      'post_commented' => NotificationBannerType.info,
-      _ => NotificationBannerType.info,
-    };
-  }
-
-  void _handleNotificationNavigation(RemoteMessage message) {
-    final actionType = message.data['actionType'] as String?;
-    final actionData = message.data['actionData'] as String?;
-
-    AppLogger.d('ActionType: $actionType, ActionData: $actionData');
-
-    if (actionType == 'post' && actionData != null) {
-      Navigator.pushNamed(context, '/post-detail', arguments: actionData);
-    } else if (actionType == 'booking' && actionData != null) {
-      Navigator.pushNamed(context, '/book-climb', arguments: actionData);
-    } else if (actionType?.startsWith('booking_') == true) {
-      // Navigate to booking tab in MainScreen
-      Navigator.pushReplacementNamed(context, '/main');
-    }
-  }
-
-  /// Handle deep link when app is launched from closed state
-  Future<void> _handleInitialDeepLink() async {
-    try {
-      final appLinks = AppLinks();
-      final link = await appLinks.getInitialLink();
-      if (link != null) {
-        AppLogger.d('[DeepLink] Initial link: $link');
-        _handleDeepLink(link.toString());
-      }
-    } catch (e) {
-      AppLogger.e('[DeepLink] Error getting initial link: $e');
-    }
-  }
-
-  /// Listen for deep links when app is running
-  void _listenToDeepLinks() {
-    final appLinks = AppLinks();
-    appLinks.uriLinkStream.listen(
-      (Uri link) {
-        AppLogger.d('[DeepLink] Received link: $link');
-        _handleDeepLink(link.toString());
-      },
-      onError: (err) {
-        AppLogger.e('[DeepLink] Stream error: $err');
-      },
-    );
-  }
-
-  /// Route user to the correct screen based on deep link
-  void _handleDeepLink(String link) {
-    try {
-      final uri = Uri.parse(link);
-      AppLogger.d(
-        '[DeepLink] Parsed URI - scheme: ${uri.scheme}, path: ${uri.path}, host: ${uri.host}',
-      );
-
-      // Handle both https://trekscanplus.app/posts/{postId} and trekscanplus://posts/{postId}
-      String? postId;
-
-      if (uri.scheme == 'https' && uri.host == 'trekscanplus.app') {
-        // Handle https://trekscanplus.app/posts/{postId}
-        if (uri.path.startsWith('/posts/')) {
-          postId = uri.path.replaceFirst('/posts/', '');
-        }
-      } else if (uri.scheme == 'trekscanplus') {
-        // Handle trekscanplus://posts/{postId}
-        if (uri.host == 'posts' && uri.path.isNotEmpty) {
-          postId = uri.path.replaceFirst('/', '');
-        }
-      }
-
-      if (postId != null && postId.isNotEmpty) {
-        AppLogger.d('[DeepLink] Navigating to post: $postId');
-        navigatorKey.currentState?.pushNamed('/post-detail', arguments: postId);
-      } else {
-        AppLogger.w('[DeepLink] Could not extract postId from link');
-      }
-    } catch (e) {
-      AppLogger.e('[DeepLink] Error handling deep link: $e');
-    }
-  }
-
-  Future<void> _requestPermissions() async {
-    if (mounted) {
-      try {
-        await PermissionService.instance.requestInitialPermissions(context);
-      } catch (e) {
-        AppLogger.e('Permission request error: $e');
-      }
-    }
+    _controller.handleLifecycle(state);
   }
 
   @override
   Widget build(BuildContext context) {
-    // Show splash screen on initial load
     if (_showSplash) {
       return const MaterialApp(
         debugShowCheckedModeBanner: false,
         home: SplashScreen(),
       );
     }
-
-    return _buildMainApp();
-  }
-
-  Widget _buildMainApp() {
-    return StreamBuilder<User?>(
-      stream: FirebaseAuthService.instance.authStateChanges,
-      initialData: FirebaseAuthService.instance.currentUser,
-      builder: (context, snapshot) {
-        final user = snapshot.data;
-
-        // Show loading screen while checking auth state
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return MaterialApp(
-            debugShowCheckedModeBanner: false,
-            home: const Scaffold(
-              body: Center(child: CircularProgressIndicator()),
-            ),
-          );
-        }
-
-        // No user logged in
-        if (user == null) {
-          return _buildApp(const LoginScreen());
-        }
-
-        // User logged in, check verification status
-        return FutureBuilder<bool>(
-          future: FirebaseAuthService.instance.isEmailVerified(),
-          builder: (context, verificationSnapshot) {
-            if (verificationSnapshot.connectionState ==
-                ConnectionState.waiting) {
-              return _buildApp(
-                const Scaffold(
-                  body: Center(child: CircularProgressIndicator()),
-                ),
-              );
-            }
-
-            final isVerified = verificationSnapshot.data ?? false;
-            final isEmailPasswordUser = user.providerData.any(
-              (info) => info.providerId == 'password',
-            );
-
-            Widget initialScreen;
-            if (isEmailPasswordUser && !isVerified) {
-              // Email not verified, show verification screen
-              initialScreen = const EmailVerificationScreen();
-            } else {
-              // Email verified or Google user, show main screen
-              // Initialize services for verified users
-              if (isVerified) {
-                WidgetsBinding.instance.addPostFrameCallback((_) {
-                  _initializeVerifiedUserServices(user.uid);
-                });
-              }
-              initialScreen = const MainScreen();
-            }
-
-            return _buildApp(initialScreen);
-          },
-        );
-      },
-    );
-  }
-
-  Widget _buildApp(Widget home) {
-    return Consumer<ThemeService>(
-      builder: (context, themeService, _) {
-        final themeData = AppThemeBuilder.getThemeData(
-          themeService.selectedTheme,
-          themeService.selectedMode,
-        );
-
-        return MaterialApp(
-          debugShowCheckedModeBanner: false,
-          title: 'Hamiguitan TrekScan+',
-          navigatorKey: navigatorKey,
-          theme: themeData,
-          builder: (context, child) => Stack(
-            children: [
-              child!,
-              NotificationBannerOverlay(key: NotificationManager.overlayKey),
-            ],
-          ),
-          home: home,
-          routes: {
-            '/login': (context) => const LoginScreen(),
-            '/signup': (context) => const SignUpScreen(),
-            '/verify-email': (context) => const EmailVerificationScreen(),
-            '/main': (context) => const MainScreen(),
-          },
-          onGenerateRoute: (settings) {
-            // Handle routes with arguments
-            if (settings.name == '/post-detail') {
-              final postId = settings.arguments as String?;
-              if (postId != null) {
-                return MaterialPageRoute(
-                  builder: (context) => PostDetailScreen(postId: postId),
-                );
-              }
-            }
-
-            // Handle book-climb route with optional bookingId argument
-            if (settings.name == '/book-climb') {
-              final bookingId = settings.arguments as String?;
-              return MaterialPageRoute(
-                builder: (context) =>
-                    BookAClimbScreenRefactored(highlightBookingId: bookingId),
-              );
-            }
-
-            return null;
-          },
-        );
-      },
-    );
-  }
-
-  /// Deferred station initialization (happens after UI is rendered)
-  void _deferredInitializeStations() {
-    unawaited(
-      Future.microtask(() async {
-        try {
-          AppLogger.d('Loading stations in background...');
-          final stationService = await StationService.init();
-          await stationService.loadStations();
-          AppLogger.i('Stations loaded successfully');
-        } catch (error) {
-          AppLogger.e('Failed to load stations: $error');
-        }
-      }),
-    );
-  }
-
-  /// Deferred deep link initialization (happens after UI is rendered)
-  void _deferredHandleDeepLinks() {
-    unawaited(_handleInitialDeepLink());
-    _listenToDeepLinks();
+    return AuthGate(onServicesInitNeeded: _controller.initializeUserServices);
   }
 }
