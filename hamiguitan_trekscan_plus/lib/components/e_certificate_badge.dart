@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../theme/new_color.dart';
+import '../theme/app_theme.dart';
 import '../services/e_certificate_service.dart';
 import '../services/certificate_pdf_service.dart';
 import '../services/permission_service.dart';
@@ -72,6 +72,7 @@ class ECertificateBadge extends StatelessWidget {
     BuildContext context,
     List<ECertificate> certificates,
   ) {
+    final colors = context.colors;
     showModalBottomSheet(
       context: context,
       builder: (context) => Container(
@@ -92,7 +93,7 @@ class ECertificateBadge extends StatelessWidget {
                 width: 40,
                 height: 4,
                 decoration: BoxDecoration(
-                  color: AppColors.border,
+                  color: colors.border,
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
@@ -117,7 +118,7 @@ class ECertificateBadge extends StatelessWidget {
             // Certificates list
             Expanded(
               child: certificates.isEmpty
-                  ? _buildEmptyState()
+                  ? _buildEmptyState(colors)
                   : ListView.builder(
                       padding: const EdgeInsets.symmetric(horizontal: 16),
                       itemCount: certificates.length,
@@ -136,7 +137,7 @@ class ECertificateBadge extends StatelessWidget {
   }
 
   Widget _buildCertificateCard(BuildContext context, ECertificate certificate) {
-    final colors = _getCertificateColors(certificate.certificateType);
+    final certColors = _getCertificateColors(certificate.certificateType);
 
     return GestureDetector(
       onTap: () => _showCertificateDetail(context, certificate),
@@ -144,14 +145,14 @@ class ECertificateBadge extends StatelessWidget {
         margin: const EdgeInsets.only(bottom: 16),
         decoration: BoxDecoration(
           gradient: LinearGradient(
-            colors: [colors['light']!, colors['main']!],
+            colors: [certColors['light']!, certColors['main']!],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
           borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
-              color: colors['main']!.withValues(alpha: 0.2),
+              color: certColors['main']!.withValues(alpha: 0.2),
               blurRadius: 12,
               offset: const Offset(0, 6),
             ),
@@ -246,6 +247,7 @@ class ECertificateBadge extends StatelessWidget {
   }
 
   void _showCertificateDetail(BuildContext context, ECertificate certificate) {
+    final colors = context.colors;
     Navigator.pop(context); // Close the modal
     showDialog(
       context: context,
@@ -293,7 +295,7 @@ class ECertificateBadge extends StatelessWidget {
               // Description
               Text(
                 certificate.getDescription(),
-                style: TextStyle(fontSize: 14, color: AppColors.textSecondary),
+                style: TextStyle(fontSize: 14, color: colors.textSecondary),
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 24),
@@ -306,31 +308,40 @@ class ECertificateBadge extends StatelessWidget {
                 ),
                 child: Column(
                   children: [
-                    _buildDetailRow('Trekker Name', certificate.trekkerName),
+                    _buildDetailRow(
+                      'Trekker Name',
+                      certificate.trekkerName,
+                      colors,
+                    ),
                     const SizedBox(height: 12),
                     _buildDetailRow(
                       'Date Earned',
                       _formatCertificateDate(certificate.dateEarned),
+                      colors,
                     ),
                     const SizedBox(height: 12),
                     _buildDetailRow(
                       'Stations Visited',
                       certificate.stationsVisited.toString(),
+                      colors,
                     ),
                     const SizedBox(height: 12),
                     _buildDetailRow(
                       'Total Distance',
                       '${certificate.totalDistance.toStringAsFixed(1)} km',
+                      colors,
                     ),
                     const SizedBox(height: 12),
                     _buildDetailRow(
                       'Total Time',
                       '${certificate.totalTimeMinutes} minutes',
+                      colors,
                     ),
                     const SizedBox(height: 12),
                     _buildDetailRow(
                       'Verification Code',
                       certificate.verificationCode,
+                      colors,
                     ),
                   ],
                 ),
@@ -412,7 +423,7 @@ class ECertificateBadge extends StatelessWidget {
     );
   }
 
-  Widget _buildDetailRow(String label, String value) {
+  Widget _buildDetailRow(String label, String value, AppTheme colors) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
@@ -420,7 +431,7 @@ class ECertificateBadge extends StatelessWidget {
           label,
           style: TextStyle(
             fontSize: 12,
-            color: AppColors.textSecondary,
+            color: colors.textSecondary,
             fontWeight: FontWeight.w500,
           ),
         ),
@@ -627,7 +638,7 @@ class ECertificateBadge extends StatelessWidget {
     }
   }
 
-  Widget _buildEmptyState() {
+  Widget _buildEmptyState(AppTheme colors) {
     return Container(
       padding: const EdgeInsets.all(20),
       child: Column(
@@ -643,7 +654,7 @@ class ECertificateBadge extends StatelessWidget {
             'No certificates yet',
             style: TextStyle(
               fontSize: 16,
-              color: AppColors.textSecondary,
+              color: colors.textSecondary,
               fontWeight: FontWeight.w500,
             ),
           ),

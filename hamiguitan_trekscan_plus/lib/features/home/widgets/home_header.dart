@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import '../../../core/widgets/profile_avatar_with_status.dart';
 import '../../../core/services/presence_service.dart';
 import '../../../core/services/user_service.dart';
-import '../../../theme/color.dart';
+import '../../../theme/app_theme.dart';
 import '../../notification/screens/notification_screen.dart';
 
 /// Top app-bar row: greeting / avatar, search field, notifications bell.
@@ -35,6 +35,7 @@ class HomeHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.colors;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
       color: Colors.white,
@@ -49,7 +50,7 @@ class HomeHeader extends StatelessWidget {
                 focusNode: searchFocusNode,
                 decoration: InputDecoration(
                   hintText: 'Search posts and users...',
-                  hintStyle: const TextStyle(color: AppColors.textSecondary),
+                  hintStyle: TextStyle(color: colors.textSecondary),
                   border: InputBorder.none,
                   contentPadding: const EdgeInsets.symmetric(horizontal: 16),
                 ),
@@ -63,6 +64,7 @@ class HomeHeader extends StatelessWidget {
   }
 
   Widget _buildGreeting(BuildContext context) {
+    final colors = context.colors;
     if (userId == null) {
       return Expanded(
         child: GestureDetector(
@@ -70,21 +72,18 @@ class HomeHeader extends StatelessWidget {
           child: Row(
             children: [
               CircleAvatar(
-                backgroundColor: AppColors.primary,
-                child: const Icon(Icons.person, color: AppColors.primary),
+                backgroundColor: colors.primary,
+                child: Icon(Icons.person, color: colors.primary),
               ),
               const SizedBox(width: 12),
-              const Column(
+              Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
                     'Welcome,',
-                    style: TextStyle(
-                      color: AppColors.textSecondary,
-                      fontSize: 14,
-                    ),
+                    style: TextStyle(color: colors.textSecondary, fontSize: 14),
                   ),
-                  Text(
+                  const Text(
                     'Traveler!',
                     style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
                   ),
@@ -127,10 +126,10 @@ class HomeHeader extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text(
+                      Text(
                         'Welcome,',
                         style: TextStyle(
-                          color: AppColors.textSecondary,
+                          color: colors.textSecondary,
                           fontSize: 12,
                         ),
                       ),
@@ -174,19 +173,18 @@ class HomeHeader extends StatelessWidget {
   }
 
   Widget _buildActions(BuildContext context) {
+    final colors = context.colors;
     return Row(
       children: [
         // Search toggle
         IconButton(
           icon: isSearchExpanded
-              ? Icon(Icons.close, size: 20, color: AppColors.primary)
+              ? Icon(Icons.close, size: 20, color: colors.primary)
               : Image.asset(
                   'assets/icons/search.png',
                   width: 20,
                   height: 20,
-                  color: searchQuery.isNotEmpty
-                      ? AppColors.primary
-                      : Colors.black,
+                  color: searchQuery.isNotEmpty ? colors.primary : Colors.black,
                 ),
           tooltip: isSearchExpanded ? 'Close search' : 'Search posts',
           onPressed: onToggleSearch,
@@ -225,7 +223,7 @@ class HomeHeader extends StatelessWidget {
               final hasUnread =
                   snapshot.hasData && snapshot.data!.docs.isNotEmpty;
               return hasUnread
-                  ? const Positioned(
+                  ? Positioned(
                       right: 12,
                       top: 12,
                       child: SizedBox(
@@ -233,7 +231,7 @@ class HomeHeader extends StatelessWidget {
                         height: 8,
                         child: DecoratedBox(
                           decoration: BoxDecoration(
-                            color: AppColors.notificationDot,
+                            color: Colors.red,
                             shape: BoxShape.circle,
                           ),
                         ),

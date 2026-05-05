@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../../theme/color.dart';
+import '../../../theme/app_theme.dart';
 
 /// Expandable FAB group: main + button, calendar sub-button, create-post
 /// sub-button. All expansion state is managed internally via [StatefulBuilder]
@@ -23,12 +23,14 @@ class _HomeActionButtonsState extends State<HomeActionButtons> {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.colors;
     return Column(
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.end,
       children: [
         _buildSubButton(
           heroTag: 'calendar_fab',
+          colors: colors,
           label: 'View Calendar',
           child: Image.asset(
             'assets/icons/calendar.png',
@@ -43,6 +45,7 @@ class _HomeActionButtonsState extends State<HomeActionButtons> {
         ),
         _buildSubButton(
           heroTag: 'create_post_fab',
+          colors: colors,
           label: 'Create Post',
           child: const Icon(Icons.edit, color: Colors.white),
           onPressed: () {
@@ -53,7 +56,7 @@ class _HomeActionButtonsState extends State<HomeActionButtons> {
         FloatingActionButton(
           heroTag: 'main_fab',
           onPressed: () => setState(() => _expanded = !_expanded),
-          backgroundColor: AppColors.primary,
+          backgroundColor: colors.primary,
           child: AnimatedRotation(
             turns: _expanded ? 0.125 : 0.0,
             duration: const Duration(milliseconds: 200),
@@ -69,6 +72,7 @@ class _HomeActionButtonsState extends State<HomeActionButtons> {
 
   Widget _buildSubButton({
     required String heroTag,
+    required AppTheme colors,
     required String label,
     required Widget child,
     required VoidCallback onPressed,
@@ -132,7 +136,7 @@ class _HomeActionButtonsState extends State<HomeActionButtons> {
                   FloatingActionButton(
                     heroTag: heroTag,
                     onPressed: onPressed,
-                    backgroundColor: AppColors.primary,
+                    backgroundColor: colors.primary,
                     child: child,
                   ),
                 ],

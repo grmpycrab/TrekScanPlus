@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../theme/color.dart';
+import '../theme/app_theme.dart';
 
 class BottomNavigation extends StatelessWidget {
   final int currentIndex;
@@ -13,13 +13,14 @@ class BottomNavigation extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.colors;
     return Container(
       height: 65,
       decoration: BoxDecoration(
-        color: AppColors.primary,
+        color: colors.primary,
         boxShadow: [
           BoxShadow(
-            color: AppColors.shadowDark,
+            color: colors.shadowDark,
             blurRadius: 10,
             offset: const Offset(0, -3),
           ),
@@ -30,11 +31,11 @@ class BottomNavigation extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: [
-              _buildNavItem(0, 'assets/icons/home_icon.png', 'Home'),
-              _buildNavItem(1, 'assets/icons/station.png', 'Stations'),
-              _buildNavItem(2, 'assets/icons/qr-code.png', 'Scanner'),
-              _buildNavItem(3, 'assets/icons/appointment.png', 'Book'),
-              _buildNavItem(4, 'assets/icons/setting.png', 'Settings'),
+              _buildNavItem(0, 'assets/icons/home_icon.png', 'Home', colors),
+              _buildNavItem(1, 'assets/icons/station.png', 'Stations', colors),
+              _buildNavItem(2, 'assets/icons/qr-code.png', 'Scanner', colors),
+              _buildNavItem(3, 'assets/icons/appointment.png', 'Book', colors),
+              _buildNavItem(4, 'assets/icons/setting.png', 'Settings', colors),
             ],
           ),
         ],
@@ -42,7 +43,12 @@ class BottomNavigation extends StatelessWidget {
     );
   }
 
-  Widget _buildNavItem(int index, String iconPath, String label) {
+  Widget _buildNavItem(
+    int index,
+    String iconPath,
+    String label,
+    AppTheme colors,
+  ) {
     final isSelected = currentIndex == index;
     return GestureDetector(
       onTap: () => onTap(index),
@@ -56,13 +62,13 @@ class BottomNavigation extends StatelessWidget {
               iconPath,
               width: 24,
               height: 24,
-              color: isSelected ? SharedColors.white : AppColors.textSecondary,
+              color: isSelected ? SharedColors.white : colors.textSecondary,
             ),
             const SizedBox(height: 4),
             Text(
               label,
               style: TextStyle(
-                color: isSelected ? SharedColors.white : AppColors.textSecondary,
+                color: isSelected ? SharedColors.white : colors.textSecondary,
                 fontSize: 12,
               ),
             ),

@@ -10,7 +10,7 @@ import '../../../core/widgets/app_dialogue_handler.dart';
 import '../widgets/do_and_dont.dart';
 import '../widgets/trek_tips.dart';
 import '../widgets/banner_slideshow.dart';
-import '../../../theme/color.dart';
+import '../../../theme/app_theme.dart';
 import 'dart:async';
 import '../../profile/screens/profile_screen.dart';
 import '../../../utils/app_logger.dart';
@@ -210,6 +210,7 @@ class _HomeScreenState extends State<HomeScreen>
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.colors;
     SystemChrome.setSystemUIOverlayStyle(
       const SystemUiOverlayStyle(
         statusBarColor: Colors.white,
@@ -221,7 +222,7 @@ class _HomeScreenState extends State<HomeScreen>
     final user = _viewModel.firebaseUser;
 
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: colors.background,
       body: SafeArea(
         child: Column(
           children: [
@@ -293,11 +294,12 @@ class _HomeScreenState extends State<HomeScreen>
   }
 
   Widget _buildSectionToggle() {
+    final colors = context.colors;
     return AnimatedContainer(
       duration: const Duration(milliseconds: 300),
       curve: Curves.easeInOut,
       height: _areSectionsVisible ? 40 : 24,
-      color: AppColors.background,
+      color: colors.background,
       child: Center(
         child: InkWell(
           onTap: () =>
@@ -315,14 +317,11 @@ class _HomeScreenState extends State<HomeScreen>
                     decoration: BoxDecoration(
                       color: Colors.grey[50],
                       borderRadius: BorderRadius.circular(12),
-                      border: Border.all(
-                        color: AppColors.borderLight,
-                        width: 1,
-                      ),
+                      border: Border.all(color: colors.borderLight, width: 1),
                     ),
                     child: Icon(
                       Icons.keyboard_arrow_up,
-                      color: AppColors.textSecondary,
+                      color: colors.textSecondary,
                       size: 20,
                     ),
                   )
@@ -333,7 +332,7 @@ class _HomeScreenState extends State<HomeScreen>
                       vertical: 2,
                     ),
                     decoration: BoxDecoration(
-                      color: AppColors.background,
+                      color: colors.background,
                       borderRadius: BorderRadius.circular(10),
                     ),
                     child: Icon(
@@ -349,6 +348,7 @@ class _HomeScreenState extends State<HomeScreen>
   }
 
   Widget _buildInfoButtons() {
+    final colors = context.colors;
     final screenWidth = MediaQuery.of(context).size.width;
     final isSmallScreen = screenWidth < 360;
 
@@ -361,10 +361,7 @@ class _HomeScreenState extends State<HomeScreen>
               title: "Do's & Dont's",
               icon: Icons.rule,
               gradient: LinearGradient(
-                colors: [
-                  AppColors.primary,
-                  AppColors.primary.withValues(alpha: 0.8),
-                ],
+                colors: [colors.primary, colors.primary.withValues(alpha: 0.8)],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
               ),
@@ -380,8 +377,8 @@ class _HomeScreenState extends State<HomeScreen>
             child: _buildInfoButton(
               title: 'Tips & Tricks',
               icon: Icons.lightbulb_outline,
-              gradient: const LinearGradient(
-                colors: [AppColors.accent, Color(0xFF053821)],
+              gradient: LinearGradient(
+                colors: [colors.accent, const Color(0xFF053821)],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
               ),

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../services/presence_service.dart';
-import '../../theme/color.dart';
+import '../../theme/app_theme.dart';
 
 /// Reusable profile avatar with online/offline status indicator
 class ProfileAvatarWithStatus extends StatelessWidget {
@@ -20,13 +20,14 @@ class ProfileAvatarWithStatus extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.colors;
     return Stack(
       children: [
         // Profile avatar
         photoUrl != null
             ? CircleAvatar(
                 radius: radius,
-                backgroundColor: AppColors.primary,
+                backgroundColor: colors.primary,
                 child: ClipOval(
                   child: CachedNetworkImage(
                     imageUrl: photoUrl!,
@@ -34,18 +35,18 @@ class ProfileAvatarWithStatus extends StatelessWidget {
                     height: radius * 2,
                     fit: BoxFit.cover,
                     placeholder: (context, url) => Container(
-                      color: AppColors.primary,
+                      color: colors.primary,
                       child: Icon(
                         Icons.person,
-                        color: AppColors.primary,
+                        color: colors.primary,
                         size: radius * 0.9,
                       ),
                     ),
                     errorWidget: (context, url, error) => Container(
-                      color: AppColors.primary,
+                      color: colors.primary,
                       child: Icon(
                         Icons.person,
-                        color: AppColors.primary,
+                        color: colors.primary,
                         size: radius * 0.9,
                       ),
                     ),
@@ -56,10 +57,10 @@ class ProfileAvatarWithStatus extends StatelessWidget {
               )
             : CircleAvatar(
                 radius: radius,
-                backgroundColor: AppColors.primary,
+                backgroundColor: colors.primary,
                 child: Icon(
                   Icons.person,
-                  color: AppColors.primary,
+                  color: colors.primary,
                   size: radius * 0.9,
                 ),
               ),
@@ -92,4 +93,3 @@ class ProfileAvatarWithStatus extends StatelessWidget {
     );
   }
 }
-

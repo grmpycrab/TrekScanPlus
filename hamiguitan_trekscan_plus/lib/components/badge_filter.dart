@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../theme/new_color.dart';
+import '../theme/app_theme.dart';
 
 class BadgeFilterBottomSheet extends StatefulWidget {
   final Set<String> selectedRarities;
@@ -34,6 +34,7 @@ class _BadgeFilterBottomSheetState extends State<BadgeFilterBottomSheet> {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.colors;
     return Container(
       decoration: const BoxDecoration(
         color: Colors.white,
@@ -68,6 +69,7 @@ class _BadgeFilterBottomSheetState extends State<BadgeFilterBottomSheet> {
                         'legendary',
                       ],
                       selectedItems: _tempRarities,
+                      colors: colors,
                       onChanged: (item, isSelected) {
                         setState(() {
                           if (isSelected) {
@@ -83,6 +85,7 @@ class _BadgeFilterBottomSheetState extends State<BadgeFilterBottomSheet> {
                       title: 'Difficulty',
                       items: ['easy', 'medium', 'hard'],
                       selectedItems: _tempDifficulties,
+                      colors: colors,
                       onChanged: (item, isSelected) {
                         setState(() {
                           if (isSelected) {
@@ -103,6 +106,7 @@ class _BadgeFilterBottomSheetState extends State<BadgeFilterBottomSheet> {
                         'distance_elevation',
                       ],
                       selectedItems: _tempCategories,
+                      colors: colors,
                       onChanged: (item, isSelected) {
                         setState(() {
                           if (isSelected) {
@@ -166,6 +170,7 @@ class _BadgeFilterBottomSheetState extends State<BadgeFilterBottomSheet> {
     required String title,
     required List<String> items,
     required Set<String> selectedItems,
+    required AppTheme colors,
     required Function(String, bool) onChanged,
   }) {
     return Column(
@@ -191,14 +196,14 @@ class _BadgeFilterBottomSheetState extends State<BadgeFilterBottomSheet> {
                     style: TextStyle(
                       fontSize: 12,
                       color: selectedItems.contains(item)
-                          ? Colors.white
-                          : AppColors.textSecondary,
+                          ? SharedColors.white
+                          : colors.textSecondary,
                     ),
                   ),
                   selected: selectedItems.contains(item),
                   onSelected: (isSelected) => onChanged(item, isSelected),
-                  backgroundColor: AppColors.borderLight,
-                  selectedColor: AppColors.primary,
+                  backgroundColor: colors.borderLight,
+                  selectedColor: colors.primary,
                 ),
               )
               .toList(),
