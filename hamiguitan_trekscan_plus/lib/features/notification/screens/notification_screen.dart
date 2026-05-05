@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../../../theme/color.dart';
+import '../../../theme/app_theme.dart';
 import '../../../screens/main/main_screen.dart';
 import '../../../core/widgets/app_dialogue_handler.dart';
 import '../models/notification_model.dart';
@@ -45,10 +45,11 @@ class _NotificationScreenState extends State<NotificationScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.colors;
     final userId = _vm.currentUserId;
 
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: colors.background,
       appBar: AppBar(
         title: Text(
           _isSelectionMode
@@ -82,10 +83,10 @@ class _NotificationScreenState extends State<NotificationScreen> {
             ? [
                 TextButton(
                   onPressed: _selectAll,
-                  child: const Text(
+                  child: Text(
                     'Select all',
                     style: TextStyle(
-                      color: AppColors.primary,
+                      color: colors.primary,
                       fontWeight: FontWeight.w500,
                     ),
                   ),
@@ -104,10 +105,10 @@ class _NotificationScreenState extends State<NotificationScreen> {
                     await _vm.markAllAsRead(userId);
                     setState(() {});
                   },
-                  child: const Text(
+                  child: Text(
                     'Mark all as read',
                     style: TextStyle(
-                      color: AppColors.primary,
+                      color: colors.primary,
                       fontWeight: FontWeight.w500,
                     ),
                   ),
@@ -137,6 +138,7 @@ class _NotificationScreenState extends State<NotificationScreen> {
   }
 
   Widget _buildEmptyState({String? message}) {
+    final colors = context.colors;
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -152,7 +154,7 @@ class _NotificationScreenState extends State<NotificationScreen> {
             style: TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.w500,
-              color: AppColors.textSecondary,
+              color: colors.textSecondary,
             ),
           ),
           const SizedBox(height: 8),
@@ -169,6 +171,7 @@ class _NotificationScreenState extends State<NotificationScreen> {
     NotificationModel notification,
     List<NotificationModel> allNotifications,
   ) {
+    final colors = context.colors;
     final isSelected = _selectedNotifications.contains(notification.id);
 
     return Dismissible(
@@ -191,11 +194,11 @@ class _NotificationScreenState extends State<NotificationScreen> {
         margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         decoration: BoxDecoration(
           color: isSelected
-              ? AppColors.primary.withValues(alpha: 0.1)
+              ? colors.primary.withValues(alpha: 0.1)
               : (notification.isRead ? Colors.white : const Color(0xFFF5F9FF)),
           borderRadius: BorderRadius.circular(12),
           border: isSelected
-              ? Border.all(color: AppColors.primary, width: 2)
+              ? Border.all(color: colors.primary, width: 2)
               : null,
           boxShadow: [
             BoxShadow(
@@ -254,7 +257,7 @@ class _NotificationScreenState extends State<NotificationScreen> {
                             Text(
                               notification.message,
                               style: TextStyle(
-                                color: AppColors.textSecondary,
+                                color: colors.textSecondary,
                                 fontSize: 14,
                               ),
                             ),
@@ -274,7 +277,7 @@ class _NotificationScreenState extends State<NotificationScreen> {
                           value: isSelected,
                           onChanged: (value) =>
                               _toggleSelection(notification.id),
-                          activeColor: AppColors.primary,
+                          activeColor: colors.primary,
                         )
                       else if (!notification.isRead &&
                           !notification.showActionButtons)
@@ -283,7 +286,7 @@ class _NotificationScreenState extends State<NotificationScreen> {
                           height: 8,
                           decoration: const BoxDecoration(
                             shape: BoxShape.circle,
-                            color: AppColors.notificationDot,
+                            color: Colors.red,
                           ),
                         ),
                     ],
@@ -315,7 +318,7 @@ class _NotificationScreenState extends State<NotificationScreen> {
                               onPressed: () =>
                                   _handleAcceptFollowRequest(notification),
                               style: FilledButton.styleFrom(
-                                backgroundColor: AppColors.primary,
+                                backgroundColor: colors.primary,
                                 padding: const EdgeInsets.symmetric(
                                   vertical: 8,
                                 ),

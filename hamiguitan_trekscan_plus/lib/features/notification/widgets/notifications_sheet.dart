@@ -3,7 +3,7 @@ import 'package:intl/intl.dart';
 import '../models/notification_model.dart';
 import '../services/firestore_notification_service.dart';
 import '../../../screens/main/main_screen.dart';
-import '../../../theme/color.dart';
+import '../../../theme/app_theme.dart';
 import '../../../core/widgets/app_dialogue_handler.dart';
 import '../../../utils/app_logger.dart';
 
@@ -345,9 +345,9 @@ class _NotificationTile extends StatelessWidget {
     this.isSelected = false,
   });
 
-  Color _getBackgroundColor() {
+  Color _getBackgroundColor(AppTheme colors) {
     if (isSelected) {
-      return AppColors.primary.withValues(alpha: 0.1);
+      return colors.primary.withValues(alpha: 0.1);
     }
     return switch (notification.type) {
       NotificationType.success => Colors.green.withValues(alpha: 0.1),
@@ -357,12 +357,12 @@ class _NotificationTile extends StatelessWidget {
     };
   }
 
-  Color _getIconColor() {
+  Color _getIconColor(AppTheme colors) {
     return switch (notification.type) {
       NotificationType.success => Colors.green,
       NotificationType.warning => Colors.orange,
       NotificationType.alert => Colors.red,
-      NotificationType.info => AppColors.primary,
+      NotificationType.info => colors.primary,
     };
   }
 
@@ -377,6 +377,7 @@ class _NotificationTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.colors;
     final timeAgo = _getTimeAgo(notification.timestamp);
 
     return GestureDetector(
@@ -390,12 +391,12 @@ class _NotificationTile extends StatelessWidget {
         decoration: BoxDecoration(
           color: notification.isRead && !isSelected
               ? Colors.transparent
-              : _getBackgroundColor(),
+              : _getBackgroundColor(colors),
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
             color: isSelected
-                ? AppColors.primary
-                : (notification.isRead ? AppColors.border : _getIconColor()),
+                ? colors.primary
+                : (notification.isRead ? colors.border : _getIconColor(colors)),
             width: isSelected ? 2 : (notification.isRead ? 0.5 : 1.5),
           ),
         ),
@@ -408,9 +409,9 @@ class _NotificationTile extends StatelessWidget {
               ? Checkbox(
                   value: isSelected,
                   onChanged: onSelectionChanged,
-                  activeColor: AppColors.primary,
+                  activeColor: colors.primary,
                 )
-              : Icon(_getIcon(), color: _getIconColor()),
+              : Icon(_getIcon(), color: _getIconColor(colors)),
           title: Text(
             notification.title,
             style: TextStyle(
@@ -431,7 +432,7 @@ class _NotificationTile extends StatelessWidget {
               const SizedBox(height: 4),
               Text(
                 timeAgo,
-                style: TextStyle(fontSize: 11, color: AppColors.textSecondary),
+                style: TextStyle(fontSize: 11, color: colors.textSecondary),
               ),
             ],
           ),
@@ -442,8 +443,8 @@ class _NotificationTile extends StatelessWidget {
                     ? Container(
                         width: 8,
                         height: 8,
-                        decoration: const BoxDecoration(
-                          color: AppColors.primary,
+                        decoration: BoxDecoration(
+                          color: colors.primary,
                           shape: BoxShape.circle,
                         ),
                       )
@@ -470,4 +471,3 @@ class _NotificationTile extends StatelessWidget {
     }
   }
 }
-
