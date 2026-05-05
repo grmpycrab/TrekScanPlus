@@ -1,10 +1,10 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import '../../../components/profile_avatar_with_status.dart';
-import '../../../services/presence_service.dart';
-import '../../../services/user_service.dart';
+import '../../../core/widgets/profile_avatar_with_status.dart';
+import '../../../core/services/presence_service.dart';
+import '../../../core/services/user_service.dart';
 import '../../../theme/color.dart';
-import '../../../screens/main/notification_screen.dart';
+import '../../notification/screens/notification_screen.dart';
 
 /// Top app-bar row: greeting / avatar, search field, notifications bell.
 ///

@@ -9,7 +9,7 @@ import 'dart:convert';
 
 import '../../../models/booking_model.dart';
 import '../../../models/member.dart';
-import '../../../services/user_service.dart';
+import '../../../core/services/user_service.dart';
 import '../../../utils/app_logger.dart';
 import '../models/booking_form_state.dart';
 

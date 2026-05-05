@@ -6,14 +6,14 @@ import 'package:share_plus/share_plus.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../models/social_model.dart';
 import '../viewmodels/post_view_model.dart';
-import '../../../services/user_service.dart';
+import '../../../core/services/user_service.dart';
 import '../../../theme/color.dart';
-import '../../../screens/main/profile_screen.dart';
+import '../../profile/screens/profile_screen.dart';
 import 'comments_sheet.dart';
 import 'post_options_sheet.dart';
 import 'image_viewer.dart';
-import '../../../components/profile_avatar_with_status.dart';
-import '../../../components/app_dialogue_handler.dart';
+import '../../../core/widgets/profile_avatar_with_status.dart';
+import '../../../core/widgets/app_dialogue_handler.dart';
 import '../../../utils/app_logger.dart';
 
 class SocialCard extends StatefulWidget {

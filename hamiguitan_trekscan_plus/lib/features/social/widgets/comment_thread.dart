@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../models/social_model.dart';
 import '../repositories/social_repository.dart';
-import '../../../components/app_dialogue_handler.dart';
+import '../../../core/widgets/app_dialogue_handler.dart';
 import '../../../services/firebase_auth_service.dart';
 import '../../../theme/color.dart';
 

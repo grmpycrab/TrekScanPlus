@@ -12,7 +12,7 @@ import '../../../models/member.dart';
 import '../../../models/climb.dart';
 import '../../../services/booking_service.dart';
 import '../widgets/climb_card.dart';
-import '../../../components/app_dialogue_handler.dart';
+import '../../../core/widgets/app_dialogue_handler.dart';
 import '../../../theme/color.dart';
 import '../../../utils/app_logger.dart';
 import '../providers/booking_provider.dart';

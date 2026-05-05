@@ -5,7 +5,7 @@ import 'core/app_startup_controller.dart';
 import 'core/providers/app_providers.dart';
 import 'core/widgets/auth_gate.dart';
 
-import 'services/presence_service.dart';
+import 'core/services/presence_service.dart';
 import 'screens/splash_screen.dart';
 
 void main() async {

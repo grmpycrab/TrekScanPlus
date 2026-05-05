@@ -1,7 +1,7 @@
 import 'package:firebase_messaging/firebase_messaging.dart';
-import '../services/fcm_service.dart';
-import '../services/notification_manager.dart';
-import '../components/notification_banner.dart';
+import '../features/notification/services/fcm_service.dart';
+import '../features/notification/services/notification_manager.dart';
+import '../features/notification/widgets/notification_banner.dart';
 import '../utils/app_logger.dart';
 import '../config/app_router.dart';
 

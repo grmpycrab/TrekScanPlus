@@ -5,7 +5,7 @@ import 'package:flutter/foundation.dart';
 import 'package:image/image.dart' as img;
 import 'dart:io';
 import '../models/social_model.dart';
-import '../../../services/notification_manager.dart';
+import '../../notification/services/notification_manager.dart';
 import '../../../utils/app_logger.dart';
 
 /// Pure data-access layer for the social feature.
