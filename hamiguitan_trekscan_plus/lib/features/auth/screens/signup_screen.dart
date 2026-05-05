@@ -3,7 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'login_screen.dart';
 import 'email_verification_screen.dart';
 import 'additional_information.dart';
-import '../../../theme/color.dart';
+import '../../../theme/app_theme.dart';
 import '../../../services/firebase_auth_service.dart';
 import '../../../components/error_feedback.dart';
 
@@ -94,8 +94,9 @@ class _SignUpScreenState extends State<SignUpScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.colors;
     return Scaffold(
-      backgroundColor: AppColors.cardBackground,
+      backgroundColor: colors.surface,
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(
@@ -108,11 +109,11 @@ class _SignUpScreenState extends State<SignUpScreen> {
                   Container(
                     padding: const EdgeInsets.all(20),
                     decoration: BoxDecoration(
-                      color: SharedColors.white,
+                      color: colors.surface,
                       shape: BoxShape.circle,
                       boxShadow: [
                         BoxShadow(
-                          color: AppColors.shadowMedium,
+                          color: colors.shadowMedium,
                           blurRadius: 20,
                           spreadRadius: 5,
                         ),
@@ -127,21 +128,18 @@ class _SignUpScreenState extends State<SignUpScreen> {
                   const SizedBox(height: 40),
 
                   // Welcome text
-                  const Text(
+                  Text(
                     'Create Account',
                     style: TextStyle(
                       fontSize: 32,
                       fontWeight: FontWeight.bold,
-                      color: AppColors.text,
+                      color: colors.text,
                     ),
                   ),
                   const SizedBox(height: 8),
-                  const Text(
+                  Text(
                     'Start your trekking journey today',
-                    style: TextStyle(
-                      fontSize: 16,
-                      color: AppColors.textSecondary,
-                    ),
+                    style: TextStyle(fontSize: 16, color: colors.textSecondary),
                   ),
                   const SizedBox(height: 40),
 
@@ -162,11 +160,11 @@ class _SignUpScreenState extends State<SignUpScreen> {
                   Container(
                     padding: const EdgeInsets.all(24),
                     decoration: BoxDecoration(
-                      color: SharedColors.white,
+                      color: colors.surface,
                       borderRadius: BorderRadius.circular(20),
                       boxShadow: [
                         BoxShadow(
-                          color: AppColors.shadowMedium,
+                          color: colors.shadowMedium,
                           blurRadius: 15,
                           offset: const Offset(0, 5),
                         ),
@@ -185,21 +183,19 @@ class _SignUpScreenState extends State<SignUpScreen> {
                             labelText: 'Email',
                             prefixIcon: const Icon(Icons.email_outlined),
                             filled: true,
-                            fillColor: Color(0xFFFAFAFA),
+                            fillColor: colors.inputFill,
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(12),
                               borderSide: BorderSide.none,
                             ),
                             enabledBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(12),
-                              borderSide: BorderSide(
-                                color: AppColors.borderLight,
-                              ),
+                              borderSide: BorderSide(color: colors.borderLight),
                             ),
                             focusedBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(12),
-                              borderSide: const BorderSide(
-                                color: AppColors.primary,
+                              borderSide: BorderSide(
+                                color: colors.primary,
                                 width: 2,
                               ),
                             ),
@@ -217,21 +213,19 @@ class _SignUpScreenState extends State<SignUpScreen> {
                             labelText: 'Password',
                             prefixIcon: const Icon(Icons.lock_outline),
                             filled: true,
-                            fillColor: Color(0xFFFAFAFA),
+                            fillColor: colors.inputFill,
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(12),
                               borderSide: BorderSide.none,
                             ),
                             enabledBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(12),
-                              borderSide: BorderSide(
-                                color: AppColors.borderLight,
-                              ),
+                              borderSide: BorderSide(color: colors.borderLight),
                             ),
                             focusedBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(12),
-                              borderSide: const BorderSide(
-                                color: AppColors.primary,
+                              borderSide: BorderSide(
+                                color: colors.primary,
                                 width: 2,
                               ),
                             ),
@@ -240,7 +234,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                                 _obscurePassword
                                     ? Icons.visibility_off_outlined
                                     : Icons.visibility_outlined,
-                                color: AppColors.textSecondary,
+                                color: colors.textSecondary,
                               ),
                               onPressed: () {
                                 setState(() {
@@ -262,21 +256,19 @@ class _SignUpScreenState extends State<SignUpScreen> {
                             labelText: 'Confirm Password',
                             prefixIcon: const Icon(Icons.lock_outline),
                             filled: true,
-                            fillColor: Color(0xFFFAFAFA),
+                            fillColor: colors.inputFill,
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(12),
                               borderSide: BorderSide.none,
                             ),
                             enabledBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(12),
-                              borderSide: BorderSide(
-                                color: AppColors.borderLight,
-                              ),
+                              borderSide: BorderSide(color: colors.borderLight),
                             ),
                             focusedBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(12),
-                              borderSide: const BorderSide(
-                                color: AppColors.primary,
+                              borderSide: BorderSide(
+                                color: colors.primary,
                                 width: 2,
                               ),
                             ),
@@ -285,7 +277,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                                 _obscureConfirmPassword
                                     ? Icons.visibility_off_outlined
                                     : Icons.visibility_outlined,
-                                color: AppColors.textSecondary,
+                                color: colors.textSecondary,
                               ),
                               onPressed: () {
                                 setState(() {
@@ -313,7 +305,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                                           _agreeToTerms = value ?? false;
                                         });
                                       },
-                                activeColor: AppColors.primary,
+                                activeColor: colors.primary,
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(4),
                                 ),
@@ -324,7 +316,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                               child: Text(
                                 'I agree to the Terms & Conditions',
                                 style: TextStyle(
-                                  color: AppColors.textSecondary,
+                                  color: colors.textSecondary,
                                   fontSize: 14,
                                 ),
                               ),
@@ -337,7 +329,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                         ElevatedButton(
                           onPressed: _isLoading ? null : _handleSignUp,
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: AppColors.primary,
+                            backgroundColor: colors.primary,
                             padding: const EdgeInsets.symmetric(vertical: 16),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(12),
@@ -355,7 +347,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                                     ),
                                   ),
                                 )
-                              : const Text(
+                              : Text(
                                   'Sign up',
                                   style: TextStyle(
                                     color: SharedColors.white,
@@ -369,7 +361,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                         // Divider
                         Row(
                           children: [
-                            Expanded(child: Divider(color: AppColors.border)),
+                            Expanded(child: Divider(color: colors.border)),
                             Padding(
                               padding: const EdgeInsets.symmetric(
                                 horizontal: 16.0,
@@ -377,12 +369,12 @@ class _SignUpScreenState extends State<SignUpScreen> {
                               child: Text(
                                 'OR',
                                 style: TextStyle(
-                                  color: AppColors.textSecondary,
+                                  color: colors.textSecondary,
                                   fontWeight: FontWeight.w600,
                                 ),
                               ),
                             ),
-                            Expanded(child: Divider(color: AppColors.border)),
+                            Expanded(child: Divider(color: colors.border)),
                           ],
                         ),
                         const SizedBox(height: 24),
@@ -446,20 +438,20 @@ class _SignUpScreenState extends State<SignUpScreen> {
                                 },
                           style: OutlinedButton.styleFrom(
                             padding: const EdgeInsets.symmetric(vertical: 16),
-                            side: BorderSide(color: AppColors.border),
+                            side: BorderSide(color: colors.border),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(12),
                             ),
-                            backgroundColor: SharedColors.white,
+                            backgroundColor: colors.surface,
                           ),
                           icon: Image.asset(
                             'assets/icons/google_icon.png',
                             height: 24,
                           ),
-                          label: const Text(
+                          label: Text(
                             'Continue with Google',
                             style: TextStyle(
-                              color: AppColors.text,
+                              color: colors.text,
                               fontSize: 16,
                               fontWeight: FontWeight.w600,
                             ),
@@ -476,7 +468,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                     children: [
                       Text(
                         'Already have an account? ',
-                        style: TextStyle(color: AppColors.textSecondary),
+                        style: TextStyle(color: colors.textSecondary),
                       ),
                       TextButton(
                         onPressed: _isLoading
@@ -489,10 +481,10 @@ class _SignUpScreenState extends State<SignUpScreen> {
                                   ),
                                 );
                               },
-                        child: const Text(
+                        child: Text(
                           'Sign in',
                           style: TextStyle(
-                            color: AppColors.primary,
+                            color: colors.primary,
                             fontWeight: FontWeight.bold,
                             fontSize: 16,
                           ),

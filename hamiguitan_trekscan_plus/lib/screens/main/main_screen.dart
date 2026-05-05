@@ -3,7 +3,7 @@ import '../../components/bottom_navigation.dart';
 import '../../features/home/screens/home_screen.dart';
 import '../../features/stations/screens/station_screen.dart';
 import '../../features/scanner/screens/scanner_screen.dart';
-import 'settings_screen.dart';
+import '../../features/settings/screens/settings_screen.dart';
 import '../../features/booking/screens/book_a_climb_screen.dart';
 
 // ignore_for_file: unnecessary_brace_in_string_interps
