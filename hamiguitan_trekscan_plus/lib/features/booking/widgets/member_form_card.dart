@@ -3,7 +3,7 @@
 import 'package:flutter/material.dart';
 import 'dart:async';
 import '../../../models/member.dart';
-import '../../../theme/color.dart';
+import '../../../theme/app_theme.dart';
 import '../services/booking_validation_service.dart';
 
 /// Editable member card for group booking form
@@ -114,11 +114,10 @@ class _MemberFormCardState extends State<MemberFormCard> {
       builder: (context, child) {
         return Theme(
           data: Theme.of(context).copyWith(
-            colorScheme: ColorScheme.light(
-              primary: AppColors.primary,
+            colorScheme: Theme.of(context).colorScheme.copyWith(
+              primary: context.colors.primary,
               onPrimary: SharedColors.white,
-              surface: SharedColors.white,
-              onSurface: AppColors.text,
+              onSurface: context.colors.text,
             ),
           ),
           child: child!,
@@ -183,33 +182,35 @@ class _MemberFormCardState extends State<MemberFormCard> {
   }
 
   InputDecoration _buildInputDecoration(String label) {
+    final colors = context.colors;
     return InputDecoration(
       labelText: label,
       labelStyle: TextStyle(
-        color: AppColors.textSecondary,
+        color: colors.textSecondary,
         fontSize: 13,
         fontWeight: FontWeight.w500,
       ),
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(10),
-        borderSide: BorderSide(color: AppColors.borderBlack26),
+        borderSide: BorderSide(color: Colors.black26),
       ),
       enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(10),
-        borderSide: BorderSide(color: AppColors.borderBlack26, width: 1),
+        borderSide: BorderSide(color: Colors.black26, width: 1),
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(10),
-        borderSide: BorderSide(color: AppColors.primary, width: 2),
+        borderSide: BorderSide(color: colors.primary, width: 2),
       ),
       filled: true,
-      fillColor: SharedColors.white,
+      fillColor: colors.inputFill,
       contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
     );
   }
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.colors;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -221,18 +222,15 @@ class _MemberFormCardState extends State<MemberFormCard> {
               widget.isPrimaryContact
                   ? 'Primary Contact'
                   : 'Member ${widget.memberIndex + 1}',
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.bold,
-                color: AppColors.text,
+                color: colors.text,
               ),
             ),
             if (!widget.isPrimaryContact)
               IconButton(
-                icon: const Icon(
-                  Icons.delete_outline,
-                  color: AppColors.statusRejected,
-                ),
+                icon: Icon(Icons.delete_outline, color: Colors.red),
                 onPressed: widget.onRemoveMember,
                 tooltip: 'Remove member',
               ),
@@ -306,12 +304,12 @@ class _MemberFormCardState extends State<MemberFormCard> {
                       decoration: BoxDecoration(
                         border: Border.all(
                           color: _selectedBirthDate == null
-                              ? AppColors.borderBlack26
-                              : AppColors.primary,
+                              ? Colors.black26
+                              : colors.primary,
                           width: _selectedBirthDate == null ? 1 : 2,
                         ),
                         borderRadius: BorderRadius.circular(10),
-                        color: SharedColors.white,
+                        color: colors.inputFill,
                       ),
                       padding: const EdgeInsets.symmetric(
                         horizontal: 14,
@@ -328,8 +326,8 @@ class _MemberFormCardState extends State<MemberFormCard> {
                               style: TextStyle(
                                 fontSize: 14,
                                 color: _selectedBirthDate != null
-                                    ? AppColors.text
-                                    : AppColors.textSecondary,
+                                    ? colors.text
+                                    : colors.textSecondary,
                               ),
                             ),
                           ),
@@ -337,8 +335,8 @@ class _MemberFormCardState extends State<MemberFormCard> {
                             Icons.calendar_today,
                             size: 18,
                             color: _selectedBirthDate != null
-                                ? AppColors.primary
-                                : AppColors.textSecondary,
+                                ? colors.primary
+                                : colors.textSecondary,
                           ),
                         ],
                       ),
@@ -359,8 +357,8 @@ class _MemberFormCardState extends State<MemberFormCard> {
                           if (error != null) {
                             return Text(
                               error,
-                              style: const TextStyle(
-                                color: AppColors.statusRejectedDark,
+                              style: TextStyle(
+                                color: colors.statusRejectedDark,
                                 fontSize: 12,
                               ),
                             );

@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../../models/member.dart';
 import './member_form_card.dart';
-import '../../../theme/color.dart';
+import '../../../theme/app_theme.dart';
 
 /// Dialog for adding or editing a booking member
 class MemberEditDialog extends StatefulWidget {
@@ -56,6 +56,7 @@ class _MemberEditDialogState extends State<MemberEditDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.colors;
     return Dialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
       elevation: 8,
@@ -65,7 +66,7 @@ class _MemberEditDialogState extends State<MemberEditDialog> {
           maxHeight: MediaQuery.of(context).size.height * 0.95,
         ),
         decoration: BoxDecoration(
-          color: SharedColors.white,
+          color: colors.surface,
           borderRadius: BorderRadius.circular(20),
         ),
         child: Column(
@@ -76,7 +77,7 @@ class _MemberEditDialogState extends State<MemberEditDialog> {
               padding: const EdgeInsets.fromLTRB(28, 24, 16, 24),
               decoration: BoxDecoration(
                 border: Border(
-                  bottom: BorderSide(color: AppColors.borderLight, width: 1),
+                  bottom: BorderSide(color: colors.borderLight, width: 1),
                 ),
               ),
               child: Row(
@@ -91,10 +92,10 @@ class _MemberEditDialogState extends State<MemberEditDialog> {
                           widget.member == null
                               ? 'Add New Member'
                               : 'Edit Member',
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 22,
                             fontWeight: FontWeight.bold,
-                            color: AppColors.text,
+                            color: colors.text,
                           ),
                         ),
                         const SizedBox(height: 6),
@@ -104,7 +105,7 @@ class _MemberEditDialogState extends State<MemberEditDialog> {
                               : 'Update member information',
                           style: TextStyle(
                             fontSize: 13,
-                            color: AppColors.textSecondary,
+                            color: colors.textSecondary,
                           ),
                         ),
                       ],
@@ -112,9 +113,9 @@ class _MemberEditDialogState extends State<MemberEditDialog> {
                   ),
                   const SizedBox(width: 12),
                   IconButton(
-                    icon: const Icon(
+                    icon: Icon(
                       Icons.close,
-                      color: AppColors.textSecondary,
+                      color: colors.textSecondary,
                       size: 24,
                     ),
                     onPressed: () => Navigator.pop(context),
@@ -156,7 +157,7 @@ class _MemberEditDialogState extends State<MemberEditDialog> {
               padding: const EdgeInsets.fromLTRB(28, 20, 28, 28),
               decoration: BoxDecoration(
                 border: Border(
-                  top: BorderSide(color: AppColors.borderLight, width: 1),
+                  top: BorderSide(color: colors.borderLight, width: 1),
                 ),
               ),
               child: Row(
@@ -170,7 +171,7 @@ class _MemberEditDialogState extends State<MemberEditDialog> {
                           horizontal: 32,
                           vertical: 14,
                         ),
-                        side: BorderSide(color: AppColors.border, width: 1.5),
+                        side: BorderSide(color: colors.border, width: 1.5),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),
                         ),
@@ -178,7 +179,7 @@ class _MemberEditDialogState extends State<MemberEditDialog> {
                       child: Text(
                         'Cancel',
                         style: TextStyle(
-                          color: AppColors.textSecondary,
+                          color: colors.textSecondary,
                           fontWeight: FontWeight.w600,
                           fontSize: 14,
                         ),
@@ -189,7 +190,7 @@ class _MemberEditDialogState extends State<MemberEditDialog> {
                   Flexible(
                     child: ElevatedButton(
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: AppColors.primary,
+                        backgroundColor: colors.primary,
                         padding: const EdgeInsets.symmetric(
                           horizontal: 36,
                           vertical: 14,

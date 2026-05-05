@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
-import '../../../theme/color.dart';
+import '../../../theme/app_theme.dart';
 
 /// Widget for uploading and managing documents
 /// Displays file picker and list of selected/existing files
@@ -21,14 +21,15 @@ class DocumentUploadWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.colors;
     return SizedBox(
       width: double.infinity,
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: AppColors.background,
+          color: colors.background,
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: AppColors.borderBlack26),
+          border: Border.all(color: Colors.black26),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -37,7 +38,7 @@ class DocumentUploadWidget extends StatelessWidget {
               width: double.infinity,
               child: ElevatedButton.icon(
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.primary,
+                  backgroundColor: colors.primary,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
                   ),
@@ -56,14 +57,14 @@ class DocumentUploadWidget extends StatelessWidget {
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: pickedFiles
-                    .map((file) => _buildFileItem(file))
+                    .map((file) => _buildFileItem(file, colors))
                     .toList(),
               )
             else if (previouslySelectedFiles != null &&
                 previouslySelectedFiles!.isNotEmpty)
-              _buildPreviousFilesList()
+              _buildPreviousFilesList(colors)
             else
-              _buildEmptyState(),
+              _buildEmptyState(colors),
           ],
         ),
       ),
@@ -71,9 +72,9 @@ class DocumentUploadWidget extends StatelessWidget {
   }
 
   /// Build list of previously selected files (for draft reference)
-  Widget _buildPreviousFilesList() {
+  Widget _buildPreviousFilesList(AppTheme colors) {
     if (previouslySelectedFiles == null || previouslySelectedFiles!.isEmpty) {
-      return _buildEmptyState();
+      return _buildEmptyState(colors);
     }
 
     return Column(
@@ -83,8 +84,8 @@ class DocumentUploadWidget extends StatelessWidget {
           width: double.infinity,
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
-            color: AppColors.infoLight,
-            border: Border.all(color: AppColors.infoBorder),
+            color: colors.infoLight,
+            border: Border.all(color: colors.infoBorder),
             borderRadius: BorderRadius.circular(8),
           ),
           child: Column(
@@ -92,14 +93,14 @@ class DocumentUploadWidget extends StatelessWidget {
             children: [
               Row(
                 children: [
-                  Icon(Icons.info, size: 16, color: AppColors.info),
+                  Icon(Icons.info, size: 16, color: colors.info),
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
                       'Previously selected files (please re-select)',
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 12,
-                        color: AppColors.info,
+                        color: colors.info,
                         fontWeight: FontWeight.w500,
                       ),
                     ),
@@ -114,10 +115,10 @@ class DocumentUploadWidget extends StatelessWidget {
                   padding: const EdgeInsets.only(bottom: 4),
                   child: Row(
                     children: [
-                      const Icon(
+                      Icon(
                         Icons.insert_drive_file,
                         size: 16,
-                        color: AppColors.textSecondary,
+                        color: colors.textSecondary,
                       ),
                       const SizedBox(width: 8),
                       Expanded(
@@ -131,9 +132,9 @@ class DocumentUploadWidget extends StatelessWidget {
                             ),
                             Text(
                               '${(fileSize / 1024).toStringAsFixed(1)} KB',
-                              style: const TextStyle(
+                              style: TextStyle(
                                 fontSize: 10,
-                                color: AppColors.iconGrey600,
+                                color: Colors.grey.shade600,
                               ),
                             ),
                           ],
@@ -151,20 +152,20 @@ class DocumentUploadWidget extends StatelessWidget {
   }
 
   /// Build empty state when no files selected
-  Widget _buildEmptyState() {
+  Widget _buildEmptyState(AppTheme colors) {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.symmetric(vertical: 16),
       decoration: BoxDecoration(
-        color: AppColors.statusRejectedLight,
-        border: Border.all(color: AppColors.red200),
+        color: colors.statusRejectedLight,
+        border: Border.all(color: Colors.red.shade200),
         borderRadius: BorderRadius.circular(12),
       ),
       child: Center(
         child: Text(
           'No files uploaded.',
-          style: const TextStyle(
-            color: AppColors.statusRejectedDark,
+          style: TextStyle(
+            color: colors.statusRejectedDark,
             fontWeight: FontWeight.w500,
           ),
         ),
@@ -173,16 +174,12 @@ class DocumentUploadWidget extends StatelessWidget {
   }
 
   /// Build individual file item with remove button
-  Widget _buildFileItem(PlatformFile file) {
+  Widget _buildFileItem(PlatformFile file, AppTheme colors) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 8.0),
       child: Row(
         children: [
-          const Icon(
-            Icons.insert_drive_file,
-            size: 18,
-            color: AppColors.primary,
-          ),
+          Icon(Icons.insert_drive_file, size: 18, color: colors.primary),
           const SizedBox(width: 8),
           Expanded(
             child: Text(
@@ -199,7 +196,7 @@ class DocumentUploadWidget extends StatelessWidget {
               padding: EdgeInsets.zero,
               iconSize: 18,
               icon: const Icon(Icons.close),
-              color: AppColors.statusRejectedDark,
+              color: colors.statusRejectedDark,
               onPressed: () => onRemoveFile(file),
               tooltip: 'Remove file',
             ),

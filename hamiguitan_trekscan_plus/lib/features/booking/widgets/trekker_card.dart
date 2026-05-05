@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../models/member.dart';
-import '../../../theme/color.dart';
+import '../../../theme/app_theme.dart';
 
 /// Card widget for displaying individual trekker information
 /// Shows member details with edit/remove actions
@@ -22,12 +22,13 @@ class TrekkerCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.colors;
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
-        color: SharedColors.white,
+        color: colors.surface,
         border: Border.all(
-          color: isPrimary ? AppColors.primary : AppColors.borderBlack12,
+          color: isPrimary ? colors.primary : Colors.black12,
           width: isPrimary ? 2 : 1,
         ),
         borderRadius: BorderRadius.circular(12),
@@ -41,15 +42,15 @@ class TrekkerCard extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  _buildHeader(),
+                  _buildHeader(colors),
                   const SizedBox(height: 8),
-                  _buildDetails(),
+                  _buildDetails(colors),
                 ],
               ),
             ),
             if (!isPrimary) ...[
               const SizedBox(width: 12),
-              _buildActionButtons(),
+              _buildActionButtons(colors),
             ],
           ],
         ),
@@ -58,7 +59,7 @@ class TrekkerCard extends StatelessWidget {
   }
 
   /// Build card header with name and primary badge
-  Widget _buildHeader() {
+  Widget _buildHeader(AppTheme colors) {
     return Row(
       children: [
         Expanded(
@@ -71,7 +72,7 @@ class TrekkerCard extends StatelessWidget {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
             decoration: BoxDecoration(
-              color: AppColors.primary.withOpacity(0.2),
+              color: colors.primary.withValues(alpha: 0.2),
               borderRadius: BorderRadius.circular(8),
             ),
             child: Text(
@@ -79,7 +80,7 @@ class TrekkerCard extends StatelessWidget {
               style: TextStyle(
                 fontSize: 11,
                 fontWeight: FontWeight.w600,
-                color: AppColors.primary,
+                color: colors.primary,
               ),
             ),
           ),
@@ -88,27 +89,28 @@ class TrekkerCard extends StatelessWidget {
   }
 
   /// Build member details (category, gender, birth date)
-  Widget _buildDetails() {
+  Widget _buildDetails(AppTheme colors) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _buildDetailRow('Category', member.category),
-        if (member.gender.isNotEmpty) _buildDetailRow('Gender', member.gender),
+        _buildDetailRow('Category', member.category, colors),
+        if (member.gender.isNotEmpty)
+          _buildDetailRow('Gender', member.gender, colors),
         if (member.birthDate.isNotEmpty)
-          _buildDetailRow('Birth Date', member.birthDate),
+          _buildDetailRow('Birth Date', member.birthDate, colors),
       ],
     );
   }
 
   /// Build single detail row
-  Widget _buildDetailRow(String label, String value) {
+  Widget _buildDetailRow(String label, String value, AppTheme colors) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4.0),
       child: Row(
         children: [
           Text(
             '$label: ',
-            style: TextStyle(fontSize: 12, color: AppColors.iconGrey600),
+            style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
           ),
           Text(
             value,
@@ -120,7 +122,7 @@ class TrekkerCard extends StatelessWidget {
   }
 
   /// Build action buttons for non-primary members
-  Widget _buildActionButtons() {
+  Widget _buildActionButtons(AppTheme colors) {
     return Column(
       mainAxisSize: MainAxisSize.min,
       spacing: 8,
@@ -134,8 +136,8 @@ class TrekkerCard extends StatelessWidget {
               onPressed: onEdit,
               icon: Icon(Icons.edit, size: 18),
               style: IconButton.styleFrom(
-                backgroundColor: AppColors.primary.withOpacity(0.1),
-                foregroundColor: AppColors.primary,
+                backgroundColor: colors.primary.withValues(alpha: 0.1),
+                foregroundColor: colors.primary,
                 padding: EdgeInsets.zero,
               ),
             ),
@@ -150,8 +152,8 @@ class TrekkerCard extends StatelessWidget {
               onPressed: onRemove,
               icon: Icon(Icons.delete_outline, size: 18),
               style: IconButton.styleFrom(
-                backgroundColor: AppColors.statusRejectedLight,
-                foregroundColor: AppColors.statusRejectedDark,
+                backgroundColor: colors.statusRejectedLight,
+                foregroundColor: colors.statusRejectedDark,
                 padding: EdgeInsets.zero,
               ),
             ),

@@ -3,7 +3,7 @@ import 'package:intl/intl.dart';
 import '../../../models/climb.dart';
 import '../../../models/booking_model.dart';
 import '../../../models/member.dart';
-import '../../../theme/color.dart';
+import '../../../theme/app_theme.dart';
 import '../../../utils/status_helpers.dart';
 import 'price_summary_widget.dart';
 import '../models/document_requirements.dart';
@@ -33,6 +33,7 @@ class BookingDetailsModal extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.colors;
     return GestureDetector(
       onTap: onClose,
       child: Container(
@@ -48,7 +49,7 @@ class BookingDetailsModal extends StatelessWidget {
                   maxWidth: MediaQuery.of(context).size.width * 0.95,
                 ),
                 decoration: BoxDecoration(
-                  color: SharedColors.white,
+                  color: colors.surface,
                   borderRadius: BorderRadius.circular(16),
                   boxShadow: [
                     BoxShadow(
@@ -73,10 +74,10 @@ class BookingDetailsModal extends StatelessWidget {
                               children: [
                                 Text(
                                   'Booking Details',
-                                  style: const TextStyle(
+                                  style: TextStyle(
                                     fontSize: 18,
                                     fontWeight: FontWeight.w600,
-                                    color: AppColors.text,
+                                    color: colors.text,
                                   ),
                                 ),
                                 const SizedBox(height: 2),
@@ -84,7 +85,7 @@ class BookingDetailsModal extends StatelessWidget {
                                   climb.name,
                                   style: TextStyle(
                                     fontSize: 13,
-                                    color: AppColors.textSecondary,
+                                    color: colors.textSecondary,
                                   ),
                                 ),
                               ],
@@ -100,7 +101,7 @@ class BookingDetailsModal extends StatelessWidget {
                     ),
                     Divider(
                       height: 1,
-                      color: AppColors.border,
+                      color: colors.border,
                       indent: 20,
                       endIndent: 20,
                     ),
@@ -112,19 +113,21 @@ class BookingDetailsModal extends StatelessWidget {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             // Status section
-                            _buildStatusSection(),
+                            _buildStatusSection(colors),
                             const SizedBox(height: 20),
                             // Booking dates section
-                            _buildSectionTitle('Booking Dates'),
+                            _buildSectionTitle('Booking Dates', colors),
                             const SizedBox(height: 12),
                             _buildDetailRow(
                               'Date Booked',
                               _formatDate(climb.dateBooked),
+                              colors,
                             ),
                             const SizedBox(height: 8),
                             _buildDetailRow(
                               'Target Trek Date',
                               _formatDate(climb.targetDate),
+                              colors,
                             ),
                             if (climb.computedStatus() != 'Pending')
                               const SizedBox(height: 8),
@@ -132,38 +135,46 @@ class BookingDetailsModal extends StatelessWidget {
                               _buildDetailRow(
                                 'Date Approved',
                                 _formatDate(climb.dateApproved),
+                                colors,
                               ),
                             const SizedBox(height: 20),
                             // Trek information section
-                            _buildSectionTitle('Trek Information'),
+                            _buildSectionTitle('Trek Information', colors),
                             const SizedBox(height: 12),
-                            _buildDetailRow('Trek Type', climb.type),
+                            _buildDetailRow('Trek Type', climb.type, colors),
                             const SizedBox(height: 8),
                             _buildDetailRow(
                               'Total Participants',
                               booking != null
                                   ? '${booking!.members.length}'
                                   : 'N/A',
+                              colors,
                             ),
                             if (booking != null) const SizedBox(height: 8),
                             if (booking != null)
                               _buildDetailRow(
                                 'Affiliation',
                                 booking!.affiliation,
+                                colors,
                               ),
                             if (booking != null) const SizedBox(height: 8),
                             if (booking != null)
                               _buildDetailRow(
                                 'Contact Number',
                                 booking!.phoneNumber,
+                                colors,
                               ),
                             if (booking != null) const SizedBox(height: 8),
                             if (booking != null)
-                              _buildDetailRow('Hometown', booking!.hometown),
+                              _buildDetailRow(
+                                'Hometown',
+                                booking!.hometown,
+                                colors,
+                              ),
                             if (booking != null && booking!.members.isNotEmpty)
                               const SizedBox(height: 20),
                             if (booking != null && booking!.members.isNotEmpty)
-                              _buildMembersSection(),
+                              _buildMembersSection(colors),
                             if (booking != null) const SizedBox(height: 20),
                             if (booking != null)
                               PriceSummaryWidget(
@@ -175,14 +186,14 @@ class BookingDetailsModal extends StatelessWidget {
                               const SizedBox(height: 20),
                             if (booking != null &&
                                 booking!.attachments.isNotEmpty)
-                              _buildAttachmentsSection(),
+                              _buildAttachmentsSection(colors),
                           ],
                         ),
                       ),
                     ),
                     Divider(
                       height: 1,
-                      color: AppColors.border,
+                      color: colors.border,
                       indent: 20,
                       endIndent: 20,
                     ),
@@ -204,8 +215,7 @@ class BookingDetailsModal extends StatelessWidget {
                                   shape: RoundedRectangleBorder(
                                     borderRadius: BorderRadius.circular(8),
                                   ),
-                                  disabledForegroundColor:
-                                      AppColors.iconGrey400,
+                                  disabledForegroundColor: Colors.grey.shade400,
                                 ),
                                 child: const Text(
                                   'Edit',
@@ -228,8 +238,8 @@ class BookingDetailsModal extends StatelessWidget {
                                       booking != null &&
                                           booking!.isDraft &&
                                           onSubmit != null
-                                      ? AppColors.statusApproved
-                                      : AppColors.primary,
+                                      ? Colors.green
+                                      : colors.primary,
                                   shape: RoundedRectangleBorder(
                                     borderRadius: BorderRadius.circular(8),
                                   ),
@@ -267,7 +277,7 @@ class BookingDetailsModal extends StatelessWidget {
     );
   }
 
-  Widget _buildStatusSection() {
+  Widget _buildStatusSection(AppTheme colors) {
     final status = climb.computedStatus();
     final statusColor = BookingStatusHelper.color(status);
 
@@ -301,7 +311,7 @@ class BookingDetailsModal extends StatelessWidget {
                       _getAdminNotes(),
                       style: TextStyle(
                         fontSize: 12,
-                        color: AppColors.textSecondary,
+                        color: colors.textSecondary,
                       ),
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
@@ -315,18 +325,18 @@ class BookingDetailsModal extends StatelessWidget {
     );
   }
 
-  Widget _buildSectionTitle(String title) {
+  Widget _buildSectionTitle(String title, AppTheme colors) {
     return Text(
       title,
-      style: const TextStyle(
+      style: TextStyle(
         fontSize: 14,
         fontWeight: FontWeight.w600,
-        color: AppColors.text,
+        color: colors.text,
       ),
     );
   }
 
-  Widget _buildDetailRow(String label, String value) {
+  Widget _buildDetailRow(String label, String value, AppTheme colors) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -336,17 +346,17 @@ class BookingDetailsModal extends StatelessWidget {
           style: TextStyle(
             fontSize: 13,
             fontWeight: FontWeight.w500,
-            color: AppColors.textSecondary,
+            color: colors.textSecondary,
           ),
         ),
         const SizedBox(width: 12),
         Expanded(
           child: Text(
             value,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 13,
               fontWeight: FontWeight.w500,
-              color: AppColors.text,
+              color: colors.text,
             ),
             textAlign: TextAlign.right,
           ),
@@ -355,7 +365,7 @@ class BookingDetailsModal extends StatelessWidget {
     );
   }
 
-  Widget _buildMembersSection() {
+  Widget _buildMembersSection(AppTheme colors) {
     if (booking == null || booking!.members.isEmpty) {
       return const SizedBox.shrink();
     }
@@ -363,7 +373,7 @@ class BookingDetailsModal extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _buildSectionTitle('Group Members'),
+        _buildSectionTitle('Group Members', colors),
         const SizedBox(height: 12),
         ...booking!.members.asMap().entries.map((entry) {
           final member = entry.value;
@@ -372,13 +382,13 @@ class BookingDetailsModal extends StatelessWidget {
             margin: const EdgeInsets.only(bottom: 12),
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: SharedColors.white,
+              color: colors.surface,
               borderRadius: BorderRadius.circular(10),
               border: Border(
                 left: BorderSide(
                   color: member.isPrimaryContact
-                      ? AppColors.primary
-                      : AppColors.borderBlack26,
+                      ? colors.primary
+                      : Colors.black26,
                   width: 3,
                 ),
               ),
@@ -399,10 +409,10 @@ class BookingDetailsModal extends StatelessWidget {
                     Expanded(
                       child: Text(
                         member.fullName,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 13,
                           fontWeight: FontWeight.w600,
-                          color: AppColors.text,
+                          color: colors.text,
                         ),
                       ),
                     ),
@@ -413,14 +423,14 @@ class BookingDetailsModal extends StatelessWidget {
                           vertical: 3,
                         ),
                         decoration: BoxDecoration(
-                          color: AppColors.primary.withValues(alpha: 0.1),
+                          color: colors.primary.withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(5),
                         ),
                         child: Text(
                           'Primary',
                           style: TextStyle(
                             fontSize: 11,
-                            color: AppColors.primary,
+                            color: colors.primary,
                             fontWeight: FontWeight.w600,
                           ),
                         ),
@@ -436,8 +446,8 @@ class BookingDetailsModal extends StatelessWidget {
                   ),
                   decoration: BoxDecoration(
                     color: docStatus['isComplete']
-                        ? AppColors.statusApproved.withValues(alpha: 0.1)
-                        : AppColors.statusPending.withValues(alpha: 0.1),
+                        ? Colors.green.withValues(alpha: 0.1)
+                        : Colors.orange.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(6),
                   ),
                   child: Row(
@@ -449,8 +459,8 @@ class BookingDetailsModal extends StatelessWidget {
                             : Icons.pending,
                         size: 14,
                         color: docStatus['isComplete']
-                            ? AppColors.statusApproved
-                            : AppColors.statusPending,
+                            ? Colors.green
+                            : Colors.orange,
                       ),
                       const SizedBox(width: 6),
                       Text(
@@ -459,21 +469,21 @@ class BookingDetailsModal extends StatelessWidget {
                           fontSize: 11,
                           fontWeight: FontWeight.w600,
                           color: docStatus['isComplete']
-                              ? AppColors.statusApproved
-                              : AppColors.statusPending,
+                              ? Colors.green
+                              : Colors.orange,
                         ),
                       ),
                     ],
                   ),
                 ),
                 const SizedBox(height: 8),
-                _buildDetailRow('Gender', member.gender),
+                _buildDetailRow('Gender', member.gender, colors),
                 const SizedBox(height: 6),
-                _buildDetailRow('Birth Date', member.birthDate),
+                _buildDetailRow('Birth Date', member.birthDate, colors),
                 const SizedBox(height: 6),
-                _buildDetailRow('Contact', member.contactNumber),
+                _buildDetailRow('Contact', member.contactNumber, colors),
                 const SizedBox(height: 6),
-                _buildDetailRow('Category', member.categoryDisplayName),
+                _buildDetailRow('Category', member.categoryDisplayName, colors),
               ],
             ),
           );
@@ -482,7 +492,7 @@ class BookingDetailsModal extends StatelessWidget {
     );
   }
 
-  Widget _buildAttachmentsSection() {
+  Widget _buildAttachmentsSection(AppTheme colors) {
     if (booking == null || booking!.attachments.isEmpty) {
       return const SizedBox.shrink();
     }
@@ -499,10 +509,11 @@ class BookingDetailsModal extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _buildSectionTitle('Attachments'),
+        _buildSectionTitle('Attachments', colors),
         const SizedBox(height: 12),
         ...grouped.entries.map(
-          (entry) => _buildMemberAttachmentGroup(entry.key, entry.value),
+          (entry) =>
+              _buildMemberAttachmentGroup(entry.key, entry.value, colors),
         ),
       ],
     );
@@ -511,13 +522,14 @@ class BookingDetailsModal extends StatelessWidget {
   Widget _buildMemberAttachmentGroup(
     String memberName,
     List<Attachment> attachments,
+    AppTheme colors,
   ) {
     return Container(
       margin: const EdgeInsets.only(bottom: 10),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.border),
-        color: SharedColors.white,
+        border: Border.all(color: colors.border),
+        color: colors.surface,
         boxShadow: [
           BoxShadow(
             color: SharedColors.black.withValues(alpha: 0.03),
@@ -533,46 +545,46 @@ class BookingDetailsModal extends StatelessWidget {
           childrenPadding: const EdgeInsets.fromLTRB(14, 0, 14, 12),
           leading: CircleAvatar(
             radius: 16,
-            backgroundColor: AppColors.primary.withValues(alpha: 0.12),
-            child: Icon(Icons.person, color: AppColors.primary, size: 16),
+            backgroundColor: colors.primary.withValues(alpha: 0.12),
+            child: Icon(Icons.person, color: colors.primary, size: 16),
           ),
           title: Text(
             memberName,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 13,
               fontWeight: FontWeight.w600,
-              color: AppColors.text,
+              color: colors.text,
             ),
           ),
           subtitle: Text(
             '${attachments.length} file${attachments.length == 1 ? '' : 's'}',
-            style: TextStyle(fontSize: 11, color: AppColors.textSecondary),
+            style: TextStyle(fontSize: 11, color: colors.textSecondary),
           ),
-          iconColor: AppColors.primary,
-          collapsedIconColor: AppColors.textSecondary,
+          iconColor: colors.primary,
+          collapsedIconColor: colors.textSecondary,
           initiallyExpanded: true,
           shape: const Border(), // removes ExpansionTile's own border
           children: attachments
-              .map((att) => _buildAttachmentTile(att))
+              .map((att) => _buildAttachmentTile(att, colors))
               .toList(),
         ),
       ),
     );
   }
 
-  Widget _buildAttachmentTile(Attachment attachment) {
+  Widget _buildAttachmentTile(Attachment attachment, AppTheme colors) {
     final icon = _getFileIcon(attachment.fileName);
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       decoration: BoxDecoration(
-        color: AppColors.surfaceVariant,
+        color: colors.surfaceVariant,
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: AppColors.border),
+        border: Border.all(color: colors.border),
       ),
       child: Row(
         children: [
-          Icon(icon, color: AppColors.primary, size: 20),
+          Icon(icon, color: colors.primary, size: 20),
           const SizedBox(width: 10),
           Expanded(
             child: Column(
@@ -580,10 +592,10 @@ class BookingDetailsModal extends StatelessWidget {
               children: [
                 Text(
                   attachment.fileName,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 12,
                     fontWeight: FontWeight.w600,
-                    color: AppColors.text,
+                    color: colors.text,
                   ),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
@@ -591,17 +603,14 @@ class BookingDetailsModal extends StatelessWidget {
                 const SizedBox(height: 2),
                 Text(
                   '${_formatBytes(attachment.size)} • ${DateFormat('MMM dd, yyyy').format(attachment.uploadedAt.toDate())}',
-                  style: TextStyle(
-                    fontSize: 11,
-                    color: AppColors.textSecondary,
-                  ),
+                  style: TextStyle(fontSize: 11, color: colors.textSecondary),
                 ),
               ],
             ),
           ),
           Icon(
             Icons.insert_drive_file_outlined,
-            color: AppColors.iconGrey400,
+            color: Colors.grey.shade400,
             size: 16,
           ),
         ],

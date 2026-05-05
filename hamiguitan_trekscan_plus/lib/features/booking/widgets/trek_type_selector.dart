@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../../theme/color.dart';
+import '../../../theme/app_theme.dart';
 
 /// Trek type selector dropdown widget
 /// Displays trek type options: Regular, Research, Creational (DIY)
@@ -15,23 +15,24 @@ class TrekTypeSelector extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.colors;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
+        Text(
           'Purpose of Trek',
           style: TextStyle(
             fontWeight: FontWeight.w600,
             fontSize: 15,
-            color: AppColors.text,
+            color: colors.text,
           ),
         ),
         const SizedBox(height: 8),
         Container(
           decoration: BoxDecoration(
-            color: SharedColors.white,
+            color: colors.surface,
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: AppColors.borderBlack12),
+            border: Border.all(color: Colors.black12),
             boxShadow: [
               BoxShadow(
                 color: SharedColors.black.withOpacity(0.05),
@@ -47,19 +48,19 @@ class TrekTypeSelector extends StatelessWidget {
               border: InputBorder.none,
               contentPadding: EdgeInsets.zero,
             ),
-            icon: Icon(Icons.arrow_drop_down, color: AppColors.primary),
-            style: const TextStyle(
+            icon: Icon(Icons.arrow_drop_down, color: colors.primary),
+            style: TextStyle(
               fontSize: 15,
-              color: AppColors.text,
+              color: colors.text,
               fontWeight: FontWeight.w500,
             ),
-            dropdownColor: SharedColors.white,
-            items: const [
+            dropdownColor: colors.surface,
+            items: [
               DropdownMenuItem(
                 value: 'regular',
                 child: Row(
                   children: [
-                    Icon(Icons.hiking, size: 20, color: AppColors.primary),
+                    Icon(Icons.hiking, size: 20, color: colors.primary),
                     SizedBox(width: 12),
                     Text('Regular Trek'),
                   ],
@@ -69,7 +70,7 @@ class TrekTypeSelector extends StatelessWidget {
                 value: 'research',
                 child: Row(
                   children: [
-                    Icon(Icons.science, size: 20, color: AppColors.primary),
+                    Icon(Icons.science, size: 20, color: colors.primary),
                     SizedBox(width: 12),
                     Text('Research Trek'),
                   ],
@@ -79,7 +80,7 @@ class TrekTypeSelector extends StatelessWidget {
                 value: 'creational',
                 child: Row(
                   children: [
-                    Icon(Icons.star, size: 20, color: AppColors.primary),
+                    Icon(Icons.star, size: 20, color: colors.primary),
                     SizedBox(width: 12),
                     Text('Creational (DIY)'),
                   ],

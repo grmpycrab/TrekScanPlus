@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../../theme/color.dart';
+import '../../../theme/app_theme.dart';
 
 /// Category selector dropdown for trekker classification
 /// Used for pricing and document requirement determination
@@ -17,23 +17,24 @@ class CategorySelector extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.colors;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
           label,
-          style: const TextStyle(
+          style: TextStyle(
             fontWeight: FontWeight.w600,
             fontSize: 15,
-            color: AppColors.text,
+            color: colors.text,
           ),
         ),
         const SizedBox(height: 8),
         Container(
           decoration: BoxDecoration(
-            color: SharedColors.white,
+            color: colors.surface,
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: AppColors.borderBlack12),
+            border: Border.all(color: Colors.black12),
             boxShadow: [
               BoxShadow(
                 color: SharedColors.black.withOpacity(0.05),
@@ -49,13 +50,13 @@ class CategorySelector extends StatelessWidget {
               border: InputBorder.none,
               contentPadding: EdgeInsets.zero,
             ),
-            icon: Icon(Icons.arrow_drop_down, color: AppColors.primary),
-            style: const TextStyle(
+            icon: Icon(Icons.arrow_drop_down, color: colors.primary),
+            style: TextStyle(
               fontSize: 15,
-              color: AppColors.text,
+              color: colors.text,
               fontWeight: FontWeight.w500,
             ),
-            dropdownColor: SharedColors.white,
+            dropdownColor: colors.surface,
             items: _buildCategoryItems(),
             onChanged: (value) {
               if (value != null) {
