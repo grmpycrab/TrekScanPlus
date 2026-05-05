@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../../../core/services/user_service.dart';
-import '../../../theme/color.dart';
+import '../../../theme/app_theme.dart';
 import '../../../screens/main/main_screen.dart';
 import '../../../components/error_feedback.dart';
 import '../../../utils/app_logger.dart';
@@ -62,6 +62,7 @@ class _AdditionalInformationScreenState
   }
 
   void _showConfirmationDialog() {
+    final colors = context.colors;
     final firstName = _firstNameController.text.trim();
     final lastName = _lastNameController.text.trim();
     final phoneNumber = _phoneController.text.trim();
@@ -162,8 +163,8 @@ class _AdditionalInformationScreenState
                 gender: gender,
               );
             },
-            style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary),
-            child: const Text(
+            style: ElevatedButton.styleFrom(backgroundColor: colors.primary),
+            child: Text(
               'Confirm & Continue',
               style: TextStyle(color: SharedColors.white),
             ),
@@ -286,6 +287,7 @@ class _AdditionalInformationScreenState
     required String hint,
     TextInputType keyboardType = TextInputType.text,
   }) {
+    final colors = context.colors;
     return Padding(
       padding: const EdgeInsets.only(bottom: 16),
       child: TextFormField(
@@ -298,7 +300,7 @@ class _AdditionalInformationScreenState
           border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
           focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(8),
-            borderSide: BorderSide(color: AppColors.primary),
+            borderSide: BorderSide(color: colors.primary),
           ),
           filled: true,
           fillColor: Colors.grey[50],
@@ -309,10 +311,11 @@ class _AdditionalInformationScreenState
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.colors;
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: colors.background,
       appBar: AppBar(
-        backgroundColor: AppColors.primary,
+        backgroundColor: colors.primary,
         title: const Text(
           'Complete Your Profile',
           style: TextStyle(color: Colors.white),
@@ -414,7 +417,7 @@ class _AdditionalInformationScreenState
                   ),
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(8),
-                    borderSide: BorderSide(color: AppColors.primary),
+                    borderSide: BorderSide(color: colors.primary),
                   ),
                   filled: true,
                   fillColor: Colors.grey[50],
@@ -436,7 +439,7 @@ class _AdditionalInformationScreenState
                   ),
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(8),
-                    borderSide: BorderSide(color: AppColors.primary),
+                    borderSide: BorderSide(color: colors.primary),
                   ),
                   filled: true,
                   fillColor: Colors.grey[50],
@@ -491,7 +494,7 @@ class _AdditionalInformationScreenState
               child: ElevatedButton(
                 onPressed: _isLoading ? null : _showConfirmationDialog,
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.primary,
+                  backgroundColor: colors.primary,
                   padding: const EdgeInsets.symmetric(vertical: 16),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(8),
@@ -508,7 +511,7 @@ class _AdditionalInformationScreenState
                           ),
                         ),
                       )
-                    : const Text(
+                    : Text(
                         'Review & Confirm',
                         style: TextStyle(
                           color: SharedColors.white,

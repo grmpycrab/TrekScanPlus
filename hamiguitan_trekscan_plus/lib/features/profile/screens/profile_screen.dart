@@ -13,7 +13,7 @@ import '../../../components/e_certificate_badge.dart';
 import '../../../core/widgets/app_dialogue_handler.dart';
 import '../../../theme/color.dart';
 import '../../../utils/app_logger.dart';
-import '../../../screens/main/settings_screen.dart';
+import '../../settings/screens/settings_screen.dart';
 import '../../../screens/settings/account_settings.dart';
 import '../viewmodels/profile_view_model.dart';
 
