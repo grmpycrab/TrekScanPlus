@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../../theme/color.dart';
+import '../../../theme/app_theme.dart';
 import '../../../utils/app_logger.dart';
 import 'dart:async';
 
@@ -135,7 +135,7 @@ class NotificationBannerOverlayState extends State<NotificationBannerOverlay>
   }
 
   Color _getBackgroundColor() {
-    return AppColors.primary.withOpacity(0.95);
+    return context.colors.primary.withOpacity(0.95);
   }
 
   IconData _getIcon() {
@@ -245,4 +245,3 @@ class NotificationBannerOverlayState extends State<NotificationBannerOverlay>
     );
   }
 }
-
