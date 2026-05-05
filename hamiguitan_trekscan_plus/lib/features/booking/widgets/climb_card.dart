@@ -3,7 +3,7 @@ import 'package:intl/intl.dart';
 import '../../../models/climb.dart';
 import '../../../models/booking_model.dart';
 import 'booking_details_modal.dart';
-import '../../../theme/color.dart';
+import '../../../theme/app_theme.dart';
 import '../../../utils/status_helpers.dart';
 
 typedef ClimbCallback = void Function(Climb);
@@ -37,6 +37,7 @@ class ClimbCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.colors;
     final status = climb.computedStatus();
     final statusColor = BookingStatusHelper.color(status);
 
@@ -47,10 +48,10 @@ class ClimbCard extends StatelessWidget {
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(12),
           border: Border(left: BorderSide(color: statusColor, width: 4)),
-          color: SharedColors.white,
+          color: colors.surface,
           boxShadow: [
             BoxShadow(
-              color: AppColors.shadowLight,
+              color: colors.shadowLight,
               blurRadius: 8,
               offset: const Offset(0, 2),
             ),
@@ -84,7 +85,7 @@ class ClimbCard extends StatelessWidget {
                           climb.type,
                           style: TextStyle(
                             fontSize: 13,
-                            color: AppColors.textSecondary,
+                            color: colors.textSecondary,
                           ),
                         ),
                       ],
@@ -125,7 +126,7 @@ class ClimbCard extends StatelessWidget {
                           'Booked',
                           style: TextStyle(
                             fontSize: 11,
-                            color: AppColors.textSecondary,
+                            color: colors.textSecondary,
                             fontWeight: FontWeight.w500,
                           ),
                         ),
@@ -148,7 +149,7 @@ class ClimbCard extends StatelessWidget {
                           'Target',
                           style: TextStyle(
                             fontSize: 11,
-                            color: AppColors.textSecondary,
+                            color: colors.textSecondary,
                             fontWeight: FontWeight.w500,
                           ),
                         ),
@@ -172,7 +173,7 @@ class ClimbCard extends StatelessWidget {
                             'Approved',
                             style: TextStyle(
                               fontSize: 11,
-                              color: AppColors.textSecondary,
+                              color: colors.textSecondary,
                               fontWeight: FontWeight.w500,
                             ),
                           ),
@@ -200,15 +201,15 @@ class ClimbCard extends StatelessWidget {
                         vertical: 4,
                       ),
                       decoration: BoxDecoration(
-                        color: AppColors.statusPendingLight,
+                        color: colors.statusPendingLight,
                         borderRadius: BorderRadius.circular(6),
                       ),
                       child: Text(
                         'Draft',
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 11,
                           fontWeight: FontWeight.w600,
-                          color: AppColors.statusPendingDark,
+                          color: colors.statusPendingDark,
                         ),
                       ),
                     )
@@ -219,15 +220,15 @@ class ClimbCard extends StatelessWidget {
                         vertical: 4,
                       ),
                       decoration: BoxDecoration(
-                        color: AppColors.green50,
+                        color: colors.green50,
                         borderRadius: BorderRadius.circular(6),
                       ),
                       child: Text(
                         'Submitted',
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 11,
                           fontWeight: FontWeight.w600,
-                          color: AppColors.green700,
+                          color: colors.green700,
                         ),
                       ),
                     ),
@@ -262,7 +263,7 @@ class ClimbCard extends StatelessWidget {
                     child: FilledButton(
                       onPressed: () => _showBookingDetails(context),
                       style: FilledButton.styleFrom(
-                        backgroundColor: AppColors.primary,
+                        backgroundColor: colors.primary,
                         padding: const EdgeInsets.symmetric(horizontal: 12),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(8),
@@ -287,6 +288,7 @@ class ClimbCard extends StatelessWidget {
   }
 
   void _showLongPressMenu(BuildContext context) {
+    final colors = context.colors;
     showModalBottomSheet(
       context: context,
       shape: const RoundedRectangleBorder(
@@ -301,7 +303,7 @@ class ClimbCard extends StatelessWidget {
               height: 4,
               margin: const EdgeInsets.symmetric(vertical: 12),
               decoration: BoxDecoration(
-                color: AppColors.border,
+                color: colors.border,
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
@@ -323,12 +325,12 @@ class ClimbCard extends StatelessWidget {
                 leading: Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: AppColors.borderLight,
+                    color: colors.borderLight,
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Icon(
                     Icons.archive_outlined,
-                    color: AppColors.textSecondary,
+                    color: colors.textSecondary,
                   ),
                 ),
                 title: const Text('Archive booking'),
@@ -349,10 +351,11 @@ class ClimbCard extends StatelessWidget {
   }
 
   void _showBookingDetails(BuildContext context) {
+    final colors = context.colors;
     showDialog(
       context: context,
       barrierDismissible: true,
-      barrierColor: AppColors.shadowOverlay,
+      barrierColor: colors.shadowOverlay,
       builder: (context) => BookingDetailsModal(
         climb: climb,
         booking: booking,

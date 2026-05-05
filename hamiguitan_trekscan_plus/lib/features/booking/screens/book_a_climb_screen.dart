@@ -13,7 +13,7 @@ import '../../../models/climb.dart';
 import '../../../services/booking_service.dart';
 import '../widgets/climb_card.dart';
 import '../../../core/widgets/app_dialogue_handler.dart';
-import '../../../theme/color.dart';
+import '../../../theme/app_theme.dart';
 import '../../../utils/app_logger.dart';
 import '../providers/booking_provider.dart';
 import '../widgets/trek_type_selector.dart';
@@ -269,12 +269,13 @@ class _BookAClimbScreenRefactoredState
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.colors;
     return ChangeNotifierProvider<BookingProvider>.value(
       value: _bookingProvider,
       child: Scaffold(
-        backgroundColor: SharedColors.white,
+        backgroundColor: colors.background,
         appBar: AppBar(
-          backgroundColor: AppColors.primary,
+          backgroundColor: colors.primary,
           elevation: 0,
           centerTitle: true,
           automaticallyImplyLeading: false,
@@ -298,11 +299,11 @@ class _BookAClimbScreenRefactoredState
           child: Column(
             children: [
               Container(
-                color: SharedColors.white,
+                color: colors.surface,
                 child: TabBar(
-                  labelColor: AppColors.text,
-                  unselectedLabelColor: AppColors.textSecondary,
-                  indicatorColor: AppColors.accent,
+                  labelColor: colors.text,
+                  unselectedLabelColor: colors.textSecondary,
+                  indicatorColor: colors.accent,
                   tabs: const [
                     Tab(text: 'Upcoming'),
                     Tab(text: 'Previous'),
@@ -323,7 +324,7 @@ class _BookAClimbScreenRefactoredState
           ),
         ),
         floatingActionButton: FloatingActionButton(
-          backgroundColor: AppColors.primary,
+          backgroundColor: colors.primary,
           onPressed: _showBookingForm,
           child: const Icon(Icons.add, color: SharedColors.white),
         ),
@@ -389,6 +390,7 @@ class _BookAClimbScreenRefactoredState
 
   /// Build bookings list view
   Widget _buildBookingsList(List<dynamic> bookings) {
+    final colors = context.colors;
     if (bookings.isEmpty) {
       return RefreshIndicator(
         onRefresh: _refreshBookings,
@@ -400,13 +402,13 @@ class _BookAClimbScreenRefactoredState
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.list_alt, size: 64, color: AppColors.iconGrey400),
+                  Icon(Icons.list_alt, size: 64, color: Colors.grey.shade400),
                   const SizedBox(height: 16),
                   const Text('No bookings', style: TextStyle(fontSize: 16)),
                   const SizedBox(height: 8),
-                  const Text(
+                  Text(
                     'Tap the + button to create a booking',
-                    style: TextStyle(color: AppColors.textSecondary),
+                    style: TextStyle(color: colors.textSecondary),
                   ),
                 ],
               ),
@@ -556,7 +558,7 @@ class _BookAClimbScreenRefactoredState
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: const Text('Booking saved as draft!'),
-        backgroundColor: AppColors.statusApproved,
+        backgroundColor: Colors.green,
         duration: const Duration(seconds: 2),
       ),
     );
@@ -598,7 +600,7 @@ class _BookAClimbScreenRefactoredState
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: const Text('Draft deleted'),
-              backgroundColor: AppColors.textSecondary,
+              backgroundColor: context.colors.textSecondary,
             ),
           );
           setState(() {
@@ -633,9 +635,9 @@ class _BookAClimbScreenRefactoredState
         await BookingService.instance.archiveBooking(booking.id);
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Booking archived'),
-              backgroundColor: AppColors.textSecondary,
+            SnackBar(
+              content: const Text('Booking archived'),
+              backgroundColor: context.colors.textSecondary,
             ),
           );
         }
@@ -661,9 +663,9 @@ class _BookAClimbScreenRefactoredState
         await _bookingProvider.archiveDraftBooking(booking.id);
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Draft archived'),
-              backgroundColor: AppColors.textSecondary,
+            SnackBar(
+              content: const Text('Draft archived'),
+              backgroundColor: context.colors.textSecondary,
             ),
           );
           setState(() {
@@ -782,9 +784,7 @@ class _BookAClimbScreenRefactoredState
                   ? 'Booking submitted with $uploadedCount file(s)!'
                   : 'Booking submitted successfully!',
             ),
-            backgroundColor: failedCount > 0
-                ? AppColors.statusPending
-                : AppColors.statusApproved,
+            backgroundColor: failedCount > 0 ? Colors.orange : Colors.green,
             duration: Duration(seconds: failedCount > 0 ? 5 : 3),
           ),
         );
@@ -850,9 +850,9 @@ class _BookAClimbScreenRefactoredState
           Navigator.pop(context); // Close form modal
           _refreshBookingsWithDrafts();
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Draft updated successfully!'),
-              backgroundColor: AppColors.statusApproved,
+            SnackBar(
+              content: const Text('Draft updated successfully!'),
+              backgroundColor: Colors.green,
             ),
           );
         }
@@ -920,7 +920,7 @@ class _BookAClimbScreenRefactoredState
                   ? 'Booking updated with $uploadedCount new file(s)!'
                   : 'Booking updated successfully!',
             ),
-            backgroundColor: AppColors.statusApproved,
+            backgroundColor: Colors.green,
           ),
         );
       }
@@ -996,11 +996,14 @@ class _BuildBookingFormModalState extends State<_BuildBookingFormModal> {
       child: Consumer<BookingProvider>(
         builder: (context, provider, _) {
           final state = provider.state;
+          final colors = context.colors;
           return Container(
             height: MediaQuery.of(context).size.height * 0.92,
-            decoration: const BoxDecoration(
-              color: SharedColors.white,
-              borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+            decoration: BoxDecoration(
+              color: colors.surface,
+              borderRadius: const BorderRadius.vertical(
+                top: Radius.circular(20),
+              ),
             ),
             child: Padding(
               padding: const EdgeInsets.all(16.0),
@@ -1013,17 +1016,14 @@ class _BuildBookingFormModalState extends State<_BuildBookingFormModal> {
                       children: [
                         Text(
                           widget.isEditMode ? 'Edit Booking' : 'New Booking',
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 20,
                             fontWeight: FontWeight.bold,
-                            color: AppColors.text,
+                            color: colors.text,
                           ),
                         ),
                         IconButton(
-                          icon: const Icon(
-                            Icons.close,
-                            color: AppColors.textSecondary,
-                          ),
+                          icon: Icon(Icons.close, color: colors.textSecondary),
                           onPressed: () => Navigator.pop(context),
                         ),
                       ],
@@ -1082,15 +1082,15 @@ class _BuildBookingFormModalState extends State<_BuildBookingFormModal> {
                       Container(
                         padding: const EdgeInsets.all(16),
                         decoration: BoxDecoration(
-                          border: Border.all(color: AppColors.borderBlack26),
+                          border: Border.all(color: Colors.black26),
                           borderRadius: BorderRadius.circular(12),
-                          color: AppColors.background,
+                          color: colors.background,
                         ),
-                        child: const Text(
+                        child: Text(
                           'No trekkers added yet. Add members below to upload documents.',
                           style: TextStyle(
                             fontSize: 14,
-                            color: AppColors.textSecondary,
+                            color: colors.textSecondary,
                           ),
                         ),
                       )
@@ -1159,7 +1159,7 @@ class _BuildBookingFormModalState extends State<_BuildBookingFormModal> {
                           icon: const Icon(Icons.copy),
                           label: const Text('Use Same Address for All'),
                           style: TextButton.styleFrom(
-                            foregroundColor: AppColors.primary,
+                            foregroundColor: colors.primary,
                           ),
                         ),
                       ),
@@ -1197,7 +1197,7 @@ class _BuildBookingFormModalState extends State<_BuildBookingFormModal> {
                     // Submit Button
                     ElevatedButton(
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: AppColors.primary,
+                        backgroundColor: colors.primary,
                         padding: const EdgeInsets.symmetric(vertical: 14),
                       ),
                       onPressed: () async {
@@ -1207,7 +1207,7 @@ class _BuildBookingFormModalState extends State<_BuildBookingFormModal> {
                             ScaffoldMessenger.of(context).showSnackBar(
                               const SnackBar(
                                 content: Text('Please select a trek date'),
-                                backgroundColor: AppColors.statusRejected,
+                                backgroundColor: Colors.red,
                               ),
                             );
                             return;
@@ -1289,12 +1289,13 @@ class _BuildBookingFormModalState extends State<_BuildBookingFormModal> {
     final docRequirements = DocumentRequirements.getDocumentsForCategory(
       member.category,
     );
+    final colors = context.colors;
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 20),
       child: Container(
         decoration: BoxDecoration(
-          border: Border.all(color: AppColors.borderBlack26),
+          border: Border.all(color: Colors.black26),
           borderRadius: BorderRadius.circular(12),
         ),
         child: ExpansionTile(
@@ -1304,7 +1305,7 @@ class _BuildBookingFormModalState extends State<_BuildBookingFormModal> {
           ),
           subtitle: Text(
             _getFileRequirmentsForCategory(member.category),
-            style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
+            style: TextStyle(fontSize: 12, color: colors.textSecondary),
           ),
           children: [
             Padding(
@@ -1321,9 +1322,9 @@ class _BuildBookingFormModalState extends State<_BuildBookingFormModal> {
                         Container(
                           padding: const EdgeInsets.all(12),
                           decoration: BoxDecoration(
-                            color: AppColors.statusApproved.withOpacity(0.1),
+                            color: Colors.green.withValues(alpha: 0.1),
                             border: Border.all(
-                              color: AppColors.statusApproved.withOpacity(0.3),
+                              color: Colors.green.withValues(alpha: 0.3),
                             ),
                             borderRadius: BorderRadius.circular(8),
                           ),
@@ -1343,10 +1344,10 @@ class _BuildBookingFormModalState extends State<_BuildBookingFormModal> {
                                   padding: const EdgeInsets.only(bottom: 4),
                                   child: Row(
                                     children: [
-                                      const Icon(
+                                      Icon(
                                         Icons.check_circle,
                                         size: 16,
-                                        color: AppColors.statusApproved,
+                                        color: Colors.green,
                                       ),
                                       const SizedBox(width: 8),
                                       Expanded(
@@ -1398,7 +1399,7 @@ class _BuildBookingFormModalState extends State<_BuildBookingFormModal> {
                               docField.description,
                               style: TextStyle(
                                 fontSize: 12,
-                                color: AppColors.textSecondary,
+                                color: colors.textSecondary,
                               ),
                             ),
                             const SizedBox(height: 8),
@@ -1441,7 +1442,7 @@ class _BuildBookingFormModalState extends State<_BuildBookingFormModal> {
                     Center(
                       child: Text(
                         'No document requirements defined for ${member.category}',
-                        style: TextStyle(color: AppColors.textSecondary),
+                        style: TextStyle(color: colors.textSecondary),
                       ),
                     ),
                 ],

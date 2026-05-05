@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../models/member.dart';
-import '../../../theme/color.dart';
+import '../../../theme/app_theme.dart';
 import '../models/document_requirements.dart';
 
 /// Widget displaying estimated pricing summary
@@ -19,6 +19,7 @@ class PriceSummaryWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.colors;
     if (members.isEmpty) {
       return const SizedBox.shrink();
     }
@@ -28,8 +29,8 @@ class PriceSummaryWidget extends StatelessWidget {
       padding: const EdgeInsets.all(16),
       margin: const EdgeInsets.only(bottom: 18),
       decoration: BoxDecoration(
-        color: AppColors.primary.withOpacity(0.1),
-        border: Border.all(color: AppColors.primary),
+        color: colors.primary.withValues(alpha: 0.1),
+        border: Border.all(color: colors.primary),
         borderRadius: BorderRadius.circular(12),
       ),
       child: Column(
@@ -40,12 +41,13 @@ class PriceSummaryWidget extends StatelessWidget {
             style: TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.bold,
-              color: AppColors.primary,
+              color: colors.primary,
             ),
           ),
           const SizedBox(height: 12),
           // Show discount info for primary member
-          if (members.isNotEmpty) _buildDiscountInfo(members[0].category),
+          if (members.isNotEmpty)
+            _buildDiscountInfo(members[0].category, colors),
           const SizedBox(height: 12),
           if (isLoading)
             SizedBox(
@@ -56,24 +58,22 @@ class PriceSummaryWidget extends StatelessWidget {
                   height: 20,
                   child: CircularProgressIndicator(
                     strokeWidth: 2,
-                    valueColor: AlwaysStoppedAnimation<Color>(
-                      AppColors.primary,
-                    ),
+                    valueColor: AlwaysStoppedAnimation<Color>(colors.primary),
                   ),
                 ),
               ),
             )
           else
-            _buildMemberPrices(),
+            _buildMemberPrices(colors),
           const Divider(height: 16),
-          _buildTotalPrice(),
+          _buildTotalPrice(colors),
         ],
       ),
     );
   }
 
   /// Build discount information display
-  Widget _buildDiscountInfo(String category) {
+  Widget _buildDiscountInfo(String category, AppTheme colors) {
     final discountDescription =
         DocumentRequirements.getDiscountDescriptionForCategory(category);
     if (discountDescription == null || discountDescription.isEmpty) {
@@ -83,20 +83,20 @@ class PriceSummaryWidget extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(10),
       decoration: BoxDecoration(
-        color: AppColors.statusApproved.withValues(alpha: 0.1),
-        border: Border.all(color: AppColors.green700),
+        color: Colors.green.withValues(alpha: 0.1),
+        border: Border.all(color: colors.green700),
         borderRadius: BorderRadius.circular(8),
       ),
       child: Row(
         children: [
-          Icon(Icons.discount, color: AppColors.green700, size: 18),
+          Icon(Icons.discount, color: colors.green700, size: 18),
           const SizedBox(width: 8),
           Expanded(
             child: Text(
               discountDescription,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 12,
-                color: AppColors.green700,
+                color: colors.green700,
                 fontWeight: FontWeight.w600,
               ),
             ),
@@ -107,7 +107,7 @@ class PriceSummaryWidget extends StatelessWidget {
   }
 
   /// Build individual member price rows
-  Widget _buildMemberPrices() {
+  Widget _buildMemberPrices(AppTheme colors) {
     return Column(
       children: members.asMap().entries.map((entry) {
         final member = entry.value;
@@ -143,10 +143,7 @@ class PriceSummaryWidget extends StatelessWidget {
                   if (discountPercent > 0)
                     Text(
                       '(${discountPercent.toStringAsFixed(0)}% off)',
-                      style: const TextStyle(
-                        fontSize: 11,
-                        color: AppColors.green700,
-                      ),
+                      style: TextStyle(fontSize: 11, color: colors.green700),
                     ),
                 ],
               ),
@@ -158,7 +155,7 @@ class PriceSummaryWidget extends StatelessWidget {
   }
 
   /// Build total price row
-  Widget _buildTotalPrice() {
+  Widget _buildTotalPrice(AppTheme colors) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
@@ -171,7 +168,7 @@ class PriceSummaryWidget extends StatelessWidget {
           style: TextStyle(
             fontWeight: FontWeight.bold,
             fontSize: 16,
-            color: AppColors.primary,
+            color: colors.primary,
           ),
         ),
       ],
