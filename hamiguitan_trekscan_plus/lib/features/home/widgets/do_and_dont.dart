@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../../theme/color.dart';
+import '../../../theme/app_theme.dart';
 import 'trek_tips.dart';
 
 class DoAndDont extends StatefulWidget {
@@ -42,6 +42,7 @@ class _DoAndDontState extends State<DoAndDont> {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.colors;
     final screenWidth = MediaQuery.of(context).size.width;
     final isSmallScreen = screenWidth < 360;
 
@@ -53,7 +54,7 @@ class _DoAndDontState extends State<DoAndDont> {
           Container(
             padding: const EdgeInsets.all(4),
             decoration: BoxDecoration(
-              color: AppColors.background,
+              color: colors.background,
               borderRadius: BorderRadius.circular(12),
               boxShadow: [
                 BoxShadow(
@@ -65,11 +66,18 @@ class _DoAndDontState extends State<DoAndDont> {
             ),
             child: Row(
               children: [
-                _buildSegment(0, "Do's & Dont's", Icons.rule, isSmallScreen),
+                _buildSegment(
+                  0,
+                  "Do's & Dont's",
+                  Icons.rule,
+                  colors,
+                  isSmallScreen,
+                ),
                 _buildSegment(
                   1,
                   'Tips & Tricks',
                   Icons.lightbulb_outline,
+                  colors,
                   isSmallScreen,
                 ),
               ],
@@ -77,7 +85,7 @@ class _DoAndDontState extends State<DoAndDont> {
           ),
           const SizedBox(height: 20),
           widget.selectedIndex == 0
-              ? _buildTipsList(isSmallScreen)
+              ? _buildTipsList(colors, isSmallScreen)
               : const TrekTips(),
         ],
       ),
@@ -88,6 +96,7 @@ class _DoAndDontState extends State<DoAndDont> {
     int index,
     String text,
     IconData icon,
+    AppTheme colors,
     bool isSmallScreen,
   ) {
     final isSelected = widget.selectedIndex == index;
@@ -101,12 +110,12 @@ class _DoAndDontState extends State<DoAndDont> {
             horizontal: isSmallScreen ? 8 : 12,
           ),
           decoration: BoxDecoration(
-            color: isSelected ? AppColors.primary : Colors.transparent,
+            color: isSelected ? colors.primary : Colors.transparent,
             borderRadius: BorderRadius.circular(10),
             boxShadow: isSelected
                 ? [
                     BoxShadow(
-                      color: AppColors.primary.withValues(alpha: 0.3),
+                      color: colors.primary.withValues(alpha: 0.3),
                       blurRadius: 8,
                       offset: const Offset(0, 2),
                     ),
@@ -119,9 +128,7 @@ class _DoAndDontState extends State<DoAndDont> {
               Icon(
                 icon,
                 size: isSmallScreen ? 16 : 18,
-                color: isSelected
-                    ? SharedColors.white
-                    : AppColors.textSecondary,
+                color: isSelected ? SharedColors.white : colors.textSecondary,
               ),
               SizedBox(width: isSmallScreen ? 6 : 8),
               Flexible(
@@ -130,9 +137,7 @@ class _DoAndDontState extends State<DoAndDont> {
                   textAlign: TextAlign.center,
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(
-                    color: isSelected
-                        ? SharedColors.white
-                        : AppColors.text,
+                    color: isSelected ? SharedColors.white : colors.text,
                     fontWeight: isSelected ? FontWeight.bold : FontWeight.w600,
                     fontSize: isSmallScreen ? 13 : 14,
                   ),
@@ -145,7 +150,7 @@ class _DoAndDontState extends State<DoAndDont> {
     );
   }
 
-  Widget _buildTipsList(bool isSmallScreen) {
+  Widget _buildTipsList(AppTheme colors, bool isSmallScreen) {
     return SingleChildScrollView(
       child: Container(
         margin: const EdgeInsets.only(bottom: 24),
@@ -217,7 +222,7 @@ class _DoAndDontState extends State<DoAndDont> {
                             style: TextStyle(
                               fontSize: isSmallScreen ? 18 : 20,
                               fontWeight: FontWeight.bold,
-                              color: AppColors.text,
+                              color: colors.text,
                             ),
                           ),
                         ],
@@ -234,6 +239,7 @@ class _DoAndDontState extends State<DoAndDont> {
                       'You must coordinate with the MHRWS Protected Area Management Office (PAMO) to get the necessary permits.',
                       Colors.green,
                       Icons.assignment_turned_in,
+                      colors,
                       isSmallScreen,
                     ),
                     _buildCard(
@@ -241,6 +247,7 @@ class _DoAndDontState extends State<DoAndDont> {
                       'This usually includes a medical certificate (to show you\'re fit for the trek), a valid ID, and sometimes a signed waiver.',
                       Colors.green,
                       Icons.description,
+                      colors,
                       isSmallScreen,
                     ),
                     _buildCard(
@@ -248,6 +255,7 @@ class _DoAndDontState extends State<DoAndDont> {
                       'Guided treks are mandatory. Guides help with navigation, safety, and also contribute to local livelihoods.',
                       Colors.green,
                       Icons.person_pin_circle,
+                      colors,
                       isSmallScreen,
                     ),
                     _buildCard(
@@ -255,6 +263,7 @@ class _DoAndDontState extends State<DoAndDont> {
                       'Stay in approved trails, use existing campsites; don\'t cut new paths or camp anywhere not allowed.',
                       Colors.green,
                       Icons.hiking,
+                      colors,
                       isSmallScreen,
                     ),
                     _buildCard(
@@ -262,6 +271,7 @@ class _DoAndDontState extends State<DoAndDont> {
                       'Bring down all your trash. Don\'t leave behind plastic, wrappers, bottles, etc. What you bring up, bring down.',
                       Colors.green,
                       Icons.eco,
+                      colors,
                       isSmallScreen,
                     ),
                     _buildCard(
@@ -269,6 +279,7 @@ class _DoAndDontState extends State<DoAndDont> {
                       'Don\'t feed animals, don\'t disturb nesting or breeding areas, don\'t pick or damage plants, saplings, or fungus.',
                       Colors.green,
                       Icons.pets,
+                      colors,
                       isSmallScreen,
                     ),
                     const SizedBox(height: 8),
@@ -315,7 +326,7 @@ class _DoAndDontState extends State<DoAndDont> {
                             style: TextStyle(
                               fontSize: isSmallScreen ? 18 : 20,
                               fontWeight: FontWeight.bold,
-                              color: AppColors.text,
+                              color: colors.text,
                             ),
                           ),
                         ],
@@ -332,6 +343,7 @@ class _DoAndDontState extends State<DoAndDont> {
                       'Walk-in trekkers are generally not allowed.',
                       Colors.red,
                       Icons.do_not_disturb,
+                      colors,
                       isSmallScreen,
                     ),
                     _buildCard(
@@ -339,6 +351,7 @@ class _DoAndDontState extends State<DoAndDont> {
                       'Some trails are permanently closed or are open only by special arrangement.',
                       Colors.red,
                       Icons.wrong_location,
+                      colors,
                       isSmallScreen,
                     ),
                     _buildCard(
@@ -346,6 +359,7 @@ class _DoAndDontState extends State<DoAndDont> {
                       'No dumping waste, no throwing cigarette butts, no bathing with soap in streams.',
                       Colors.red,
                       Icons.delete_outline,
+                      colors,
                       isSmallScreen,
                     ),
                     _buildCard(
@@ -353,6 +367,7 @@ class _DoAndDontState extends State<DoAndDont> {
                       'This includes feeding animals, harvesting flora, removing anything from its place. It\'s a protected area with many endemic species.',
                       Colors.red,
                       Icons.nature_people,
+                      colors,
                       isSmallScreen,
                     ),
                     _buildCard(
@@ -360,6 +375,7 @@ class _DoAndDontState extends State<DoAndDont> {
                       'The trails are challenging. If you\'re not prepared (fitness-wise or gear-wise), you may be putting yourself or others at risk.',
                       Colors.red,
                       Icons.health_and_safety,
+                      colors,
                       isSmallScreen,
                     ),
                     _buildCard(
@@ -367,6 +383,7 @@ class _DoAndDontState extends State<DoAndDont> {
                       'Disrupts wildlife and other trekkers. Respect the quietness of the forest.',
                       Colors.red,
                       Icons.volume_off,
+                      colors,
                       isSmallScreen,
                     ),
                     const SizedBox(height: 8),
@@ -385,6 +402,7 @@ class _DoAndDontState extends State<DoAndDont> {
     String content,
     Color accentColor,
     IconData icon,
+    AppTheme colors,
     bool isSmallScreen,
   ) {
     return Container(
@@ -434,7 +452,7 @@ class _DoAndDontState extends State<DoAndDont> {
                   style: TextStyle(
                     fontSize: isSmallScreen ? 14 : 16,
                     fontWeight: FontWeight.bold,
-                    color: AppColors.text,
+                    color: colors.text,
                   ),
                 ),
                 const SizedBox(height: 6),
@@ -442,7 +460,7 @@ class _DoAndDontState extends State<DoAndDont> {
                   content,
                   style: TextStyle(
                     fontSize: isSmallScreen ? 13 : 14,
-                    color: AppColors.textSecondary,
+                    color: colors.textSecondary,
                     height: 1.5,
                   ),
                 ),
@@ -459,6 +477,7 @@ class _DoAndDontState extends State<DoAndDont> {
 class _DoAndDontOverlayState extends State<DoAndDontOverlay> {
   @override
   Widget build(BuildContext context) {
+    final colors = context.colors;
     final screenWidth = MediaQuery.of(context).size.width;
     final screenHeight = MediaQuery.of(context).size.height;
     final isSmallScreen = screenWidth < 360;
@@ -491,8 +510,8 @@ class _DoAndDontOverlayState extends State<DoAndDontOverlay> {
               decoration: BoxDecoration(
                 gradient: LinearGradient(
                   colors: [
-                    AppColors.primary,
-                    AppColors.primary.withValues(alpha: 0.8),
+                    colors.primary,
+                    colors.primary.withValues(alpha: 0.8),
                   ],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
@@ -533,6 +552,7 @@ class _DoAndDontOverlayState extends State<DoAndDontOverlay> {
                       title: "Do's",
                       icon: Icons.check_circle_outline,
                       color: Colors.green,
+                      colors: colors,
                       items: [
                         _InfoItem(
                           title: 'Secure a permit ahead of time',
@@ -578,6 +598,7 @@ class _DoAndDontOverlayState extends State<DoAndDontOverlay> {
                       title: "Don'ts",
                       icon: Icons.cancel_outlined,
                       color: Colors.red,
+                      colors: colors,
                       items: [
                         _InfoItem(
                           title: 'Don\'t walk in without permit',
@@ -632,6 +653,7 @@ class _DoAndDontOverlayState extends State<DoAndDontOverlay> {
     required String title,
     required IconData icon,
     required Color color,
+    required AppTheme colors,
     required List<_InfoItem> items,
     required bool isSmallScreen,
   }) {
@@ -680,7 +702,7 @@ class _DoAndDontOverlayState extends State<DoAndDontOverlay> {
                     style: TextStyle(
                       fontSize: isSmallScreen ? 18 : 20,
                       fontWeight: FontWeight.bold,
-                      color: AppColors.text,
+                      color: colors.text,
                     ),
                   ),
                 ),
@@ -691,7 +713,10 @@ class _DoAndDontOverlayState extends State<DoAndDontOverlay> {
             padding: const EdgeInsets.all(12),
             child: Column(
               children: items
-                  .map((item) => _buildInfoCard(item, color, isSmallScreen))
+                  .map(
+                    (item) =>
+                        _buildInfoCard(item, color, colors, isSmallScreen),
+                  )
                   .toList(),
             ),
           ),
@@ -700,7 +725,12 @@ class _DoAndDontOverlayState extends State<DoAndDontOverlay> {
     );
   }
 
-  Widget _buildInfoCard(_InfoItem item, Color color, bool isSmallScreen) {
+  Widget _buildInfoCard(
+    _InfoItem item,
+    Color color,
+    AppTheme colors,
+    bool isSmallScreen,
+  ) {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       padding: EdgeInsets.all(isSmallScreen ? 12 : 14),
@@ -737,7 +767,7 @@ class _DoAndDontOverlayState extends State<DoAndDontOverlay> {
                   style: TextStyle(
                     fontSize: isSmallScreen ? 14 : 15,
                     fontWeight: FontWeight.bold,
-                    color: AppColors.text,
+                    color: colors.text,
                   ),
                 ),
                 const SizedBox(height: 4),
@@ -745,7 +775,7 @@ class _DoAndDontOverlayState extends State<DoAndDontOverlay> {
                   item.description,
                   style: TextStyle(
                     fontSize: isSmallScreen ? 12 : 13,
-                    color: AppColors.textSecondary,
+                    color: colors.textSecondary,
                     height: 1.4,
                   ),
                 ),
@@ -757,4 +787,3 @@ class _DoAndDontOverlayState extends State<DoAndDontOverlay> {
     );
   }
 }
-

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../../theme/color.dart';
+import '../../../theme/app_theme.dart';
 import 'package:hamiguitan_trekscan_plus/features/social/models/social_model.dart';
 import 'package:hamiguitan_trekscan_plus/features/social/widgets/social_card.dart';
 import '../viewmodels/home_view_model.dart';
@@ -54,6 +54,7 @@ class _HomeSocialFeedState extends State<HomeSocialFeed> {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.colors;
     final vm = widget.viewModel;
 
     // ── Not signed in ────────────────────────────────────────────────────────
@@ -81,7 +82,7 @@ class _HomeSocialFeedState extends State<HomeSocialFeed> {
             widget.searchQuery.isNotEmpty
                 ? 'No posts found for "${widget.searchQuery}"'
                 : 'No posts yet. Be the first to share your experience!',
-            style: const TextStyle(color: AppColors.textSecondary),
+            style: TextStyle(color: colors.textSecondary),
           ),
         ),
       );
@@ -135,7 +136,7 @@ class _HomeSocialFeedState extends State<HomeSocialFeed> {
             child: Center(
               child: Text(
                 'No posts found for "${widget.searchQuery}"',
-                style: const TextStyle(color: AppColors.textSecondary),
+                style: TextStyle(color: colors.textSecondary),
               ),
             ),
           );
@@ -177,6 +178,7 @@ class _HomeSocialFeedState extends State<HomeSocialFeed> {
 class _EndOfFeedCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
+    final colors = context.colors;
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
       child: Column(
@@ -193,7 +195,7 @@ class _EndOfFeedCard extends StatelessWidget {
             style: TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.w600,
-              color: AppColors.textSecondary,
+              color: colors.textSecondary,
             ),
             textAlign: TextAlign.center,
           ),

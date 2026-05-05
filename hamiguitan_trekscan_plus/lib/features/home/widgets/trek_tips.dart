@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../../theme/color.dart';
+import '../../../theme/app_theme.dart';
 
 class TrekTips extends StatefulWidget {
   const TrekTips({super.key});
@@ -29,6 +29,7 @@ class _TrekTipsState extends State<TrekTips> {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.colors;
     final screenWidth = MediaQuery.of(context).size.width;
     final isSmallScreen = screenWidth < 360;
 
@@ -72,8 +73,8 @@ class _TrekTipsState extends State<TrekTips> {
                       gradient: isExpanded
                           ? LinearGradient(
                               colors: [
-                                AppColors.primary.withValues(alpha: 0.1),
-                                AppColors.primary.withValues(alpha: 0.05),
+                                colors.primary.withValues(alpha: 0.1),
+                                colors.primary.withValues(alpha: 0.05),
                               ],
                               begin: Alignment.topLeft,
                               end: Alignment.bottomRight,
@@ -90,12 +91,12 @@ class _TrekTipsState extends State<TrekTips> {
                           Container(
                             padding: const EdgeInsets.all(8),
                             decoration: BoxDecoration(
-                              color: AppColors.primary.withValues(alpha: 0.1),
+                              color: colors.primary.withValues(alpha: 0.1),
                               borderRadius: BorderRadius.circular(8),
                             ),
                             child: Icon(
                               _getSectionIcon(entry.key),
-                              color: AppColors.primary,
+                              color: colors.primary,
                               size: 20,
                             ),
                           ),
@@ -106,7 +107,7 @@ class _TrekTipsState extends State<TrekTips> {
                               style: TextStyle(
                                 fontSize: isSmallScreen ? 16 : 18,
                                 fontWeight: FontWeight.bold,
-                                color: AppColors.text,
+                                color: colors.text,
                               ),
                             ),
                           ),
@@ -118,7 +119,7 @@ class _TrekTipsState extends State<TrekTips> {
                 body: Column(
                   children: [
                     ...entry.value.map(
-                      (tip) => _buildTipItem(tip, isSmallScreen),
+                      (tip) => _buildTipItem(tip, colors, isSmallScreen),
                     ),
                     const SizedBox(height: 8),
                   ],
@@ -204,7 +205,7 @@ class _TrekTipsState extends State<TrekTips> {
     ],
   };
 
-  Widget _buildTipItem(String text, bool isSmallScreen) {
+  Widget _buildTipItem(String text, AppTheme colors, bool isSmallScreen) {
     return Container(
       margin: EdgeInsets.only(
         bottom: 12,
@@ -216,7 +217,7 @@ class _TrekTipsState extends State<TrekTips> {
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: AppColors.primary.withValues(alpha: 0.2),
+          color: colors.primary.withValues(alpha: 0.2),
           width: 1,
         ),
         boxShadow: [
@@ -233,13 +234,13 @@ class _TrekTipsState extends State<TrekTips> {
           Container(
             padding: const EdgeInsets.all(6),
             decoration: BoxDecoration(
-              color: AppColors.primary.withValues(alpha: 0.1),
+              color: colors.primary.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(6),
             ),
             child: Icon(
               Icons.tips_and_updates,
               size: isSmallScreen ? 16 : 18,
-              color: AppColors.primary,
+              color: colors.primary,
             ),
           ),
           SizedBox(width: isSmallScreen ? 10 : 12),
@@ -248,7 +249,7 @@ class _TrekTipsState extends State<TrekTips> {
               text,
               style: TextStyle(
                 fontSize: isSmallScreen ? 13 : 14,
-                color: AppColors.text,
+                color: colors.text,
                 height: 1.5,
               ),
             ),
@@ -313,6 +314,7 @@ class _TrekTipsOverlayState extends State<TrekTipsOverlay> {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.colors;
     final screenWidth = MediaQuery.of(context).size.width;
     final screenHeight = MediaQuery.of(context).size.height;
     final isSmallScreen = screenWidth < 360;
@@ -342,13 +344,13 @@ class _TrekTipsOverlayState extends State<TrekTipsOverlay> {
             // Header
             Container(
               padding: const EdgeInsets.all(20),
-              decoration: const BoxDecoration(
+              decoration: BoxDecoration(
                 gradient: LinearGradient(
-                  colors: [AppColors.accent, Color(0xFF053821)],
+                  colors: [colors.accent, const Color(0xFF053821)],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                 ),
-                borderRadius: BorderRadius.only(
+                borderRadius: const BorderRadius.only(
                   topLeft: Radius.circular(20),
                   topRight: Radius.circular(20),
                 ),
@@ -388,6 +390,7 @@ class _TrekTipsOverlayState extends State<TrekTipsOverlay> {
                       title: entry.key,
                       icon: _getSectionIcon(entry.key),
                       tips: entry.value,
+                      colors: colors,
                       isSmallScreen: isSmallScreen,
                     );
                   }).toList(),
@@ -425,6 +428,7 @@ class _TrekTipsOverlayState extends State<TrekTipsOverlay> {
     required String title,
     required IconData icon,
     required List<String> tips,
+    required AppTheme colors,
     required bool isSmallScreen,
   }) {
     return Container(
@@ -433,7 +437,7 @@ class _TrekTipsOverlayState extends State<TrekTipsOverlay> {
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: AppColors.accent.withValues(alpha: 0.3),
+          color: colors.accent.withValues(alpha: 0.3),
           width: 1.5,
         ),
         boxShadow: [
@@ -451,8 +455,8 @@ class _TrekTipsOverlayState extends State<TrekTipsOverlay> {
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 colors: [
-                  AppColors.accent.withValues(alpha: 0.1),
-                  AppColors.accent.withValues(alpha: 0.05),
+                  colors.accent.withValues(alpha: 0.1),
+                  colors.accent.withValues(alpha: 0.05),
                 ],
               ),
               borderRadius: const BorderRadius.vertical(
@@ -464,10 +468,10 @@ class _TrekTipsOverlayState extends State<TrekTipsOverlay> {
                 Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: AppColors.accent.withValues(alpha: 0.15),
+                    color: colors.accent.withValues(alpha: 0.15),
                     borderRadius: BorderRadius.circular(8),
                   ),
-                  child: Icon(icon, color: AppColors.accent, size: 20),
+                  child: Icon(icon, color: colors.accent, size: 20),
                 ),
                 SizedBox(width: isSmallScreen ? 10 : 12),
                 Expanded(
@@ -476,7 +480,7 @@ class _TrekTipsOverlayState extends State<TrekTipsOverlay> {
                     style: TextStyle(
                       fontSize: isSmallScreen ? 15 : 16,
                       fontWeight: FontWeight.bold,
-                      color: AppColors.text,
+                      color: colors.text,
                     ),
                   ),
                 ),
@@ -487,7 +491,7 @@ class _TrekTipsOverlayState extends State<TrekTipsOverlay> {
             padding: const EdgeInsets.all(12),
             child: Column(
               children: tips
-                  .map((tip) => _buildTipCard(tip, isSmallScreen))
+                  .map((tip) => _buildTipCard(tip, colors, isSmallScreen))
                   .toList(),
             ),
           ),
@@ -496,14 +500,14 @@ class _TrekTipsOverlayState extends State<TrekTipsOverlay> {
     );
   }
 
-  Widget _buildTipCard(String tip, bool isSmallScreen) {
+  Widget _buildTipCard(String tip, AppTheme colors, bool isSmallScreen) {
     return Container(
       margin: const EdgeInsets.only(bottom: 10),
       padding: EdgeInsets.all(isSmallScreen ? 10 : 12),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: AppColors.accent.withValues(alpha: 0.2)),
+        border: Border.all(color: colors.accent.withValues(alpha: 0.2)),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.02),
@@ -538,7 +542,7 @@ class _TrekTipsOverlayState extends State<TrekTipsOverlay> {
               tip,
               style: TextStyle(
                 fontSize: isSmallScreen ? 12 : 13,
-                color: AppColors.text,
+                color: colors.text,
                 height: 1.4,
               ),
             ),
@@ -548,4 +552,3 @@ class _TrekTipsOverlayState extends State<TrekTipsOverlay> {
     );
   }
 }
-

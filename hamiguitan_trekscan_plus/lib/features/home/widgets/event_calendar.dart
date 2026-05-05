@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../../../models/calendar_model.dart';
-import '../../../theme/color.dart';
+import '../../../theme/app_theme.dart';
 import '../../../services/calendar_config_service.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'dart:async';
@@ -29,6 +29,7 @@ class _EventCalendarState extends State<EventCalendar> {
   late List<String> _weekDays;
   late List<TrekDay> _displayTrekDays;
   StreamSubscription<QuerySnapshot>? _bookingsSubscription;
+  late AppTheme _colors;
 
   @override
   void initState() {
@@ -163,6 +164,7 @@ class _EventCalendarState extends State<EventCalendar> {
 
   @override
   Widget build(BuildContext context) {
+    _colors = context.colors;
     return Dialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
       insetPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
@@ -178,7 +180,7 @@ class _EventCalendarState extends State<EventCalendar> {
             Container(
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
-                color: AppColors.primary,
+                color: _colors.primary,
                 borderRadius: const BorderRadius.only(
                   topLeft: Radius.circular(20),
                   topRight: Radius.circular(20),
@@ -357,7 +359,7 @@ class _EventCalendarState extends State<EventCalendar> {
         badgeColor = Colors.orange;
       } else if (bookedSlots > 0) {
         // Has bookings - show green badge
-        badgeColor = AppColors.accent;
+        badgeColor = _colors.accent;
       }
 
       // Show booked count if there are bookings
@@ -367,7 +369,7 @@ class _EventCalendarState extends State<EventCalendar> {
     }
 
     if (isToday && !isPastDate) {
-      borderColor = AppColors.primary;
+      borderColor = _colors.primary;
     }
 
     return GestureDetector(
@@ -499,7 +501,7 @@ class _EventCalendarState extends State<EventCalendar> {
       spacing: 12,
       runSpacing: 8,
       children: [
-        _buildLegendItem('Available', AppColors.accent),
+        _buildLegendItem('Available', _colors.accent),
         _buildLegendItem('Limited Slots', Colors.orange),
         _buildLegendItem('Full', Colors.red),
         _buildLegendItem('Closed', Colors.grey.shade600),
@@ -518,4 +520,3 @@ class _EventCalendarState extends State<EventCalendar> {
     );
   }
 }
-

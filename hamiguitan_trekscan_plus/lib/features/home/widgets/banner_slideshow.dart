@@ -1,6 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
-import '../../../theme/color.dart';
+import '../../../theme/app_theme.dart';
 import '../../../services/e_certificate_service.dart';
 import '../../../components/e_certificate_badge.dart';
 
@@ -51,6 +51,7 @@ class _BannerSlideshowState extends State<BannerSlideshow> {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.colors;
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
       height: 180,
@@ -83,7 +84,7 @@ class _BannerSlideshowState extends State<BannerSlideshow> {
                 width: double.infinity,
                 height: double.infinity,
                 errorBuilder: (context, error, stack) =>
-                    Container(color: AppColors.primary),
+                    Container(color: colors.primary),
               );
             },
           ),
@@ -96,8 +97,8 @@ class _BannerSlideshowState extends State<BannerSlideshow> {
                   begin: Alignment.bottomCenter,
                   end: Alignment.topCenter,
                   colors: [
-                    AppColors.primary.withValues(alpha: 0.9),
-                    AppColors.primary.withValues(alpha: 0.6),
+                    colors.primary.withValues(alpha: 0.9),
+                    colors.primary.withValues(alpha: 0.6),
                     Colors.black.withValues(alpha: 0.3),
                     Colors.transparent,
                   ],
@@ -186,4 +187,3 @@ class _BannerSlideshowState extends State<BannerSlideshow> {
     );
   }
 }
-

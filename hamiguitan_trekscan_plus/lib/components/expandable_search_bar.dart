@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../theme/color.dart';
+import '../theme/app_theme.dart';
 
 /// A reusable expandable search bar component that animates from right to left
 /// Displays a title when collapsed and a search field when expanded
@@ -74,6 +74,7 @@ class _ExpandableSearchBarState extends State<ExpandableSearchBar>
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.colors;
     return Row(
       children: [
         if (!_isExpanded)
@@ -88,7 +89,7 @@ class _ExpandableSearchBarState extends State<ExpandableSearchBar>
               focusNode: _searchFocusNode,
               decoration: InputDecoration(
                 hintText: widget.hintText,
-                hintStyle: TextStyle(color: AppColors.textSecondary),
+                hintStyle: TextStyle(color: colors.textSecondary),
                 border: InputBorder.none,
                 contentPadding: const EdgeInsets.symmetric(horizontal: 12),
               ),
@@ -99,7 +100,7 @@ class _ExpandableSearchBarState extends State<ExpandableSearchBar>
         IconButton(
           icon: Icon(
             _isExpanded ? Icons.close : Icons.search,
-            color: AppColors.primary,
+            color: colors.primary,
           ),
           onPressed: _toggleSearch,
         ),
