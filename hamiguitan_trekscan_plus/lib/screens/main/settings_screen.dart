@@ -11,7 +11,7 @@ import '../settings/appearance_settings.dart';
 import '../settings/archived_bookings_screen.dart';
 import '../../services/firebase_auth_service.dart';
 import '../../services/onboarding_service.dart';
-import '../../components/app_dialogue_handler.dart';
+import '../../core/widgets/app_dialogue_handler.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});

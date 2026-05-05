@@ -10,7 +10,7 @@ import '../../services/booking_service.dart';
 import '../../theme/color.dart';
 import '../../utils/app_logger.dart';
 import '../../utils/status_helpers.dart';
-import '../../components/app_dialogue_handler.dart';
+import '../../core/widgets/app_dialogue_handler.dart';
 
 class ArchivedBookingsScreen extends StatefulWidget {
   const ArchivedBookingsScreen({super.key});

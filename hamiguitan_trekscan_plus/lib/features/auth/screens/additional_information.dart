@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import '../../../services/user_service.dart';
+import '../../../core/services/user_service.dart';
 import '../../../theme/color.dart';
 import '../../../screens/main/main_screen.dart';
 import '../../../components/error_feedback.dart';

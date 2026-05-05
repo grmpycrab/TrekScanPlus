@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import '../../components/bottom_navigation.dart';
-import 'home_screen.dart';
-import 'station_screen.dart';
-import 'scanner_screen.dart';
+import '../../features/home/screens/home_screen.dart';
+import '../../features/stations/screens/station_screen.dart';
+import '../../features/scanner/screens/scanner_screen.dart';
 import 'settings_screen.dart';
 import '../../features/booking/screens/book_a_climb_screen.dart';
 

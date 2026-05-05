@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../../models/user_model.dart';
-import '../../services/user_service.dart';
+import '../../core/services/user_service.dart';
 import '../../theme/color.dart';
 import '../../utils/app_logger.dart';
 

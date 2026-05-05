@@ -1,0 +1,407 @@
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
+import '../models/station_review.dart';
+import '../services/station_review_service.dart';
+import '../../../theme/color.dart';
+import '../../../features/auth/screens/login_screen.dart';
+
+/// Pill showing average rating (reference-style), or a neutral state when empty.
+class StationRatingSummaryPill extends StatelessWidget {
+  const StationRatingSummaryPill({
+    super.key,
+    required this.loading,
+    required this.average,
+    required this.count,
+  });
+
+  final bool loading;
+  final double average;
+  final int count;
+
+  @override
+  Widget build(BuildContext context) {
+    if (loading) {
+      return const Padding(
+        padding: EdgeInsets.only(left: 8, top: 2),
+        child: SizedBox(
+          width: 22,
+          height: 22,
+          child: CircularProgressIndicator(strokeWidth: 2),
+        ),
+      );
+    }
+
+    final hasReviews = count > 0;
+    final label = hasReviews ? '${average.toStringAsFixed(1)}/5' : '—';
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: AppColors.accent,
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            hasReviews ? Icons.star_rounded : Icons.star_outline_rounded,
+            size: 18,
+            color: Colors.white,
+          ),
+          const SizedBox(width: 4),
+          Text(
+            hasReviews ? '$label ($count)' : label,
+            style: const TextStyle(
+              color: Colors.white,
+              fontWeight: FontWeight.w600,
+              fontSize: 13,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Reviews list + sign-in / compose UI for a station.
+class StationReviewsSectionBody extends StatefulWidget {
+  const StationReviewsSectionBody({
+    super.key,
+    required this.stationId,
+    required this.reviews,
+    required this.loading,
+    this.error,
+  });
+
+  final String stationId;
+  final List<StationReview> reviews;
+  final bool loading;
+  final Object? error;
+
+  @override
+  State<StationReviewsSectionBody> createState() =>
+      _StationReviewsSectionBodyState();
+}
+
+class _StationReviewsSectionBodyState extends State<StationReviewsSectionBody> {
+  final _commentController = TextEditingController();
+  int _draftRating = 5;
+  bool _submitting = false;
+
+  @override
+  void dispose() {
+    _commentController.dispose();
+    super.dispose();
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _syncDraftFromMyReview(_myReview);
+  }
+
+  StationReview? get _myReview {
+    final uid = StationReviewService.instance.currentUserId;
+    if (uid == null) return null;
+    for (final r in widget.reviews) {
+      if (r.userId == uid) return r;
+    }
+    return null;
+  }
+
+  void _syncDraftFromMyReview(StationReview? mine) {
+    if (mine == null) return;
+    _draftRating = mine.rating;
+    _commentController.text = mine.comment;
+  }
+
+  Future<void> _submit() async {
+    setState(() => _submitting = true);
+    try {
+      await StationReviewService.instance.upsertReview(
+        stationId: widget.stationId,
+        rating: _draftRating,
+        comment: _commentController.text,
+      );
+      if (mounted) {
+        FocusScope.of(context).unfocus();
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('Review saved')));
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(e.toString())));
+      }
+    } finally {
+      if (mounted) setState(() => _submitting = false);
+    }
+  }
+
+  Future<void> _deleteMine() async {
+    final mine = _myReview;
+    if (mine == null) return;
+    try {
+      await StationReviewService.instance.deleteMyReview(widget.stationId);
+      if (mounted) {
+        _commentController.clear();
+        setState(() => _draftRating = 5);
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('Review removed')));
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(e.toString())));
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final dateFmt = DateFormat.yMMMd();
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _sectionTitle('Reviews'),
+        if (widget.error != null) ...[
+          const SizedBox(height: 8),
+          Text(
+            'Could not load reviews. Check connection and try again.',
+            style: TextStyle(color: Colors.red[700], fontSize: 14),
+          ),
+        ] else if (widget.loading && widget.reviews.isEmpty) ...[
+          const SizedBox(height: 16),
+          const Center(child: CircularProgressIndicator()),
+        ] else if (widget.reviews.isEmpty) ...[
+          const SizedBox(height: 8),
+          Text(
+            'No reviews yet. Be the first to share your experience.',
+            style: TextStyle(
+              color: Colors.grey[600],
+              fontSize: 15,
+              height: 1.4,
+            ),
+          ),
+        ] else ...[
+          const SizedBox(height: 12),
+          ...widget.reviews.map(
+            (r) => _ReviewTile(review: r, dateFmt: dateFmt),
+          ),
+        ],
+        const SizedBox(height: 20),
+        _buildComposer(context),
+      ],
+    );
+  }
+
+  Widget _sectionTitle(String title) {
+    return Text(
+      title,
+      style: const TextStyle(
+        fontSize: 18,
+        fontWeight: FontWeight.bold,
+        color: AppColors.text,
+      ),
+    );
+  }
+
+  Widget _buildComposer(BuildContext context) {
+    final user = FirebaseAuth.instance.currentUser;
+
+    if (user == null) {
+      return OutlinedButton.icon(
+        onPressed: () {
+          Navigator.push<void>(
+            context,
+            MaterialPageRoute(builder: (_) => const LoginScreen()),
+          );
+        },
+        icon: const Icon(Icons.login, size: 18),
+        label: const Text('Sign in to leave a review'),
+        style: OutlinedButton.styleFrom(
+          foregroundColor: AppColors.accent,
+          side: const BorderSide(color: AppColors.accent),
+        ),
+      );
+    }
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppColors.background,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AppColors.border),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            _myReview != null ? 'Update your review' : 'Write a review',
+            style: const TextStyle(
+              fontWeight: FontWeight.w600,
+              fontSize: 15,
+              color: AppColors.text,
+            ),
+          ),
+          const SizedBox(height: 10),
+          Row(
+            children: List.generate(5, (i) {
+              final n = i + 1;
+              final filled = n <= _draftRating;
+              return InkWell(
+                onTap: () => setState(() => _draftRating = n),
+                borderRadius: BorderRadius.circular(20),
+                child: Padding(
+                  padding: const EdgeInsets.only(right: 4),
+                  child: Icon(
+                    filled ? Icons.star_rounded : Icons.star_border_rounded,
+                    color: filled ? Colors.amber[700] : Colors.grey[400],
+                    size: 32,
+                  ),
+                ),
+              );
+            }),
+          ),
+          const SizedBox(height: 12),
+          TextField(
+            controller: _commentController,
+            maxLines: 3,
+            maxLength: 2000,
+            decoration: InputDecoration(
+              hintText: 'Share tips or how it felt at this station…',
+              filled: true,
+              fillColor: Colors.white,
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(10),
+                borderSide: const BorderSide(color: AppColors.border),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(10),
+                borderSide: const BorderSide(
+                  color: AppColors.accent,
+                  width: 1.5,
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              FilledButton(
+                onPressed: _submitting ? null : _submit,
+                style: FilledButton.styleFrom(
+                  backgroundColor: AppColors.accent,
+                  foregroundColor: Colors.white,
+                ),
+                child: _submitting
+                    ? const SizedBox(
+                        width: 18,
+                        height: 18,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: Colors.white,
+                        ),
+                      )
+                    : Text(_myReview != null ? 'Update review' : 'Post review'),
+              ),
+              if (_myReview != null) ...[
+                const SizedBox(width: 12),
+                TextButton(
+                  onPressed: _submitting ? null : _deleteMine,
+                  child: Text(
+                    'Remove',
+                    style: TextStyle(color: Colors.red[700]),
+                  ),
+                ),
+              ],
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ReviewTile extends StatelessWidget {
+  const _ReviewTile({required this.review, required this.dateFmt});
+
+  final StationReview review;
+  final DateFormat dateFmt;
+
+  @override
+  Widget build(BuildContext context) {
+    final initial = review.userDisplayName.isNotEmpty
+        ? review.userDisplayName[0].toUpperCase()
+        : '?';
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 16),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          CircleAvatar(
+            backgroundColor: AppColors.accent.withValues(alpha: 0.15),
+            foregroundColor: AppColors.accent,
+            child: Text(initial),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        review.userDisplayName,
+                        style: const TextStyle(
+                          fontWeight: FontWeight.w600,
+                          fontSize: 15,
+                        ),
+                      ),
+                    ),
+                    Text(
+                      dateFmt.format(review.updatedAt),
+                      style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 4),
+                Row(
+                  children: List.generate(
+                    5,
+                    (i) => Icon(
+                      i < review.rating
+                          ? Icons.star_rounded
+                          : Icons.star_border_rounded,
+                      size: 16,
+                      color: Colors.amber[700],
+                    ),
+                  ),
+                ),
+                if (review.comment.trim().isNotEmpty) ...[
+                  const SizedBox(height: 8),
+                  Text(
+                    review.comment.trim(),
+                    style: const TextStyle(
+                      fontSize: 14,
+                      height: 1.45,
+                      color: Colors.black87,
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}

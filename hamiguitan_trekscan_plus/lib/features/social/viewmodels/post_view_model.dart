@@ -3,7 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:intl/intl.dart';
 import '../models/social_model.dart';
 import '../repositories/social_repository.dart';
-import '../../../services/user_service.dart';
+import '../../../core/services/user_service.dart';
 import '../../../utils/app_logger.dart';
 
 /// Manages per-post state: like/bookmark/follow status, counts, display name.

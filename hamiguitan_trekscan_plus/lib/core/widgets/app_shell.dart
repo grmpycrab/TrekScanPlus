@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../services/theme_service.dart';
 import '../../services/app_theme_builder.dart';
-import '../../services/notification_manager.dart';
-import '../../components/notification_banner.dart';
+import '../../features/notification/services/notification_manager.dart';
+import '../../features/notification/widgets/notification_banner.dart';
 import '../../config/app_router.dart';
 
 /// The root [MaterialApp] shell for the entire application.

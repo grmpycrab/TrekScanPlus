@@ -3,7 +3,7 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../theme/color.dart';
-import '../components/app_dialogue_handler.dart';
+import '../core/widgets/app_dialogue_handler.dart';
 
 class OnboardingService {
   static const String _hasSeenOnboardingKey = 'has_seen_onboarding';
