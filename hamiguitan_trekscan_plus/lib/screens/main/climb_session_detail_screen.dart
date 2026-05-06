@@ -3,7 +3,7 @@
 
 import 'package:flutter/material.dart';
 import '../../models/climb_session.dart';
-import '../../theme/color.dart';
+import '../../theme/app_theme.dart';
 import '../../utils/status_helpers.dart';
 
 class ClimbSessionDetailScreen extends StatefulWidget {
@@ -38,22 +38,23 @@ class _ClimbSessionDetailScreenState extends State<ClimbSessionDetailScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.colors;
     final elapsedDuration = _session.getElapsedDuration();
     final visitCount = _session.visitedStations.length;
 
     return Scaffold(
       appBar: AppBar(
         title: Text(_session.name),
-        backgroundColor: AppColors.primary,
+        backgroundColor: colors.primary,
         foregroundColor: Colors.white,
       ),
-      backgroundColor: AppColors.background,
+      backgroundColor: colors.background,
       body: SingleChildScrollView(
         child: Column(
           children: [
             // Header Card with Status
             Container(
-              color: AppColors.primary.withOpacity(0.1),
+              color: colors.primary.withValues(alpha: 0.1),
               padding: const EdgeInsets.all(20),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -77,7 +78,7 @@ class _ClimbSessionDetailScreenState extends State<ClimbSessionDetailScreen> {
                               _session.description,
                               style: TextStyle(
                                 fontSize: 14,
-                                color: AppColors.textSecondary,
+                                color: colors.textSecondary,
                               ),
                               maxLines: 2,
                               overflow: TextOverflow.ellipsis,
@@ -211,7 +212,7 @@ class _ClimbSessionDetailScreenState extends State<ClimbSessionDetailScreen> {
                                       width: 40,
                                       height: 40,
                                       decoration: BoxDecoration(
-                                        color: AppColors.primary,
+                                        color: colors.primary,
                                         shape: BoxShape.circle,
                                       ),
                                       child: Center(
@@ -230,8 +231,8 @@ class _ClimbSessionDetailScreenState extends State<ClimbSessionDetailScreen> {
                                         width: 2,
                                         height: 50,
                                         child: Container(
-                                          color: AppColors.primary.withOpacity(
-                                            0.3,
+                                          color: colors.primary.withValues(
+                                            alpha: 0.3,
                                           ),
                                         ),
                                       ),
@@ -255,14 +256,14 @@ class _ClimbSessionDetailScreenState extends State<ClimbSessionDetailScreen> {
                                         'Elevation: ${visit.elevation}m',
                                         style: TextStyle(
                                           fontSize: 12,
-                                          color: AppColors.textSecondary,
+                                          color: colors.textSecondary,
                                         ),
                                       ),
                                       Text(
                                         'Scanned: ${_formatDateTime(visit.scannedAt)}',
                                         style: TextStyle(
                                           fontSize: 12,
-                                          color: AppColors.textSecondary,
+                                          color: colors.textSecondary,
                                         ),
                                       ),
                                       if (duration != null)
@@ -305,9 +306,11 @@ class _ClimbSessionDetailScreenState extends State<ClimbSessionDetailScreen> {
               child: Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: AppColors.segmentBackground,
+                  color: colors.segmentBackground,
                   borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: AppColors.primary.withOpacity(0.2)),
+                  border: Border.all(
+                    color: colors.primary.withValues(alpha: 0.2),
+                  ),
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -347,10 +350,11 @@ class _ClimbSessionDetailScreenState extends State<ClimbSessionDetailScreen> {
     required String value,
     required Color color,
   }) {
+    final colors = context.colors;
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: colors.surface,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: color.withOpacity(0.2)),
       ),
@@ -367,7 +371,7 @@ class _ClimbSessionDetailScreenState extends State<ClimbSessionDetailScreen> {
           const SizedBox(height: 4),
           Text(
             label,
-            style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
+            style: TextStyle(fontSize: 12, color: colors.textSecondary),
             textAlign: TextAlign.center,
           ),
         ],
@@ -376,12 +380,13 @@ class _ClimbSessionDetailScreenState extends State<ClimbSessionDetailScreen> {
   }
 
   Widget _buildInfoRow(String label, String value) {
+    final colors = context.colors;
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         Text(
           label,
-          style: TextStyle(fontSize: 14, color: AppColors.textSecondary),
+          style: TextStyle(fontSize: 14, color: colors.textSecondary),
         ),
         Text(
           value,

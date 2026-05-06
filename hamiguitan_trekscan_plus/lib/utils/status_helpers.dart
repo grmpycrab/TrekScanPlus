@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
-import '../theme/color.dart';
 
-// ─────────────────────────────────────────────────────────────────────────────
+// -----------------------------------------------------------------------------
 // BOOKING STATUS  (Approved / Pending / Cancelled / Declined / Rejected / Completed)
-// ─────────────────────────────────────────────────────────────────────────────
+// -----------------------------------------------------------------------------
 
 /// Centralised color and icon mappings for booking statuses.
 ///
@@ -16,18 +15,18 @@ class BookingStatusHelper {
   static Color color(String status) {
     switch (status) {
       case 'Approved':
-        return AppColors.statusApproved;
+        return Colors.green;
       case 'Cancelled':
-        return AppColors.statusCancelled;
+        return Colors.grey.shade500;
       case 'Completed':
-        return AppColors.notificationBooking;
+        return const Color(0xFF2196F3); // blue
       case 'Declined':
       case 'Rejected':
-        return AppColors.statusRejected;
+        return Colors.red;
       case 'Pending':
-        return AppColors.statusPending;
+        return Colors.orange;
       default:
-        return AppColors.primary;
+        return const Color(0xFF252B30); // primary
     }
   }
 
@@ -45,9 +44,9 @@ class BookingStatusHelper {
   }
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
+// -----------------------------------------------------------------------------
 // CLIMB SESSION STATUS  (ongoing / completed / abandoned)
-// ─────────────────────────────────────────────────────────────────────────────
+// -----------------------------------------------------------------------------
 
 /// Centralised color mapping for climb-session statuses.
 ///
@@ -60,13 +59,13 @@ class ClimbSessionStatusHelper {
   static Color color(String status) {
     switch (status) {
       case 'ongoing':
-        return AppColors.notificationBooking; // blue
+        return const Color(0xFF2196F3); // blue
       case 'completed':
-        return AppColors.statusApproved; // green
+        return Colors.green;
       case 'abandoned':
-        return AppColors.statusRejected; // red
+        return Colors.red;
       default:
-        return AppColors.textSecondary; // grey
+        return Colors.grey.shade500;
     }
   }
 }

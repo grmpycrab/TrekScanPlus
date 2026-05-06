@@ -2,7 +2,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import '../theme/color.dart';
+import '../theme/app_theme.dart';
 import '../core/widgets/app_dialogue_handler.dart';
 
 class OnboardingService {
@@ -116,8 +116,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.colors;
     return Scaffold(
-      backgroundColor: SharedColors.white,
+      backgroundColor: colors.background,
       body: SafeArea(
         child: Column(
           children: [
@@ -129,10 +130,10 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 children: [
                   TextButton(
                     onPressed: _skipOnboarding,
-                    child: const Text(
+                    child: Text(
                       'Skip',
                       style: TextStyle(
-                        color: AppColors.primary,
+                        color: colors.primary,
                         fontSize: 16,
                         fontWeight: FontWeight.w600,
                       ),
@@ -140,8 +141,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                   ),
                   Text(
                     '${_currentPage + 1} of $_totalPages',
-                    style: const TextStyle(
-                      color: AppColors.primary,
+                    style: TextStyle(
+                      color: colors.primary,
                       fontSize: 14,
                       fontWeight: FontWeight.w500,
                     ),
@@ -179,14 +180,14 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                   _currentPage > 0
                       ? TextButton.icon(
                           onPressed: _previousPage,
-                          icon: const Icon(
+                          icon: Icon(
                             Icons.arrow_back,
-                            color: AppColors.primary,
+                            color: colors.primary,
                           ),
-                          label: const Text(
+                          label: Text(
                             'Back',
                             style: TextStyle(
-                              color: AppColors.primary,
+                              color: colors.primary,
                               fontWeight: FontWeight.w600,
                             ),
                           ),
@@ -202,8 +203,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                         height: 8,
                         decoration: BoxDecoration(
                           color: _currentPage == index
-                              ? AppColors.primary
-                              : AppColors.primary.withOpacity(0.3),
+                              ? colors.primary
+                              : colors.primary.withValues(alpha: 0.3),
                           borderRadius: BorderRadius.circular(4),
                         ),
                       );
@@ -214,7 +215,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                   ElevatedButton.icon(
                     onPressed: _nextPage,
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.primary,
+                      backgroundColor: colors.primary,
                       foregroundColor: SharedColors.white,
                       padding: const EdgeInsets.symmetric(
                         horizontal: 20,
@@ -231,7 +232,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                     ),
                     label: Text(
                       _currentPage == _totalPages - 1 ? 'Get Started' : 'Next',
-                      style: const TextStyle(fontWeight: FontWeight.bold),
+                      style: TextStyle(fontWeight: FontWeight.bold),
                     ),
                   ),
                 ],
@@ -320,6 +321,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     String? image,
     List<String>? features,
   }) {
+    final colors = context.colors;
     return Padding(
       padding: const EdgeInsets.all(24.0),
       child: Column(
@@ -331,10 +333,10 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
               width: 150,
               height: 150,
               decoration: BoxDecoration(
-                color: AppColors.primary.withOpacity(0.1),
+                color: colors.primary.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(75),
                 border: Border.all(
-                  color: AppColors.primary.withOpacity(0.2),
+                  color: colors.primary.withValues(alpha: 0.2),
                   width: 2,
                 ),
               ),
@@ -345,7 +347,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                   height: 100,
                   fit: BoxFit.contain,
                   errorBuilder: (context, error, stackTrace) =>
-                      Icon(icon, size: 80, color: AppColors.primary),
+                      Icon(icon, size: 80, color: colors.primary),
                 ),
               ),
             )
@@ -354,14 +356,14 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
               width: 120,
               height: 120,
               decoration: BoxDecoration(
-                color: AppColors.primary.withOpacity(0.1),
+                color: colors.primary.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(60),
                 border: Border.all(
-                  color: AppColors.primary.withOpacity(0.2),
+                  color: colors.primary.withValues(alpha: 0.2),
                   width: 2,
                 ),
               ),
-              child: Icon(icon, size: 60, color: AppColors.primary),
+              child: Icon(icon, size: 60, color: colors.primary),
             ),
 
           const SizedBox(height: 40),
@@ -369,8 +371,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
           // Title
           Text(
             title,
-            style: const TextStyle(
-              color: AppColors.primary,
+            style: TextStyle(
+              color: colors.primary,
               fontSize: 28,
               fontWeight: FontWeight.bold,
               height: 1.2,
@@ -383,8 +385,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
           // Description
           Text(
             description,
-            style: const TextStyle(
-              color: AppColors.primary,
+            style: TextStyle(
+              color: colors.primary,
               fontSize: 16,
               height: 1.5,
             ),
@@ -397,10 +399,10 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             Container(
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
-                color: AppColors.primary.withOpacity(0.05),
+                color: colors.primary.withValues(alpha: 0.05),
                 borderRadius: BorderRadius.circular(16),
                 border: Border.all(
-                  color: AppColors.primary.withOpacity(0.1),
+                  color: colors.primary.withValues(alpha: 0.1),
                   width: 1,
                 ),
               ),
@@ -413,14 +415,14 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                           children: [
                             Text(
                               feature.split(' ')[0], // The emoji
-                              style: const TextStyle(fontSize: 18),
+                              style: TextStyle(fontSize: 18),
                             ),
                             const SizedBox(width: 12),
                             Expanded(
                               child: Text(
                                 feature.substring(feature.indexOf(' ') + 1),
-                                style: const TextStyle(
-                                  color: AppColors.primary,
+                                style: TextStyle(
+                                  color: colors.primary,
                                   fontSize: 14,
                                   fontWeight: FontWeight.w500,
                                 ),

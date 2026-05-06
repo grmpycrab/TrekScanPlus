@@ -7,7 +7,7 @@ import '../../features/booking/widgets/booking_details_modal.dart';
 import '../../models/booking_model.dart';
 import '../../models/climb.dart';
 import '../../services/booking_service.dart';
-import '../../theme/color.dart';
+import '../../theme/app_theme.dart';
 import '../../utils/app_logger.dart';
 import '../../utils/status_helpers.dart';
 import '../../core/widgets/app_dialogue_handler.dart';
@@ -106,7 +106,7 @@ class _ArchivedBookingsScreenState extends State<ArchivedBookingsScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('Booking restored to main list'),
-            backgroundColor: AppColors.statusApproved,
+            backgroundColor: Colors.green,
           ),
         );
         await _loadArchived();
@@ -118,10 +118,11 @@ class _ArchivedBookingsScreenState extends State<ArchivedBookingsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.colors;
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: colors.background,
       appBar: AppBar(
-        backgroundColor: AppColors.primary,
+        backgroundColor: colors.primary,
         elevation: 0,
         title: const Text(
           'Archived Bookings',
@@ -159,28 +160,25 @@ class _ArchivedBookingsScreenState extends State<ArchivedBookingsScreen> {
   }
 
   Widget _buildEmptyState() {
+    final colors = context.colors;
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(
-            Icons.archive_outlined,
-            size: 64,
-            color: AppColors.textSecondary,
-          ),
+          Icon(Icons.archive_outlined, size: 64, color: colors.textSecondary),
           const SizedBox(height: 16),
           Text(
             'No archived bookings',
             style: TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.w600,
-              color: AppColors.textSecondary,
+              color: colors.textSecondary,
             ),
           ),
           const SizedBox(height: 8),
           Text(
             'Long-press a booking card to archive it.',
-            style: TextStyle(fontSize: 14, color: AppColors.textSecondary),
+            style: TextStyle(fontSize: 14, color: colors.textSecondary),
             textAlign: TextAlign.center,
           ),
         ],
@@ -204,6 +202,7 @@ class _ArchivedCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.colors;
     final status = climb.computedStatus();
     final statusColor = BookingStatusHelper.color(status);
 
@@ -214,10 +213,10 @@ class _ArchivedCard extends StatelessWidget {
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(12),
           border: Border(left: BorderSide(color: statusColor, width: 4)),
-          color: SharedColors.white,
+          color: colors.surface,
           boxShadow: [
             BoxShadow(
-              color: AppColors.shadowLight,
+              color: colors.shadowLight,
               blurRadius: 8,
               offset: const Offset(0, 2),
             ),
@@ -248,7 +247,7 @@ class _ArchivedCard extends StatelessWidget {
                           climb.type,
                           style: TextStyle(
                             fontSize: 13,
-                            color: AppColors.textSecondary,
+                            color: colors.textSecondary,
                           ),
                         ),
                       ],
@@ -277,7 +276,7 @@ class _ArchivedCard extends StatelessWidget {
               const SizedBox(height: 8),
               Text(
                 'Trek date: ${DateFormat('MMMM dd, yyyy').format(climb.targetDate!)}',
-                style: TextStyle(fontSize: 13, color: AppColors.textSecondary),
+                style: TextStyle(fontSize: 13, color: colors.textSecondary),
               ),
               const SizedBox(height: 12),
               Row(
@@ -288,14 +287,14 @@ class _ArchivedCard extends StatelessWidget {
                       Icon(
                         Icons.archive_outlined,
                         size: 14,
-                        color: AppColors.textSecondary,
+                        color: colors.textSecondary,
                       ),
                       const SizedBox(width: 4),
                       Text(
                         'Archived',
                         style: TextStyle(
                           fontSize: 12,
-                          color: AppColors.textSecondary,
+                          color: colors.textSecondary,
                         ),
                       ),
                       if (isDraft) ...[
@@ -306,15 +305,15 @@ class _ArchivedCard extends StatelessWidget {
                             vertical: 2,
                           ),
                           decoration: BoxDecoration(
-                            color: AppColors.statusPendingLight,
+                            color: colors.statusPendingLight,
                             borderRadius: BorderRadius.circular(4),
                           ),
-                          child: const Text(
+                          child: Text(
                             'Draft',
                             style: TextStyle(
                               fontSize: 11,
                               fontWeight: FontWeight.w600,
-                              color: AppColors.statusPendingDark,
+                              color: colors.statusPendingDark,
                             ),
                           ),
                         ),
@@ -345,7 +344,7 @@ class _ArchivedCard extends StatelessWidget {
                         child: FilledButton(
                           onPressed: onUnarchive,
                           style: FilledButton.styleFrom(
-                            backgroundColor: AppColors.primary,
+                            backgroundColor: colors.primary,
                             padding: const EdgeInsets.symmetric(horizontal: 10),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(8),
@@ -369,10 +368,11 @@ class _ArchivedCard extends StatelessWidget {
   }
 
   void _showDetails(BuildContext context) {
+    final colors = context.colors;
     showDialog(
       context: context,
       barrierDismissible: true,
-      barrierColor: AppColors.shadowOverlay,
+      barrierColor: colors.shadowOverlay,
       builder: (context) => BookingDetailsModal(
         climb: climb,
         booking: booking,

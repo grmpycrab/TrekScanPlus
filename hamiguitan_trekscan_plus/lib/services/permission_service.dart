@@ -3,7 +3,7 @@
 import 'package:flutter/material.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import '../../theme/new_color.dart';
+import '../../theme/app_theme.dart';
 
 /// Service to handle app permissions (notifications, storage, etc.)
 class PermissionService {
@@ -192,6 +192,7 @@ class PermissionService {
           context: context,
           barrierDismissible: false,
           builder: (BuildContext context) {
+            final colors = context.colors;
             return AlertDialog(
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(16),
@@ -220,18 +221,14 @@ class PermissionService {
               ),
               content: Text(
                 message,
-                style: TextStyle(
-                  fontSize: 14,
-                  color: AppColors.textSecondary,
-                  height: 1.5,
-                ),
+                style: TextStyle(fontSize: 14, color: colors.textSecondary),
               ),
               actions: [
                 TextButton(
                   onPressed: () => Navigator.of(context).pop(false),
                   child: Text(
                     'Not Now',
-                    style: TextStyle(color: AppColors.textSecondary),
+                    style: TextStyle(color: colors.textSecondary),
                   ),
                 ),
                 ElevatedButton(

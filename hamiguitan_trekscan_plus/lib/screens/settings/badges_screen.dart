@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'dart:convert';
 import '../../models/badge.dart';
-import '../../theme/color.dart';
+import '../../theme/app_theme.dart';
 import 'badge_display.dart';
 import '../../components/badge_filter.dart';
 import '../../services/achievement_service.dart';
@@ -78,9 +78,10 @@ class _BadgesScreenState extends State<BadgesScreen> {
   }
 
   void _showFilterBottomSheet() {
+    final colors = context.colors;
     showModalBottomSheet(
       context: context,
-      backgroundColor: SharedColors.white,
+      backgroundColor: colors.surface,
       builder: (context) => BadgeFilterBottomSheet(
         selectedRarities: _selectedRarities,
         selectedCategories: _selectedCategories,
@@ -98,8 +99,9 @@ class _BadgesScreenState extends State<BadgesScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.colors;
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: colors.background,
       body: SafeArea(
         child: Column(
           children: [
@@ -125,7 +127,7 @@ class _BadgesScreenState extends State<BadgesScreen> {
                     return Center(
                       child: Text(
                         'No badges available',
-                        style: TextStyle(color: AppColors.textSecondary),
+                        style: TextStyle(color: colors.textSecondary),
                       ),
                     );
                   }
@@ -138,13 +140,13 @@ class _BadgesScreenState extends State<BadgesScreen> {
                           Icon(
                             Icons.filter_none,
                             size: 48,
-                            color: AppColors.textSecondary,
+                            color: colors.textSecondary,
                           ),
                           const SizedBox(height: 12),
                           Text(
                             'No badges match your filters',
                             style: TextStyle(
-                              color: AppColors.textSecondary,
+                              color: colors.textSecondary,
                               fontSize: 16,
                             ),
                           ),
@@ -198,9 +200,10 @@ class _BadgesScreenState extends State<BadgesScreen> {
   }
 
   Widget _buildHeader() {
+    final colors = context.colors;
     return Container(
       padding: const EdgeInsets.all(16),
-      color: AppColors.primary,
+      color: colors.primary,
       child: Row(
         children: [
           IconButton(
