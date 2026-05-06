@@ -55,18 +55,18 @@ class _NotificationScreenState extends State<NotificationScreen> {
           _isSelectionMode
               ? '${_selectedNotifications.length} selected'
               : 'Notifications',
-          style: const TextStyle(
-            color: Colors.black87,
+          style: TextStyle(
+            color: colors.text,
             fontSize: 20,
             fontWeight: FontWeight.w600,
           ),
         ),
-        backgroundColor: Colors.white,
+        backgroundColor: colors.surface,
         elevation: 0,
         leading: IconButton(
           icon: Icon(
             _isSelectionMode ? Icons.close : Icons.arrow_back,
-            color: Colors.black87,
+            color: colors.text,
           ),
           onPressed: () {
             if (_isSelectionMode) {
@@ -195,7 +195,7 @@ class _NotificationScreenState extends State<NotificationScreen> {
         decoration: BoxDecoration(
           color: isSelected
               ? colors.primary.withValues(alpha: 0.1)
-              : (notification.isRead ? Colors.white : const Color(0xFFF5F9FF)),
+              : (notification.isRead ? colors.surface : colors.infoLight),
           borderRadius: BorderRadius.circular(12),
           border: isSelected
               ? Border.all(color: colors.primary, width: 2)

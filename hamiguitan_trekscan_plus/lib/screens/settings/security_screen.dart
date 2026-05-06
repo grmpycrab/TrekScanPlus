@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import '../../core/services/user_service.dart';
-import '../../theme/color.dart';
+import '../../theme/app_theme.dart';
 import '../../utils/app_logger.dart';
 
 class SecurityScreen extends StatefulWidget {
@@ -37,10 +37,11 @@ class _SecurityScreenState extends State<SecurityScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.colors;
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: colors.background,
       appBar: AppBar(
-        backgroundColor: AppColors.primary,
+        backgroundColor: colors.primary,
         title: const Text(
           'Security & Privacy',
           style: TextStyle(
@@ -73,10 +74,10 @@ class _SecurityScreenState extends State<SecurityScreen> {
                       : 'Update your account password',
                   onTap: _isGoogleUser ? null : _changePassword,
                   trailing: _isGoogleUser
-                      ? const Text(
+                      ? Text(
                           'N/A',
                           style: TextStyle(
-                            color: AppColors.textSecondary,
+                            color: colors.textSecondary,
                             fontSize: 12,
                           ),
                         )
@@ -169,13 +170,14 @@ class _SecurityScreenState extends State<SecurityScreen> {
     required Color iconColor,
     required List<Widget> children,
   }) {
+    final colors = context.colors;
     return Container(
       decoration: BoxDecoration(
-        color: SharedColors.white,
+        color: colors.surface,
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            color: AppColors.shadowLight,
+            color: colors.shadowLight,
             blurRadius: 10,
             offset: const Offset(0, 1),
           ),
@@ -199,10 +201,10 @@ class _SecurityScreenState extends State<SecurityScreen> {
                 const SizedBox(width: 12),
                 Text(
                   title,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
-                    color: AppColors.text,
+                    color: colors.text,
                   ),
                 ),
               ],
@@ -215,11 +217,12 @@ class _SecurityScreenState extends State<SecurityScreen> {
   }
 
   Widget _buildDangerZoneCard() {
+    final colors = context.colors;
     return Container(
       decoration: BoxDecoration(
-        color: SharedColors.white,
+        color: colors.surface,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.red200, width: 2),
+        border: Border.all(color: Colors.red.shade200, width: 2),
         boxShadow: [
           BoxShadow(
             color: Colors.red.withOpacity(0.05),
@@ -279,6 +282,7 @@ class _SecurityScreenState extends State<SecurityScreen> {
     Widget? trailing,
     bool isDanger = false,
   }) {
+    final colors = context.colors;
     return InkWell(
       onTap: onTap,
       child: Container(
@@ -290,8 +294,8 @@ class _SecurityScreenState extends State<SecurityScreen> {
               color: isDanger
                   ? Colors.red
                   : onTap == null
-                  ? AppColors.textSecondary
-                  : AppColors.primary,
+                  ? colors.textSecondary
+                  : colors.primary,
               size: 24,
             ),
             const SizedBox(width: 16),
@@ -307,8 +311,8 @@ class _SecurityScreenState extends State<SecurityScreen> {
                       color: isDanger
                           ? Colors.red
                           : onTap == null
-                          ? AppColors.textSecondary
-                          : AppColors.text,
+                          ? colors.textSecondary
+                          : colors.text,
                     ),
                   ),
                   const SizedBox(height: 4),
@@ -318,7 +322,7 @@ class _SecurityScreenState extends State<SecurityScreen> {
                       fontSize: 14,
                       color: isDanger
                           ? Colors.red.shade300
-                          : AppColors.textSecondary,
+                          : colors.textSecondary,
                     ),
                   ),
                 ],
@@ -330,7 +334,7 @@ class _SecurityScreenState extends State<SecurityScreen> {
               Icon(
                 Icons.arrow_forward_ios,
                 size: 16,
-                color: isDanger ? Colors.red : AppColors.textTertiary,
+                color: isDanger ? Colors.red : colors.textTertiary,
               ),
           ],
         ),
@@ -358,6 +362,7 @@ class _SecurityScreenState extends State<SecurityScreen> {
   }
 
   Future<void> _changePassword() async {
+    final colors = context.colors;
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) return;
 
@@ -369,9 +374,9 @@ class _SecurityScreenState extends State<SecurityScreen> {
       context: context,
       builder: (context) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: const Row(
+        title: Row(
           children: [
-            Icon(Icons.lock_outline, color: AppColors.primary),
+            Icon(Icons.lock_outline, color: context.colors.primary),
             SizedBox(width: 8),
             Text('Change Password'),
           ],
@@ -478,7 +483,7 @@ class _SecurityScreenState extends State<SecurityScreen> {
                 );
               }
             },
-            style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary),
+            style: ElevatedButton.styleFrom(backgroundColor: colors.primary),
             child: const Text(
               'Change Password',
               style: TextStyle(color: SharedColors.white),
@@ -492,7 +497,7 @@ class _SecurityScreenState extends State<SecurityScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Password changed successfully'),
-          backgroundColor: AppColors.green,
+          backgroundColor: Colors.green,
         ),
       );
     }

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../../theme/color.dart';
+import '../../../theme/app_theme.dart';
 import '../../../utils/app_logger.dart';
 import '../utils/station_image_path.dart';
 
@@ -23,6 +23,7 @@ class StationCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.colors;
     return GestureDetector(
       onTap: isVisited
           ? onTap
@@ -53,7 +54,7 @@ class StationCard extends StatelessWidget {
           ),
           boxShadow: [
             BoxShadow(
-              color: AppColors.shadowMedium,
+              color: colors.shadowMedium,
               blurRadius: 8,
               offset: const Offset(0, 4),
             ),
@@ -65,14 +66,14 @@ class StationCard extends StatelessWidget {
             gradient: LinearGradient(
               begin: Alignment.topCenter,
               end: Alignment.bottomCenter,
-              colors: [Colors.transparent, AppColors.shadowOverlay],
+              colors: [Colors.transparent, colors.shadowOverlay],
             ),
           ),
           padding: const EdgeInsets.all(16),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             crossAxisAlignment: CrossAxisAlignment.start,
-            children: [_buildDifficultyTag(), _buildStationInfo()],
+            children: [_buildDifficultyTag(), _buildStationInfo(colors)],
           ),
         ),
       ),
@@ -97,7 +98,7 @@ class StationCard extends StatelessWidget {
     );
   }
 
-  Widget _buildStationInfo() {
+  Widget _buildStationInfo(AppTheme colors) {
     return ConstrainedBox(
       constraints: const BoxConstraints(minHeight: 0),
       child: Column(
@@ -119,7 +120,7 @@ class StationCard extends StatelessWidget {
               const SizedBox(width: 4),
               Text(
                 '$elevation MASL',
-                style: TextStyle(color: AppColors.textLight, fontSize: 14),
+                style: TextStyle(color: Colors.white70, fontSize: 14),
               ),
             ],
           ),

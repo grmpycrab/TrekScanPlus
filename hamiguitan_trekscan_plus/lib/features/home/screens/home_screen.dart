@@ -315,7 +315,7 @@ class _HomeScreenState extends State<HomeScreen>
                       vertical: 4,
                     ),
                     decoration: BoxDecoration(
-                      color: Colors.grey[50],
+                      color: colors.surface,
                       borderRadius: BorderRadius.circular(12),
                       border: Border.all(color: colors.borderLight, width: 1),
                     ),

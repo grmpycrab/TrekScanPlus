@@ -1,24 +1,25 @@
 import 'package:flutter/material.dart';
-import '../../theme/new_color.dart';
+import '../../theme/app_theme.dart';
 
 class AboutScreen extends StatelessWidget {
   const AboutScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.colors;
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: colors.background,
       appBar: AppBar(
-        backgroundColor: AppColors.primary,
+        backgroundColor: colors.primary,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.white),
+          icon: const Icon(Icons.arrow_back, color: SharedColors.white),
           onPressed: () => Navigator.pop(context),
         ),
         title: const Text(
           'About',
           style: TextStyle(
-            color: Colors.white,
+            color: SharedColors.white,
             fontSize: 20,
             fontWeight: FontWeight.bold,
           ),
@@ -36,23 +37,19 @@ class AboutScreen extends StatelessWidget {
                   width: 100,
                   height: 100,
                   decoration: BoxDecoration(
-                    color: AppColors.primary.withValues(alpha: 0.1),
+                    color: colors.primary.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(20),
                   ),
-                  child: const Icon(
-                    Icons.landscape,
-                    size: 60,
-                    color: AppColors.primary,
-                  ),
+                  child: Icon(Icons.landscape, size: 60, color: colors.primary),
                 ),
               ),
               const SizedBox(height: 32),
-              const Text(
+              Text(
                 'Trek Scan+',
                 style: TextStyle(
                   fontSize: 24,
                   fontWeight: FontWeight.bold,
-                  color: AppColors.primary,
+                  color: colors.primary,
                 ),
               ),
               const SizedBox(height: 12),
@@ -65,7 +62,7 @@ class AboutScreen extends StatelessWidget {
                 width: double.infinity,
                 padding: const EdgeInsets.all(20.0),
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: colors.surface,
                   borderRadius: BorderRadius.circular(12),
                   boxShadow: [
                     BoxShadow(
@@ -78,12 +75,12 @@ class AboutScreen extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
+                    Text(
                       'About This Project',
                       style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
-                        color: AppColors.primary,
+                        color: colors.primary,
                       ),
                     ),
                     const SizedBox(height: 16),
@@ -93,7 +90,7 @@ class AboutScreen extends StatelessWidget {
                       'Trek Scan Plus features real-time trek scheduling, interactive QR code scanning for educational insights, achievement tracking through our badge system, and comprehensive trek information to inspire and inform every adventurer who chooses to explore the mountain\'s wonders.',
                       style: TextStyle(
                         fontSize: 14,
-                        color: AppColors.textSecondary,
+                        color: colors.textSecondary,
                         height: 1.6,
                       ),
                     ),
@@ -105,7 +102,7 @@ class AboutScreen extends StatelessWidget {
                 width: double.infinity,
                 padding: const EdgeInsets.all(20.0),
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: colors.surface,
                   borderRadius: BorderRadius.circular(12),
                   boxShadow: [
                     BoxShadow(
@@ -118,12 +115,12 @@ class AboutScreen extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
+                    Text(
                       'Development Team',
                       style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
-                        color: AppColors.primary,
+                        color: colors.primary,
                       ),
                     ),
                     const SizedBox(height: 16),
@@ -131,7 +128,7 @@ class AboutScreen extends StatelessWidget {
                       'Developed with passion and dedication by BSIT students at Davao Oriental State University.',
                       style: TextStyle(
                         fontSize: 14,
-                        color: AppColors.textSecondary,
+                        color: colors.textSecondary,
                         height: 1.6,
                       ),
                     ),
@@ -143,7 +140,7 @@ class AboutScreen extends StatelessWidget {
                 width: double.infinity,
                 padding: const EdgeInsets.all(20.0),
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: colors.surface,
                   borderRadius: BorderRadius.circular(12),
                   boxShadow: [
                     BoxShadow(
@@ -156,12 +153,12 @@ class AboutScreen extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
+                    Text(
                       'About Mt. Hamiguitan',
                       style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
-                        color: AppColors.primary,
+                        color: colors.primary,
                       ),
                     ),
                     const SizedBox(height: 16),
@@ -169,7 +166,7 @@ class AboutScreen extends StatelessWidget {
                       'Mt. Hamiguitan stands as a testament to nature\'s grandeur and biodiversity. As a UNESCO World Heritage Site, it represents a unique ecosystem that deserves our respect, protection, and appreciation. Every trek contributes to our understanding and preservation of this natural wonder.',
                       style: TextStyle(
                         fontSize: 14,
-                        color: AppColors.textSecondary,
+                        color: colors.textSecondary,
                         height: 1.6,
                       ),
                     ),
@@ -184,3 +181,4 @@ class AboutScreen extends StatelessWidget {
     );
   }
 }
+

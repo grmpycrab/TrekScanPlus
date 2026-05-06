@@ -7,7 +7,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import '../models/social_model.dart';
 import '../viewmodels/post_view_model.dart';
 import '../../../core/services/user_service.dart';
-import '../../../theme/color.dart';
+import '../../../theme/app_theme.dart';
 import '../../profile/screens/profile_screen.dart';
 import 'comments_sheet.dart';
 import 'post_options_sheet.dart';
@@ -198,129 +198,139 @@ class _SocialCardState extends State<SocialCard> {
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (context) => StatefulBuilder(
-        builder: (context, setDialogState) => Container(
-          padding: EdgeInsets.only(
-            bottom: MediaQuery.of(context).viewInsets.bottom,
-            top: 20,
-            left: 20,
-            right: 20,
-          ),
-          decoration: const BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  const Text(
-                    'Edit Post',
-                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                  ),
-                  IconButton(
-                    icon: const Icon(Icons.close),
-                    onPressed: () => Navigator.pop(context),
-                  ),
-                ],
+        builder: (context, setDialogState) {
+          final colors = context.colors;
+          return Container(
+            padding: EdgeInsets.only(
+              bottom: MediaQuery.of(context).viewInsets.bottom,
+              top: 20,
+              left: 20,
+              right: 20,
+            ),
+            decoration: BoxDecoration(
+              color: colors.surface,
+              borderRadius: const BorderRadius.vertical(
+                top: Radius.circular(20),
               ),
-              const SizedBox(height: 16),
-              TextField(
-                controller: captionController,
-                maxLines: 5,
-                maxLength: 500,
-                decoration: const InputDecoration(
-                  hintText: 'Caption',
-                  border: OutlineInputBorder(),
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text(
+                      'Edit Post',
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.close),
+                      onPressed: () => Navigator.pop(context),
+                    ),
+                  ],
                 ),
-              ),
-              const SizedBox(height: 16),
-              const Text(
-                'Privacy',
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-              ),
-              const SizedBox(height: 8),
-              DropdownButtonFormField<PostPrivacy>(
-                value: selectedPrivacy,
-                decoration: const InputDecoration(border: OutlineInputBorder()),
-                items: const [
-                  DropdownMenuItem(
-                    value: PostPrivacy.public,
-                    child: Row(
-                      children: [
-                        Icon(Icons.public, size: 20),
-                        SizedBox(width: 8),
-                        Text('Public'),
-                      ],
-                    ),
+                const SizedBox(height: 16),
+                TextField(
+                  controller: captionController,
+                  maxLines: 5,
+                  maxLength: 500,
+                  decoration: const InputDecoration(
+                    hintText: 'Caption',
+                    border: OutlineInputBorder(),
                   ),
-                  DropdownMenuItem(
-                    value: PostPrivacy.followers,
-                    child: Row(
-                      children: [
-                        Icon(Icons.people, size: 20),
-                        SizedBox(width: 8),
-                        Text('Followers'),
-                      ],
-                    ),
+                ),
+                const SizedBox(height: 16),
+                const Text(
+                  'Privacy',
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                ),
+                const SizedBox(height: 8),
+                DropdownButtonFormField<PostPrivacy>(
+                  value: selectedPrivacy,
+                  decoration: const InputDecoration(
+                    border: OutlineInputBorder(),
                   ),
-                  DropdownMenuItem(
-                    value: PostPrivacy.private,
-                    child: Row(
-                      children: [
-                        Icon(Icons.lock, size: 20),
-                        SizedBox(width: 8),
-                        Text('Private'),
-                      ],
+                  items: const [
+                    DropdownMenuItem(
+                      value: PostPrivacy.public,
+                      child: Row(
+                        children: [
+                          Icon(Icons.public, size: 20),
+                          SizedBox(width: 8),
+                          Text('Public'),
+                        ],
+                      ),
                     ),
-                  ),
-                ],
-                onChanged: (value) {
-                  if (value != null) {
-                    setDialogState(() => selectedPrivacy = value);
-                  }
-                },
-              ),
-              const SizedBox(height: 24),
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: () async {
-                    if (widget.post.id == null) return;
-                    try {
-                      await _vm.updatePost(
-                        postId: widget.post.id!,
-                        caption: captionController.text.trim(),
-                        privacy: selectedPrivacy,
-                      );
-                      if (context.mounted) Navigator.pop(context);
-                    } catch (e) {
-                      if (context.mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text('Error updating post: $e'),
-                            backgroundColor: Colors.red,
-                          ),
-                        );
-                      }
+                    DropdownMenuItem(
+                      value: PostPrivacy.followers,
+                      child: Row(
+                        children: [
+                          Icon(Icons.people, size: 20),
+                          SizedBox(width: 8),
+                          Text('Followers'),
+                        ],
+                      ),
+                    ),
+                    DropdownMenuItem(
+                      value: PostPrivacy.private,
+                      child: Row(
+                        children: [
+                          Icon(Icons.lock, size: 20),
+                          SizedBox(width: 8),
+                          Text('Private'),
+                        ],
+                      ),
+                    ),
+                  ],
+                  onChanged: (value) {
+                    if (value != null) {
+                      setDialogState(() => selectedPrivacy = value);
                     }
                   },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.primary,
-                    padding: const EdgeInsets.symmetric(vertical: 14),
-                  ),
-                  child: const Text(
-                    'Save Changes',
-                    style: TextStyle(color: Colors.white, fontSize: 16),
+                ),
+                const SizedBox(height: 24),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: () async {
+                      if (widget.post.id == null) return;
+                      try {
+                        await _vm.updatePost(
+                          postId: widget.post.id!,
+                          caption: captionController.text.trim(),
+                          privacy: selectedPrivacy,
+                        );
+                        if (context.mounted) Navigator.pop(context);
+                      } catch (e) {
+                        if (context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text('Error updating post: $e'),
+                              backgroundColor: Colors.red,
+                            ),
+                          );
+                        }
+                      }
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: colors.primary,
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                    ),
+                    child: const Text(
+                      'Save Changes',
+                      style: TextStyle(color: Colors.white, fontSize: 16),
+                    ),
                   ),
                 ),
-              ),
-              const SizedBox(height: 20),
-            ],
-          ),
-        ),
+                const SizedBox(height: 20),
+              ],
+            ),
+          );
+        },
       ),
     );
   }
@@ -405,6 +415,7 @@ class _SocialCardState extends State<SocialCard> {
   }
 
   Widget _buildHeader() {
+    final colors = context.colors;
     final isOwnPost = _vm.isOwnPost;
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
@@ -439,7 +450,7 @@ class _SocialCardState extends State<SocialCard> {
                         _vm.getTimeAgo(),
                         style: TextStyle(
                           fontSize: 12,
-                          color: AppColors.textSecondary,
+                          color: colors.textSecondary,
                         ),
                       ),
                       Padding(
@@ -455,7 +466,7 @@ class _SocialCardState extends State<SocialCard> {
                       Icon(
                         _vm.getVisibilityIcon(),
                         size: 14,
-                        color: AppColors.textSecondary,
+                        color: colors.textSecondary,
                       ),
                     ],
                   ),
@@ -473,10 +484,10 @@ class _SocialCardState extends State<SocialCard> {
                 ),
                 decoration: BoxDecoration(
                   color: _vm.isFollowing
-                      ? AppColors.background
+                      ? colors.background
                       : _vm.isPending
                       ? Colors.orange[50]
-                      : AppColors.primary,
+                      : colors.primary,
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: Text(
@@ -489,7 +500,7 @@ class _SocialCardState extends State<SocialCard> {
                     fontSize: 13,
                     fontWeight: FontWeight.w600,
                     color: _vm.isFollowing
-                        ? AppColors.textSecondary
+                        ? colors.textSecondary
                         : _vm.isPending
                         ? Colors.orange[700]
                         : Colors.white,
@@ -499,11 +510,7 @@ class _SocialCardState extends State<SocialCard> {
             ),
           const SizedBox(width: 8),
           IconButton(
-            icon: Icon(
-              Icons.more_horiz,
-              size: 22,
-              color: AppColors.textSecondary,
-            ),
+            icon: Icon(Icons.more_horiz, size: 22, color: colors.textSecondary),
             onPressed: _showOptionsMenu,
             padding: EdgeInsets.zero,
             constraints: const BoxConstraints(),
@@ -553,7 +560,7 @@ class _SocialCardState extends State<SocialCard> {
           imageUrl: url,
           fit: BoxFit.cover,
           placeholder: (context, url) => Container(
-            color: AppColors.background,
+            color: context.colors.background,
             child: const Center(
               child: CircularProgressIndicator(
                 strokeWidth: 2,
@@ -564,7 +571,7 @@ class _SocialCardState extends State<SocialCard> {
           errorWidget: (context, url, error) {
             AppLogger.e('Image load error for $url: $error');
             return Container(
-              color: AppColors.borderLight,
+              color: context.colors.borderLight,
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
@@ -587,12 +594,13 @@ class _SocialCardState extends State<SocialCard> {
   }
 
   Widget _buildTwoImages(List<String> urls) {
+    final colors = context.colors;
     return AspectRatio(
       aspectRatio: 16 / 9,
       child: Row(
         children: [
           Expanded(child: _buildImageTile(urls[0], 0)),
-          Container(width: 2, color: Colors.white),
+          Container(width: 2, color: colors.background),
           Expanded(child: _buildImageTile(urls[1], 1)),
         ],
       ),
@@ -600,18 +608,19 @@ class _SocialCardState extends State<SocialCard> {
   }
 
   Widget _buildThreeImages(List<String> urls) {
+    final colors = context.colors;
     return AspectRatio(
       aspectRatio: 16 / 9,
       child: Row(
         children: [
           Expanded(flex: 2, child: _buildImageTile(urls[0], 0)),
-          Container(width: 2, color: Colors.white),
+          Container(width: 2, color: colors.background),
           Expanded(
             flex: 1,
             child: Column(
               children: [
                 Expanded(child: _buildImageTile(urls[1], 1)),
-                Container(height: 2, color: Colors.white),
+                Container(height: 2, color: colors.background),
                 Expanded(child: _buildImageTile(urls[2], 2)),
               ],
             ),
@@ -622,20 +631,21 @@ class _SocialCardState extends State<SocialCard> {
   }
 
   Widget _buildFourImages(List<String> urls) {
+    final colors = context.colors;
     return AspectRatio(
       aspectRatio: 16 / 9,
       child: Row(
         children: [
           Expanded(flex: 2, child: _buildImageTile(urls[0], 0)),
-          Container(width: 2, color: Colors.white),
+          Container(width: 2, color: colors.background),
           Expanded(
             flex: 1,
             child: Column(
               children: [
                 Expanded(child: _buildImageTile(urls[1], 1)),
-                Container(height: 2, color: Colors.white),
+                Container(height: 2, color: colors.background),
                 Expanded(child: _buildImageTile(urls[2], 2)),
-                Container(height: 2, color: Colors.white),
+                Container(height: 2, color: colors.background),
                 Expanded(child: _buildImageTile(urls[3], 3)),
               ],
             ),
@@ -646,6 +656,7 @@ class _SocialCardState extends State<SocialCard> {
   }
 
   Widget _buildFivePlusImages(List<String> urls) {
+    final colors = context.colors;
     final hasMoreThanFour = urls.length > 4;
     final displayCount = urls.length - 4;
     return AspectRatio(
@@ -656,17 +667,17 @@ class _SocialCardState extends State<SocialCard> {
             child: Row(
               children: [
                 Expanded(child: _buildImageTile(urls[0], 0)),
-                Container(width: 2, color: Colors.white),
+                Container(width: 2, color: colors.background),
                 Expanded(child: _buildImageTile(urls[1], 1)),
               ],
             ),
           ),
-          Container(height: 2, color: Colors.white),
+          Container(height: 2, color: colors.background),
           Expanded(
             child: Row(
               children: [
                 Expanded(child: _buildImageTile(urls[2], 2)),
-                Container(width: 2, color: Colors.white),
+                Container(width: 2, color: colors.background),
                 Expanded(
                   child: Stack(
                     fit: StackFit.expand,
@@ -704,7 +715,7 @@ class _SocialCardState extends State<SocialCard> {
         imageUrl: url,
         fit: BoxFit.cover,
         placeholder: (context, url) => Container(
-          color: AppColors.background,
+          color: context.colors.background,
           child: const Center(
             child: SizedBox(
               width: 20,
@@ -719,7 +730,7 @@ class _SocialCardState extends State<SocialCard> {
         errorWidget: (context, url, error) {
           AppLogger.e('Image load error for $url: $error');
           return Container(
-            color: AppColors.borderLight,
+            color: context.colors.borderLight,
             child: const Icon(Icons.broken_image, size: 32, color: Colors.grey),
           );
         },
@@ -742,6 +753,7 @@ class _SocialCardState extends State<SocialCard> {
   }
 
   Widget _buildFooter() {
+    final colors = context.colors;
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       child: Row(
@@ -749,7 +761,7 @@ class _SocialCardState extends State<SocialCard> {
           IconButton(
             icon: Icon(
               _vm.isLiked ? Icons.favorite : Icons.favorite_border,
-              color: _vm.isLiked ? Colors.red : AppColors.textSecondary,
+              color: _vm.isLiked ? Colors.red : colors.textSecondary,
               size: 24,
             ),
             onPressed: _handleLike,
@@ -761,7 +773,7 @@ class _SocialCardState extends State<SocialCard> {
             Text(
               '${_vm.likesCount}',
               style: TextStyle(
-                color: AppColors.textSecondary,
+                color: colors.textSecondary,
                 fontWeight: FontWeight.w500,
                 fontSize: 14,
               ),
@@ -776,7 +788,7 @@ class _SocialCardState extends State<SocialCard> {
                 children: [
                   Icon(
                     Icons.chat_bubble_outline_rounded,
-                    color: AppColors.textSecondary,
+                    color: colors.textSecondary,
                     size: 23,
                   ),
                   if (_vm.commentsCount > 0) ...[
@@ -784,7 +796,7 @@ class _SocialCardState extends State<SocialCard> {
                     Text(
                       '${_vm.commentsCount}',
                       style: TextStyle(
-                        color: AppColors.textSecondary,
+                        color: colors.textSecondary,
                         fontWeight: FontWeight.w500,
                         fontSize: 14,
                       ),
@@ -803,7 +815,7 @@ class _SocialCardState extends State<SocialCard> {
                 children: [
                   Icon(
                     Icons.share_outlined,
-                    color: AppColors.textSecondary,
+                    color: colors.textSecondary,
                     size: 22,
                   ),
                   if (_vm.sharesCount > 0) ...[
@@ -811,7 +823,7 @@ class _SocialCardState extends State<SocialCard> {
                     Text(
                       '${_vm.sharesCount}',
                       style: TextStyle(
-                        color: AppColors.textSecondary,
+                        color: colors.textSecondary,
                         fontWeight: FontWeight.w500,
                         fontSize: 14,
                       ),
@@ -825,9 +837,7 @@ class _SocialCardState extends State<SocialCard> {
           IconButton(
             icon: Icon(
               _vm.isBookmarked ? Icons.bookmark : Icons.bookmark_border,
-              color: _vm.isBookmarked
-                  ? AppColors.primary
-                  : AppColors.textSecondary,
+              color: _vm.isBookmarked ? colors.primary : colors.textSecondary,
               size: 24,
             ),
             onPressed: _handleBookmark,

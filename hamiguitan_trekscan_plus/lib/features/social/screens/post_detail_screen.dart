@@ -3,7 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/social_model.dart';
 import '../widgets/social_card.dart';
 import '../widgets/comments_sheet.dart';
-import '../../../theme/color.dart';
+import '../../../theme/app_theme.dart';
 
 class PostDetailScreen extends StatefulWidget {
   final String postId;
@@ -79,10 +79,11 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.colors;
     return Scaffold(
       appBar: AppBar(
         title: const Text('Post'),
-        backgroundColor: AppColors.primary,
+        backgroundColor: colors.primary,
         foregroundColor: Colors.white,
       ),
       body: _isLoading
@@ -96,17 +97,14 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
                   const SizedBox(height: 16),
                   Text(
                     _error!,
-                    style: TextStyle(
-                      fontSize: 16,
-                      color: AppColors.textSecondary,
-                    ),
+                    style: TextStyle(fontSize: 16, color: colors.textSecondary),
                     textAlign: TextAlign.center,
                   ),
                   const SizedBox(height: 24),
                   ElevatedButton(
                     onPressed: () => Navigator.pop(context),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.primary,
+                      backgroundColor: colors.primary,
                       foregroundColor: Colors.white,
                     ),
                     child: const Text('Go Back'),
@@ -134,7 +132,7 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
                         icon: const Icon(Icons.comment),
                         label: Text('View Comments (${_post!.commentsCount})'),
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: AppColors.primary,
+                          backgroundColor: colors.primary,
                           foregroundColor: Colors.white,
                           padding: const EdgeInsets.symmetric(vertical: 14),
                         ),

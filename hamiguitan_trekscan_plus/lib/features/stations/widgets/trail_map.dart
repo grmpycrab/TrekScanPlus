@@ -8,7 +8,7 @@ import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import '../../../utils/app_logger.dart';
-import '../../../theme/new_color.dart';
+import '../../../theme/app_theme.dart';
 import '../../../models/station_data.dart';
 
 /// A named section of the trail. Camp 3 is the hub where the trail branches
@@ -212,7 +212,7 @@ class _TrailMapState extends State<TrailMap>
           polylines.add(
             Polyline(
               points: seg.path.sublist(splitIdx),
-              color: AppColors.accent,
+              color: context.colors.accent,
               strokeWidth: 4.5,
             ),
           );
@@ -270,7 +270,7 @@ class _TrailMapState extends State<TrailMap>
             strokeWidth = 5.0;
             dotted = false;
           } else if (isCurrentSegment) {
-            segmentColor = AppColors.accent;
+            segmentColor = context.colors.accent;
             strokeWidth = 4.5;
             dotted = false;
           } else {
@@ -452,13 +452,14 @@ class _TrailMapState extends State<TrailMap>
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.colors;
     final bounds = _calculateBounds();
 
     return Container(
       height: widget.height,
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.border),
+        border: Border.all(color: colors.border),
       ),
       clipBehavior: Clip.antiAlias,
       child: Stack(
@@ -507,7 +508,7 @@ class _TrailMapState extends State<TrailMap>
           else
             // Offline fallback UI with station list
             Container(
-              color: Colors.grey[50],
+              color: colors.surface,
               child: Column(
                 children: [
                   // Offline banner
@@ -552,7 +553,7 @@ class _TrailMapState extends State<TrailMap>
                             style: TextStyle(
                               fontSize: 14,
                               fontWeight: FontWeight.bold,
-                              color: AppColors.textSecondary,
+                              color: colors.textSecondary,
                             ),
                           ),
                           const SizedBox(height: 12),
@@ -568,11 +569,11 @@ class _TrailMapState extends State<TrailMap>
                               decoration: BoxDecoration(
                                 color: isCurrentStation
                                     ? Colors.red.withValues(alpha: 0.1)
-                                    : AppColors.background,
+                                    : colors.background,
                                 border: Border.all(
                                   color: isCurrentStation
                                       ? Colors.red
-                                      : AppColors.border,
+                                      : colors.border,
                                   width: isCurrentStation ? 2 : 1,
                                 ),
                                 borderRadius: BorderRadius.circular(8),
@@ -617,7 +618,7 @@ class _TrailMapState extends State<TrailMap>
                                                 fontWeight: FontWeight.w600,
                                                 color: isCurrentStation
                                                     ? Colors.red
-                                                    : Colors.black87,
+                                                    : colors.text,
                                               ),
                                               maxLines: 1,
                                               overflow: TextOverflow.ellipsis,
@@ -628,8 +629,7 @@ class _TrailMapState extends State<TrailMap>
                                                 '${station.latitude!.toStringAsFixed(4)}, ${station.longitude!.toStringAsFixed(4)}',
                                                 style: TextStyle(
                                                   fontSize: 11,
-                                                  color:
-                                                      AppColors.textSecondary,
+                                                  color: colors.textSecondary,
                                                   fontFamily: 'monospace',
                                                 ),
                                               ),
@@ -749,4 +749,3 @@ class _TrailMapState extends State<TrailMap>
     );
   }
 }
-

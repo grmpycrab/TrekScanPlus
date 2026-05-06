@@ -38,7 +38,7 @@ class HomeHeader extends StatelessWidget {
     final colors = context.colors;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
-      color: Colors.white,
+      color: colors.background,
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
@@ -184,7 +184,7 @@ class HomeHeader extends StatelessWidget {
                   'assets/icons/search.png',
                   width: 20,
                   height: 20,
-                  color: searchQuery.isNotEmpty ? colors.primary : Colors.black,
+                  color: searchQuery.isNotEmpty ? colors.primary : colors.text,
                 ),
           tooltip: isSearchExpanded ? 'Close search' : 'Search posts',
           onPressed: onToggleSearch,
@@ -196,6 +196,7 @@ class HomeHeader extends StatelessWidget {
   }
 
   Widget _buildNotificationBell(BuildContext context) {
+    final colors = context.colors;
     return Stack(
       children: [
         IconButton(
@@ -203,7 +204,7 @@ class HomeHeader extends StatelessWidget {
             'assets/icons/bell.png',
             width: 20,
             height: 20,
-            color: Colors.black,
+            color: colors.text,
           ),
           onPressed: () => Navigator.push(
             context,

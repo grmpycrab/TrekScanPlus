@@ -5,7 +5,7 @@ import 'package:flutter/foundation.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../../models/user_model.dart';
 import '../../core/services/user_service.dart';
-import '../../theme/color.dart';
+import '../../theme/app_theme.dart';
 import '../../utils/app_logger.dart';
 
 class AccountSettingsScreen extends StatefulWidget {
@@ -292,10 +292,10 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
           border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
           focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(8),
-            borderSide: BorderSide(color: AppColors.primary),
+            borderSide: BorderSide(color: context.colors.primary),
           ),
           filled: true,
-          fillColor: Color(0xFFFAFAFA),
+          fillColor: const Color(0xFFFAFAFA),
         ),
       ),
     );
@@ -303,11 +303,12 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.colors;
     if (_isInitializing) {
       return Scaffold(
-        backgroundColor: AppColors.background,
+        backgroundColor: colors.background,
         appBar: AppBar(
-          backgroundColor: AppColors.primary,
+          backgroundColor: colors.primary,
           title: const Text(
             'Account Settings',
             style: TextStyle(
@@ -326,9 +327,9 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
     }
 
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: colors.background,
       appBar: AppBar(
-        backgroundColor: AppColors.primary,
+        backgroundColor: colors.primary,
         title: const Text(
           'Account Settings',
           style: TextStyle(
@@ -354,7 +355,7 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
                 margin: const EdgeInsets.only(bottom: 16),
                 decoration: BoxDecoration(
                   color: Color(0xFFFFEBEE),
-                  border: Border.all(color: AppColors.red200),
+                  border: Border.all(color: Colors.red.shade200),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Row(
@@ -377,18 +378,18 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
                 padding: const EdgeInsets.all(12),
                 margin: const EdgeInsets.only(bottom: 16),
                 decoration: BoxDecoration(
-                  color: AppColors.green50,
-                  border: Border.all(color: AppColors.green200),
+                  color: colors.green50,
+                  border: Border.all(color: colors.green200),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Row(
                   children: [
-                    Icon(Icons.check_circle_outline, color: AppColors.green700),
+                    Icon(Icons.check_circle_outline, color: colors.green700),
                     const SizedBox(width: 12),
                     Expanded(
                       child: Text(
                         _successMessage!,
-                        style: TextStyle(color: AppColors.green700),
+                        style: TextStyle(color: colors.green700),
                       ),
                     ),
                   ],
@@ -423,11 +424,11 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: SharedColors.white,
+                color: colors.surface,
                 borderRadius: BorderRadius.circular(12),
                 boxShadow: [
                   BoxShadow(
-                    color: AppColors.shadowLight,
+                    color: colors.shadowLight,
                     blurRadius: 10,
                     offset: const Offset(0, 1),
                   ),
@@ -441,22 +442,22 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
                       Container(
                         padding: const EdgeInsets.all(8),
                         decoration: BoxDecoration(
-                          color: AppColors.primary.withOpacity(0.1),
+                          color: colors.primary.withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: Icon(
                           Icons.person_outline,
-                          color: AppColors.primary,
+                          color: colors.primary,
                           size: 24,
                         ),
                       ),
                       const SizedBox(width: 12),
-                      const Text(
+                      Text(
                         'Personal Information',
                         style: TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
-                          color: AppColors.text,
+                          color: colors.text,
                         ),
                       ),
                     ],
@@ -512,7 +513,7 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
                           borderSide: BorderSide(
                             color: _phoneValidationError != null
                                 ? Colors.red
-                                : AppColors.primary,
+                                : colors.primary,
                           ),
                         ),
                         filled: true,
@@ -557,10 +558,10 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
                         ),
                         focusedBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(8),
-                          borderSide: BorderSide(color: AppColors.primary),
+                          borderSide: BorderSide(color: colors.primary),
                         ),
                         filled: true,
-                        fillColor: Color(0xFFFAFAFA),
+                        fillColor: const Color(0xFFFAFAFA),
                         suffixIcon: const Icon(Icons.calendar_today),
                       ),
                     ),
@@ -579,10 +580,10 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
                         ),
                         focusedBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(8),
-                          borderSide: BorderSide(color: AppColors.primary),
+                          borderSide: BorderSide(color: colors.primary),
                         ),
                         filled: true,
-                        fillColor: Color(0xFFFAFAFA),
+                        fillColor: const Color(0xFFFAFAFA),
                       ),
                       items: const [
                         DropdownMenuItem(value: 'Male', child: Text('Male')),
@@ -628,7 +629,7 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
               child: ElevatedButton(
                 onPressed: _isLoading ? null : _saveChanges,
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.primary,
+                  backgroundColor: colors.primary,
                   padding: const EdgeInsets.symmetric(vertical: 16),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import '../viewmodels/create_post_view_model.dart';
 import '../models/social_model.dart';
-import '../../../theme/color.dart';
+import '../../../theme/app_theme.dart';
 import '../../../utils/app_logger.dart';
 
 class CreatePostSheet extends StatefulWidget {
@@ -78,11 +78,12 @@ class _CreatePostSheetState extends State<CreatePostSheet> {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.colors;
     return Container(
       height: MediaQuery.of(context).size.height * 0.9,
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      decoration: BoxDecoration(
+        color: colors.surface,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
       ),
       padding: const EdgeInsets.all(16),
       child: Form(
@@ -117,10 +118,7 @@ class _CreatePostSheetState extends State<CreatePostSheet> {
                 ),
                 focusedBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
-                  borderSide: const BorderSide(
-                    color: AppColors.primary,
-                    width: 2,
-                  ),
+                  borderSide: BorderSide(color: colors.primary, width: 2),
                 ),
               ),
               validator: (value) {
@@ -177,7 +175,7 @@ class _CreatePostSheetState extends State<CreatePostSheet> {
                 icon: const Icon(Icons.image),
                 label: const Text('Pick Images'),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.primary,
+                  backgroundColor: colors.primary,
                   foregroundColor: Colors.white,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
@@ -245,7 +243,7 @@ class _CreatePostSheetState extends State<CreatePostSheet> {
               child: ElevatedButton(
                 onPressed: _vm.isUploading ? null : _submitPost,
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.primary,
+                  backgroundColor: colors.primary,
                   foregroundColor: Colors.white,
                   padding: const EdgeInsets.symmetric(vertical: 12),
                   shape: RoundedRectangleBorder(

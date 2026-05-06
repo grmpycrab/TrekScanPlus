@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import '../models/social_model.dart';
 import '../viewmodels/comments_view_model.dart';
-import '../../../theme/color.dart';
+import '../../../theme/app_theme.dart';
 import 'comment_thread.dart';
 
 class CommentsSheet extends StatefulWidget {
@@ -64,13 +64,14 @@ class _CommentsSheetState extends State<CommentsSheet> {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.colors;
     final canComment = _vm.canComment(widget.post);
 
     return Container(
       height: MediaQuery.of(context).size.height * 0.75,
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      decoration: BoxDecoration(
+        color: colors.surface,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
       ),
       child: Column(
         children: [
@@ -154,14 +155,14 @@ class _CommentsSheetState extends State<CommentsSheet> {
                       padding: const EdgeInsets.only(bottom: 8),
                       child: Row(
                         children: [
-                          Icon(Icons.reply, size: 14, color: AppColors.primary),
+                          Icon(Icons.reply, size: 14, color: colors.primary),
                           const SizedBox(width: 6),
                           Expanded(
                             child: Text(
                               'Replying to ${_vm.replyingToUserName}',
                               style: TextStyle(
                                 fontSize: 12,
-                                color: AppColors.primary,
+                                color: colors.primary,
                                 fontWeight: FontWeight.w500,
                               ),
                               overflow: TextOverflow.ellipsis,
@@ -175,7 +176,7 @@ class _CommentsSheetState extends State<CommentsSheet> {
                             child: Icon(
                               Icons.close,
                               size: 16,
-                              color: AppColors.textSecondary,
+                              color: colors.textSecondary,
                             ),
                           ),
                         ],
@@ -195,16 +196,16 @@ class _CommentsSheetState extends State<CommentsSheet> {
                                 : 'Write a comment...',
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(24),
-                              borderSide: BorderSide(color: AppColors.border),
+                              borderSide: BorderSide(color: colors.border),
                             ),
                             enabledBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(24),
-                              borderSide: BorderSide(color: AppColors.border),
+                              borderSide: BorderSide(color: colors.border),
                             ),
                             focusedBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(24),
-                              borderSide: const BorderSide(
-                                color: AppColors.primary,
+                              borderSide: BorderSide(
+                                color: colors.primary,
                                 width: 2,
                               ),
                             ),
@@ -217,8 +218,8 @@ class _CommentsSheetState extends State<CommentsSheet> {
                       ),
                       const SizedBox(width: 8),
                       Container(
-                        decoration: const BoxDecoration(
-                          color: AppColors.primary,
+                        decoration: BoxDecoration(
+                          color: colors.primary,
                           shape: BoxShape.circle,
                         ),
                         child: IconButton(
@@ -249,7 +250,7 @@ class _CommentsSheetState extends State<CommentsSheet> {
                 child: Text(
                   'You cannot comment on this post',
                   style: TextStyle(
-                    color: AppColors.textSecondary,
+                    color: colors.textSecondary,
                     fontStyle: FontStyle.italic,
                   ),
                 ),

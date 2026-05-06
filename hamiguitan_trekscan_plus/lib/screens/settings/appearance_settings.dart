@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../../theme/color.dart';
+import '../../theme/app_theme.dart';
 import '../../services/theme_service.dart';
 
 class AppearanceSettingsScreen extends StatelessWidget {
@@ -8,10 +8,11 @@ class AppearanceSettingsScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.colors;
     return Scaffold(
-      backgroundColor: SharedColors.white,
+      backgroundColor: colors.background,
       appBar: AppBar(
-        backgroundColor: AppColors.primary,
+        backgroundColor: colors.primary,
         elevation: 0,
         centerTitle: true,
         leading: IconButton(
@@ -33,11 +34,11 @@ class AppearanceSettingsScreen extends StatelessWidget {
             padding: const EdgeInsets.all(16),
             children: [
               // Theme Selection Card
-              _buildThemeSelectionCard(context, themeService),
+              _buildThemeSelectionCard(context, themeService, colors),
               const SizedBox(height: 16),
 
               // Dark Mode Setting
-              _buildDarkModeCard(context, themeService),
+              _buildDarkModeCard(context, themeService, colors),
             ],
           );
         },
@@ -48,13 +49,14 @@ class AppearanceSettingsScreen extends StatelessWidget {
   Widget _buildThemeSelectionCard(
     BuildContext context,
     ThemeService themeService,
+    AppTheme colors,
   ) {
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
       elevation: 1,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
-        side: BorderSide(color: AppColors.borderLight),
+        side: BorderSide(color: colors.borderLight),
       ),
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -66,7 +68,7 @@ class AppearanceSettingsScreen extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.all(10),
                   decoration: BoxDecoration(
-                    color: AppColors.primary,
+                    color: colors.primary,
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: Icon(
@@ -104,6 +106,7 @@ class AppearanceSettingsScreen extends StatelessWidget {
                     label: 'Original Theme',
                     isSelected:
                         themeService.selectedTheme == ThemeType.original,
+                    colors: colors,
                     onTap: () async {
                       await themeService.setTheme(ThemeType.original);
                     },
@@ -115,6 +118,7 @@ class AppearanceSettingsScreen extends StatelessWidget {
                     label: 'New Theme',
                     isSelected:
                         themeService.selectedTheme == ThemeType.new_theme,
+                    colors: colors,
                     onTap: () async {
                       await themeService.setTheme(ThemeType.new_theme);
                     },
@@ -128,13 +132,17 @@ class AppearanceSettingsScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildDarkModeCard(BuildContext context, ThemeService themeService) {
+  Widget _buildDarkModeCard(
+    BuildContext context,
+    ThemeService themeService,
+    AppTheme colors,
+  ) {
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
       elevation: 1,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
-        side: BorderSide(color: AppColors.borderLight),
+        side: BorderSide(color: colors.borderLight),
       ),
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -146,7 +154,7 @@ class AppearanceSettingsScreen extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.all(10),
                   decoration: BoxDecoration(
-                    color: AppColors.primary,
+                    color: colors.primary,
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: Icon(
@@ -171,7 +179,7 @@ class AppearanceSettingsScreen extends StatelessWidget {
                         'Enable dark mode for the app',
                         style: TextStyle(
                           fontSize: 13,
-                          color: AppColors.textSecondary,
+                          color: colors.textSecondary,
                         ),
                       ),
                     ],
@@ -187,6 +195,7 @@ class AppearanceSettingsScreen extends StatelessWidget {
                     label: 'Light',
                     isSelected: themeService.selectedMode == AppThemeMode.light,
                     icon: Icons.light_mode,
+                    colors: colors,
                     onTap: () async {
                       await themeService.setThemeMode(AppThemeMode.light);
                     },
@@ -198,6 +207,7 @@ class AppearanceSettingsScreen extends StatelessWidget {
                     label: 'Dark',
                     isSelected: themeService.selectedMode == AppThemeMode.dark,
                     icon: Icons.dark_mode,
+                    colors: colors,
                     onTap: () async {
                       await themeService.setThemeMode(AppThemeMode.dark);
                     },
@@ -209,15 +219,15 @@ class AppearanceSettingsScreen extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: AppColors.background,
+                color: colors.background,
                 borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: AppColors.borderLight),
+                border: Border.all(color: colors.borderLight),
               ),
               child: Text(
                 'Currently using: ${themeService.selectedTheme == ThemeType.original ? 'Original' : 'New'} Theme (${themeService.selectedMode == AppThemeMode.light ? 'Light' : 'Dark'} Mode)',
                 style: TextStyle(
                   fontSize: 12,
-                  color: AppColors.textSecondary,
+                  color: colors.textSecondary,
                   fontStyle: FontStyle.italic,
                 ),
                 textAlign: TextAlign.center,
@@ -233,16 +243,17 @@ class AppearanceSettingsScreen extends StatelessWidget {
     required String label,
     required bool isSelected,
     required VoidCallback onTap,
+    required AppTheme colors,
   }) {
     return GestureDetector(
       onTap: onTap,
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
         decoration: BoxDecoration(
-          color: isSelected ? AppColors.primary : AppColors.background,
+          color: isSelected ? colors.primary : colors.background,
           borderRadius: BorderRadius.circular(10),
           border: Border.all(
-            color: isSelected ? AppColors.primary : AppColors.border,
+            color: isSelected ? colors.primary : colors.border,
             width: isSelected ? 2 : 1,
           ),
         ),
@@ -252,7 +263,7 @@ class AppearanceSettingsScreen extends StatelessWidget {
             style: TextStyle(
               fontWeight: FontWeight.w600,
               fontSize: 14,
-              color: isSelected ? SharedColors.white : AppColors.text,
+              color: isSelected ? SharedColors.white : colors.text,
             ),
           ),
         ),
@@ -265,16 +276,17 @@ class AppearanceSettingsScreen extends StatelessWidget {
     required bool isSelected,
     required IconData icon,
     required VoidCallback onTap,
+    required AppTheme colors,
   }) {
     return GestureDetector(
       onTap: onTap,
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 12),
         decoration: BoxDecoration(
-          color: isSelected ? AppColors.primary : AppColors.background,
+          color: isSelected ? colors.primary : colors.background,
           borderRadius: BorderRadius.circular(10),
           border: Border.all(
-            color: isSelected ? AppColors.primary : AppColors.border,
+            color: isSelected ? colors.primary : colors.border,
             width: isSelected ? 2 : 1,
           ),
         ),
@@ -283,7 +295,7 @@ class AppearanceSettingsScreen extends StatelessWidget {
           children: [
             Icon(
               icon,
-              color: isSelected ? SharedColors.white : AppColors.text,
+              color: isSelected ? SharedColors.white : colors.text,
               size: 24,
             ),
             const SizedBox(height: 4),
@@ -292,7 +304,7 @@ class AppearanceSettingsScreen extends StatelessWidget {
               style: TextStyle(
                 fontWeight: FontWeight.w600,
                 fontSize: 12,
-                color: isSelected ? SharedColors.white : AppColors.text,
+                color: isSelected ? SharedColors.white : colors.text,
               ),
             ),
           ],

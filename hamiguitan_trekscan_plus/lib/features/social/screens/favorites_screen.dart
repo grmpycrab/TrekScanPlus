@@ -3,7 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import '../models/social_model.dart';
 import '../viewmodels/social_feed_view_model.dart';
 import '../widgets/social_card.dart';
-import '../../../theme/color.dart';
+import '../../../theme/app_theme.dart';
 
 class FavoritesScreen extends StatefulWidget {
   const FavoritesScreen({super.key});
@@ -30,35 +30,36 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.colors;
     if (_firebaseUser == null) {
       return Scaffold(
-        backgroundColor: Colors.white,
+        backgroundColor: colors.background,
         appBar: AppBar(
           title: const Text('Favorites'),
-          backgroundColor: Colors.white,
+          backgroundColor: colors.surface,
           elevation: 0,
-          foregroundColor: AppColors.text,
+          foregroundColor: colors.text,
         ),
         body: const Center(child: Text('Please login to view favorites')),
       );
     }
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: colors.background,
       appBar: AppBar(
-        title: const Text(
+        title: Text(
           'Favorites',
           style: TextStyle(
             fontSize: 18,
             fontWeight: FontWeight.bold,
-            color: AppColors.text,
+            color: colors.text,
           ),
         ),
-        backgroundColor: Colors.white,
+        backgroundColor: colors.surface,
         elevation: 0,
-        foregroundColor: AppColors.text,
+        foregroundColor: colors.text,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: AppColors.text),
+          icon: Icon(Icons.arrow_back, color: colors.text),
           onPressed: () => Navigator.pop(context),
         ),
       ),
@@ -66,9 +67,9 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
         stream: _vm.bookmarkedPostsStream(_firebaseUser.uid),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(
+            return Center(
               child: CircularProgressIndicator(
-                valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
+                valueColor: AlwaysStoppedAnimation<Color>(colors.primary),
               ),
             );
           }
@@ -84,17 +85,14 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
                     'Error loading favorites',
                     style: TextStyle(
                       fontSize: 16,
-                      color: AppColors.textTertiary,
+                      color: colors.textTertiary,
                       fontWeight: FontWeight.w500,
                     ),
                   ),
                   const SizedBox(height: 8),
                   Text(
                     '${snapshot.error}',
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: AppColors.textTertiary,
-                    ),
+                    style: TextStyle(fontSize: 12, color: colors.textTertiary),
                     textAlign: TextAlign.center,
                   ),
                 ],
@@ -112,7 +110,7 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
                   Icon(
                     Icons.bookmark_border,
                     size: 80,
-                    color: AppColors.iconGrey400,
+                    color: Colors.grey.shade400,
                   ),
                   const SizedBox(height: 24),
                   Text(
@@ -120,16 +118,13 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
                     style: TextStyle(
                       fontSize: 20,
                       fontWeight: FontWeight.w600,
-                      color: AppColors.text,
+                      color: colors.text,
                     ),
                   ),
                   const SizedBox(height: 8),
                   Text(
                     'Posts you bookmark will appear here',
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: AppColors.textTertiary,
-                    ),
+                    style: TextStyle(fontSize: 14, color: colors.textTertiary),
                   ),
                   const SizedBox(height: 24),
                   Container(
@@ -138,9 +133,9 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
                       vertical: 12,
                     ),
                     decoration: BoxDecoration(
-                      color: AppColors.background,
+                      color: colors.background,
                       borderRadius: BorderRadius.circular(24),
-                      border: Border.all(color: AppColors.borderColor),
+                      border: Border.all(color: colors.border),
                     ),
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
@@ -148,14 +143,14 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
                         Icon(
                           Icons.info_outline,
                           size: 16,
-                          color: AppColors.textTertiary,
+                          color: colors.textTertiary,
                         ),
                         const SizedBox(width: 8),
                         Text(
                           'Tap the bookmark icon on any post to save it',
                           style: TextStyle(
                             fontSize: 12,
-                            color: AppColors.textTertiary,
+                            color: colors.textTertiary,
                           ),
                         ),
                       ],

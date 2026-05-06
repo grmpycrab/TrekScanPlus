@@ -3,26 +3,27 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../../services/onboarding_service.dart';
-import '../../theme/new_color.dart';
+import '../../theme/app_theme.dart';
 
 class HelpAndSupportScreen extends StatelessWidget {
   const HelpAndSupportScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.colors;
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: colors.background,
       appBar: AppBar(
-        backgroundColor: AppColors.primary,
+        backgroundColor: colors.primary,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.white),
+          icon: const Icon(Icons.arrow_back, color: SharedColors.white),
           onPressed: () => Navigator.pop(context),
         ),
         title: const Text(
           'Help & Support',
           style: TextStyle(
-            color: Colors.white,
+            color: SharedColors.white,
             fontSize: 20,
             fontWeight: FontWeight.bold,
           ),
@@ -35,12 +36,12 @@ class HelpAndSupportScreen extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text(
+              Text(
                 'We\'re Here to Help',
                 style: TextStyle(
                   fontSize: 24,
                   fontWeight: FontWeight.bold,
-                  color: AppColors.text,
+                  color: colors.text,
                 ),
               ),
               const SizedBox(height: 12),
@@ -48,92 +49,100 @@ class HelpAndSupportScreen extends StatelessWidget {
                 'Have questions or need assistance? Our dedicated support team is ready to help you make the most of Trek Scan Plus.',
                 style: TextStyle(
                   fontSize: 14,
-                  color: AppColors.textSecondary,
+                  color: colors.textSecondary,
                   height: 1.6,
                 ),
               ),
               const SizedBox(height: 32),
-              const Text(
+              Text(
                 'Frequently Asked Questions',
                 style: TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
-                  color: AppColors.primary,
+                  color: colors.primary,
                 ),
               ),
               const SizedBox(height: 16),
               _buildFAQItem(
                 'How do I book a trek?',
                 'You can easily book a trek by navigating to the Trek Schedule section, selecting your preferred date, and following the booking process. Check the calendar for available slots.',
+                colors,
               ),
               _buildFAQItem(
                 'What is the badge system?',
                 'The badge system rewards your trekking achievements and engagement. Earn badges by reaching different stations, scanning QR codes, and practicing sustainable trekking habits.',
+                colors,
               ),
               _buildFAQItem(
                 'How do I scan QR codes?',
                 'Use the Scanner feature in the bottom navigation menu. Point your camera at the QR codes located along the trekking route to learn interesting facts about Mt. Hamiguitan.',
+                colors,
               ),
               _buildFAQItem(
                 'Is my booking data secure?',
                 'Yes! Trek Scan Plus uses Firebase security protocols to protect your personal and booking information with industry-standard encryption.',
+                colors,
               ),
               _buildFAQItem(
                 'Can I cancel or modify my booking?',
                 'You can manage your bookings through your profile. For assistance with cancellations or modifications, please contact our support team.',
+                colors,
               ),
               const SizedBox(height: 32),
-              _buildQuickHelpSection(),
+              _buildQuickHelpSection(context, colors),
               const SizedBox(height: 32),
-              const Text(
+              Text(
                 'Contact Us',
                 style: TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
-                  color: AppColors.primary,
+                  color: colors.primary,
                 ),
               ),
               const SizedBox(height: 16),
               Text(
                 'Reach out to our support team through any of these channels:',
-                style: TextStyle(fontSize: 14, color: AppColors.textSecondary),
+                style: TextStyle(fontSize: 14, color: colors.textSecondary),
               ),
               const SizedBox(height: 16),
               _buildContactItem(
                 icon: Icons.email,
                 label: 'Email Support',
                 value: 'keyntharly@gmail.com',
+                colors: colors,
               ),
               _buildContactItem(
                 icon: Icons.email,
                 label: 'Email Support',
                 value: 'shannenmendoza.310@gmail.com',
+                colors: colors,
               ),
               _buildContactItem(
                 icon: Icons.school,
                 label: 'University',
                 value: 'dorsuunacom@gmail.com',
+                colors: colors,
               ),
               const SizedBox(height: 32),
               Container(
                 width: double.infinity,
                 padding: const EdgeInsets.all(20.0),
                 decoration: BoxDecoration(
-                  color: AppColors.primary.withValues(alpha: 0.1),
+                  color: colors.primary.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(12),
                   border: Border.all(
-                    color: AppColors.primary.withValues(alpha: 0.2),
+                    color: colors.primary.withValues(alpha: 0.2),
                   ),
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
+                    Text(
                       'Support Hours',
                       style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
-                        color: AppColors.primary,
+                        color: colors.primary,
                       ),
                     ),
                     const SizedBox(height: 12),
@@ -141,7 +150,7 @@ class HelpAndSupportScreen extends StatelessWidget {
                       'Monday - Friday: 9:00 AM - 5:00 PM (PST)\nWeekends: 10:00 AM - 3:00 PM (PST)\n\nWe typically respond to inquiries within 24 business hours.',
                       style: TextStyle(
                         fontSize: 14,
-                        color: AppColors.textSecondary,
+                        color: colors.textSecondary,
                         height: 1.6,
                       ),
                     ),
@@ -153,7 +162,7 @@ class HelpAndSupportScreen extends StatelessWidget {
                 width: double.infinity,
                 padding: const EdgeInsets.all(20.0),
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: colors.surface,
                   borderRadius: BorderRadius.circular(12),
                   boxShadow: [
                     BoxShadow(
@@ -166,12 +175,12 @@ class HelpAndSupportScreen extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
+                    Text(
                       'Additional Resources',
                       style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
-                        color: AppColors.primary,
+                        color: colors.primary,
                       ),
                     ),
                     const SizedBox(height: 16),
@@ -179,7 +188,7 @@ class HelpAndSupportScreen extends StatelessWidget {
                       'Visit our website and documentation for additional guides, tutorials, and resources to help you get the most out of Trek Scan Plus.',
                       style: TextStyle(
                         fontSize: 14,
-                        color: AppColors.textSecondary,
+                        color: colors.textSecondary,
                         height: 1.6,
                       ),
                     ),
@@ -194,13 +203,13 @@ class HelpAndSupportScreen extends StatelessWidget {
     );
   }
 
-  static Widget _buildFAQItem(String question, String answer) {
+  static Widget _buildFAQItem(String question, String answer, AppTheme colors) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 16.0),
       child: Container(
         padding: const EdgeInsets.all(16.0),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: colors.surface,
           borderRadius: BorderRadius.circular(12),
           boxShadow: [
             BoxShadow(
@@ -215,10 +224,10 @@ class HelpAndSupportScreen extends StatelessWidget {
           children: [
             Text(
               question,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 14,
                 fontWeight: FontWeight.bold,
-                color: AppColors.primary,
+                color: colors.primary,
               ),
             ),
             const SizedBox(height: 8),
@@ -226,7 +235,7 @@ class HelpAndSupportScreen extends StatelessWidget {
               answer,
               style: TextStyle(
                 fontSize: 13,
-                color: AppColors.textSecondary,
+                color: colors.textSecondary,
                 height: 1.5,
               ),
             ),
@@ -240,13 +249,14 @@ class HelpAndSupportScreen extends StatelessWidget {
     required IconData icon,
     required String label,
     required String value,
+    required AppTheme colors,
   }) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 12.0),
       child: Container(
         padding: const EdgeInsets.all(16.0),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: colors.surface,
           borderRadius: BorderRadius.circular(12),
           boxShadow: [
             BoxShadow(
@@ -261,10 +271,10 @@ class HelpAndSupportScreen extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(
-                color: AppColors.primary.withValues(alpha: 0.1),
+                color: colors.primary.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(8),
               ),
-              child: Icon(icon, color: AppColors.primary, size: 20),
+              child: Icon(icon, color: colors.primary, size: 20),
             ),
             const SizedBox(width: 16),
             Expanded(
@@ -282,10 +292,10 @@ class HelpAndSupportScreen extends StatelessWidget {
                   const SizedBox(height: 4),
                   Text(
                     value,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.bold,
-                      color: AppColors.primary,
+                      color: colors.primary,
                     ),
                     overflow: TextOverflow.ellipsis,
                   ),
@@ -299,7 +309,7 @@ class HelpAndSupportScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildQuickHelpSection() {
+  Widget _buildQuickHelpSection(BuildContext context, AppTheme colors) {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(20.0),
@@ -307,7 +317,7 @@ class HelpAndSupportScreen extends StatelessWidget {
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [AppColors.primary, AppColors.primary.withValues(alpha: 0.7)],
+          colors: [colors.primary, colors.primary.withValues(alpha: 0.7)],
         ),
         borderRadius: BorderRadius.circular(16),
         boxShadow: [

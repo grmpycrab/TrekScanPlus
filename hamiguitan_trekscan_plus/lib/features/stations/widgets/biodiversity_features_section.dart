@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../models/trail_details.dart';
-import '../../../theme/color.dart';
+import '../../../theme/app_theme.dart';
 
 /// A single biodiversity feature button (icon + label)
 class BiodiversityFeatureItem extends StatelessWidget {
@@ -19,14 +19,13 @@ class BiodiversityFeatureItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.colors;
     final isEmpty = items.isEmpty;
-    final tileColor = isEmpty
-        ? AppColors.segmentBackground
-        : AppColors.cardBackground;
+    final tileColor = isEmpty ? colors.segmentBackground : colors.surface;
     final borderColor = isEmpty
-        ? AppColors.border
+        ? colors.border
         : iconColor.withValues(alpha: 0.3);
-    final labelColor = isEmpty ? AppColors.textSecondary : AppColors.text;
+    final labelColor = isEmpty ? colors.textSecondary : colors.text;
 
     return GestureDetector(
       onTap: isEmpty ? null : () => _showDetailsBottomSheet(context),
@@ -132,12 +131,8 @@ class _FeatureDetailsSheet extends StatelessWidget {
     return true;
   }
 
-  Widget _buildItemText(String item) {
-    const baseStyle = TextStyle(
-      fontSize: 14,
-      color: AppColors.text,
-      height: 1.4,
-    );
+  Widget _buildItemText(String item, AppTheme colors) {
+    final baseStyle = TextStyle(fontSize: 14, color: colors.text, height: 1.4);
 
     if (_formatScientificNames && _looksLikeScientificName(item)) {
       return Text(item, style: baseStyle.copyWith(fontStyle: FontStyle.italic));
@@ -148,9 +143,10 @@ class _FeatureDetailsSheet extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.colors;
     return Container(
       decoration: BoxDecoration(
-        color: AppColors.cardBackground,
+        color: colors.surface,
         borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
       ),
       child: Column(
@@ -165,7 +161,7 @@ class _FeatureDetailsSheet extends StatelessWidget {
                   width: 40,
                   height: 4,
                   decoration: BoxDecoration(
-                    color: AppColors.iconGrey400,
+                    color: Colors.grey.shade400,
                     borderRadius: BorderRadius.circular(2),
                   ),
                 ),
@@ -188,17 +184,17 @@ class _FeatureDetailsSheet extends StatelessWidget {
                         children: [
                           Text(
                             title,
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontSize: 18,
                               fontWeight: FontWeight.bold,
-                              color: AppColors.text,
+                              color: colors.text,
                             ),
                           ),
                           Text(
                             '${items.length} item${items.length != 1 ? 's' : ''}',
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontSize: 12,
-                              color: AppColors.textSecondary,
+                              color: colors.textSecondary,
                             ),
                           ),
                         ],
@@ -212,7 +208,7 @@ class _FeatureDetailsSheet extends StatelessWidget {
           ),
 
           // Divider
-          const Divider(height: 1, color: AppColors.border),
+          Divider(height: 1, color: colors.border),
 
           // List of items
           Expanded(
@@ -236,7 +232,7 @@ class _FeatureDetailsSheet extends StatelessWidget {
                         ),
                       ),
                       const SizedBox(width: 12),
-                      Expanded(child: _buildItemText(items[index])),
+                      Expanded(child: _buildItemText(items[index], colors)),
                     ],
                   ),
                 );
@@ -252,7 +248,7 @@ class _FeatureDetailsSheet extends StatelessWidget {
               child: ElevatedButton(
                 onPressed: () => Navigator.pop(context),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.primary,
+                  backgroundColor: colors.primary,
                   padding: const EdgeInsets.symmetric(vertical: 14),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(10),
@@ -284,36 +280,21 @@ class _FeatureType {
   _FeatureType({required this.label, required this.icon, required this.color});
 }
 
-final Map<String, _FeatureType> _featureTypes = {
-  'trailType': _FeatureType(
-    label: 'Trail Type',
-    icon: Icons.terrain,
-    color: AppColors.primary,
-  ),
+final Map<String, _FeatureType> _staticFeatureTypes = {
   'plants': _FeatureType(
     label: 'Plants',
     icon: Icons.local_florist,
-    color: AppColors.statusApproved,
+    color: Colors.green,
   ),
   'animals': _FeatureType(
     label: 'Animals',
     icon: Icons.pets,
-    color: AppColors.statusPending,
-  ),
-  'facilities': _FeatureType(
-    label: 'Facilities',
-    icon: Icons.home,
-    color: AppColors.notificationBooking,
-  ),
-  'utilities': _FeatureType(
-    label: 'Utilities',
-    icon: Icons.water_drop,
-    color: AppColors.accent,
+    color: Colors.orange,
   ),
   'warnings': _FeatureType(
     label: 'Warnings',
     icon: Icons.warning_amber_rounded,
-    color: AppColors.statusPending,
+    color: Colors.orange,
   ),
 };
 
@@ -325,6 +306,26 @@ class BiodiversityFeaturesSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.colors;
+    final featureTypes = <String, _FeatureType>{
+      ..._staticFeatureTypes,
+      'trailType': _FeatureType(
+        label: 'Trail Type',
+        icon: Icons.terrain,
+        color: colors.primary,
+      ),
+      'facilities': _FeatureType(
+        label: 'Facilities',
+        icon: Icons.home,
+        color: colors.notificationBooking,
+      ),
+      'utilities': _FeatureType(
+        label: 'Utilities',
+        icon: Icons.water_drop,
+        color: colors.accent,
+      ),
+    };
+
     if (!trailDetails.hasData) {
       return const SizedBox.shrink();
     }
@@ -333,19 +334,19 @@ class BiodiversityFeaturesSection extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppColors.background,
+        color: colors.background,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.border),
+        border: Border.all(color: colors.border),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
+          Text(
             'Biodiversity Features',
             style: TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.bold,
-              color: AppColors.text,
+              color: colors.text,
             ),
           ),
           const SizedBox(height: 14),
@@ -353,19 +354,36 @@ class BiodiversityFeaturesSection extends StatelessWidget {
             scrollDirection: Axis.horizontal,
             child: Row(
               children: [
-                _buildFeatureItem('trailType', trailDetails.trailType),
+                _buildFeatureItem(
+                  'trailType',
+                  trailDetails.trailType,
+                  featureTypes,
+                ),
                 const SizedBox(width: 10),
-                _buildFeatureItem('plants', trailDetails.plants),
+                _buildFeatureItem('plants', trailDetails.plants, featureTypes),
                 const SizedBox(width: 10),
-                _buildFeatureItem('animals', trailDetails.animals),
+                _buildFeatureItem(
+                  'animals',
+                  trailDetails.animals,
+                  featureTypes,
+                ),
                 const SizedBox(width: 10),
-                _buildFeatureItem('facilities', trailDetails.facilities),
+                _buildFeatureItem(
+                  'facilities',
+                  trailDetails.facilities,
+                  featureTypes,
+                ),
                 const SizedBox(width: 10),
-                _buildFeatureItem('utilities', trailDetails.utilities),
+                _buildFeatureItem(
+                  'utilities',
+                  trailDetails.utilities,
+                  featureTypes,
+                ),
                 const SizedBox(width: 10),
                 _buildFeatureItem(
                   'warnings',
                   trailDetails.warnings.keys.toList(),
+                  featureTypes,
                 ),
               ],
             ),
@@ -375,8 +393,12 @@ class BiodiversityFeaturesSection extends StatelessWidget {
     );
   }
 
-  Widget _buildFeatureItem(String key, List<String> items) {
-    final feature = _featureTypes[key]!;
+  Widget _buildFeatureItem(
+    String key,
+    List<String> items,
+    Map<String, _FeatureType> featureTypes,
+  ) {
+    final feature = featureTypes[key]!;
     // For warnings, convert the warning messages to a list
     final displayItems = key == 'warnings'
         ? trailDetails.warnings.values.toList()
@@ -393,4 +415,3 @@ class BiodiversityFeaturesSection extends StatelessWidget {
     );
   }
 }
-

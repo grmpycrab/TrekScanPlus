@@ -7,7 +7,7 @@ import 'package:flutter/material.dart';
 import '../../../models/station_data.dart';
 import '../models/station_review.dart';
 import '../services/station_review_service.dart';
-import '../../../theme/color.dart';
+import '../../../theme/app_theme.dart';
 import '../widgets/trail_map.dart';
 import '../widgets/station_review_widgets.dart';
 import '../widgets/biodiversity_features_section.dart';
@@ -315,6 +315,7 @@ class _DescriptionSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.colors;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -324,17 +325,17 @@ class _DescriptionSection extends StatelessWidget {
               width: 3,
               height: 20,
               decoration: BoxDecoration(
-                color: AppColors.accent,
+                color: colors.accent,
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
             const SizedBox(width: 10),
-            const Text(
+            Text(
               'About this Station',
               style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
-                color: AppColors.text,
+                color: colors.text,
               ),
             ),
           ],
@@ -343,11 +344,7 @@ class _DescriptionSection extends StatelessWidget {
         Text(
           description,
           textAlign: TextAlign.justify,
-          style: const TextStyle(
-            fontSize: 16,
-            height: 1.6,
-            color: Colors.black87,
-          ),
+          style: TextStyle(fontSize: 16, height: 1.6, color: colors.text),
         ),
       ],
     );
@@ -360,13 +357,14 @@ class _WarningsSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.colors;
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppColors.background,
+        color: colors.background,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.border),
+        border: Border.all(color: colors.border),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -377,7 +375,7 @@ class _WarningsSection extends StatelessWidget {
                 width: 3,
                 height: 20,
                 decoration: BoxDecoration(
-                  color: AppColors.accent,
+                  color: colors.accent,
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
@@ -388,12 +386,12 @@ class _WarningsSection extends StatelessWidget {
                 size: 22,
               ),
               const SizedBox(width: 8),
-              const Text(
+              Text(
                 'Safety warnings',
                 style: TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
-                  color: AppColors.text,
+                  color: colors.text,
                 ),
               ),
             ],
@@ -425,10 +423,7 @@ class _WarningsSection extends StatelessWidget {
                     Expanded(
                       child: Text(
                         e.value,
-                        style: const TextStyle(
-                          color: AppColors.text,
-                          height: 1.5,
-                        ),
+                        style: TextStyle(color: colors.text, height: 1.5),
                       ),
                     ),
                   ],
@@ -465,14 +460,15 @@ class _MetadataSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.colors;
     if (metadata.isEmpty) return const SizedBox.shrink();
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppColors.background,
+        color: colors.background,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.border),
+        border: Border.all(color: colors.border),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -483,17 +479,17 @@ class _MetadataSection extends StatelessWidget {
                 width: 3,
                 height: 20,
                 decoration: BoxDecoration(
-                  color: AppColors.accent,
+                  color: colors.accent,
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
               const SizedBox(width: 10),
-              const Text(
+              Text(
                 'Additional information',
                 style: TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
-                  color: AppColors.text,
+                  color: colors.text,
                 ),
               ),
             ],
@@ -507,7 +503,7 @@ class _MetadataSection extends StatelessWidget {
                   Icon(
                     _kMetadataIcons[entry.key] ?? Icons.info,
                     size: 16,
-                    color: AppColors.primary,
+                    color: colors.primary,
                   ),
                   const SizedBox(width: 8),
                   Text(
@@ -675,7 +671,7 @@ class _StationDetailScreenState extends State<StationDetailScreen> {
                   top: Radius.circular(30),
                 ),
                 child: Material(
-                  color: AppColors.cardBackground,
+                  color: context.colors.surface,
                   child: Padding(
                     padding: const EdgeInsets.fromLTRB(20, 36, 20, 0),
                     child: StreamBuilder<List<StationReview>>(
@@ -793,11 +789,15 @@ class _StationDetailScreenState extends State<StationDetailScreen> {
           pinned: true,
           elevation: offset > 50 ? 4.0 : 0.0,
           shadowColor: const Color(0x1A000000),
-          backgroundColor: Color.lerp(Colors.transparent, Colors.white, bgT),
+          backgroundColor: Color.lerp(
+            Colors.transparent,
+            context.colors.surface,
+            bgT,
+          ),
           leading: IconButton(
             icon: Icon(
               Icons.arrow_back,
-              color: Color.lerp(Colors.white, Colors.black, iconT),
+              color: Color.lerp(Colors.white, context.colors.text, iconT),
             ),
             onPressed: () => Navigator.pop(context, widget.station),
           ),
@@ -806,7 +806,7 @@ class _StationDetailScreenState extends State<StationDetailScreen> {
             style: TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.w600,
-              color: Color.lerp(Colors.white, AppColors.text, iconT),
+              color: Color.lerp(Colors.white, context.colors.text, iconT),
             ),
           ),
           flexibleSpace: FlexibleSpaceBar(
@@ -826,7 +826,7 @@ class _StationDetailScreenState extends State<StationDetailScreen> {
   Widget _buildImageCarousel() {
     if (_vm.imagePaths.isEmpty) {
       return const ColoredBox(
-        color: AppColors.border,
+        color: Color(0xFFCCCCCC),
         child: Center(child: Icon(Icons.image_not_supported, size: 50)),
       );
     }
@@ -848,7 +848,7 @@ class _StationDetailScreenState extends State<StationDetailScreen> {
             _vm.imagePaths[real],
             fit: BoxFit.cover,
             errorBuilder: (_, __, ___) => const ColoredBox(
-              color: AppColors.border,
+              color: Color(0xFFCCCCCC),
               child: Center(child: Icon(Icons.image_not_supported, size: 50)),
             ),
           ),
@@ -881,7 +881,7 @@ class _StationDetailScreenState extends State<StationDetailScreen> {
     return Container(
       width: double.infinity,
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: context.colors.surface,
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
@@ -896,9 +896,11 @@ class _StationDetailScreenState extends State<StationDetailScreen> {
         children: [
           Container(
             height: 4,
-            decoration: const BoxDecoration(
-              color: AppColors.accent,
-              borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+            decoration: BoxDecoration(
+              color: context.colors.accent,
+              borderRadius: const BorderRadius.vertical(
+                top: Radius.circular(16),
+              ),
             ),
           ),
           Padding(
@@ -913,7 +915,7 @@ class _StationDetailScreenState extends State<StationDetailScreen> {
                   if (_vm.allStations.isNotEmpty)
                     Padding(
                       padding: const EdgeInsets.symmetric(vertical: 14),
-                      child: Divider(height: 1, color: AppColors.border),
+                      child: Divider(height: 1, color: context.colors.border),
                     )
                   else
                     const SizedBox(height: 14),
@@ -942,19 +944,19 @@ class _StationDetailScreenState extends State<StationDetailScreen> {
           width: 3,
           height: 20,
           decoration: BoxDecoration(
-            color: AppColors.accent,
+            color: context.colors.accent,
             borderRadius: BorderRadius.circular(2),
           ),
         ),
         const SizedBox(width: 10),
-        const Icon(Icons.map_outlined, size: 22, color: AppColors.primary),
+        Icon(Icons.map_outlined, size: 22, color: context.colors.primary),
         const SizedBox(width: 8),
-        const Text(
+        Text(
           'Trail Route',
           style: TextStyle(
             fontSize: 18,
             fontWeight: FontWeight.bold,
-            color: AppColors.text,
+            color: context.colors.text,
           ),
         ),
       ],
@@ -982,19 +984,19 @@ class _StationDetailScreenState extends State<StationDetailScreen> {
       width: double.infinity,
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: AppColors.accent.withValues(alpha: 0.08),
+        color: context.colors.accent.withValues(alpha: 0.08),
         borderRadius: BorderRadius.circular(12),
       ),
-      child: const Row(
+      child: Row(
         children: [
-          Icon(Icons.celebration, color: AppColors.accent, size: 24),
-          SizedBox(width: 12),
+          Icon(Icons.celebration, color: context.colors.accent, size: 24),
+          const SizedBox(width: 12),
           Expanded(
             child: Text(
               "You've reached the final station on this route!",
               style: TextStyle(
                 fontWeight: FontWeight.w600,
-                color: AppColors.accent,
+                color: context.colors.accent,
                 height: 1.4,
               ),
             ),
@@ -1015,10 +1017,10 @@ class _StationDetailScreenState extends State<StationDetailScreen> {
             Expanded(
               child: Text(
                 next.name,
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 17,
                   fontWeight: FontWeight.w700,
-                  color: AppColors.text,
+                  color: context.colors.text,
                 ),
               ),
             ),
@@ -1048,7 +1050,7 @@ class _StationDetailScreenState extends State<StationDetailScreen> {
         const SizedBox(height: 12),
         Container(
           decoration: BoxDecoration(
-            color: AppColors.background,
+            color: context.colors.background,
             borderRadius: BorderRadius.circular(10),
           ),
           padding: const EdgeInsets.symmetric(vertical: 12),
@@ -1061,7 +1063,7 @@ class _StationDetailScreenState extends State<StationDetailScreen> {
                   label: 'ELEVATION',
                 ),
               ),
-              Container(width: 1, height: 36, color: AppColors.border),
+              Container(width: 1, height: 36, color: context.colors.border),
               Expanded(
                 child: _buildRouteMetric(
                   icon: Icons.route,
@@ -1077,7 +1079,7 @@ class _StationDetailScreenState extends State<StationDetailScreen> {
           width: double.infinity,
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 13),
           decoration: BoxDecoration(
-            color: AppColors.accent,
+            color: context.colors.accent,
             borderRadius: BorderRadius.circular(10),
           ),
           child: Row(
@@ -1118,23 +1120,23 @@ class _StationDetailScreenState extends State<StationDetailScreen> {
             Container(
               padding: const EdgeInsets.all(7),
               decoration: BoxDecoration(
-                color: AppColors.accent.withValues(alpha: 0.12),
+                color: context.colors.accent.withValues(alpha: 0.12),
                 borderRadius: BorderRadius.circular(8),
               ),
-              child: const Icon(
+              child: Icon(
                 Icons.fork_right,
-                color: AppColors.accent,
+                color: context.colors.accent,
                 size: 18,
               ),
             ),
             const SizedBox(width: 10),
-            const Expanded(
+            Expanded(
               child: Text(
                 'Multiple routes branch from here',
                 style: TextStyle(
                   fontSize: 15,
                   fontWeight: FontWeight.w700,
-                  color: AppColors.text,
+                  color: context.colors.text,
                 ),
               ),
             ),
@@ -1148,9 +1150,9 @@ class _StationDetailScreenState extends State<StationDetailScreen> {
             margin: const EdgeInsets.only(bottom: 8),
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
             decoration: BoxDecoration(
-              color: AppColors.background,
+              color: context.colors.background,
               borderRadius: BorderRadius.circular(10),
-              border: Border.all(color: AppColors.border),
+              border: Border.all(color: context.colors.border),
             ),
             child: Row(
               children: [
@@ -1170,10 +1172,10 @@ class _StationDetailScreenState extends State<StationDetailScreen> {
                     children: [
                       Text(
                         branch.name,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 14,
                           fontWeight: FontWeight.w600,
-                          color: AppColors.text,
+                          color: context.colors.text,
                         ),
                       ),
                       if (routeLabel != null)
@@ -1181,7 +1183,7 @@ class _StationDetailScreenState extends State<StationDetailScreen> {
                           routeLabel,
                           style: TextStyle(
                             fontSize: 11,
-                            color: AppColors.textSecondary,
+                            color: context.colors.textSecondary,
                           ),
                         ),
                     ],
@@ -1224,14 +1226,14 @@ class _StationDetailScreenState extends State<StationDetailScreen> {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Icon(icon, size: 20, color: AppColors.primary),
+        Icon(icon, size: 20, color: context.colors.primary),
         const SizedBox(height: 4),
         Text(
           value,
-          style: const TextStyle(
+          style: TextStyle(
             fontSize: 15,
             fontWeight: FontWeight.w700,
-            color: AppColors.text,
+            color: context.colors.text,
           ),
         ),
         Text(

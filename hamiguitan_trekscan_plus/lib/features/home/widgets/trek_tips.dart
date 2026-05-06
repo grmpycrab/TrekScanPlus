@@ -41,7 +41,7 @@ class _TrekTipsState extends State<TrekTips> {
           right: isSmallScreen ? 0 : 0,
         ),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: colors.surface,
           borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
@@ -214,7 +214,7 @@ class _TrekTipsState extends State<TrekTips> {
       ),
       padding: EdgeInsets.all(isSmallScreen ? 12 : 16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: colors.surface,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
           color: colors.primary.withValues(alpha: 0.2),
@@ -328,7 +328,7 @@ class _TrekTipsOverlayState extends State<TrekTipsOverlay> {
           maxWidth: 600,
         ),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: colors.surface,
           borderRadius: BorderRadius.circular(20),
           boxShadow: [
             BoxShadow(
@@ -434,7 +434,7 @@ class _TrekTipsOverlayState extends State<TrekTipsOverlay> {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: colors.surface,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
           color: colors.accent.withValues(alpha: 0.3),
@@ -505,7 +505,7 @@ class _TrekTipsOverlayState extends State<TrekTipsOverlay> {
       margin: const EdgeInsets.only(bottom: 10),
       padding: EdgeInsets.all(isSmallScreen ? 10 : 12),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: colors.surface,
         borderRadius: BorderRadius.circular(10),
         border: Border.all(color: colors.accent.withValues(alpha: 0.2)),
         boxShadow: [
