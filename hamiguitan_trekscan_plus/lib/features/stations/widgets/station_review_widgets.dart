@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../models/station_review.dart';
 import '../services/station_review_service.dart';
-import '../../../theme/color.dart';
+import '../../../theme/app_theme.dart';
 import '../../../features/auth/screens/login_screen.dart';
 
 /// Pill showing average rating (reference-style), or a neutral state when empty.
@@ -21,6 +21,7 @@ class StationRatingSummaryPill extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.colors;
     if (loading) {
       return const Padding(
         padding: EdgeInsets.only(left: 8, top: 2),
@@ -38,7 +39,7 @@ class StationRatingSummaryPill extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
-        color: AppColors.accent,
+        color: colors.accent,
         borderRadius: BorderRadius.circular(20),
       ),
       child: Row(
@@ -204,10 +205,10 @@ class _StationReviewsSectionBodyState extends State<StationReviewsSectionBody> {
   Widget _sectionTitle(String title) {
     return Text(
       title,
-      style: const TextStyle(
+      style: TextStyle(
         fontSize: 18,
         fontWeight: FontWeight.bold,
-        color: AppColors.text,
+        color: context.colors.text,
       ),
     );
   }
@@ -226,8 +227,8 @@ class _StationReviewsSectionBodyState extends State<StationReviewsSectionBody> {
         icon: const Icon(Icons.login, size: 18),
         label: const Text('Sign in to leave a review'),
         style: OutlinedButton.styleFrom(
-          foregroundColor: AppColors.accent,
-          side: const BorderSide(color: AppColors.accent),
+          foregroundColor: context.colors.accent,
+          side: BorderSide(color: context.colors.accent),
         ),
       );
     }
@@ -235,19 +236,19 @@ class _StationReviewsSectionBodyState extends State<StationReviewsSectionBody> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppColors.background,
+        color: context.colors.background,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.border),
+        border: Border.all(color: context.colors.border),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
             _myReview != null ? 'Update your review' : 'Write a review',
-            style: const TextStyle(
+            style: TextStyle(
               fontWeight: FontWeight.w600,
               fontSize: 15,
-              color: AppColors.text,
+              color: context.colors.text,
             ),
           ),
           const SizedBox(height: 10),
@@ -277,15 +278,15 @@ class _StationReviewsSectionBodyState extends State<StationReviewsSectionBody> {
             decoration: InputDecoration(
               hintText: 'Share tips or how it felt at this station…',
               filled: true,
-              fillColor: Colors.white,
+              fillColor: context.colors.inputFill,
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(10),
-                borderSide: const BorderSide(color: AppColors.border),
+                borderSide: BorderSide(color: context.colors.border),
               ),
               focusedBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(10),
-                borderSide: const BorderSide(
-                  color: AppColors.accent,
+                borderSide: BorderSide(
+                  color: context.colors.accent,
                   width: 1.5,
                 ),
               ),
@@ -297,7 +298,7 @@ class _StationReviewsSectionBodyState extends State<StationReviewsSectionBody> {
               FilledButton(
                 onPressed: _submitting ? null : _submit,
                 style: FilledButton.styleFrom(
-                  backgroundColor: AppColors.accent,
+                  backgroundColor: context.colors.accent,
                   foregroundColor: Colors.white,
                 ),
                 child: _submitting
@@ -337,6 +338,7 @@ class _ReviewTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.colors;
     final initial = review.userDisplayName.isNotEmpty
         ? review.userDisplayName[0].toUpperCase()
         : '?';
@@ -347,8 +349,8 @@ class _ReviewTile extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           CircleAvatar(
-            backgroundColor: AppColors.accent.withValues(alpha: 0.15),
-            foregroundColor: AppColors.accent,
+            backgroundColor: colors.accent.withValues(alpha: 0.15),
+            foregroundColor: colors.accent,
             child: Text(initial),
           ),
           const SizedBox(width: 12),

@@ -11,7 +11,7 @@ import '../../../core/services/user_service.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../../../components/e_certificate_badge.dart';
 import '../../../core/widgets/app_dialogue_handler.dart';
-import '../../../theme/color.dart';
+import '../../../theme/app_theme.dart';
 import '../../../utils/app_logger.dart';
 import '../../settings/screens/settings_screen.dart';
 import '../../../screens/settings/account_settings.dart';
@@ -64,9 +64,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.colors;
     if (_vm.firebaseUser == null) {
       return Scaffold(
-        backgroundColor: Colors.white,
+        backgroundColor: colors.background,
         body: SafeArea(
           child: Center(
             child: Column(
@@ -86,7 +87,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     }
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: colors.background,
       body: StreamBuilder<DocumentSnapshot<Map<String, dynamic>>>(
         stream: _userService.streamUser(widget.userId ?? _vm.firebaseUser!.uid),
         builder: (context, snapshot) {
@@ -194,6 +195,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   Widget _buildBadgesSection(UserModel user) {
+    final colors = context.colors;
     if (_vm.achievementsLoading) {
       return Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -235,10 +237,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 const SizedBox(height: 4),
                 Text(
                   '${unlockedAchievements.length} of $totalAchievements unlocked',
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: AppColors.textSecondary,
-                  ),
+                  style: TextStyle(fontSize: 12, color: colors.textSecondary),
                 ),
               ],
             ),
@@ -270,7 +269,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             padding: const EdgeInsets.all(16.0),
             margin: const EdgeInsets.symmetric(vertical: 8.0),
             decoration: BoxDecoration(
-              color: AppColors.background,
+              color: colors.background,
               borderRadius: BorderRadius.circular(12),
               border: Border.all(color: Colors.grey.shade300),
             ),
@@ -287,10 +286,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     _vm.isOwnProfile
                         ? 'No achievements unlocked yet. Start scanning stations to earn achievements!'
                         : 'No achievements unlocked yet.',
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: AppColors.textSecondary,
-                    ),
+                    style: TextStyle(fontSize: 14, color: colors.textSecondary),
                   ),
                 ),
               ],
@@ -349,7 +345,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                   'Unlocked ${_formatDate(achievement.unlockedAt!)}',
                                   style: TextStyle(
                                     fontSize: 12,
-                                    color: AppColors.textSecondary,
+                                    color: colors.textSecondary,
                                   ),
                                 ),
                             ],
@@ -427,150 +423,157 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
     showDialog(
       context: context,
-      builder: (context) => Dialog(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Padding(
-              padding: const EdgeInsets.all(16),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  const Text(
-                    'All Achievements',
-                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                  ),
-                  IconButton(
-                    icon: const Icon(Icons.close),
-                    onPressed: () => Navigator.pop(context),
-                  ),
-                ],
-              ),
-            ),
-            Expanded(
-              child: ListView.builder(
-                itemCount: allAchievements.length,
-                itemBuilder: (context, index) {
-                  final achievement = allAchievements[index];
-                  final isUnlocked = unlockedIds.contains(achievement.id);
-
-                  return Padding(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 8,
-                    ),
-                    child: Container(
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: isUnlocked
-                            ? achievement.getColor().withValues(alpha: 0.1)
-                            : AppColors.background,
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(
-                          color: isUnlocked
-                              ? achievement.getColor().withValues(alpha: 0.3)
-                              : AppColors.border,
-                        ),
+      builder: (context) {
+        final colors = context.colors;
+        return Dialog(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Padding(
+                padding: const EdgeInsets.all(16),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text(
+                      'All Achievements',
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
                       ),
-                      child: Row(
-                        children: [
-                          Container(
-                            width: 48,
-                            height: 48,
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              color: isUnlocked
-                                  ? achievement.getColor().withValues(
-                                      alpha: 0.2,
-                                    )
-                                  : AppColors.border,
-                            ),
-                            child: isUnlocked
-                                ? Icon(
-                                    achievement.getIconData(),
-                                    color: achievement.getColor(),
-                                    size: 24,
-                                  )
-                                : Icon(
-                                    Icons.lock,
-                                    color: AppColors.textSecondary,
-                                    size: 24,
-                                  ),
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.close),
+                      onPressed: () => Navigator.pop(context),
+                    ),
+                  ],
+                ),
+              ),
+              Expanded(
+                child: ListView.builder(
+                  itemCount: allAchievements.length,
+                  itemBuilder: (context, index) {
+                    final achievement = allAchievements[index];
+                    final isUnlocked = unlockedIds.contains(achievement.id);
+
+                    return Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 8,
+                      ),
+                      child: Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: isUnlocked
+                              ? achievement.getColor().withValues(alpha: 0.1)
+                              : colors.background,
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: isUnlocked
+                                ? achievement.getColor().withValues(alpha: 0.3)
+                                : colors.border,
                           ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  achievement.name,
-                                  style: TextStyle(
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.bold,
-                                    color: isUnlocked
-                                        ? Colors.black
-                                        : AppColors.textSecondary,
-                                  ),
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                                const SizedBox(height: 2),
-                                if (isUnlocked &&
-                                    achievement.unlockedAt != null)
-                                  Text(
-                                    'Unlocked ${_formatDate(achievement.unlockedAt!)}',
-                                    style: TextStyle(
-                                      fontSize: 12,
-                                      color: AppColors.textSecondary,
+                        ),
+                        child: Row(
+                          children: [
+                            Container(
+                              width: 48,
+                              height: 48,
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                color: isUnlocked
+                                    ? achievement.getColor().withValues(
+                                        alpha: 0.2,
+                                      )
+                                    : colors.border,
+                              ),
+                              child: isUnlocked
+                                  ? Icon(
+                                      achievement.getIconData(),
+                                      color: achievement.getColor(),
+                                      size: 24,
+                                    )
+                                  : Icon(
+                                      Icons.lock,
+                                      color: colors.textSecondary,
+                                      size: 24,
                                     ),
-                                  )
-                                else if (!isUnlocked)
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
                                   Text(
-                                    achievement.description,
+                                    achievement.name,
                                     style: TextStyle(
-                                      fontSize: 12,
-                                      color: AppColors.textSecondary,
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.bold,
+                                      color: isUnlocked
+                                          ? Colors.black
+                                          : colors.textSecondary,
                                     ),
                                     maxLines: 1,
                                     overflow: TextOverflow.ellipsis,
                                   ),
-                              ],
-                            ),
-                          ),
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 10,
-                              vertical: 4,
-                            ),
-                            decoration: BoxDecoration(
-                              color: isUnlocked
-                                  ? achievement.getColor()
-                                  : Colors.grey[400],
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: Text(
-                              achievement.rarity.toUpperCase(),
-                              style: const TextStyle(
-                                fontSize: 10,
-                                fontWeight: FontWeight.w600,
-                                color: Colors.white,
+                                  const SizedBox(height: 2),
+                                  if (isUnlocked &&
+                                      achievement.unlockedAt != null)
+                                    Text(
+                                      'Unlocked ${_formatDate(achievement.unlockedAt!)}',
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        color: colors.textSecondary,
+                                      ),
+                                    )
+                                  else if (!isUnlocked)
+                                    Text(
+                                      achievement.description,
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        color: colors.textSecondary,
+                                      ),
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                ],
                               ),
                             ),
-                          ),
-                        ],
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 10,
+                                vertical: 4,
+                              ),
+                              decoration: BoxDecoration(
+                                color: isUnlocked
+                                    ? achievement.getColor()
+                                    : Colors.grey[400],
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: Text(
+                                achievement.rarity.toUpperCase(),
+                                style: const TextStyle(
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.w600,
+                                  color: Colors.white,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
-                    ),
-                  );
-                },
+                    );
+                  },
+                ),
               ),
-            ),
-          ],
-        ),
-      ),
+            ],
+          ),
+        );
+      },
     );
   }
 
   Widget _buildUserPostsSection() {
+    final colors = context.colors;
     if (_vm.firebaseUser == null) {
       return const SizedBox.shrink();
     }
@@ -598,7 +601,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.w600,
-                      color: AppColors.textSecondary,
+                      color: colors.textSecondary,
                     ),
                   );
                 },
@@ -637,7 +640,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       '${snapshot.error}',
                       style: TextStyle(
                         fontSize: 12,
-                        color: AppColors.textSecondary,
+                        color: colors.textSecondary,
                       ),
                       textAlign: TextAlign.center,
                     ),
@@ -663,7 +666,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       'No posts yet',
                       style: TextStyle(
                         fontSize: 14,
-                        color: AppColors.textSecondary,
+                        color: colors.textSecondary,
                         fontWeight: FontWeight.w500,
                       ),
                     ),
@@ -770,6 +773,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   Widget _buildNewProfileLayout(UserModel user) {
+    final colors = context.colors;
     return Column(
       children: [
         Row(
@@ -780,20 +784,20 @@ class _ProfileScreenState extends State<ProfileScreen> {
               width: 90,
               height: 90,
               decoration: BoxDecoration(
-                color: AppColors.background,
+                color: colors.background,
                 shape: BoxShape.circle,
-                border: Border.all(color: AppColors.borderColor, width: 2),
+                border: Border.all(color: colors.border, width: 2),
               ),
               child: ClipOval(
                 child: user.profileImage != null
                     ? Image.network(user.profileImage!, fit: BoxFit.cover)
                     : CircleAvatar(
                         radius: 45,
-                        backgroundColor: AppColors.background,
+                        backgroundColor: colors.background,
                         child: Icon(
                           Icons.person_outline_rounded,
                           size: 45,
-                          color: AppColors.iconGrey400,
+                          color: Colors.grey.shade400,
                         ),
                       ),
               ),
@@ -807,20 +811,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   // User name at the top
                   Text(
                     _getDisplayName(user),
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
-                      color: AppColors.text,
+                      color: colors.text,
                     ),
                   ),
                   const SizedBox(height: 4),
                   // User email under the name
                   Text(
                     user.email,
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: AppColors.textTertiary,
-                    ),
+                    style: TextStyle(fontSize: 14, color: colors.textTertiary),
                   ),
                   const SizedBox(height: 16),
                   // Stats row below the name
@@ -837,7 +838,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           return _buildStatColumn(
                             postsCount.toString(),
                             'posts',
-                            () {}, // No action for posts
+                            () {},
                           );
                         },
                       ),
@@ -865,22 +866,23 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   Widget _buildStatColumn(String count, String label, VoidCallback onTap) {
+    final colors = context.colors;
     return GestureDetector(
       onTap: onTap,
       child: Column(
         children: [
           Text(
             count,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.bold,
-              color: AppColors.text,
+              color: colors.text,
             ),
           ),
           const SizedBox(height: 4),
           Text(
             label,
-            style: TextStyle(fontSize: 13, color: AppColors.textTertiary),
+            style: TextStyle(fontSize: 13, color: colors.textTertiary),
           ),
         ],
       ),
@@ -888,15 +890,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   Widget _buildActionButtons() {
+    final colors = context.colors;
     if (_vm.isOwnProfile) {
-      // Own profile: Edit Profile and Logout buttons
       return Row(
         children: [
           // Edit Profile button
           Expanded(
             child: ElevatedButton(
               onPressed: () {
-                // Navigate to account settings
                 Navigator.push(
                   context,
                   MaterialPageRoute(
@@ -905,10 +906,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 );
               },
               style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.background,
-                foregroundColor: AppColors.text,
+                backgroundColor: colors.background,
+                foregroundColor: colors.text,
                 elevation: 0,
-                side: BorderSide(color: AppColors.borderColor),
+                side: BorderSide(color: colors.border),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(8),
                 ),
@@ -926,10 +927,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
             child: ElevatedButton(
               onPressed: () => _navigateToFavorites(),
               style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.background,
-                foregroundColor: AppColors.text,
+                backgroundColor: colors.background,
+                foregroundColor: colors.text,
                 elevation: 0,
-                side: BorderSide(color: AppColors.borderColor),
+                side: BorderSide(color: colors.border),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(8),
                 ),
@@ -948,16 +949,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
             child: ElevatedButton(
               onPressed: () => _navigateToSettings(),
               style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.background,
-                foregroundColor: AppColors.text,
+                backgroundColor: colors.background,
+                foregroundColor: colors.text,
                 elevation: 0,
-                side: BorderSide(color: AppColors.borderColor),
+                side: BorderSide(color: colors.border),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(8),
                 ),
                 padding: const EdgeInsets.symmetric(vertical: 10),
               ),
-              child: Icon(Icons.more_vert, size: 18, color: AppColors.text),
+              child: Icon(Icons.more_vert, size: 18, color: colors.text),
             ),
           ),
         ],
@@ -974,14 +975,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
               onPressed: () => _showFollowOptionsModal(isFollowing),
               style: ElevatedButton.styleFrom(
                 backgroundColor: isFollowing
-                    ? AppColors.background
-                    : AppColors.primary,
-                foregroundColor: isFollowing ? AppColors.text : Colors.white,
+                    ? colors.background
+                    : colors.primary,
+                foregroundColor: isFollowing ? colors.text : Colors.white,
                 elevation: 0,
                 side: BorderSide(
-                  color: isFollowing
-                      ? AppColors.borderColor
-                      : AppColors.primary,
+                  color: isFollowing ? colors.border : colors.primary,
                 ),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(8),
@@ -1006,61 +1005,64 @@ class _ProfileScreenState extends State<ProfileScreen> {
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
-      builder: (context) => Container(
-        decoration: const BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.only(
-            topLeft: Radius.circular(20),
-            topRight: Radius.circular(20),
+      builder: (context) {
+        final colors = context.colors;
+        return Container(
+          decoration: BoxDecoration(
+            color: colors.surface,
+            borderRadius: const BorderRadius.only(
+              topLeft: Radius.circular(20),
+              topRight: Radius.circular(20),
+            ),
           ),
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            // Handle bar
-            Container(
-              margin: const EdgeInsets.symmetric(vertical: 12),
-              width: 40,
-              height: 4,
-              decoration: BoxDecoration(
-                color: AppColors.border,
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
-            // Option
-            ListTile(
-              leading: Icon(
-                isCurrentlyFollowing ? Icons.person_remove : Icons.person_add,
-                color: isCurrentlyFollowing ? Colors.red : AppColors.primary,
-              ),
-              title: Text(
-                isCurrentlyFollowing ? 'Unfollow' : 'Follow',
-                style: TextStyle(
-                  fontWeight: FontWeight.w500,
-                  color: isCurrentlyFollowing ? Colors.red : AppColors.text,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Handle bar
+              Container(
+                margin: const EdgeInsets.symmetric(vertical: 12),
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: colors.border,
+                  borderRadius: BorderRadius.circular(2),
                 ),
               ),
-              onTap: () async {
-                Navigator.pop(context);
-                await _handleFollowAction(isCurrentlyFollowing);
-              },
-            ),
-            // Cancel option
-            ListTile(
-              leading: Icon(Icons.close, color: AppColors.iconGrey600),
-              title: Text(
-                'Cancel',
-                style: TextStyle(
-                  fontWeight: FontWeight.w500,
-                  color: AppColors.textTertiary,
+              // Option
+              ListTile(
+                leading: Icon(
+                  isCurrentlyFollowing ? Icons.person_remove : Icons.person_add,
+                  color: isCurrentlyFollowing ? Colors.red : colors.primary,
                 ),
+                title: Text(
+                  isCurrentlyFollowing ? 'Unfollow' : 'Follow',
+                  style: TextStyle(
+                    fontWeight: FontWeight.w500,
+                    color: isCurrentlyFollowing ? Colors.red : colors.text,
+                  ),
+                ),
+                onTap: () async {
+                  Navigator.pop(context);
+                  await _handleFollowAction(isCurrentlyFollowing);
+                },
               ),
-              onTap: () => Navigator.pop(context),
-            ),
-            const SizedBox(height: 16),
-          ],
-        ),
-      ),
+              // Cancel option
+              ListTile(
+                leading: Icon(Icons.close, color: Colors.grey.shade600),
+                title: Text(
+                  'Cancel',
+                  style: TextStyle(
+                    fontWeight: FontWeight.w500,
+                    color: colors.textTertiary,
+                  ),
+                ),
+                onTap: () => Navigator.pop(context),
+              ),
+              const SizedBox(height: 16),
+            ],
+          ),
+        );
+      },
     );
   }
 
@@ -1081,7 +1083,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
           );
         }
       }
-      // Trigger UI update
       if (mounted) {
         setState(() {});
       }
@@ -1111,7 +1112,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
   void _showFollowersModal() async {
     if (_vm.firebaseUser == null) return;
 
-    // Get the correct user ID for the profile being viewed
     final profileUserId = widget.userId ?? _vm.firebaseUser!.uid;
 
     showModalBottomSheet(
@@ -1124,107 +1124,113 @@ class _ProfileScreenState extends State<ProfileScreen> {
             initialChildSize: 0.7,
             minChildSize: 0.5,
             maxChildSize: 0.95,
-            builder: (context, scrollController) => Container(
-              decoration: const BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.only(
-                  topLeft: Radius.circular(20),
-                  topRight: Radius.circular(20),
+            builder: (context, scrollController) {
+              final colors = context.colors;
+              return Container(
+                decoration: BoxDecoration(
+                  color: colors.surface,
+                  borderRadius: const BorderRadius.only(
+                    topLeft: Radius.circular(20),
+                    topRight: Radius.circular(20),
+                  ),
                 ),
-              ),
-              child: Column(
-                children: [
-                  // Handle bar
-                  Container(
-                    margin: const EdgeInsets.symmetric(vertical: 12),
-                    width: 40,
-                    height: 4,
-                    decoration: BoxDecoration(
-                      color: AppColors.border,
-                      borderRadius: BorderRadius.circular(2),
+                child: Column(
+                  children: [
+                    // Handle bar
+                    Container(
+                      margin: const EdgeInsets.symmetric(vertical: 12),
+                      width: 40,
+                      height: 4,
+                      decoration: BoxDecoration(
+                        color: colors.border,
+                        borderRadius: BorderRadius.circular(2),
+                      ),
                     ),
-                  ),
-                  // Header
-                  Padding(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 8,
-                    ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        const Text(
-                          'Followers',
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        IconButton(
-                          icon: const Icon(Icons.close),
-                          onPressed: () => Navigator.pop(context),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const Divider(height: 1),
-                  // Followers list
-                  Expanded(
-                    child: FutureBuilder<List<Map<String, dynamic>>>(
-                      future: _getFollowersListForUser(profileUserId),
-                      builder: (context, snapshot) {
-                        if (snapshot.connectionState ==
-                            ConnectionState.waiting) {
-                          return const Center(
-                            child: CircularProgressIndicator(),
-                          );
-                        }
-
-                        if (snapshot.hasError) {
-                          return Center(
-                            child: Text('Error: ${snapshot.error}'),
-                          );
-                        }
-
-                        final followers = snapshot.data ?? [];
-
-                        if (followers.isEmpty) {
-                          return Center(
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Icon(
-                                  Icons.people_outline,
-                                  size: 64,
-                                  color: Colors.grey[400],
-                                ),
-                                const SizedBox(height: 16),
-                                Text(
-                                  'No followers yet',
-                                  style: TextStyle(
-                                    fontSize: 16,
-                                    color: AppColors.textSecondary,
-                                  ),
-                                ),
-                              ],
+                    // Header
+                    Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 8,
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          const Text(
+                            'Followers',
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
                             ),
-                          );
-                        }
-
-                        return ListView.builder(
-                          controller: scrollController,
-                          itemCount: followers.length,
-                          itemBuilder: (context, index) {
-                            final user = followers[index];
-                            return _buildFollowerListTile(user, setModalState);
-                          },
-                        );
-                      },
+                          ),
+                          IconButton(
+                            icon: const Icon(Icons.close),
+                            onPressed: () => Navigator.pop(context),
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
-                ],
-              ),
-            ),
+                    const Divider(height: 1),
+                    // Followers list
+                    Expanded(
+                      child: FutureBuilder<List<Map<String, dynamic>>>(
+                        future: _getFollowersListForUser(profileUserId),
+                        builder: (context, snapshot) {
+                          if (snapshot.connectionState ==
+                              ConnectionState.waiting) {
+                            return const Center(
+                              child: CircularProgressIndicator(),
+                            );
+                          }
+
+                          if (snapshot.hasError) {
+                            return Center(
+                              child: Text('Error: ${snapshot.error}'),
+                            );
+                          }
+
+                          final followers = snapshot.data ?? [];
+
+                          if (followers.isEmpty) {
+                            return Center(
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(
+                                    Icons.people_outline,
+                                    size: 64,
+                                    color: Colors.grey[400],
+                                  ),
+                                  const SizedBox(height: 16),
+                                  Text(
+                                    'No followers yet',
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                      color: colors.textSecondary,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            );
+                          }
+
+                          return ListView.builder(
+                            controller: scrollController,
+                            itemCount: followers.length,
+                            itemBuilder: (context, index) {
+                              final user = followers[index];
+                              return _buildFollowerListTile(
+                                user,
+                                setModalState,
+                              );
+                            },
+                          );
+                        },
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            },
           );
         },
       ),
@@ -1234,7 +1240,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
   void _showFollowingModal() async {
     if (_vm.firebaseUser == null) return;
 
-    // Get the correct user ID for the profile being viewed
     final profileUserId = widget.userId ?? _vm.firebaseUser!.uid;
 
     showModalBottomSheet(
@@ -1247,107 +1252,113 @@ class _ProfileScreenState extends State<ProfileScreen> {
             initialChildSize: 0.7,
             minChildSize: 0.5,
             maxChildSize: 0.95,
-            builder: (context, scrollController) => Container(
-              decoration: const BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.only(
-                  topLeft: Radius.circular(20),
-                  topRight: Radius.circular(20),
+            builder: (context, scrollController) {
+              final colors = context.colors;
+              return Container(
+                decoration: BoxDecoration(
+                  color: colors.surface,
+                  borderRadius: const BorderRadius.only(
+                    topLeft: Radius.circular(20),
+                    topRight: Radius.circular(20),
+                  ),
                 ),
-              ),
-              child: Column(
-                children: [
-                  // Handle bar
-                  Container(
-                    margin: const EdgeInsets.symmetric(vertical: 12),
-                    width: 40,
-                    height: 4,
-                    decoration: BoxDecoration(
-                      color: AppColors.border,
-                      borderRadius: BorderRadius.circular(2),
+                child: Column(
+                  children: [
+                    // Handle bar
+                    Container(
+                      margin: const EdgeInsets.symmetric(vertical: 12),
+                      width: 40,
+                      height: 4,
+                      decoration: BoxDecoration(
+                        color: colors.border,
+                        borderRadius: BorderRadius.circular(2),
+                      ),
                     ),
-                  ),
-                  // Header
-                  Padding(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 8,
-                    ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        const Text(
-                          'Following',
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        IconButton(
-                          icon: const Icon(Icons.close),
-                          onPressed: () => Navigator.pop(context),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const Divider(height: 1),
-                  // Following list
-                  Expanded(
-                    child: FutureBuilder<List<Map<String, dynamic>>>(
-                      future: _getFollowingListForUser(profileUserId),
-                      builder: (context, snapshot) {
-                        if (snapshot.connectionState ==
-                            ConnectionState.waiting) {
-                          return const Center(
-                            child: CircularProgressIndicator(),
-                          );
-                        }
-
-                        if (snapshot.hasError) {
-                          return Center(
-                            child: Text('Error: ${snapshot.error}'),
-                          );
-                        }
-
-                        final following = snapshot.data ?? [];
-
-                        if (following.isEmpty) {
-                          return Center(
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Icon(
-                                  Icons.person_add_outlined,
-                                  size: 64,
-                                  color: Colors.grey[400],
-                                ),
-                                const SizedBox(height: 16),
-                                Text(
-                                  'Not following anyone yet',
-                                  style: TextStyle(
-                                    fontSize: 16,
-                                    color: AppColors.textSecondary,
-                                  ),
-                                ),
-                              ],
+                    // Header
+                    Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 8,
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          const Text(
+                            'Following',
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
                             ),
-                          );
-                        }
-
-                        return ListView.builder(
-                          controller: scrollController,
-                          itemCount: following.length,
-                          itemBuilder: (context, index) {
-                            final user = following[index];
-                            return _buildFollowingListTile(user, setModalState);
-                          },
-                        );
-                      },
+                          ),
+                          IconButton(
+                            icon: const Icon(Icons.close),
+                            onPressed: () => Navigator.pop(context),
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
-                ],
-              ),
-            ),
+                    const Divider(height: 1),
+                    // Following list
+                    Expanded(
+                      child: FutureBuilder<List<Map<String, dynamic>>>(
+                        future: _getFollowingListForUser(profileUserId),
+                        builder: (context, snapshot) {
+                          if (snapshot.connectionState ==
+                              ConnectionState.waiting) {
+                            return const Center(
+                              child: CircularProgressIndicator(),
+                            );
+                          }
+
+                          if (snapshot.hasError) {
+                            return Center(
+                              child: Text('Error: ${snapshot.error}'),
+                            );
+                          }
+
+                          final following = snapshot.data ?? [];
+
+                          if (following.isEmpty) {
+                            return Center(
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(
+                                    Icons.person_add_outlined,
+                                    size: 64,
+                                    color: Colors.grey[400],
+                                  ),
+                                  const SizedBox(height: 16),
+                                  Text(
+                                    'Not following anyone yet',
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                      color: colors.textSecondary,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            );
+                          }
+
+                          return ListView.builder(
+                            controller: scrollController,
+                            itemCount: following.length,
+                            itemBuilder: (context, index) {
+                              final user = following[index];
+                              return _buildFollowingListTile(
+                                user,
+                                setModalState,
+                              );
+                            },
+                          );
+                        },
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            },
           );
         },
       ),
@@ -1417,6 +1428,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     Map<String, dynamic> user,
     StateSetter setModalState,
   ) {
+    final colors = context.colors;
     final firstName = user['firstName'] as String? ?? '';
     final lastName = user['lastName'] as String? ?? '';
     final email = user['email'] as String? ?? '';
@@ -1449,7 +1461,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       ),
       subtitle: Text(
         email,
-        style: TextStyle(fontSize: 13, color: AppColors.textSecondary),
+        style: TextStyle(fontSize: 13, color: colors.textSecondary),
       ),
       trailing: uid != _vm.firebaseUser?.uid
           ? FutureBuilder<bool>(
@@ -1460,16 +1472,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 return OutlinedButton(
                   onPressed: () async {
                     if (isFollowingBack) {
-                      // Current user unfollows them (but they still follow you)
                       await _userService.unfollow(_vm.firebaseUser!.uid, uid);
                     } else {
-                      // Current user follows them back
                       await _userService.toggleFollow(
                         uid,
                         _vm.firebaseUser!.uid,
                       );
                     }
-                    // Update both modal and parent screen
                     setModalState(() {});
                     if (mounted) {
                       setState(() {});
@@ -1481,7 +1490,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       vertical: 8,
                     ),
                     backgroundColor: isFollowingBack
-                        ? Colors.white
+                        ? colors.surface
                         : Colors.blueGrey[700],
                     foregroundColor: isFollowingBack
                         ? Colors.blueGrey[700]
@@ -1510,6 +1519,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     Map<String, dynamic> user,
     StateSetter setModalState,
   ) {
+    final colors = context.colors;
     final firstName = user['firstName'] as String? ?? '';
     final lastName = user['lastName'] as String? ?? '';
     final email = user['email'] as String? ?? '';
@@ -1542,14 +1552,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
       ),
       subtitle: Text(
         email,
-        style: TextStyle(fontSize: 13, color: AppColors.textSecondary),
+        style: TextStyle(fontSize: 13, color: colors.textSecondary),
       ),
       trailing: uid != _vm.firebaseUser?.uid
           ? OutlinedButton(
               onPressed: () async {
-                // Unfollow this user (remove from your following list)
                 await _userService.unfollow(_vm.firebaseUser!.uid, uid);
-                // Update both modal and parent screen
                 setModalState(() {});
                 if (mounted) {
                   setState(() {});
@@ -1560,7 +1568,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   horizontal: 20,
                   vertical: 8,
                 ),
-                backgroundColor: Colors.white,
+                backgroundColor: colors.surface,
                 foregroundColor: Colors.blueGrey[700],
                 side: BorderSide(color: Colors.blueGrey[700]!, width: 1.5),
                 shape: RoundedRectangleBorder(

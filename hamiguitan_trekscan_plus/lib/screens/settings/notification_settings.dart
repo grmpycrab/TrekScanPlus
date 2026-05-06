@@ -3,7 +3,7 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:permission_handler/permission_handler.dart';
-import '../../theme/color.dart';
+import '../../theme/app_theme.dart';
 import '../../services/permission_service.dart';
 
 class NotificationSettingsScreen extends StatefulWidget {
@@ -68,10 +68,11 @@ class _NotificationSettingsScreenState
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.colors;
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: colors.background,
       appBar: AppBar(
-        backgroundColor: AppColors.notificationToggle,
+        backgroundColor: colors.primary,
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: SharedColors.white),
@@ -102,7 +103,7 @@ class _NotificationSettingsScreenState
           const SizedBox(height: 12),
           _buildNotificationCard(
             icon: Icons.calendar_today,
-            iconColor: AppColors.notificationToggle,
+            iconColor: colors.primary,
             title: 'Booking Notifications',
             subtitle: 'Booking approvals, declines, and updates',
             value: _bookingNotifications,
@@ -114,7 +115,7 @@ class _NotificationSettingsScreenState
           ),
           _buildNotificationCard(
             icon: Icons.people,
-            iconColor: AppColors.notificationToggle,
+            iconColor: colors.primary,
             title: 'Social Notifications',
             subtitle: 'Likes, comments, and mentions',
             value: _socialNotifications,
@@ -126,7 +127,7 @@ class _NotificationSettingsScreenState
           ),
           _buildNotificationCard(
             icon: Icons.person_add,
-            iconColor: AppColors.notificationToggle,
+            iconColor: colors.primary,
             title: 'Follow Requests',
             subtitle: 'New follow requests and acceptances',
             value: _followRequestNotifications,
@@ -138,7 +139,7 @@ class _NotificationSettingsScreenState
           ),
           _buildNotificationCard(
             icon: Icons.emoji_events,
-            iconColor: AppColors.notificationToggle,
+            iconColor: colors.primary,
             title: 'Achievement Notifications',
             subtitle: 'New achievements and milestones',
             value: _achievementNotifications,
@@ -150,7 +151,7 @@ class _NotificationSettingsScreenState
           ),
           _buildNotificationCard(
             icon: Icons.card_membership,
-            iconColor: AppColors.notificationToggle,
+            iconColor: colors.primary,
             title: 'Certificate Notifications',
             subtitle: 'E-certificates and trek completions',
             value: _certificateNotifications,
@@ -162,7 +163,7 @@ class _NotificationSettingsScreenState
           ),
           _buildNotificationCard(
             icon: Icons.settings,
-            iconColor: AppColors.notificationToggle,
+            iconColor: colors.primary,
             title: 'System Notifications',
             subtitle: 'App updates and important announcements',
             value: _systemNotifications,
@@ -180,7 +181,7 @@ class _NotificationSettingsScreenState
           const SizedBox(height: 12),
           _buildNotificationCard(
             icon: Icons.volume_up,
-            iconColor: AppColors.primary,
+            iconColor: colors.primary,
             title: 'Sound',
             subtitle: 'Play sound for notifications',
             value: _soundEnabled,
@@ -192,7 +193,7 @@ class _NotificationSettingsScreenState
           ),
           _buildNotificationCard(
             icon: Icons.vibration,
-            iconColor: AppColors.primary,
+            iconColor: colors.primary,
             title: 'Vibration',
             subtitle: 'Vibrate for notifications',
             value: _vibrationEnabled,
@@ -213,13 +214,14 @@ class _NotificationSettingsScreenState
   }
 
   Widget _buildMasterToggle() {
+    final colors = context.colors;
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: _pushNotificationsEnabled
-              ? [AppColors.notificationBooking, AppColors.primary]
-              : [AppColors.border, Colors.grey.shade400],
+              ? [colors.notificationBooking, colors.primary]
+              : [colors.border, Colors.grey.shade400],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
@@ -227,8 +229,8 @@ class _NotificationSettingsScreenState
         boxShadow: [
           BoxShadow(
             color: _pushNotificationsEnabled
-                ? AppColors.notificationBooking.withOpacity(0.3)
-                : AppColors.shadowLight,
+                ? colors.notificationBooking.withValues(alpha: 0.3)
+                : colors.shadowLight,
             blurRadius: 12,
             offset: const Offset(0, 6),
           ),
@@ -306,14 +308,15 @@ class _NotificationSettingsScreenState
   }
 
   Widget _buildSectionHeader(String title) {
+    final colors = context.colors;
     return Padding(
       padding: const EdgeInsets.only(left: 4),
       child: Text(
         title,
-        style: const TextStyle(
+        style: TextStyle(
           fontSize: 16,
           fontWeight: FontWeight.bold,
-          color: AppColors.text,
+          color: colors.text,
         ),
       ),
     );
@@ -328,14 +331,15 @@ class _NotificationSettingsScreenState
     required bool enabled,
     required ValueChanged<bool> onChanged,
   }) {
+    final colors = context.colors;
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
-        color: AppColors.cardBackground,
+        color: colors.surface,
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            color: AppColors.shadowLight,
+            color: colors.shadowLight,
             blurRadius: 10,
             offset: const Offset(0, 2),
           ),
@@ -346,7 +350,7 @@ class _NotificationSettingsScreenState
         leading: Container(
           padding: const EdgeInsets.all(10),
           decoration: BoxDecoration(
-            color: iconColor.withOpacity(0.1),
+            color: iconColor.withValues(alpha: 0.1),
             borderRadius: BorderRadius.circular(10),
           ),
           child: Icon(icon, color: iconColor, size: 24),
@@ -356,13 +360,13 @@ class _NotificationSettingsScreenState
           style: TextStyle(
             fontWeight: FontWeight.w600,
             fontSize: 15,
-            color: enabled ? AppColors.text : AppColors.textSecondary,
+            color: enabled ? colors.text : colors.textSecondary,
           ),
         ),
         subtitle: Text(
           subtitle,
           style: TextStyle(
-            color: enabled ? AppColors.textTertiary : AppColors.textSecondary,
+            color: enabled ? colors.textTertiary : colors.textSecondary,
             fontSize: 13,
           ),
         ),
@@ -435,23 +439,20 @@ class _NotificationSettingsScreenState
   }
 
   Widget _buildInfoCard() {
+    final colors = context.colors;
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppColors.notificationBooking.withOpacity(0.1),
+        color: colors.notificationBooking.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: AppColors.notificationBooking.withOpacity(0.3),
+          color: colors.notificationBooking.withValues(alpha: 0.3),
         ),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(
-            Icons.info_outline,
-            color: AppColors.notificationBooking,
-            size: 24,
-          ),
+          Icon(Icons.info_outline, color: colors.notificationBooking, size: 24),
           const SizedBox(width: 12),
           Expanded(
             child: Column(
@@ -461,7 +462,7 @@ class _NotificationSettingsScreenState
                   'About Notifications',
                   style: TextStyle(
                     fontWeight: FontWeight.bold,
-                    color: AppColors.notificationBooking.withOpacity(0.9),
+                    color: colors.notificationBooking.withValues(alpha: 0.9),
                     fontSize: 14,
                   ),
                 ),
@@ -469,7 +470,7 @@ class _NotificationSettingsScreenState
                 Text(
                   'You can customize which notifications you receive. Turn off push notifications to disable all alerts.',
                   style: TextStyle(
-                    color: AppColors.notificationBooking.withOpacity(0.8),
+                    color: colors.notificationBooking.withValues(alpha: 0.8),
                     fontSize: 13,
                   ),
                 ),

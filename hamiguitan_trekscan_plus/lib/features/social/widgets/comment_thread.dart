@@ -4,7 +4,7 @@ import '../models/social_model.dart';
 import '../repositories/social_repository.dart';
 import '../../../core/widgets/app_dialogue_handler.dart';
 import '../../../services/firebase_auth_service.dart';
-import '../../../theme/color.dart';
+import '../../../theme/app_theme.dart';
 
 class CommentThread extends StatefulWidget {
   final String postId;
@@ -139,6 +139,7 @@ class _CommentThreadState extends State<CommentThread> {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.colors;
     final timeAgo = _getTimeAgo(widget.comment.createdAt.toDate());
     final currentUser = FirebaseAuthService.instance.currentUser;
     final isOwner = currentUser?.uid == widget.comment.userId;
@@ -183,7 +184,7 @@ class _CommentThreadState extends State<CommentThread> {
                                 timeAgo,
                                 style: TextStyle(
                                   fontSize: 12,
-                                  color: AppColors.textSecondary,
+                                  color: colors.textSecondary,
                                 ),
                               ),
                             ],
@@ -198,7 +199,7 @@ class _CommentThreadState extends State<CommentThread> {
                               child: Icon(
                                 Icons.more_horiz,
                                 size: 20,
-                                color: AppColors.textSecondary,
+                                color: colors.textSecondary,
                               ),
                             ),
                           ),
@@ -208,7 +209,7 @@ class _CommentThreadState extends State<CommentThread> {
                     Container(
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
-                        color: AppColors.background,
+                        color: colors.background,
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: Text(
@@ -236,7 +237,7 @@ class _CommentThreadState extends State<CommentThread> {
                                   size: 18,
                                   color: _isLiked
                                       ? Colors.red
-                                      : AppColors.textSecondary,
+                                      : colors.textSecondary,
                                 ),
                                 if (_likesCount > 0) ...[
                                   const SizedBox(width: 6),
@@ -244,7 +245,7 @@ class _CommentThreadState extends State<CommentThread> {
                                     '$_likesCount',
                                     style: TextStyle(
                                       fontSize: 13,
-                                      color: AppColors.textSecondary,
+                                      color: colors.textSecondary,
                                       fontWeight: FontWeight.w500,
                                     ),
                                   ),
@@ -271,7 +272,7 @@ class _CommentThreadState extends State<CommentThread> {
                               'Reply',
                               style: TextStyle(
                                 fontSize: 13,
-                                color: AppColors.textSecondary,
+                                color: colors.textSecondary,
                                 fontWeight: FontWeight.w600,
                               ),
                             ),
@@ -295,7 +296,7 @@ class _CommentThreadState extends State<CommentThread> {
                                     : 'View ${widget.comment.repliesCount} ${widget.comment.repliesCount == 1 ? 'reply' : 'replies'}',
                                 style: TextStyle(
                                   fontSize: 13,
-                                  color: AppColors.primary,
+                                  color: colors.primary,
                                   fontWeight: FontWeight.w600,
                                 ),
                               ),
@@ -492,6 +493,7 @@ class _ReplyTileState extends State<ReplyTile> {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.colors;
     final timeAgo = _getTimeAgo(widget.reply.createdAt.toDate());
     final currentUser = FirebaseAuthService.instance.currentUser;
     final isOwner = currentUser?.uid == widget.reply.userId;
@@ -532,7 +534,7 @@ class _ReplyTileState extends State<ReplyTile> {
                             timeAgo,
                             style: TextStyle(
                               fontSize: 11,
-                              color: AppColors.textSecondary,
+                              color: colors.textSecondary,
                             ),
                           ),
                         ],
@@ -547,7 +549,7 @@ class _ReplyTileState extends State<ReplyTile> {
                           child: Icon(
                             Icons.more_horiz,
                             size: 18,
-                            color: AppColors.textSecondary,
+                            color: colors.textSecondary,
                           ),
                         ),
                       ),
@@ -557,7 +559,7 @@ class _ReplyTileState extends State<ReplyTile> {
                 Container(
                   padding: const EdgeInsets.all(11),
                   decoration: BoxDecoration(
-                    color: AppColors.background,
+                    color: colors.background,
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Text(
@@ -580,9 +582,7 @@ class _ReplyTileState extends State<ReplyTile> {
                         Icon(
                           _isLiked ? Icons.favorite : Icons.favorite_border,
                           size: 16,
-                          color: _isLiked
-                              ? Colors.red
-                              : AppColors.textSecondary,
+                          color: _isLiked ? Colors.red : colors.textSecondary,
                         ),
                         if (_likesCount > 0) ...[
                           const SizedBox(width: 6),
@@ -590,7 +590,7 @@ class _ReplyTileState extends State<ReplyTile> {
                             '$_likesCount',
                             style: TextStyle(
                               fontSize: 12,
-                              color: AppColors.textSecondary,
+                              color: colors.textSecondary,
                               fontWeight: FontWeight.w500,
                             ),
                           ),

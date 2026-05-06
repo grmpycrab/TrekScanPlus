@@ -155,7 +155,7 @@ class _DoAndDontState extends State<DoAndDont> {
       child: Container(
         margin: const EdgeInsets.only(bottom: 24),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: colors.surface,
           borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
@@ -413,7 +413,7 @@ class _DoAndDontState extends State<DoAndDont> {
       ),
       padding: EdgeInsets.all(isSmallScreen ? 12 : 16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: colors.surface,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
           color: accentColor.withValues(alpha: 0.3),
@@ -491,7 +491,7 @@ class _DoAndDontOverlayState extends State<DoAndDontOverlay> {
           maxWidth: 600,
         ),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: colors.surface,
           borderRadius: BorderRadius.circular(20),
           boxShadow: [
             BoxShadow(
@@ -659,7 +659,7 @@ class _DoAndDontOverlayState extends State<DoAndDontOverlay> {
   }) {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: colors.surface,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: color.withValues(alpha: 0.3), width: 2),
         boxShadow: [
@@ -735,7 +735,7 @@ class _DoAndDontOverlayState extends State<DoAndDontOverlay> {
       margin: const EdgeInsets.only(bottom: 12),
       padding: EdgeInsets.all(isSmallScreen ? 12 : 14),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: colors.surface,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: color.withValues(alpha: 0.2)),
         boxShadow: [

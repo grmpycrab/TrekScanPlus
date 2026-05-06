@@ -3,7 +3,7 @@
 import 'package:flutter/material.dart';
 
 import '../widgets/station_card.dart';
-import '../../../theme/color.dart';
+import '../../../theme/app_theme.dart';
 import '../../../models/climb_session.dart';
 import '../../../dialogs/new_climb_session_dialog.dart';
 import '../../../utils/status_helpers.dart';
@@ -123,12 +123,13 @@ class _StationScreenState extends State<StationScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.colors;
     if (_vm.isLoading) {
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
 
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: colors.background,
       body: SafeArea(
         child: Column(
           children: [
@@ -151,7 +152,7 @@ class _StationScreenState extends State<StationScreen> {
               onPressed: _createNewSession,
               icon: const Icon(Icons.add),
               label: const Text('New Climb'),
-              backgroundColor: AppColors.primary,
+              backgroundColor: colors.primary,
               foregroundColor: Colors.white,
             )
           : null,
@@ -161,7 +162,7 @@ class _StationScreenState extends State<StationScreen> {
   Widget _buildAppBar() {
     return Container(
       padding: const EdgeInsets.all(16),
-      color: AppColors.primary,
+      color: context.colors.primary,
       child: Row(
         children: [
           const SizedBox(width: 8),
@@ -206,7 +207,7 @@ class _StationScreenState extends State<StationScreen> {
           decoration: BoxDecoration(
             border: Border(
               bottom: BorderSide(
-                color: isSelected ? AppColors.primary : Colors.transparent,
+                color: isSelected ? context.colors.primary : Colors.transparent,
                 width: isSelected ? 3 : 0,
               ),
             ),
@@ -215,7 +216,9 @@ class _StationScreenState extends State<StationScreen> {
             text,
             textAlign: TextAlign.center,
             style: TextStyle(
-              color: isSelected ? AppColors.primary : Colors.black54,
+              color: isSelected
+                  ? context.colors.primary
+                  : context.colors.textSecondary,
               fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
             ),
           ),
@@ -328,6 +331,7 @@ class _StationScreenState extends State<StationScreen> {
   }
 
   Widget _buildClimbsTab() {
+    final colors = context.colors;
     if (!_vm.climbServiceReady) {
       return Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -405,7 +409,7 @@ class _StationScreenState extends State<StationScreen> {
                         child: Container(
                           margin: const EdgeInsets.only(bottom: 16),
                           decoration: BoxDecoration(
-                            color: Colors.white,
+                            color: colors.surface,
                             borderRadius: BorderRadius.circular(12),
                             border: Border.all(
                               color: ClimbSessionStatusHelper.color(
@@ -483,7 +487,7 @@ class _StationScreenState extends State<StationScreen> {
                                                 Icon(
                                                   Icons.edit_outlined,
                                                   size: 18,
-                                                  color: AppColors.primary,
+                                                  color: context.colors.primary,
                                                 ),
                                                 const SizedBox(width: 12),
                                                 const Text('Edit'),
@@ -624,7 +628,7 @@ class _StationScreenState extends State<StationScreen> {
             style: TextStyle(
               fontSize: 22,
               fontWeight: FontWeight.bold,
-              color: AppColors.textSecondary,
+              color: context.colors.textSecondary,
             ),
           ),
           const SizedBox(height: 12),
@@ -635,7 +639,7 @@ class _StationScreenState extends State<StationScreen> {
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontSize: 16,
-                color: AppColors.textSecondary,
+                color: context.colors.textSecondary,
                 height: 1.5,
               ),
             ),
@@ -662,7 +666,7 @@ class _StationScreenState extends State<StationScreen> {
             style: TextStyle(
               fontSize: 22,
               fontWeight: FontWeight.bold,
-              color: AppColors.textSecondary,
+              color: context.colors.textSecondary,
             ),
           ),
           const SizedBox(height: 12),
@@ -673,7 +677,7 @@ class _StationScreenState extends State<StationScreen> {
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontSize: 16,
-                color: AppColors.textSecondary,
+                color: context.colors.textSecondary,
                 height: 1.5,
               ),
             ),
@@ -682,19 +686,25 @@ class _StationScreenState extends State<StationScreen> {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
             decoration: BoxDecoration(
-              color: AppColors.primary.withOpacity(0.1),
+              color: context.colors.primary.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: AppColors.primary.withOpacity(0.3)),
+              border: Border.all(
+                color: context.colors.primary.withValues(alpha: 0.3),
+              ),
             ),
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(Icons.qr_code_scanner, color: AppColors.primary, size: 20),
+                Icon(
+                  Icons.qr_code_scanner,
+                  color: context.colors.primary,
+                  size: 20,
+                ),
                 const SizedBox(width: 8),
                 Text(
                   'Use Scanner to get started',
                   style: TextStyle(
-                    color: AppColors.primary,
+                    color: context.colors.primary,
                     fontWeight: FontWeight.w600,
                   ),
                 ),
@@ -729,7 +739,7 @@ class _StationScreenState extends State<StationScreen> {
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontSize: 16,
-                color: AppColors.textSecondary,
+                color: context.colors.textSecondary,
                 height: 1.5,
               ),
             ),
@@ -738,7 +748,7 @@ class _StationScreenState extends State<StationScreen> {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
             decoration: BoxDecoration(
-              color: Colors.amber.withOpacity(0.1),
+              color: Colors.amber.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(8),
               border: Border.all(color: Colors.amber.withOpacity(0.3)),
             ),
