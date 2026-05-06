@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
-import '../../../theme/color.dart';
+import '../../../theme/app_theme.dart';
 import '../../../utils/app_logger.dart';
 import '../../../models/station_data.dart';
 import '../viewmodels/scanner_view_model.dart';
@@ -227,6 +227,7 @@ class _ScannerScreenState extends State<ScannerScreen>
   }
 
   Widget _buildControls() {
+    final colors = context.colors;
     return SafeArea(
       child: Column(
         children: [
@@ -244,7 +245,7 @@ class _ScannerScreenState extends State<ScannerScreen>
                   },
                   child: Icon(
                     Icons.arrow_back,
-                    color: AppColors.primary,
+                    color: colors.primary,
                     size: 28,
                   ),
                 ),
@@ -261,7 +262,7 @@ class _ScannerScreenState extends State<ScannerScreen>
                               ? Icons.location_on
                               : Icons.location_off,
                           color: _vm.geofencingEnabled
-                              ? AppColors.primary
+                              ? colors.primary
                               : Colors.orange,
                         ),
                         onPressed: () {
@@ -282,14 +283,14 @@ class _ScannerScreenState extends State<ScannerScreen>
                         'assets/icons/switch-camera.png',
                         width: 24,
                         height: 24,
-                        color: AppColors.primary,
+                        color: colors.primary,
                       ),
                       onPressed: () => _controller?.switchCamera(),
                     ),
                     IconButton(
                       icon: Icon(
                         _isFlashOn ? Icons.flash_on : Icons.flash_off,
-                        color: AppColors.primary,
+                        color: colors.primary,
                       ),
                       onPressed: () {
                         _controller?.toggleTorch();

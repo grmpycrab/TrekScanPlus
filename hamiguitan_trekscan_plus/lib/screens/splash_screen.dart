@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../theme/color.dart';
+import '../theme/app_theme.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -42,8 +42,9 @@ class _SplashScreenState extends State<SplashScreen>
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.colors;
     return Scaffold(
-      backgroundColor: SharedColors.white, // Using your app's primary color
+      backgroundColor: colors.background, // Using your app's primary color
       body: Center(
         child: AnimatedBuilder(
           animation: _animationController,
@@ -63,7 +64,7 @@ class _SplashScreenState extends State<SplashScreen>
                         borderRadius: BorderRadius.circular(20),
                         boxShadow: [
                           BoxShadow(
-                            color: AppColors.shadowDark,
+                            color: colors.shadowDark,
                             blurRadius: 20,
                             offset: const Offset(0, 10),
                           ),
@@ -78,7 +79,7 @@ class _SplashScreenState extends State<SplashScreen>
                             // Fallback if logo image doesn't exist
                             return Container(
                               decoration: BoxDecoration(
-                                color: AppColors.green700,
+                                color: colors.green700,
                                 borderRadius: BorderRadius.circular(20),
                               ),
                               child: Icon(
@@ -98,7 +99,7 @@ class _SplashScreenState extends State<SplashScreen>
                       style: TextStyle(
                         fontSize: 32,
                         fontWeight: FontWeight.bold,
-                        color: AppColors.primary,
+                        color: colors.primary,
                         letterSpacing: 1.5,
                       ),
                     ),
@@ -108,7 +109,7 @@ class _SplashScreenState extends State<SplashScreen>
                       'Hamiguitan Range Wildlife Sanctuary',
                       style: TextStyle(
                         fontSize: 14,
-                        color: AppColors.textLight,
+                        color: Colors.white70,
                         letterSpacing: 0.5,
                       ),
                       textAlign: TextAlign.center,

@@ -4,7 +4,7 @@
 import 'package:flutter/material.dart';
 import '../../services/climb_session_service.dart';
 import '../../models/climb_session.dart';
-import '../../theme/color.dart';
+import '../../theme/app_theme.dart';
 import '../../utils/status_helpers.dart';
 import 'climb_session_detail_screen.dart';
 
@@ -34,15 +34,16 @@ class _ClimbSessionsListScreenState extends State<ClimbSessionsListScreen>
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.colors;
     // Guard against uninitialized service
     if (!ClimbSessionService.isInitialized) {
       return Scaffold(
         appBar: AppBar(
           title: const Text('My Climbs'),
-          backgroundColor: AppColors.primary,
+          backgroundColor: colors.primary,
           foregroundColor: Colors.white,
         ),
-        backgroundColor: AppColors.background,
+        backgroundColor: colors.background,
         body: const Center(child: CircularProgressIndicator()),
       );
     }
@@ -50,7 +51,7 @@ class _ClimbSessionsListScreenState extends State<ClimbSessionsListScreen>
     return Scaffold(
       appBar: AppBar(
         title: const Text('My Climbs'),
-        backgroundColor: AppColors.primary,
+        backgroundColor: colors.primary,
         foregroundColor: Colors.white,
         bottom: TabBar(
           controller: _tabController,
@@ -61,7 +62,7 @@ class _ClimbSessionsListScreenState extends State<ClimbSessionsListScreen>
           ],
         ),
       ),
-      backgroundColor: AppColors.background,
+      backgroundColor: colors.background,
       body: TabBarView(
         controller: _tabController,
         children: [
@@ -79,6 +80,7 @@ class _ClimbSessionsListScreenState extends State<ClimbSessionsListScreen>
   }
 
   Widget _buildSessionsList(List<ClimbSession> sessions, String type) {
+    final colors = context.colors;
     if (sessions.isEmpty) {
       return Center(
         child: Column(
@@ -101,7 +103,7 @@ class _ClimbSessionsListScreenState extends State<ClimbSessionsListScreen>
               type == 'ongoing'
                   ? 'Start a new climb to track your adventure!'
                   : 'Complete a climb session to see it here',
-              style: TextStyle(fontSize: 14, color: AppColors.textSecondary),
+              style: TextStyle(fontSize: 14, color: colors.textSecondary),
             ),
           ],
         ),
@@ -129,7 +131,7 @@ class _ClimbSessionsListScreenState extends State<ClimbSessionsListScreen>
             margin: const EdgeInsets.only(bottom: 12),
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: colors.surface,
               borderRadius: BorderRadius.circular(12),
               boxShadow: [
                 BoxShadow(
@@ -163,7 +165,7 @@ class _ClimbSessionsListScreenState extends State<ClimbSessionsListScreen>
                             session.description,
                             style: TextStyle(
                               fontSize: 12,
-                              color: AppColors.textSecondary,
+                              color: colors.textSecondary,
                             ),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
@@ -226,13 +228,13 @@ class _ClimbSessionsListScreenState extends State<ClimbSessionsListScreen>
                       'Created: ${_formatDate(session.createdAt)}',
                       style: TextStyle(
                         fontSize: 11,
-                        color: AppColors.textSecondary,
+                        color: colors.textSecondary,
                       ),
                     ),
-                    const Icon(
+                    Icon(
                       Icons.arrow_forward_ios,
                       size: 14,
-                      color: AppColors.primary,
+                      color: colors.primary,
                     ),
                   ],
                 ),
@@ -249,9 +251,10 @@ class _ClimbSessionsListScreenState extends State<ClimbSessionsListScreen>
     required String label,
     required String value,
   }) {
+    final colors = context.colors;
     return Column(
       children: [
-        Icon(icon, size: 18, color: AppColors.primary),
+        Icon(icon, size: 18, color: colors.primary),
         const SizedBox(height: 4),
         Text(
           value,
@@ -259,7 +262,7 @@ class _ClimbSessionsListScreenState extends State<ClimbSessionsListScreen>
         ),
         Text(
           label,
-          style: TextStyle(fontSize: 10, color: AppColors.textSecondary),
+          style: TextStyle(fontSize: 10, color: colors.textSecondary),
         ),
       ],
     );

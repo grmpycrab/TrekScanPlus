@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../models/badge.dart';
-import '../../theme/color.dart';
+import '../../theme/app_theme.dart';
 
 class BadgeCard extends StatelessWidget {
   final UserBadge badge;
@@ -18,6 +18,7 @@ class BadgeCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.colors;
     return LayoutBuilder(
       builder: (context, constraints) {
         // Calculate responsive sizes based on available width
@@ -32,11 +33,11 @@ class BadgeCard extends StatelessWidget {
           onTap: onTap,
           child: Container(
             decoration: BoxDecoration(
-              color: AppColors.cardBackground,
+              color: colors.surface,
               borderRadius: BorderRadius.circular(12),
               boxShadow: [
                 BoxShadow(
-                  color: AppColors.shadowLight,
+                  color: colors.shadowLight,
                   blurRadius: 8,
                   offset: const Offset(0, 2),
                 ),
@@ -101,7 +102,7 @@ class BadgeCard extends StatelessWidget {
                 if (!isAcquired)
                   Container(
                     decoration: BoxDecoration(
-                      color: AppColors.shadowOverlay,
+                      color: colors.shadowOverlay,
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Center(
@@ -135,8 +136,9 @@ class BadgeDetailScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.colors;
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: colors.background,
       body: SafeArea(
         child: Column(
           children: [
@@ -147,12 +149,12 @@ class BadgeDetailScreen extends StatelessWidget {
                   padding: const EdgeInsets.all(24.0),
                   child: Column(
                     children: [
-                      _buildBadgeDisplay(),
+                      _buildBadgeDisplay(colors),
                       const SizedBox(height: 32),
-                      _buildBadgeInfo(),
+                      _buildBadgeInfo(colors),
                       if (isAcquired && acquiredDate != null) ...[
                         const SizedBox(height: 32),
-                        _buildAcquiredInfo(),
+                        _buildAcquiredInfo(colors),
                       ],
                     ],
                   ),
@@ -166,9 +168,10 @@ class BadgeDetailScreen extends StatelessWidget {
   }
 
   Widget _buildHeader(BuildContext context) {
+    final colors = context.colors;
     return Container(
       padding: const EdgeInsets.all(16),
-      color: AppColors.primary,
+      color: colors.primary,
       child: Row(
         children: [
           IconButton(
@@ -193,7 +196,7 @@ class BadgeDetailScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildBadgeDisplay() {
+  Widget _buildBadgeDisplay(AppTheme colors) {
     return LayoutBuilder(
       builder: (context, constraints) {
         final screenWidth = MediaQuery.of(context).size.width;
@@ -223,7 +226,7 @@ class BadgeDetailScreen extends StatelessWidget {
                   if (!isAcquired)
                     Container(
                       decoration: BoxDecoration(
-                        color: AppColors.shadowOverlay,
+                        color: colors.shadowOverlay,
                         shape: BoxShape.circle,
                       ),
                       child: Icon(
@@ -265,11 +268,11 @@ class BadgeDetailScreen extends StatelessWidget {
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               decoration: BoxDecoration(
                 color: isAcquired
-                    ? AppColors.statusApproved.withValues(alpha: 0.2)
-                    : AppColors.borderLight,
+                    ? Colors.green.withValues(alpha: 0.2)
+                    : colors.borderLight,
                 borderRadius: BorderRadius.circular(20),
                 border: Border.all(
-                  color: isAcquired ? AppColors.statusApproved : Colors.grey,
+                  color: isAcquired ? Colors.green : Colors.grey,
                   width: 1,
                 ),
               ),
@@ -278,7 +281,7 @@ class BadgeDetailScreen extends StatelessWidget {
                 children: [
                   Icon(
                     isAcquired ? Icons.check_circle : Icons.lock_outline,
-                    color: isAcquired ? AppColors.statusApproved : Colors.grey,
+                    color: isAcquired ? Colors.green : Colors.grey,
                     size: 16,
                   ),
                   const SizedBox(width: 6),
@@ -287,9 +290,7 @@ class BadgeDetailScreen extends StatelessWidget {
                     style: TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.w600,
-                      color: isAcquired
-                          ? AppColors.statusApproved
-                          : Colors.grey,
+                      color: isAcquired ? Colors.green : Colors.grey,
                     ),
                   ),
                 ],
@@ -301,15 +302,15 @@ class BadgeDetailScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildBadgeInfo() {
+  Widget _buildBadgeInfo(AppTheme colors) {
     return Container(
       width: double.infinity,
       decoration: BoxDecoration(
-        color: AppColors.cardBackground,
+        color: colors.surface,
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            color: AppColors.shadowLight,
+            color: colors.shadowLight,
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -329,7 +330,7 @@ class BadgeDetailScreen extends StatelessWidget {
               badge.description,
               style: TextStyle(
                 fontSize: 14,
-                color: AppColors.textGrey700,
+                color: Colors.grey.shade700,
                 height: 1.5,
               ),
             ),
@@ -341,7 +342,7 @@ class BadgeDetailScreen extends StatelessWidget {
             const SizedBox(height: 8),
             Text(
               badge.category.replaceAll('_', ' ').toUpperCase(),
-              style: TextStyle(fontSize: 14, color: AppColors.textSecondary),
+              style: TextStyle(fontSize: 14, color: colors.textSecondary),
             ),
             const SizedBox(height: 20),
             const Text(
@@ -351,7 +352,7 @@ class BadgeDetailScreen extends StatelessWidget {
             const SizedBox(height: 8),
             Text(
               '${badge.requirement['type']}: ${badge.requirement['value']}',
-              style: TextStyle(fontSize: 14, color: AppColors.textSecondary),
+              style: TextStyle(fontSize: 14, color: colors.textSecondary),
             ),
           ],
         ),
@@ -359,7 +360,7 @@ class BadgeDetailScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildAcquiredInfo() {
+  Widget _buildAcquiredInfo(AppTheme colors) {
     final date = acquiredDate!;
     final formattedDate = '${date.month}/${date.day}/${date.year}';
     final formattedTime =
@@ -368,11 +369,11 @@ class BadgeDetailScreen extends StatelessWidget {
     return Container(
       width: double.infinity,
       decoration: BoxDecoration(
-        color: AppColors.cardBackground,
+        color: colors.surface,
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            color: AppColors.shadowLight,
+            color: colors.shadowLight,
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -392,7 +393,7 @@ class BadgeDetailScreen extends StatelessWidget {
               children: [
                 Icon(
                   Icons.calendar_today,
-                  color: AppColors.textSecondary,
+                  color: colors.textSecondary,
                   size: 20,
                 ),
                 const SizedBox(width: 12),
@@ -408,11 +409,7 @@ class BadgeDetailScreen extends StatelessWidget {
             const SizedBox(height: 12),
             Row(
               children: [
-                Icon(
-                  Icons.access_time,
-                  color: AppColors.textSecondary,
-                  size: 20,
-                ),
+                Icon(Icons.access_time, color: colors.textSecondary, size: 20),
                 const SizedBox(width: 12),
                 Text(
                   formattedTime,
