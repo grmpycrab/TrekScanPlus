@@ -161,14 +161,11 @@ class _HomeSocialFeedState extends State<HomeSocialFeed> {
 
         // ── Post card ────────────────────────────────────────────────────────
         final post = posts[index - 1];
-        return Padding(
+        return SocialCard(
           key: ValueKey(post.id ?? index),
-          padding: const EdgeInsets.symmetric(horizontal: 16),
-          child: SocialCard(
-            post: post,
-            onCommentTap: () => widget.onShowComments(post),
-            onDelete: () => widget.onDeletePost(post),
-          ),
+          post: post,
+          onCommentTap: () => widget.onShowComments(post),
+          onDelete: () => widget.onDeletePost(post),
         );
       },
     );
