@@ -369,6 +369,17 @@ class ClimbSessionService extends ChangeNotifier {
     session.syncPending = true;
     if (session == _activeSession) _activeSession = null;
 
+    // Notify the user that their session was auto-completed.
+    final stats = session.liveStats;
+    unawaited(
+      NotificationService().showAutoCompletedNotification(
+        sessionName: session.name,
+        stationsVisited: stats.stationCount,
+        distanceKm: stats.distanceKm,
+        elapsed: stats.elapsed ?? Duration.zero,
+      ),
+    );
+
     _saveSessions();
     if (_isFirebaseEnabled && _userClimbsRef != null) {
       unawaited(_syncSessionToFirebase(session, isNew: false));
