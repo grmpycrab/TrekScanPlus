@@ -55,19 +55,11 @@ class _NotificationScreenState extends State<NotificationScreen> {
           _isSelectionMode
               ? '${_selectedNotifications.length} selected'
               : 'Notifications',
-          style: TextStyle(
-            color: colors.text,
-            fontSize: 20,
-            fontWeight: FontWeight.w600,
-          ),
+          style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w600),
         ),
-        backgroundColor: colors.surface,
         elevation: 0,
         leading: IconButton(
-          icon: Icon(
-            _isSelectionMode ? Icons.close : Icons.arrow_back,
-            color: colors.text,
-          ),
+          icon: Icon(_isSelectionMode ? Icons.close : Icons.arrow_back),
           onPressed: () {
             if (_isSelectionMode) {
               setState(() {

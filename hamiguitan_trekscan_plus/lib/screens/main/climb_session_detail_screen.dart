@@ -43,11 +43,7 @@ class _ClimbSessionDetailScreenState extends State<ClimbSessionDetailScreen> {
     final visitCount = _session.visitedStations.length;
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text(_session.name),
-        backgroundColor: colors.primary,
-        foregroundColor: Colors.white,
-      ),
+      appBar: AppBar(title: Text(_session.name), elevation: 0),
       backgroundColor: colors.background,
       body: SingleChildScrollView(
         child: Column(

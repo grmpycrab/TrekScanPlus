@@ -202,29 +202,29 @@ class _BadgesScreenState extends State<BadgesScreen> {
   Widget _buildHeader() {
     final colors = context.colors;
     return Container(
-      padding: const EdgeInsets.all(16),
-      color: colors.primary,
+      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
+      color: context.isDarkMode ? Colors.black : Colors.white,
       child: Row(
         children: [
           IconButton(
-            icon: const Icon(Icons.arrow_back, color: SharedColors.white),
+            icon: Icon(Icons.arrow_back, color: colors.text),
             onPressed: () => Navigator.pop(context),
           ),
           const SizedBox(width: 8),
-          const Expanded(
+          Expanded(
             child: Center(
               child: Text(
                 'All Badges',
                 style: TextStyle(
-                  color: SharedColors.white,
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
+                  color: colors.text,
+                  fontSize: 17,
+                  fontWeight: FontWeight.w600,
                 ),
               ),
             ),
           ),
           IconButton(
-            icon: const Icon(Icons.filter_list, color: SharedColors.white),
+            icon: Icon(Icons.filter_list, color: colors.text),
             onPressed: _showFilterBottomSheet,
           ),
         ],

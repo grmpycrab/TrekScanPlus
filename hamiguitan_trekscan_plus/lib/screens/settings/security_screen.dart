@@ -41,16 +41,12 @@ class _SecurityScreenState extends State<SecurityScreen> {
     return Scaffold(
       backgroundColor: colors.background,
       appBar: AppBar(
-        backgroundColor: colors.primary,
         title: const Text(
           'Security & Privacy',
-          style: TextStyle(
-            color: SharedColors.white,
-            fontWeight: FontWeight.bold,
-          ),
+          style: TextStyle(fontWeight: FontWeight.bold),
         ),
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: SharedColors.white),
+          icon: const Icon(Icons.arrow_back),
           onPressed: () => Navigator.pop(context),
         ),
         elevation: 0,

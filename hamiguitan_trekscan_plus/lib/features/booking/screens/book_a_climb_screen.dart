@@ -275,20 +275,16 @@ class _BookAClimbScreenRefactoredState
       child: Scaffold(
         backgroundColor: colors.background,
         appBar: AppBar(
-          backgroundColor: colors.primary,
           elevation: 0,
           centerTitle: true,
           automaticallyImplyLeading: false,
           title: const Text(
             'Book a Climb',
-            style: TextStyle(
-              color: SharedColors.white,
-              fontWeight: FontWeight.bold,
-            ),
+            style: TextStyle(fontWeight: FontWeight.bold),
           ),
           actions: [
             IconButton(
-              icon: const Icon(Icons.filter_list, color: SharedColors.white),
+              icon: const Icon(Icons.filter_list),
               onPressed: _showFilterDialog,
               tooltip: 'Filter bookings',
             ),

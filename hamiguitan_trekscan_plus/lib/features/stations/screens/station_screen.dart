@@ -160,20 +160,21 @@ class _StationScreenState extends State<StationScreen> {
   }
 
   Widget _buildAppBar() {
+    final colors = context.colors;
     return Container(
-      padding: const EdgeInsets.all(16),
-      color: context.colors.primary,
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+      color: context.isDarkMode ? Colors.black : Colors.white,
       child: Row(
         children: [
           const SizedBox(width: 8),
           Expanded(
             child: Center(
-              child: const Text(
+              child: Text(
                 'Stations',
                 style: TextStyle(
-                  color: SharedColors.white,
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
+                  color: colors.text,
+                  fontSize: 17,
+                  fontWeight: FontWeight.w600,
                 ),
               ),
             ),

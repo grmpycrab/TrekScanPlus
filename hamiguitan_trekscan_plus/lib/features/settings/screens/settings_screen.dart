@@ -207,8 +207,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
   Widget _buildHeader() {
     final colors = context.colors;
     return Container(
-      padding: const EdgeInsets.all(16),
-      color: colors.primary,
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+      color: context.isDarkMode ? Colors.black : Colors.white,
       child: Row(
         children: [
           const SizedBox(width: 56),
@@ -217,9 +217,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
               child: Text(
                 'Settings',
                 style: TextStyle(
-                  color: SharedColors.white, // Always white on primary header
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
+                  color: colors.text,
+                  fontSize: 17,
+                  fontWeight: FontWeight.w600,
                 ),
               ),
             ),
