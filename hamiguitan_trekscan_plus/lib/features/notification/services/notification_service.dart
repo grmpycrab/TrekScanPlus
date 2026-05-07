@@ -20,6 +20,9 @@ class NotificationService {
   static const String _channelId = 'booking_updates';
   static const String _channelName = 'Booking Updates';
 
+  static const String _trekChannelId = 'trek_session_reminders';
+  static const String _trekChannelName = 'Trek Session Reminders';
+
   final FlutterLocalNotificationsPlugin _localNotifications =
       FlutterLocalNotificationsPlugin();
   final FirebaseMessaging _firebaseMessaging = FirebaseMessaging.instance;
@@ -75,11 +78,21 @@ class NotificationService {
         enableVibration: true,
       );
 
-      await _localNotifications
+      const AndroidNotificationChannel trekChannel = AndroidNotificationChannel(
+        _trekChannelId,
+        _trekChannelName,
+        description: 'Reminders for active trek sessions',
+        importance: Importance.defaultImportance,
+        playSound: true,
+        enableVibration: true,
+      );
+
+      final androidPlugin = _localNotifications
           .resolvePlatformSpecificImplementation<
             AndroidFlutterLocalNotificationsPlugin
-          >()
-          ?.createNotificationChannel(channel);
+          >();
+      await androidPlugin?.createNotificationChannel(channel);
+      await androidPlugin?.createNotificationChannel(trekChannel);
     }
   }
 
@@ -225,6 +238,84 @@ class NotificationService {
       );
     } catch (e) {
       AppLogger.i('[NotificationService] Failed to show notification: $e');
+    }
+  }
+
+  /// Show a reminder notification for an active trek session that has been
+  /// idle for [inactiveFor].
+  ///
+  /// Includes a human-readable summary of progress (stations, distance, elapsed)
+  /// and warns that the session will be auto-completed after 72 h of inactivity.
+  Future<void> showTrekSessionReminder({
+    required String sessionName,
+    required Duration inactiveFor,
+    required int stationsVisited,
+    required double distanceKm,
+    required Duration elapsed,
+    required Duration autoCompleteIn,
+  }) async {
+    if (!_isInitialized) return;
+
+    final idleHours = inactiveFor.inHours;
+    final idleMinutes = inactiveFor.inMinutes % 60;
+    final idleLabel = idleHours > 0
+        ? '${idleHours}h ${idleMinutes}m'
+        : '${idleMinutes}m';
+
+    final elapsedHours = elapsed.inHours;
+    final elapsedMins = elapsed.inMinutes % 60;
+    final elapsedLabel = elapsedHours > 0
+        ? '${elapsedHours}h ${elapsedMins}m'
+        : '${elapsedMins}m';
+
+    final distLabel = distanceKm > 0
+        ? '${distanceKm.toStringAsFixed(1)} km'
+        : '—';
+
+    final autoCompleteHours = autoCompleteIn.inHours;
+
+    final body =
+        'You have an active trek "$sessionName". '
+        'Last scan: $idleLabel ago · '
+        '$stationsVisited station${stationsVisited == 1 ? '' : 's'} · '
+        '$distLabel · $elapsedLabel trekking time. '
+        'Auto-complete in ${autoCompleteHours}h if no activity.';
+
+    try {
+      const AndroidNotificationDetails androidDetails =
+          AndroidNotificationDetails(
+            _trekChannelId,
+            _trekChannelName,
+            channelDescription: 'Reminders for active trek sessions',
+            importance: Importance.defaultImportance,
+            priority: Priority.defaultPriority,
+            playSound: true,
+            enableVibration: true,
+            autoCancel: true,
+          );
+
+      const DarwinNotificationDetails iosDetails = DarwinNotificationDetails(
+        presentAlert: true,
+        presentBadge: false,
+        presentSound: true,
+      );
+
+      const NotificationDetails details = NotificationDetails(
+        android: androidDetails,
+        iOS: iosDetails,
+      );
+
+      // Use a fixed ID (9001) so repeated reminders replace the previous one.
+      await _localNotifications.show(
+        9001,
+        '🥾 Active Trek Session',
+        body,
+        details,
+        payload: 'trek_session_reminder',
+      );
+      AppLogger.i('[NotificationService] Trek session reminder sent');
+    } catch (e) {
+      AppLogger.i('[NotificationService] Failed to show trek reminder: $e');
     }
   }
 
@@ -376,4 +467,3 @@ class NotificationService {
     // Clean up if needed
   }
 }
-

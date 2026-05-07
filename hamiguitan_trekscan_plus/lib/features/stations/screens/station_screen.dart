@@ -5,7 +5,8 @@ import 'package:flutter/material.dart';
 import '../widgets/station_card.dart';
 import '../../../theme/app_theme.dart';
 import '../../../models/climb_session.dart';
-import '../../../dialogs/new_climb_session_dialog.dart';
+import '../../../dialogs/new_climb_session_dialog.dart'
+    show showClimbSessionSheet;
 import '../../../utils/status_helpers.dart';
 import '../../stations/viewmodels/station_view_model.dart';
 import 'station_detail_screen.dart';
@@ -94,10 +95,7 @@ class _StationScreenState extends State<StationScreen> {
   }
 
   Future<void> _showEditDialog(ClimbSession session) async {
-    final result = await showDialog<ClimbSession>(
-      context: context,
-      builder: (context) => NewClimbSessionDialog(climbSession: session),
-    );
+    final result = await showClimbSessionSheet(context, existing: session);
 
     if (result != null && mounted) {
       _vm.refreshAfterEdit();
@@ -111,10 +109,7 @@ class _StationScreenState extends State<StationScreen> {
   }
 
   void _createNewSession() {
-    showDialog(
-      context: context,
-      builder: (context) => const NewClimbSessionDialog(),
-    );
+    showClimbSessionSheet(context);
   }
 
   // -------------------------------------------------------------------------
@@ -380,7 +375,7 @@ class _StationScreenState extends State<StationScreen> {
                   fontWeight: FontWeight.bold,
                 ),
               ),
-              if (_vm.activeSession == null)
+              if (allSessions.isNotEmpty && _vm.activeSession == null)
                 FilledButton.tonal(
                   onPressed: _createNewSession,
                   child: const Text('+ New Climb'),
@@ -645,11 +640,7 @@ class _StationScreenState extends State<StationScreen> {
               ),
             ),
           ),
-          const SizedBox(height: 32),
-          FilledButton.tonal(
-            onPressed: _createNewSession,
-            child: const Text('Create First Climb'),
-          ),
+          const SizedBox(height: 8),
         ],
       ),
     );

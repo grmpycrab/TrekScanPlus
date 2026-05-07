@@ -3,10 +3,12 @@
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:uuid/uuid.dart';
 import 'dart:async';
 import 'dart:convert';
 import '../models/climb_session.dart';
 import '../models/station_data.dart';
+import '../features/notification/services/notification_service.dart';
 import '../utils/app_logger.dart';
 
 /// Service for managing climb/trek sessions
@@ -21,10 +23,24 @@ import '../utils/app_logger.dart';
 /// - Read: GET + real-time listeners
 /// - Update: PUT operation (auto-synced)
 /// - Delete: DELETE operation (auto-synced)
+///
+/// Business rules enforced here (not in ViewModel):
+/// - Only ONE active (ongoing) session allowed at a time
+/// - Sessions inactive for 72+ hours are auto-completed
+/// - Firebase sync never silently overwrites locally-pending sessions
 class ClimbSessionService extends ChangeNotifier {
   static const String CLIMB_SESSIONS_KEY = 'climb_sessions';
   static const String usersCollection = 'users';
   static const String climbsSubcollection = 'climbs';
+
+  /// Sessions inactive longer than this are auto-completed.
+  static const Duration _inactivityThreshold = Duration(hours: 72);
+
+  /// Fire a reminder notification after this much inactivity.
+  static const Duration _reminderThreshold = Duration(hours: 2);
+
+  static const _uuid = Uuid();
+
   static ClimbSessionService? _instance;
 
   final SharedPreferences prefs;
@@ -34,6 +50,13 @@ class ClimbSessionService extends ChangeNotifier {
   ClimbSession? _activeSession;
   String? _currentUserId;
   bool _isFirebaseEnabled = false;
+
+  /// Periodic timer that checks for inactivity while the app is running.
+  Timer? _inactivityTimer;
+
+  /// Tracks which session IDs have already received a reminder in this app run,
+  /// so we don't spam the user every 30 minutes.
+  final Set<String> _remindedSessionIds = {};
 
   ClimbSessionService._(
     this.prefs, {
@@ -101,6 +124,12 @@ class ClimbSessionService extends ChangeNotifier {
         _instance!._activeSession = null;
       }
 
+      // Check for inactivity on startup (handles 72h rule after app restart).
+      _instance!._checkInactivityTimeout();
+
+      // Start periodic inactivity check (every 30 minutes while app is open).
+      _instance!._startInactivityTimer();
+
       // Sync with Firebase in background (fire-and-forget, non-blocking)
       if (_instance!._isFirebaseEnabled) {
         AppLogger.d(
@@ -119,6 +148,9 @@ class ClimbSessionService extends ChangeNotifier {
   }
 
   void setCurrentUser(String? userId) {
+    _inactivityTimer?.cancel();
+    _inactivityTimer = null;
+    _remindedSessionIds.clear();
     _currentUserId = userId;
     _isFirebaseEnabled = userId != null;
     _climbSessions.clear();
@@ -127,6 +159,8 @@ class ClimbSessionService extends ChangeNotifier {
     _loadLocalSessions();
     if (_isFirebaseEnabled) {
       _syncWithFirebaseBackground();
+      _checkInactivityTimeout();
+      _startInactivityTimer();
     }
   }
 
@@ -143,16 +177,7 @@ class ClimbSessionService extends ChangeNotifier {
         _climbSessions = [];
       }
 
-      // Set the most recent ongoing session as active
-      _activeSession = _climbSessions
-          .where((s) => s.status == 'ongoing')
-          .fold<ClimbSession?>(null, (latest, current) {
-            if (latest == null) return current;
-            return current.createdAt.isAfter(latest.createdAt)
-                ? current
-                : latest;
-          });
-
+      _refreshActiveSession();
       notifyListeners();
     } catch (e) {
       if (kDebugMode) AppLogger.e('Error in _loadLocalSessions: $e');
@@ -175,8 +200,13 @@ class ClimbSessionService extends ChangeNotifier {
         );
   }
 
-  /// Sync local sessions with Firebase
-  /// Pulls latest from Firebase and merges with local data
+  /// Sync local sessions with Firebase using a safe merge strategy.
+  ///
+  /// Rules:
+  /// - If local session has [syncPending] = true → push local to Firebase (local wins).
+  /// - If Firebase has a newer [lastActivityAt] → take Firebase version.
+  /// - Sessions on Firebase but missing locally → add locally.
+  /// - Sessions only in local with [syncPending] → push to Firebase.
   Future<void> _syncWithFirebase() async {
     try {
       if (_userClimbsRef == null) return;
@@ -186,9 +216,7 @@ class ClimbSessionService extends ChangeNotifier {
 
       for (var doc in snapshot.docs) {
         try {
-          final data = doc.data();
-          final session = ClimbSession.fromMap(data);
-          firebaseSessions.add(session);
+          firebaseSessions.add(ClimbSession.fromMap(doc.data()));
         } catch (e) {
           if (kDebugMode) {
             AppLogger.e('Error parsing climb session from Firebase: $e');
@@ -196,22 +224,156 @@ class ClimbSessionService extends ChangeNotifier {
         }
       }
 
-      // Merge: Keep Firebase as source of truth
-      // Replace local sessions with Firebase versions
-      if (firebaseSessions.isNotEmpty) {
-        _climbSessions = firebaseSessions;
-        await _saveSessions();
+      // --- Merge ---
+      for (final remote in firebaseSessions) {
+        final localIndex = _climbSessions.indexWhere((s) => s.id == remote.id);
+        if (localIndex == -1) {
+          // New from Firebase — add locally.
+          _climbSessions.add(remote);
+        } else {
+          final local = _climbSessions[localIndex];
+          if (local.syncPending) {
+            // Local has unconfirmed changes → push local to Firebase, keep local.
+            unawaited(_syncSessionToFirebase(local, isNew: false));
+          } else {
+            // Compare by lastActivityAt (later wins); server wins on tie.
+            final remoteActivity = remote.lastActivityAt ?? remote.createdAt;
+            final localActivity = local.lastActivityAt ?? local.createdAt;
+            if (remoteActivity.isAfter(localActivity)) {
+              _climbSessions[localIndex] = remote;
+            }
+          }
+        }
       }
+
+      // Push any local-only pending sessions that Firebase doesn't know about.
+      for (final local in _climbSessions.where((s) => s.syncPending)) {
+        if (!firebaseSessions.any((r) => r.id == local.id)) {
+          unawaited(_syncSessionToFirebase(local, isNew: true));
+        }
+      }
+
+      // Refresh active session pointer after merge.
+      _refreshActiveSession();
+      await _saveSessions();
 
       if (kDebugMode) {
         AppLogger.i(
-          'Synced ${firebaseSessions.length} climb sessions from Firebase',
+          'Merged ${firebaseSessions.length} Firebase sessions with '
+          '${_climbSessions.length} local sessions',
         );
       }
     } catch (e) {
       if (kDebugMode) AppLogger.w('Error syncing with Firebase: $e');
-      // Don't fail - continue with local data
+      // Don't fail — continue with local data.
     }
+  }
+
+  /// Pick the most-recent ongoing session as the active session.
+  void _refreshActiveSession() {
+    _activeSession = _climbSessions
+        .where((s) => s.status == 'ongoing')
+        .fold<ClimbSession?>(null, (latest, current) {
+          if (latest == null) return current;
+          return current.createdAt.isAfter(latest.createdAt) ? current : latest;
+        });
+  }
+
+  // ---------------------------------------------------------------------------
+  // Inactivity auto-complete
+  // ---------------------------------------------------------------------------
+
+  void _startInactivityTimer() {
+    _inactivityTimer?.cancel();
+    _inactivityTimer = Timer.periodic(
+      const Duration(minutes: 30),
+      (_) => _checkInactivityTimeout(),
+    );
+  }
+
+  /// Checks inactivity for the active session.
+  ///
+  /// - At [_reminderThreshold] (2h): fires a local notification reminder once.
+  /// - At [_inactivityThreshold] (72h): auto-completes the session.
+  void _checkInactivityTimeout() {
+    final session = _activeSession;
+    if (session == null || session.status != 'ongoing') return;
+
+    final anchor =
+        session.lastActivityAt ?? session.startedAt ?? session.createdAt;
+    final inactiveFor = DateTime.now().difference(anchor);
+
+    // Auto-complete threshold — highest priority check.
+    if (inactiveFor >= _inactivityThreshold) {
+      AppLogger.i(
+        'Session "${session.name}" auto-completing after '
+        '${inactiveFor.inHours}h of inactivity',
+      );
+      _autoCompleteSession(session);
+      return;
+    }
+
+    // Reminder threshold — fire once per session per app run.
+    if (inactiveFor >= _reminderThreshold &&
+        !_remindedSessionIds.contains(session.id)) {
+      _remindedSessionIds.add(session.id);
+      AppLogger.i(
+        'Sending inactivity reminder for session "${session.name}" '
+        '(inactive ${inactiveFor.inHours}h ${inactiveFor.inMinutes % 60}m)',
+      );
+      _sendReminderNotification(session, inactiveFor);
+    }
+  }
+
+  void _sendReminderNotification(ClimbSession session, Duration inactiveFor) {
+    final stats = session.liveStats;
+    final autoCompleteIn = _inactivityThreshold - inactiveFor;
+
+    unawaited(
+      NotificationService().showTrekSessionReminder(
+        sessionName: session.name,
+        inactiveFor: inactiveFor,
+        stationsVisited: stats.stationCount,
+        distanceKm: stats.distanceKm,
+        elapsed: stats.elapsed ?? Duration.zero,
+        autoCompleteIn: autoCompleteIn,
+      ),
+    );
+  }
+
+  void _autoCompleteSession(ClimbSession session) {
+    // completedAt = the last actual activity, not an artificial future timestamp.
+    // This way totalDuration reflects real trekking time, not idle wait time.
+    final lastActivity =
+        session.lastActivityAt ?? session.startedAt ?? session.createdAt;
+    session.completedAt = lastActivity;
+    session.status = 'auto_completed';
+
+    // Stamp duration for the final station (from last scan to auto-complete).
+    if (session.visitedStations.isNotEmpty) {
+      final last = session.visitedStations.last;
+      last.durationAtStation ??= lastActivity.difference(last.scannedAt);
+    }
+
+    // totalDuration = actual time trekking (start → last activity), excluding idle.
+    if (session.startedAt != null) {
+      session.totalDuration = lastActivity.difference(session.startedAt!);
+    }
+
+    // totalDistance = sum of per-station distances recorded during the trek.
+    session.totalDistance = session.visitedStations.fold<double>(
+      0.0,
+      (sum, v) => sum + (v.distanceFromPrevious ?? 0.0),
+    );
+
+    session.syncPending = true;
+    if (session == _activeSession) _activeSession = null;
+
+    _saveSessions();
+    if (_isFirebaseEnabled && _userClimbsRef != null) {
+      unawaited(_syncSessionToFirebase(session, isNew: false));
+    }
+    notifyListeners();
   }
 
   Future<void> _saveSessions() async {
@@ -225,8 +387,11 @@ class ClimbSessionService extends ChangeNotifier {
     }
   }
 
-  /// Create a new climb session
-  /// Automatically saves to both local storage and Firebase
+  /// Create a new climb session.
+  ///
+  /// Throws [StateError] if the user already has an active (ongoing) session.
+  /// Callers (ViewModel, not Scanner) must check [getActiveSession()] first
+  /// and prompt the user to complete or abandon the existing session.
   Future<ClimbSession> createClimbSession({
     required String name,
     required String description,
@@ -234,21 +399,32 @@ class ClimbSessionService extends ChangeNotifier {
     DateTime? trekStartDate,
     DateTime? trekEndDate,
   }) async {
+    // --- Single-session enforcement ---
+    if (_activeSession != null && _activeSession!.status == 'ongoing') {
+      throw StateError(
+        'Cannot create a new session: "${_activeSession!.name}" is still active. '
+        'Please complete or abandon it first.',
+      );
+    }
+
+    final isOffline = !_isFirebaseEnabled;
     final session = ClimbSession(
-      id: DateTime.now().millisecondsSinceEpoch.toString(),
+      id: _uuid.v4(),
       name: name,
       description: description,
       trekType: trekType,
       createdAt: DateTime.now(),
       trekStartDate: trekStartDate,
       trekEndDate: trekEndDate,
+      syncPending: true,
+      createdOffline: isOffline,
     );
 
     _climbSessions.add(session);
     _activeSession = session;
     await _saveSessions();
 
-    // Sync to Firebase in background (fire-and-forget, non-blocking)
+    // Sync to Firebase in background (fire-and-forget, non-blocking).
     if (_isFirebaseEnabled && _userClimbsRef != null) {
       unawaited(_syncSessionToFirebase(session, isNew: true));
     }
@@ -286,33 +462,73 @@ class ClimbSessionService extends ChangeNotifier {
       session.startClimb();
     }
 
-    // Add the station visit
+    // Add the station visit (also updates lastActivityAt + syncPending)
     if (!session.isStationVisited(station.id)) {
       session.addVisitedStation(station);
+
+      // User resumed activity — clear reminder flag so it can fire again
+      // if they go idle again after this scan.
+      _remindedSessionIds.remove(session.id);
       await _saveSessions();
+
+      if (_isFirebaseEnabled && _userClimbsRef != null) {
+        unawaited(
+          _syncSessionToFirebase(session, isNew: false)
+              .then((_) {
+                session.syncPending = false;
+                _saveSessions();
+              })
+              .catchError((e) {
+                AppLogger.w('Deferred Firebase sync error (station visit): $e');
+              }),
+        );
+      }
     }
   }
 
   /// Complete an active session
   Future<void> completeSession(ClimbSession session) async {
     session.completeClimb();
+    session.syncPending = true;
     if (session == _activeSession) {
       _activeSession = null;
     }
     await _saveSessions();
+
+    if (_isFirebaseEnabled && _userClimbsRef != null) {
+      unawaited(
+        _syncSessionToFirebase(session, isNew: false)
+            .then((_) {
+              session.syncPending = false;
+              _saveSessions();
+            })
+            .catchError((e) {
+              AppLogger.w('Deferred Firebase sync error (complete): $e');
+            }),
+      );
+    }
   }
 
   /// Abandon a session and sync to Firebase
   Future<void> abandonSession(ClimbSession session) async {
     session.status = 'abandoned';
+    session.syncPending = true;
     if (session == _activeSession) {
       _activeSession = null;
     }
     await _saveSessions();
 
-    // Sync to Firebase
     if (_isFirebaseEnabled && _userClimbsRef != null) {
-      await _syncSessionToFirebase(session, isNew: false);
+      unawaited(
+        _syncSessionToFirebase(session, isNew: false)
+            .then((_) {
+              session.syncPending = false;
+              _saveSessions();
+            })
+            .catchError((e) {
+              AppLogger.w('Deferred Firebase sync error (abandon): $e');
+            }),
+      );
     }
   }
 
@@ -345,26 +561,18 @@ class ClimbSessionService extends ChangeNotifier {
   /// ========== Firebase Sync Methods ==========
 
   /// Sync a single session to Firebase
-  /// Called automatically after create/update operations
   Future<void> _syncSessionToFirebase(
     ClimbSession session, {
     bool isNew = false,
   }) async {
     try {
-      if (!_isFirebaseEnabled || _userClimbsRef == null) {
-        if (kDebugMode) {
-          AppLogger.w(
-            'Firebase disabled or no user, skipping sync for ${session.id}',
-          );
-        }
-        return;
-      }
+      if (!_isFirebaseEnabled || _userClimbsRef == null) return;
 
       await _userClimbsRef!
           .doc(session.id)
           .set(session.toMap(), SetOptions(merge: true))
           .timeout(
-            const Duration(seconds: 3),
+            const Duration(seconds: 5),
             onTimeout: () {
               if (kDebugMode) {
                 AppLogger.w('Firebase sync timeout for session ${session.id}');
@@ -375,13 +583,14 @@ class ClimbSessionService extends ChangeNotifier {
 
       if (kDebugMode) {
         final action = isNew ? 'created' : 'updated';
-        AppLogger.i('Climb session ${session.name} $action on Firebase');
+        AppLogger.i('Climb session "${session.name}" $action on Firebase');
       }
     } catch (e) {
       if (kDebugMode) {
         AppLogger.e('Error syncing climb session to Firebase: $e');
       }
-      // Don't throw - app should work offline
+      // Don't throw — app should work offline.
+      rethrow;
     }
   }
 
