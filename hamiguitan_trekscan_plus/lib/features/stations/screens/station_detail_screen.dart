@@ -550,6 +550,7 @@ class _StationDetailScreenState extends State<StationDetailScreen> {
   late final Widget _warningsSection;
   late final Widget _biodiversityFeaturesSection;
   late final Widget _metadataSection;
+  bool _didPreloadImages = false;
 
   // -------------------------------------------------------------------------
   // Lifecycle
@@ -577,9 +578,17 @@ class _StationDetailScreenState extends State<StationDetailScreen> {
         : const SizedBox.shrink();
     _metadataSection = _MetadataSection(metadata: _vm.station.metadata);
 
-    _preloadImages();
     _vm.initialize();
     WidgetsBinding.instance.addPostFrameCallback((_) => _startHeroSlideshow());
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (!_didPreloadImages) {
+      _didPreloadImages = true;
+      _preloadImages();
+    }
   }
 
   @override
