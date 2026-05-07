@@ -29,8 +29,7 @@ class ExpandableCaption extends StatefulWidget {
   State<ExpandableCaption> createState() => _ExpandableCaptionState();
 }
 
-class _ExpandableCaptionState extends State<ExpandableCaption>
-    with SingleTickerProviderStateMixin {
+class _ExpandableCaptionState extends State<ExpandableCaption> {
   bool _isExpanded = false;
 
   @override
@@ -59,28 +58,23 @@ class _ExpandableCaptionState extends State<ExpandableCaption>
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Animated text expansion with smoother timing (250ms)
-              AnimatedCrossFade(
-                firstChild: Text(
+              // Animated text expansion using a single text tree for lower
+              // rebuild/render cost than cross-fading two text widgets.
+              AnimatedSize(
+                duration: const Duration(milliseconds: 220),
+                curve: Curves.easeInOut,
+                alignment: Alignment.topLeft,
+                child: Text(
                   widget.text,
-                  maxLines: widget.maxLines,
-                  overflow: TextOverflow.ellipsis,
+                  maxLines: _isExpanded ? null : widget.maxLines,
+                  overflow: _isExpanded
+                      ? TextOverflow.visible
+                      : TextOverflow.ellipsis,
                   softWrap: true,
                   style:
                       widget.style ??
                       const TextStyle(fontSize: 14, height: 1.4),
                 ),
-                secondChild: Text(
-                  widget.text,
-                  softWrap: true,
-                  style:
-                      widget.style ??
-                      const TextStyle(fontSize: 14, height: 1.4),
-                ),
-                crossFadeState: _isExpanded
-                    ? CrossFadeState.showSecond
-                    : CrossFadeState.showFirst,
-                duration: const Duration(milliseconds: 250),
               ),
 
               // See more / See less button (only if text overflows)

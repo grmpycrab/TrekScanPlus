@@ -680,22 +680,19 @@ class _ProfileScreenState extends State<ProfileScreen> {
               );
             }
 
-            return Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0),
-              child: ListView.builder(
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                itemCount: posts.length,
-                itemBuilder: (context, index) {
-                  final post = posts[index];
-                  return SocialCard(
-                    post: post,
-                    onDelete: () {
-                      _handleDeletePost(post.id!);
-                    },
-                  );
-                },
-              ),
+            return ListView.builder(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              itemCount: posts.length,
+              itemBuilder: (context, index) {
+                final post = posts[index];
+                return SocialCard(
+                  post: post,
+                  onDelete: () {
+                    _handleDeletePost(post.id!);
+                  },
+                );
+              },
             );
           },
         ),
