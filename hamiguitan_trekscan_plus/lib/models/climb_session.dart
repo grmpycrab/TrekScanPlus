@@ -12,7 +12,7 @@ class ClimbSession {
   DateTime? trekEndDate; // Planned trek end date
   DateTime? startedAt; // When first station was scanned
   DateTime? completedAt;
-  String status; // 'ongoing', 'completed', 'abandoned'
+  String status; // 'ongoing', 'completed', 'abandoned', 'auto_completed'
 
   // Station tracking
   List<StationVisit> visitedStations;
@@ -20,6 +20,16 @@ class ClimbSession {
   // Statistics
   Duration? totalDuration;
   double? totalDistance; // in km
+
+  // Offline / sync metadata
+  /// Last time any station was scanned in this session. Updated on every scan.
+  DateTime? lastActivityAt;
+
+  /// True when this session has local changes not yet confirmed by Firestore.
+  bool syncPending;
+
+  /// True when this session was first created while the device was offline.
+  final bool createdOffline;
 
   ClimbSession({
     required this.id,
@@ -35,6 +45,9 @@ class ClimbSession {
     List<StationVisit>? visitedStations,
     this.totalDuration,
     this.totalDistance,
+    this.lastActivityAt,
+    this.syncPending = false,
+    this.createdOffline = false,
   }) : visitedStations = visitedStations ?? [];
 
   /// Mark when the climb actually starts (first station scan)
@@ -45,31 +58,84 @@ class ClimbSession {
     }
   }
 
-  /// Add a visited station
+  /// Add a visited station, stamp the previous station's [durationAtStation],
+  /// update [lastActivityAt], and recompute running [totalDistance].
   void addVisitedStation(StationData station) {
+    final now = DateTime.now();
+
+    // Stamp how long the trekker spent at the previous station.
+    if (visitedStations.isNotEmpty) {
+      final prev = visitedStations.last;
+      prev.durationAtStation ??= now.difference(prev.scannedAt);
+    }
+
+    // distanceFromPrevious = distance from the previous station TO this one,
+    // which is stored on the previous station as distanceToNextKm.
+    final double? distFromPrev = visitedStations.isNotEmpty
+        ? visitedStations.last.distanceFromPrevious
+        : null;
+
     final visit = StationVisit(
       stationId: station.id,
       stationName: station.name,
-      scannedAt: DateTime.now(),
+      scannedAt: now,
       elevation: station.elevation,
-      distanceFromPrevious: station.distanceToNextKm,
+      // Pre-populate with the current station's distanceToNextKm so the
+      // NEXT scan can read it as distanceFromPrevious.
+      distanceFromPrevious: distFromPrev ?? station.distanceToNextKm,
     );
     visitedStations.add(visit);
+    lastActivityAt = now;
+    syncPending = true;
+
+    // Keep running total of distance covered so far.
+    totalDistance = visitedStations.fold<double>(
+      0.0,
+      (sum, v) => sum + (v.distanceFromPrevious ?? 0.0),
+    );
   }
 
-  /// Complete the climb session
+  /// Complete the climb session.
+  ///
+  /// Stamps the final station's [durationAtStation] and recalculates
+  /// [totalDuration] and [totalDistance] from actual scan data.
   void completeClimb() {
     completedAt = DateTime.now();
     status = 'completed';
 
-    if (startedAt != null && completedAt != null) {
+    // Stamp duration for the final station.
+    if (visitedStations.isNotEmpty) {
+      final last = visitedStations.last;
+      last.durationAtStation ??= completedAt!.difference(last.scannedAt);
+    }
+
+    if (startedAt != null) {
       totalDuration = completedAt!.difference(startedAt!);
     }
 
-    // Calculate total distance
-    totalDistance = visitedStations.fold<double>(0.0, (sum, visit) {
-      return sum + (visit.distanceFromPrevious ?? 0.0);
-    });
+    totalDistance = visitedStations.fold<double>(
+      0.0,
+      (sum, v) => sum + (v.distanceFromPrevious ?? 0.0),
+    );
+  }
+
+  /// Calculate accurate stats without mutating the session.
+  /// Used for display in detail screens.
+  ({Duration? elapsed, double distanceKm, int stationCount}) get liveStats {
+    final elapsed = startedAt != null
+        ? (completedAt ?? lastActivityAt ?? DateTime.now()).difference(
+            startedAt!,
+          )
+        : null;
+    final dist = visitedStations.fold<double>(
+      0.0,
+      (sum, v) => sum + (v.distanceFromPrevious ?? 0.0),
+    );
+    return (
+      elapsed: elapsed,
+      distanceKm: dist,
+      stationCount: visitedStations.length,
+    );
   }
 
   /// Check if station was already visited in this session
@@ -116,6 +182,9 @@ class ClimbSession {
       'visitedStations': visitedStations.map((v) => v.toMap()).toList(),
       'totalDuration': totalDuration?.inSeconds,
       'totalDistance': totalDistance,
+      'lastActivityAt': lastActivityAt?.toIso8601String(),
+      'syncPending': syncPending,
+      'createdOffline': createdOffline,
     };
   }
 
@@ -125,18 +194,18 @@ class ClimbSession {
       name: map['name'] as String,
       description: map['description'] as String,
       trekType: map['trekType'] as String? ?? 'regular_trek',
-      createdAt: DateTime.parse(map['createdAt'] as String),
+      createdAt: _parseDateTime(map['createdAt']),
       trekStartDate: map['trekStartDate'] != null
-          ? DateTime.parse(map['trekStartDate'] as String)
+          ? _parseDateTime(map['trekStartDate'])
           : null,
       trekEndDate: map['trekEndDate'] != null
-          ? DateTime.parse(map['trekEndDate'] as String)
+          ? _parseDateTime(map['trekEndDate'])
           : null,
       startedAt: map['startedAt'] != null
-          ? DateTime.parse(map['startedAt'] as String)
+          ? _parseDateTime(map['startedAt'])
           : null,
       completedAt: map['completedAt'] != null
-          ? DateTime.parse(map['completedAt'] as String)
+          ? _parseDateTime(map['completedAt'])
           : null,
       status: map['status'] as String? ?? 'ongoing',
       visitedStations:
@@ -148,7 +217,22 @@ class ClimbSession {
           ? Duration(seconds: map['totalDuration'] as int)
           : null,
       totalDistance: (map['totalDistance'] as num?)?.toDouble(),
+      lastActivityAt: map['lastActivityAt'] != null
+          ? _parseDateTime(map['lastActivityAt'])
+          : null,
+      syncPending: map['syncPending'] as bool? ?? false,
+      createdOffline: map['createdOffline'] as bool? ?? false,
     );
+  }
+
+  /// Parse DateTime from either a Firestore Timestamp or an ISO-8601 string.
+  static DateTime _parseDateTime(dynamic value) {
+    if (value is DateTime) return value;
+    // Firestore Timestamp (has .toDate())
+    try {
+      return (value as dynamic).toDate() as DateTime;
+    } catch (_) {}
+    return DateTime.parse(value as String);
   }
 }
 
@@ -158,7 +242,14 @@ class StationVisit {
   final String stationName;
   final DateTime scannedAt;
   final int elevation;
-  final double? distanceFromPrevious; // in km
+
+  /// Distance from the previous station to this one, in km.
+  /// Derived from [StationData.distanceToNextKm] of the previous station.
+  final double? distanceFromPrevious;
+
+  /// How long the trekker spent at this station before moving to the next.
+  /// Null for the last station in the session (still ongoing or just completed).
+  Duration? durationAtStation;
 
   StationVisit({
     required this.stationId,
@@ -166,12 +257,11 @@ class StationVisit {
     required this.scannedAt,
     required this.elevation,
     this.distanceFromPrevious,
+    this.durationAtStation,
   });
 
-  /// Get time spent at this station (until next station or now)
-  Duration getTimeSinceScanned() {
-    return DateTime.now().difference(scannedAt);
-  }
+  /// Time elapsed since this station was scanned (live, for the last station).
+  Duration get timeSinceScanned => DateTime.now().difference(scannedAt);
 
   Map<String, dynamic> toMap() {
     return {
@@ -180,6 +270,7 @@ class StationVisit {
       'scannedAt': scannedAt.toIso8601String(),
       'elevation': elevation,
       'distanceFromPrevious': distanceFromPrevious,
+      'durationAtStation': durationAtStation?.inSeconds,
     };
   }
 
@@ -187,9 +278,12 @@ class StationVisit {
     return StationVisit(
       stationId: map['stationId'] as String,
       stationName: map['stationName'] as String,
-      scannedAt: DateTime.parse(map['scannedAt'] as String),
+      scannedAt: ClimbSession._parseDateTime(map['scannedAt']),
       elevation: map['elevation'] as int,
       distanceFromPrevious: (map['distanceFromPrevious'] as num?)?.toDouble(),
+      durationAtStation: map['durationAtStation'] != null
+          ? Duration(seconds: map['durationAtStation'] as int)
+          : null,
     );
   }
 }

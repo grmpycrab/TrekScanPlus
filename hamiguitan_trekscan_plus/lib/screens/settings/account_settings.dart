@@ -295,7 +295,7 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
             borderSide: BorderSide(color: context.colors.primary),
           ),
           filled: true,
-          fillColor: const Color(0xFFFAFAFA),
+          fillColor: context.colors.inputFill,
         ),
       ),
     );
@@ -308,16 +308,12 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
       return Scaffold(
         backgroundColor: colors.background,
         appBar: AppBar(
-          backgroundColor: colors.primary,
           title: const Text(
             'Account Settings',
-            style: TextStyle(
-              color: SharedColors.white,
-              fontWeight: FontWeight.bold,
-            ),
+            style: TextStyle(fontWeight: FontWeight.bold),
           ),
           leading: IconButton(
-            icon: const Icon(Icons.arrow_back, color: SharedColors.white),
+            icon: const Icon(Icons.arrow_back),
             onPressed: () => Navigator.pop(context),
           ),
           elevation: 0,
@@ -329,16 +325,12 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
     return Scaffold(
       backgroundColor: colors.background,
       appBar: AppBar(
-        backgroundColor: colors.primary,
         title: const Text(
           'Account Settings',
-          style: TextStyle(
-            color: SharedColors.white,
-            fontWeight: FontWeight.bold,
-          ),
+          style: TextStyle(fontWeight: FontWeight.bold),
         ),
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: SharedColors.white),
+          icon: const Icon(Icons.arrow_back),
           onPressed: () => Navigator.pop(context),
         ),
         elevation: 0,
@@ -517,7 +509,7 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
                           ),
                         ),
                         filled: true,
-                        fillColor: Color(0xFFFAFAFA),
+                        fillColor: context.colors.inputFill,
                         prefixIcon: Icon(
                           Icons.phone,
                           color: _phoneValidationError != null
@@ -561,7 +553,7 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
                           borderSide: BorderSide(color: colors.primary),
                         ),
                         filled: true,
-                        fillColor: const Color(0xFFFAFAFA),
+                        fillColor: context.colors.inputFill,
                         suffixIcon: const Icon(Icons.calendar_today),
                       ),
                     ),
@@ -583,7 +575,7 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
                           borderSide: BorderSide(color: colors.primary),
                         ),
                         filled: true,
-                        fillColor: const Color(0xFFFAFAFA),
+                        fillColor: context.colors.inputFill,
                       ),
                       items: const [
                         DropdownMenuItem(value: 'Male', child: Text('Male')),

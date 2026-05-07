@@ -38,11 +38,7 @@ class _ClimbSessionsListScreenState extends State<ClimbSessionsListScreen>
     // Guard against uninitialized service
     if (!ClimbSessionService.isInitialized) {
       return Scaffold(
-        appBar: AppBar(
-          title: const Text('My Climbs'),
-          backgroundColor: colors.primary,
-          foregroundColor: Colors.white,
-        ),
+        appBar: AppBar(title: const Text('My Climbs'), elevation: 0),
         backgroundColor: colors.background,
         body: const Center(child: CircularProgressIndicator()),
       );
@@ -51,11 +47,12 @@ class _ClimbSessionsListScreenState extends State<ClimbSessionsListScreen>
     return Scaffold(
       appBar: AppBar(
         title: const Text('My Climbs'),
-        backgroundColor: colors.primary,
-        foregroundColor: Colors.white,
+        elevation: 0,
         bottom: TabBar(
           controller: _tabController,
-          indicatorColor: Colors.white,
+          indicatorColor: colors.primary,
+          labelColor: colors.text,
+          unselectedLabelColor: colors.textSecondary,
           tabs: const [
             Tab(text: 'Ongoing'),
             Tab(text: 'Completed'),

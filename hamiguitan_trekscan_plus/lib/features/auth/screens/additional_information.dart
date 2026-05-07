@@ -315,11 +315,7 @@ class _AdditionalInformationScreenState
     return Scaffold(
       backgroundColor: colors.background,
       appBar: AppBar(
-        backgroundColor: colors.primary,
-        title: const Text(
-          'Complete Your Profile',
-          style: TextStyle(color: Colors.white),
-        ),
+        title: const Text('Complete Your Profile'),
         elevation: 0,
         automaticallyImplyLeading: false,
       ),

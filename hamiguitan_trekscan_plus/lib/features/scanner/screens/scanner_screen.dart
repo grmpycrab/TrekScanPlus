@@ -4,6 +4,7 @@ import '../../../theme/app_theme.dart';
 import '../../../utils/app_logger.dart';
 import '../../../models/station_data.dart';
 import '../viewmodels/scanner_view_model.dart';
+import '../widgets/start_climb_dialog.dart';
 import '../../stations/screens/station_detail_screen.dart';
 
 class ScannerScreen extends StatefulWidget {
@@ -85,6 +86,11 @@ class _ScannerScreenState extends State<ScannerScreen>
       _dismissGeofenceDialog();
     }
 
+    // No-active-session: show StartClimbDialog, then retry the pending station.
+    if (_vm.requiresActiveSession) {
+      _showStartClimbDialog();
+    }
+
     // Consume pending error and show SnackBar.
     if (_vm.pendingError != null) {
       final err = _vm.pendingError!;
@@ -138,6 +144,24 @@ class _ScannerScreenState extends State<ScannerScreen>
   void _dismissGeofenceDialog() {
     if (mounted && Navigator.of(context).canPop()) {
       Navigator.of(context).pop();
+    }
+  }
+
+  /// Show the StartClimbDialog and, when the user successfully creates a
+  /// session, call [retryPendingStation] to continue the interrupted scan.
+  Future<void> _showStartClimbDialog() async {
+    if (!mounted) return;
+    final started = await showDialog<bool>(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => const StartClimbDialog(),
+    );
+    if (started == true) {
+      await _vm.retryPendingStation();
+    } else {
+      // User cancelled — clear the pending state so the scanner is unlocked.
+      _vm.requiresActiveSession = false;
+      _vm.clearError();
     }
   }
 

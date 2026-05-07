@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import '../theme/new_color.dart';
 import 'theme_service.dart';
 
@@ -62,9 +63,32 @@ class AppThemeBuilder {
         labelSmall: TextStyle(color: textColor),
       ),
       appBarTheme: AppBarTheme(
-        backgroundColor: primaryColor,
-        foregroundColor: SharedColors.white,
+        backgroundColor: isDark ? Colors.black : Colors.white,
+        foregroundColor: isDark ? Colors.white : Colors.black87,
         elevation: 0,
+        scrolledUnderElevation: 0,
+        toolbarHeight: 48,
+        titleTextStyle: TextStyle(
+          color: isDark ? Colors.white : Colors.black87,
+          fontSize: 17,
+          fontWeight: FontWeight.w600,
+          fontFamily: 'Montserrat',
+        ),
+        iconTheme: IconThemeData(color: isDark ? Colors.white : Colors.black87),
+        actionsIconTheme: IconThemeData(
+          color: isDark ? Colors.white : Colors.black87,
+        ),
+        systemOverlayStyle: isDark
+            ? const SystemUiOverlayStyle(
+                statusBarColor: Colors.transparent,
+                statusBarIconBrightness: Brightness.light,
+                statusBarBrightness: Brightness.dark,
+              )
+            : const SystemUiOverlayStyle(
+                statusBarColor: Colors.transparent,
+                statusBarIconBrightness: Brightness.dark,
+                statusBarBrightness: Brightness.light,
+              ),
       ),
       bottomNavigationBarTheme: BottomNavigationBarThemeData(
         backgroundColor: backgroundColor,
@@ -156,9 +180,32 @@ class AppThemeBuilder {
         labelSmall: TextStyle(color: textColor),
       ),
       appBarTheme: AppBarTheme(
-        backgroundColor: primaryColor,
-        foregroundColor: SharedColors.white,
+        backgroundColor: isDark ? Colors.black : Colors.white,
+        foregroundColor: isDark ? Colors.white : Colors.black87,
         elevation: 0,
+        scrolledUnderElevation: 0,
+        toolbarHeight: 48,
+        titleTextStyle: TextStyle(
+          color: isDark ? Colors.white : Colors.black87,
+          fontSize: 17,
+          fontWeight: FontWeight.w600,
+          fontFamily: 'Montserrat',
+        ),
+        iconTheme: IconThemeData(color: isDark ? Colors.white : Colors.black87),
+        actionsIconTheme: IconThemeData(
+          color: isDark ? Colors.white : Colors.black87,
+        ),
+        systemOverlayStyle: isDark
+            ? const SystemUiOverlayStyle(
+                statusBarColor: Colors.transparent,
+                statusBarIconBrightness: Brightness.light,
+                statusBarBrightness: Brightness.dark,
+              )
+            : const SystemUiOverlayStyle(
+                statusBarColor: Colors.transparent,
+                statusBarIconBrightness: Brightness.dark,
+                statusBarBrightness: Brightness.light,
+              ),
       ),
       bottomNavigationBarTheme: BottomNavigationBarThemeData(
         backgroundColor: backgroundColor,

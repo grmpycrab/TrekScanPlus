@@ -212,10 +212,14 @@ class _HomeScreenState extends State<HomeScreen>
   Widget build(BuildContext context) {
     final colors = context.colors;
     SystemChrome.setSystemUIOverlayStyle(
-      const SystemUiOverlayStyle(
-        statusBarColor: Colors.white,
-        statusBarIconBrightness: Brightness.dark,
-        statusBarBrightness: Brightness.light,
+      SystemUiOverlayStyle(
+        statusBarColor: Colors.transparent,
+        statusBarIconBrightness: context.isDarkMode
+            ? Brightness.light
+            : Brightness.dark,
+        statusBarBrightness: context.isDarkMode
+            ? Brightness.dark
+            : Brightness.light,
       ),
     );
 

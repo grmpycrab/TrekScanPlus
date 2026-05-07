@@ -25,7 +25,7 @@ class ScannerErrorEvent {
 /// - Camera permission request
 /// - Service initialisation (StationService, AchievementService)
 /// - QR barcode processing
-/// - ClimbSession management (resume or create)
+/// - ClimbSession management (check active, block if none — no auto-create)
 /// - Geofence validation
 ///
 /// The screen is responsible for:
@@ -41,6 +41,7 @@ class ScannerErrorEvent {
 /// - [pendingError]          → read once, show SnackBar, call [clearError]
 /// - [stationToNavigate]     → read once, navigate, call [clearNavigationRequest]
 /// - [isProcessing]          → scanner lock (prevent duplicate detections)
+/// - [requiresActiveSession] → show StartClimbDialog; call [retryPendingStation] after session created
 class ScannerViewModel extends ChangeNotifier {
   // ---------------------------------------------------------------------------
   // State
@@ -69,11 +70,19 @@ class ScannerViewModel extends ChangeNotifier {
   /// Read once, then call [clearError].
   ScannerErrorEvent? pendingError;
 
+  /// True when a station was scanned but no active session exists.
+  /// The screen must show a "Start Climb" dialog, create a session via
+  /// [ClimbSessionService], then call [retryPendingStation].
+  bool requiresActiveSession = false;
+
   // ---------------------------------------------------------------------------
   // Private
   // ---------------------------------------------------------------------------
 
   final AchievementService _achievementService = AchievementService();
+
+  /// Station held while the user is prompted to start a session.
+  StationData? _pendingStation;
 
   // ---------------------------------------------------------------------------
   // Public API
@@ -120,6 +129,18 @@ class ScannerViewModel extends ChangeNotifier {
   /// Call after the screen has consumed [pendingError].
   void clearError() {
     pendingError = null;
+  }
+
+  /// Called by the screen after the user has successfully created or selected
+  /// an active session via the StartClimbDialog.
+  ///
+  /// Re-processes the held [_pendingStation] so the scan can continue.
+  Future<void> retryPendingStation() async {
+    final station = _pendingStation;
+    if (station == null) return;
+    requiresActiveSession = false;
+    _pendingStation = null;
+    await _processStation(station);
   }
 
   /// Entry point for [MobileScanner.onDetect].
@@ -199,24 +220,17 @@ class ScannerViewModel extends ChangeNotifier {
 
     if (activeSession != null && activeSession.status == 'ongoing') {
       AppLogger.i('Using existing active session');
-      final alreadyInSession = activeSession.visitedStations.any(
-        (visit) => visit.stationId == station.id,
+      await ClimbSessionService.instance.addVisitedStation(
+        station,
+        activeSession,
       );
-      if (!alreadyInSession) {
-        activeSession.addVisitedStation(station);
-      }
     } else {
-      AppLogger.i('Creating new climb session...');
-      final now = DateTime.now();
-      final sessionName =
-          'Trek - ${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}';
-      final newSession = await ClimbSessionService.instance.createClimbSession(
-        name: sessionName,
-        description: 'Climbing session starting at ${station.name}',
-        trekType: 'regular_trek',
-      );
-      AppLogger.i('Climb session created: ${newSession.id}');
-      newSession.addVisitedStation(station);
+      // No active session — hold the station and ask the user to start one.
+      AppLogger.i('No active session. Requesting user to start climb.');
+      _pendingStation = station;
+      requiresActiveSession = true;
+      notifyListeners();
+      return;
     }
 
     // Geofencing check — if coords are missing or feature is off, skip.

@@ -14,29 +14,61 @@ class BottomNavigation extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = context.colors;
+    final isDark = context.isDarkMode;
+    final bgColor = isDark ? Colors.black : Colors.white;
+    final activeColor = colors.primary;
+    final inactiveColor = colors.textSecondary;
+
     return Container(
       height: 65,
       decoration: BoxDecoration(
-        color: colors.primary,
+        color: bgColor,
+        border: Border(top: BorderSide(color: colors.border, width: 0.5)),
         boxShadow: [
           BoxShadow(
-            color: colors.shadowDark,
-            blurRadius: 10,
-            offset: const Offset(0, -3),
+            color: colors.shadowLight,
+            blurRadius: 8,
+            offset: const Offset(0, -2),
           ),
         ],
       ),
-      child: Stack(
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            children: [
-              _buildNavItem(0, 'assets/icons/home_icon.png', 'Home', colors),
-              _buildNavItem(1, 'assets/icons/station.png', 'Stations', colors),
-              _buildNavItem(2, 'assets/icons/qr-code.png', 'Scanner', colors),
-              _buildNavItem(3, 'assets/icons/appointment.png', 'Book', colors),
-              _buildNavItem(4, 'assets/icons/setting.png', 'Settings', colors),
-            ],
+          _buildNavItem(
+            0,
+            'assets/icons/home_icon.png',
+            'Home',
+            activeColor,
+            inactiveColor,
+          ),
+          _buildNavItem(
+            1,
+            'assets/icons/station.png',
+            'Stations',
+            activeColor,
+            inactiveColor,
+          ),
+          _buildNavItem(
+            2,
+            'assets/icons/qr-code.png',
+            'Scanner',
+            activeColor,
+            inactiveColor,
+          ),
+          _buildNavItem(
+            3,
+            'assets/icons/appointment.png',
+            'Book',
+            activeColor,
+            inactiveColor,
+          ),
+          _buildNavItem(
+            4,
+            'assets/icons/setting.png',
+            'Settings',
+            activeColor,
+            inactiveColor,
           ),
         ],
       ),
@@ -47,9 +79,11 @@ class BottomNavigation extends StatelessWidget {
     int index,
     String iconPath,
     String label,
-    AppTheme colors,
+    Color activeColor,
+    Color inactiveColor,
   ) {
     final isSelected = currentIndex == index;
+    final itemColor = isSelected ? activeColor : inactiveColor;
     return GestureDetector(
       onTap: () => onTap(index),
       behavior: HitTestBehavior.opaque,
@@ -58,18 +92,14 @@ class BottomNavigation extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Image.asset(
-              iconPath,
-              width: 24,
-              height: 24,
-              color: isSelected ? SharedColors.white : colors.textSecondary,
-            ),
+            Image.asset(iconPath, width: 24, height: 24, color: itemColor),
             const SizedBox(height: 4),
             Text(
               label,
               style: TextStyle(
-                color: isSelected ? SharedColors.white : colors.textSecondary,
+                color: itemColor,
                 fontSize: 12,
+                fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
               ),
             ),
           ],

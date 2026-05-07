@@ -122,16 +122,11 @@ class _ArchivedBookingsScreenState extends State<ArchivedBookingsScreen> {
     return Scaffold(
       backgroundColor: colors.background,
       appBar: AppBar(
-        backgroundColor: colors.primary,
         elevation: 0,
         title: const Text(
           'Archived Bookings',
-          style: TextStyle(
-            color: SharedColors.white,
-            fontWeight: FontWeight.bold,
-          ),
+          style: TextStyle(fontWeight: FontWeight.bold),
         ),
-        iconTheme: const IconThemeData(color: SharedColors.white),
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())

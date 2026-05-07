@@ -5,7 +5,9 @@
     "private": true,
     "scripts": {
         "add-bookings": "node add_test_bookings.js",
-        "delete-bookings": "node delete_test_bookings.js"
+        "delete-bookings": "node delete_test_bookings.js",
+        "add-sessions": "node add_test_climb_sessions.js",
+        "delete-sessions": "node delete_test_climb_sessions.js"
     },
     "dependencies": {
         "firebase-admin": "^12.0.0"
