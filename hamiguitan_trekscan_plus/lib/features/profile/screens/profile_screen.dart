@@ -30,6 +30,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   late UserModel _user;
   final UserService _userService = UserService.instance;
   final SocialSharingService _socialService = SocialSharingService.instance;
+  late final Stream<List<SocialPost>> _userPostsStream;
 
   late final ProfileViewModel _vm;
 
@@ -47,6 +48,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
     _vm.addListener(_onVmChanged);
     _vm.initialize(widget.userId);
     _user = _vm.initialUser;
+
+    final profileUserId = widget.userId ?? _vm.firebaseUser?.uid;
+    _userPostsStream = profileUserId == null
+        ? Stream<List<SocialPost>>.empty()
+        : _socialService.streamUserPosts(profileUserId).asBroadcastStream();
 
     if (_vm.firebaseUser != null && _vm.isOwnProfile) {
       _userService.fixNegativeCounts(_vm.firebaseUser!.uid).catchError((e) {
@@ -591,9 +597,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ),
               const SizedBox(width: 8),
               StreamBuilder<List<SocialPost>>(
-                stream: _socialService.streamUserPosts(
-                  widget.userId ?? _vm.firebaseUser!.uid,
-                ),
+                stream: _userPostsStream,
                 builder: (context, snapshot) {
                   final count = snapshot.data?.length ?? 0;
                   return Text(
@@ -612,9 +616,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         const SizedBox(height: 16),
         // Posts list
         StreamBuilder<List<SocialPost>>(
-          stream: _socialService.streamUserPosts(
-            widget.userId ?? _vm.firebaseUser!.uid,
-          ),
+          stream: _userPostsStream,
           builder: (context, snapshot) {
             if (snapshot.connectionState == ConnectionState.waiting) {
               return const Padding(
@@ -687,6 +689,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               itemBuilder: (context, index) {
                 final post = posts[index];
                 return SocialCard(
+                  key: ValueKey(post.id ?? 'profile_post_$index'),
                   post: post,
                   onDelete: () {
                     _handleDeletePost(post.id!);

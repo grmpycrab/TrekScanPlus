@@ -26,6 +26,7 @@ class PostViewModel extends ChangeNotifier {
   final int _commentsCount;
   int _sharesCount;
   String _displayName;
+  bool _isDisposed = false;
 
   bool get isLiked => _isLiked;
   bool get isBookmarked => _isBookmarked;
@@ -62,7 +63,7 @@ class PostViewModel extends ChangeNotifier {
     try {
       final liked = await _repository.isLiked(post.id!);
       _isLiked = liked;
-      notifyListeners();
+      _notifyIfAlive();
     } catch (e) {
       AppLogger.e('Error checking liked status: $e');
     }
@@ -73,7 +74,7 @@ class PostViewModel extends ChangeNotifier {
     try {
       final bookmarked = await _repository.isBookmarked(post.id!);
       _isBookmarked = bookmarked;
-      notifyListeners();
+      _notifyIfAlive();
     } catch (e) {
       AppLogger.e('Error checking bookmarked status: $e');
     }
@@ -88,7 +89,7 @@ class PostViewModel extends ChangeNotifier {
         post.userId,
       );
       _isFollowing = isFollowing;
-      notifyListeners();
+      _notifyIfAlive();
     } catch (e) {
       AppLogger.e('Error checking follow status: $e');
     }
@@ -103,7 +104,7 @@ class PostViewModel extends ChangeNotifier {
         post.userId,
       );
       _isPending = isPending;
-      notifyListeners();
+      _notifyIfAlive();
     } catch (e) {
       AppLogger.e('Error checking pending status: $e');
     }
@@ -120,7 +121,7 @@ class PostViewModel extends ChangeNotifier {
         } else if (firstName != null) {
           _displayName = firstName;
         }
-        notifyListeners();
+        _notifyIfAlive();
       }
     } catch (e) {
       AppLogger.e('Error loading user name: $e');
@@ -136,13 +137,13 @@ class PostViewModel extends ChangeNotifier {
     if (post.id == null) return;
     _isLiked = !_isLiked;
     _likesCount += _isLiked ? 1 : -1;
-    notifyListeners();
+    _notifyIfAlive();
     try {
       await _repository.toggleLike(post.id!);
     } catch (e) {
       _isLiked = !_isLiked;
       _likesCount += _isLiked ? 1 : -1;
-      notifyListeners();
+      _notifyIfAlive();
       rethrow;
     }
   }
@@ -151,12 +152,12 @@ class PostViewModel extends ChangeNotifier {
   Future<void> handleBookmark() async {
     if (post.id == null) return;
     _isBookmarked = !_isBookmarked;
-    notifyListeners();
+    _notifyIfAlive();
     try {
       await _repository.toggleBookmark(post.id!);
     } catch (e) {
       _isBookmarked = !_isBookmarked;
-      notifyListeners();
+      _notifyIfAlive();
       rethrow;
     }
   }
@@ -166,7 +167,7 @@ class PostViewModel extends ChangeNotifier {
   Future<void> onShareCompleted() async {
     if (post.id == null) return;
     _sharesCount++;
-    notifyListeners();
+    _notifyIfAlive();
     try {
       await _repository.sharePost(post.id!);
     } catch (e) {
@@ -183,15 +184,15 @@ class PostViewModel extends ChangeNotifier {
     try {
       if (_isFollowing) {
         _isFollowing = false;
-        notifyListeners();
+        _notifyIfAlive();
         await _userService.unfollow(currentUser.uid, post.userId);
       } else if (_isPending) {
         _isPending = false;
-        notifyListeners();
+        _notifyIfAlive();
         await _userService.cancelFollowRequest(currentUser.uid, post.userId);
       } else {
         _isPending = true;
-        notifyListeners();
+        _notifyIfAlive();
         await _userService.toggleFollow(post.userId, currentUser.uid);
       }
     } catch (e) {
@@ -201,9 +202,21 @@ class PostViewModel extends ChangeNotifier {
       } else {
         _isPending = false;
       }
-      notifyListeners();
+      _notifyIfAlive();
       rethrow;
     }
+  }
+
+  void _notifyIfAlive() {
+    if (!_isDisposed) {
+      notifyListeners();
+    }
+  }
+
+  @override
+  void dispose() {
+    _isDisposed = true;
+    super.dispose();
   }
 
   /// Calls the repository to update the post caption/privacy.
