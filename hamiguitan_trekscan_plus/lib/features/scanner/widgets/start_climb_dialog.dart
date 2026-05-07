@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../../services/climb_session_service.dart';
+import '../../../services/climb_session_guard.dart';
 import '../../../theme/app_theme.dart';
 import '../../../utils/app_logger.dart';
 
@@ -53,12 +53,11 @@ class _StartClimbDialogState extends State<StartClimbDialog> {
     });
 
     try {
-      final session = await ClimbSessionService.instance.createClimbSession(
+      await ClimbSessionGuard.instance.createSession(
         name: _nameController.text.trim(),
-        description: 'Started via QR scan',
         trekType: _selectedTrekType,
       );
-      AppLogger.i('New climb session created: ${session.id}');
+      AppLogger.i('New climb session created via ClimbSessionGuard');
       if (mounted) Navigator.of(context).pop(true);
     } on StateError catch (e) {
       // Single-session enforcement fired — already has an active session.
@@ -98,100 +97,103 @@ class _StartClimbDialogState extends State<StartClimbDialog> {
       ),
       content: SizedBox(
         width: double.maxFinite,
-        child: Form(
-          key: _formKey,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'You scanned a station but have no active climb session. '
-                'Start one to record your progress.',
-                style: TextStyle(color: colors.textSecondary, fontSize: 13),
-              ),
-              const SizedBox(height: 16),
-              TextFormField(
-                controller: _nameController,
-                style: TextStyle(color: colors.text, fontSize: 14),
-                decoration: InputDecoration(
-                  labelText: 'Session name',
-                  labelStyle: TextStyle(color: colors.textSecondary),
-                  filled: true,
-                  fillColor: colors.inputFill,
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(8),
-                    borderSide: BorderSide.none,
-                  ),
-                  contentPadding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 10,
-                  ),
+        child: SingleChildScrollView(
+          child: Form(
+            key: _formKey,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'You scanned a station but have no active climb session. '
+                  'Start one to record your progress.',
+                  style: TextStyle(color: colors.textSecondary, fontSize: 13),
                 ),
-                validator: (v) =>
-                    (v == null || v.trim().isEmpty) ? 'Name is required' : null,
-              ),
-              const SizedBox(height: 12),
-              Text(
-                'Trek type',
-                style: TextStyle(color: colors.textSecondary, fontSize: 13),
-              ),
-              const SizedBox(height: 6),
-              Wrap(
-                spacing: 8,
-                runSpacing: 6,
-                children: _trekTypes.map((type) {
-                  final selected = _selectedTrekType == type.value;
-                  return ChoiceChip(
-                    avatar: Icon(
-                      type.icon,
-                      size: 16,
-                      color: selected ? Colors.white : colors.textSecondary,
+                const SizedBox(height: 16),
+                TextFormField(
+                  controller: _nameController,
+                  style: TextStyle(color: colors.text, fontSize: 14),
+                  decoration: InputDecoration(
+                    labelText: 'Session name',
+                    labelStyle: TextStyle(color: colors.textSecondary),
+                    filled: true,
+                    fillColor: colors.inputFill,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      borderSide: BorderSide.none,
                     ),
-                    label: Text(
-                      type.label,
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: selected ? Colors.white : colors.text,
-                      ),
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 10,
                     ),
-                    selected: selected,
-                    selectedColor: colors.primary,
-                    backgroundColor: colors.inputFill,
-                    onSelected: (_) =>
-                        setState(() => _selectedTrekType = type.value),
-                  );
-                }).toList(),
-              ),
-              if (_error != null) ...[
-                const SizedBox(height: 10),
-                Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: Colors.red.withOpacity(0.12),
-                    borderRadius: BorderRadius.circular(8),
                   ),
-                  child: Row(
-                    children: [
-                      const Icon(
-                        Icons.error_outline,
-                        color: Colors.red,
+                  validator: (v) => (v == null || v.trim().isEmpty)
+                      ? 'Name is required'
+                      : null,
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  'Trek type',
+                  style: TextStyle(color: colors.textSecondary, fontSize: 13),
+                ),
+                const SizedBox(height: 6),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 6,
+                  children: _trekTypes.map((type) {
+                    final selected = _selectedTrekType == type.value;
+                    return ChoiceChip(
+                      avatar: Icon(
+                        type.icon,
                         size: 16,
+                        color: selected ? Colors.white : colors.textSecondary,
                       ),
-                      const SizedBox(width: 6),
-                      Expanded(
-                        child: Text(
-                          _error!,
-                          style: const TextStyle(
-                            color: Colors.red,
-                            fontSize: 12,
-                          ),
+                      label: Text(
+                        type.label,
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: selected ? Colors.white : colors.text,
                         ),
                       ),
-                    ],
-                  ),
+                      selected: selected,
+                      selectedColor: colors.primary,
+                      backgroundColor: colors.inputFill,
+                      onSelected: (_) =>
+                          setState(() => _selectedTrekType = type.value),
+                    );
+                  }).toList(),
                 ),
+                if (_error != null) ...[
+                  const SizedBox(height: 10),
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: Colors.red.withOpacity(0.12),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Row(
+                      children: [
+                        const Icon(
+                          Icons.error_outline,
+                          color: Colors.red,
+                          size: 16,
+                        ),
+                        const SizedBox(width: 6),
+                        Expanded(
+                          child: Text(
+                            _error!,
+                            style: const TextStyle(
+                              color: Colors.red,
+                              fontSize: 12,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
               ],
-            ],
+            ),
           ),
         ),
       ),

@@ -4,8 +4,7 @@ import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:permission_handler/permission_handler.dart';
 import '../../../models/station_data.dart';
 import '../../../services/station_service.dart';
-import '../../../services/climb_session_service.dart';
-import '../../../services/geofencing_service.dart';
+import '../../../services/climb_session_guard.dart';
 import '../../../services/achievement_service.dart';
 import '../../../utils/app_logger.dart';
 
@@ -25,8 +24,7 @@ class ScannerErrorEvent {
 /// - Camera permission request
 /// - Service initialisation (StationService, AchievementService)
 /// - QR barcode processing
-/// - ClimbSession management (check active, block if none — no auto-create)
-/// - Geofence validation
+/// - Delegating ALL session and geofence logic to [ClimbSessionGuard]
 ///
 /// The screen is responsible for:
 /// - Owning the [MobileScannerController] (tied to MobileScanner widget lifecycle)
@@ -193,128 +191,44 @@ class ScannerViewModel extends ChangeNotifier {
   // Private helpers
   // ---------------------------------------------------------------------------
 
+  /// Processes a detected station through [ClimbSessionGuard].
+  ///
+  /// [ClimbSessionGuard] enforces the strict order:
+  ///   1. Geofence validation (hard gate)
+  ///   2. Active session check
+  ///   3. Station visit recording
+  ///
+  /// This method only translates [ScanGateResult] values into ViewModel state;
+  /// it contains no session or geofence logic of its own.
   Future<void> _processStation(StationData station) async {
-    AppLogger.d('Attempting to mark station as visited...');
-
     // Fire and forget — non-blocking, so the UI remains responsive offline.
     StationService.instance
         .updateStationVisited(station.id, true)
-        .then((_) => AppLogger.i('Station marked as visited'))
+        .then((_) => AppLogger.i('Station marked as visited in local cache'))
         .catchError((e) => AppLogger.w('Error updating station visited: $e'));
 
-    AppLogger.d(
-      'ClimbSessionService.isInitialized: ${ClimbSessionService.isInitialized}',
+    final result = await ClimbSessionGuard.instance.processStationScan(
+      station: station,
+      geofencingEnabled: geofencingEnabled,
+      onGeofenceValidating: (validating) {
+        isValidatingGeofence = validating;
+        notifyListeners();
+      },
     );
 
-    if (!ClimbSessionService.isInitialized) {
-      AppLogger.e('Service NOT initialized');
-      pendingError = const ScannerErrorEvent(
-        'Service not initialized. Please restart.',
-      );
-      notifyListeners();
-      return;
-    }
-
-    final activeSession = ClimbSessionService.instance.getActiveSession();
-    AppLogger.d('Active session: ${activeSession?.id ?? "None"}');
-
-    if (activeSession != null && activeSession.status == 'ongoing') {
-      AppLogger.i('Using existing active session');
-      await ClimbSessionService.instance.addVisitedStation(
-        station,
-        activeSession,
-      );
-    } else {
-      // No active session — hold the station and ask the user to start one.
-      AppLogger.i('No active session. Requesting user to start climb.');
-      _pendingStation = station;
-      requiresActiveSession = true;
-      notifyListeners();
-      return;
-    }
-
-    // Geofencing check — if coords are missing or feature is off, skip.
-    if (geofencingEnabled &&
-        station.latitude != null &&
-        station.longitude != null) {
-      final passed = await _validateGeofence(station);
-      if (!passed) return;
-    }
-
-    // Signal screen to navigate to this station.
-    stationToNavigate = station;
-    notifyListeners();
-  }
-
-  /// Runs the geofence check with a 15-second timeout.
-  ///
-  /// Returns `true` if the user is within the geofence, `false` otherwise.
-  /// Sets [pendingError] on failure before returning `false`.
-  Future<bool> _validateGeofence(StationData station) async {
-    AppLogger.d('Geofencing enabled, verifying location...');
-    isValidatingGeofence = true;
-    notifyListeners();
-
-    try {
-      final geofenceResult =
-          await GeofencingService.checkGeofence(
-            stationLat: station.latitude!,
-            stationLng: station.longitude!,
-            radiusMeters: GeofencingService.GEOFENCE_RADIUS_METERS,
-          ).timeout(
-            const Duration(seconds: 15),
-            onTimeout: () {
-              AppLogger.w('Geofence check timed out after 15 seconds');
-              return GeofenceCheckResult(
-                isWithinGeofence: false,
-                distanceMeters: null,
-                errorMessage:
-                    'Could not get your location in time. Make sure GPS is enabled and you have a clear sky view.',
-              );
-            },
-          );
-
-      isValidatingGeofence = false;
-
-      if (geofenceResult.errorMessage != null) {
-        AppLogger.w('Geofence error: ${geofenceResult.errorMessage}');
-        pendingError = ScannerErrorEvent(
-          'Cannot verify location: ${geofenceResult.errorMessage}',
-          isWarning: true,
-        );
+    switch (result) {
+      case ScanGateSuccess(:final station):
+        stationToNavigate = station;
         notifyListeners();
-        return false;
-      }
 
-      if (!geofenceResult.isWithinGeofence &&
-          geofenceResult.distanceMeters != null) {
-        AppLogger.w(
-          'NOT within geofence. Distance: '
-          '${geofenceResult.distanceMeters?.toStringAsFixed(2) ?? "unknown"} meters',
-        );
-        pendingError = ScannerErrorEvent(
-          'You are too far from the station '
-          '(${geofenceResult.distanceMeters?.toStringAsFixed(0) ?? "?"} meters away)',
-        );
+      case ScanGateNeedsSession():
+        _pendingStation = station;
+        requiresActiveSession = true;
         notifyListeners();
-        return false;
-      }
 
-      AppLogger.i(
-        'Geofence verified! Distance: '
-        '${geofenceResult.distanceMeters?.toStringAsFixed(2) ?? "0"} meters',
-      );
-      notifyListeners();
-      return true;
-    } catch (e) {
-      AppLogger.e('Error during geofence check: $e');
-      isValidatingGeofence = false;
-      pendingError = ScannerErrorEvent(
-        'Could not verify location: $e',
-        isWarning: true,
-      );
-      notifyListeners();
-      return false;
+      case ScanGateBlocked(:final message, :final isWarning):
+        pendingError = ScannerErrorEvent(message, isWarning: isWarning);
+        notifyListeners();
     }
   }
 }
