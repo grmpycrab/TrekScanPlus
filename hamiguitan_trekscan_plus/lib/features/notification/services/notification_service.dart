@@ -319,7 +319,73 @@ class NotificationService {
     }
   }
 
-  /// Get FCM token for the device
+  /// Notify the user that a session was auto-completed due to 72 h of
+  /// inactivity. Uses a fixed notification ID (9002) so it replaces itself
+  /// if somehow triggered more than once.
+  Future<void> showAutoCompletedNotification({
+    required String sessionName,
+    required int stationsVisited,
+    required double distanceKm,
+    required Duration elapsed,
+  }) async {
+    if (!_isInitialized) return;
+
+    final distLabel = distanceKm > 0
+        ? '${distanceKm.toStringAsFixed(1)} km'
+        : '—';
+    final elapsedHours = elapsed.inHours;
+    final elapsedMins = elapsed.inMinutes % 60;
+    final elapsedLabel = elapsedHours > 0
+        ? '${elapsedHours}h ${elapsedMins}m'
+        : '${elapsedMins}m';
+
+    final body =
+        'Your trek "$sessionName" was idle for too long and has been '
+        'auto-completed by the system. '
+        '$stationsVisited station${stationsVisited == 1 ? '' : 's'} · '
+        '$distLabel · $elapsedLabel trekking time.';
+
+    try {
+      const AndroidNotificationDetails androidDetails =
+          AndroidNotificationDetails(
+            _trekChannelId,
+            _trekChannelName,
+            channelDescription: 'Reminders for active trek sessions',
+            importance: Importance.high,
+            priority: Priority.high,
+            playSound: true,
+            enableVibration: true,
+            autoCancel: true,
+          );
+
+      const DarwinNotificationDetails iosDetails = DarwinNotificationDetails(
+        presentAlert: true,
+        presentBadge: true,
+        presentSound: true,
+      );
+
+      const NotificationDetails details = NotificationDetails(
+        android: androidDetails,
+        iOS: iosDetails,
+      );
+
+      await _localNotifications.show(
+        9002,
+        '⏱ Trek Session Auto-Completed',
+        body,
+        details,
+        payload: 'trek_auto_completed',
+      );
+      AppLogger.i(
+        '[NotificationService] Auto-complete notification sent for "$sessionName"',
+      );
+    } catch (e) {
+      AppLogger.i(
+        '[NotificationService] Failed to show auto-complete notification: $e',
+      );
+    }
+  }
+
   Future<String?> getFCMToken() async {
     try {
       final token = await _firebaseMessaging.getToken();
