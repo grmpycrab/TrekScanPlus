@@ -3,7 +3,6 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:share_plus/share_plus.dart';
-import 'package:cached_network_image/cached_network_image.dart';
 import '../models/social_model.dart';
 import '../viewmodels/post_view_model.dart';
 import '../../../core/services/user_service.dart';
@@ -12,9 +11,13 @@ import '../../profile/screens/profile_screen.dart';
 import 'comments_sheet.dart';
 import 'post_options_sheet.dart';
 import 'image_viewer.dart';
-import '../../../core/widgets/profile_avatar_with_status.dart';
 import '../../../core/widgets/app_dialogue_handler.dart';
-import '../../../utils/app_logger.dart';
+
+// Import new modular components
+import 'social_card/social_card_header.dart';
+import 'social_card/expandable_caption.dart';
+import 'social_card/social_card_media.dart';
+import 'social_card/social_card_actions.dart';
 
 class SocialCard extends StatefulWidget {
   final SocialPost post;
@@ -386,356 +389,62 @@ class _SocialCardState extends State<SocialCard> {
 
   @override
   Widget build(BuildContext context) {
-    final screenHeight = MediaQuery.of(context).size.height;
-    final cardHeight = screenHeight * 0.45;
-
     return Card(
-      margin: const EdgeInsets.only(bottom: 16),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      elevation: 2,
-      child: SizedBox(
-        height: cardHeight,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _buildHeader(),
-            if (widget.post.caption.isNotEmpty) _buildCaption(),
-            if (widget.post.imageUrls.isNotEmpty)
-              Expanded(
-                child: SingleChildScrollView(
-                  physics: const NeverScrollableScrollPhysics(),
-                  child: _buildImages(),
-                ),
-              ),
-            _buildFooter(),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildHeader() {
-    final colors = context.colors;
-    final isOwnPost = _vm.isOwnPost;
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      child: Row(
-        children: [
-          GestureDetector(
-            onTap: () => _navigateToUserProfile(context),
-            child: ProfileAvatarWithStatus(
-              userId: widget.post.userId,
-              photoUrl: widget.post.userPhotoUrl,
-              radius: 20,
-            ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: GestureDetector(
-              onTap: () => _navigateToUserProfile(context),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    _vm.displayName,
-                    style: const TextStyle(
-                      fontWeight: FontWeight.w600,
-                      fontSize: 15,
-                    ),
-                  ),
-                  const SizedBox(height: 2),
-                  Row(
-                    children: [
-                      Text(
-                        _vm.getTimeAgo(),
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: colors.textSecondary,
-                        ),
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 6),
-                        child: Text(
-                          '•',
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: Colors.grey[400],
-                          ),
-                        ),
-                      ),
-                      Icon(
-                        _vm.getVisibilityIcon(),
-                        size: 14,
-                        color: colors.textSecondary,
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-          ),
-          if (!isOwnPost)
-            GestureDetector(
-              onTap: _handleFollow,
-              child: Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 6,
-                ),
-                decoration: BoxDecoration(
-                  color: _vm.isFollowing
-                      ? colors.background
-                      : _vm.isPending
-                      ? Colors.orange[50]
-                      : colors.primary,
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: Text(
-                  _vm.isFollowing
-                      ? 'Following'
-                      : _vm.isPending
-                      ? 'Pending'
-                      : 'Follow',
-                  style: TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w600,
-                    color: _vm.isFollowing
-                        ? colors.textSecondary
-                        : _vm.isPending
-                        ? Colors.orange[700]
-                        : Colors.white,
-                  ),
-                ),
-              ),
-            ),
-          const SizedBox(width: 8),
-          IconButton(
-            icon: Icon(Icons.more_horiz, size: 22, color: colors.textSecondary),
-            onPressed: _showOptionsMenu,
-            padding: EdgeInsets.zero,
-            constraints: const BoxConstraints(),
-            visualDensity: VisualDensity.compact,
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildCaption() {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
-      child: Text(
-        widget.post.caption,
-        style: const TextStyle(fontSize: 14, height: 1.4),
-      ),
-    );
-  }
-
-  Widget _buildImages() {
-    final images = widget.post.imageUrls;
-    if (images.isEmpty) return const SizedBox.shrink();
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(12),
-        child: _buildImageLayout(images),
-      ),
-    );
-  }
-
-  Widget _buildImageLayout(List<String> images) {
-    if (images.length == 1) return _buildSingleImage(images[0]);
-    if (images.length == 2) return _buildTwoImages(images);
-    if (images.length == 3) return _buildThreeImages(images);
-    if (images.length == 4) return _buildFourImages(images);
-    return _buildFivePlusImages(images);
-  }
-
-  Widget _buildSingleImage(String url) {
-    return GestureDetector(
-      onTap: () => _openImageViewer(0),
-      child: AspectRatio(
-        aspectRatio: 4 / 3,
-        child: CachedNetworkImage(
-          imageUrl: url,
-          fit: BoxFit.cover,
-          placeholder: (context, url) => Container(
-            color: context.colors.background,
-            child: const Center(
-              child: CircularProgressIndicator(
-                strokeWidth: 2,
-                valueColor: AlwaysStoppedAnimation<Color>(Colors.grey),
-              ),
-            ),
-          ),
-          errorWidget: (context, url, error) {
-            AppLogger.e('Image load error for $url: $error');
-            return Container(
-              color: context.colors.borderLight,
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const Icon(Icons.broken_image, size: 48, color: Colors.grey),
-                  const SizedBox(height: 8),
-                  Text(
-                    'Image failed to load',
-                    style: TextStyle(fontSize: 11, color: Colors.grey[600]),
-                    textAlign: TextAlign.center,
-                  ),
-                ],
-              ),
-            );
-          },
-          memCacheWidth: 800,
-          memCacheHeight: 600,
-        ),
-      ),
-    );
-  }
-
-  Widget _buildTwoImages(List<String> urls) {
-    final colors = context.colors;
-    return AspectRatio(
-      aspectRatio: 16 / 9,
-      child: Row(
-        children: [
-          Expanded(child: _buildImageTile(urls[0], 0)),
-          Container(width: 2, color: colors.background),
-          Expanded(child: _buildImageTile(urls[1], 1)),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildThreeImages(List<String> urls) {
-    final colors = context.colors;
-    return AspectRatio(
-      aspectRatio: 16 / 9,
-      child: Row(
-        children: [
-          Expanded(flex: 2, child: _buildImageTile(urls[0], 0)),
-          Container(width: 2, color: colors.background),
-          Expanded(
-            flex: 1,
-            child: Column(
-              children: [
-                Expanded(child: _buildImageTile(urls[1], 1)),
-                Container(height: 2, color: colors.background),
-                Expanded(child: _buildImageTile(urls[2], 2)),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildFourImages(List<String> urls) {
-    final colors = context.colors;
-    return AspectRatio(
-      aspectRatio: 16 / 9,
-      child: Row(
-        children: [
-          Expanded(flex: 2, child: _buildImageTile(urls[0], 0)),
-          Container(width: 2, color: colors.background),
-          Expanded(
-            flex: 1,
-            child: Column(
-              children: [
-                Expanded(child: _buildImageTile(urls[1], 1)),
-                Container(height: 2, color: colors.background),
-                Expanded(child: _buildImageTile(urls[2], 2)),
-                Container(height: 2, color: colors.background),
-                Expanded(child: _buildImageTile(urls[3], 3)),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildFivePlusImages(List<String> urls) {
-    final colors = context.colors;
-    final hasMoreThanFour = urls.length > 4;
-    final displayCount = urls.length - 4;
-    return AspectRatio(
-      aspectRatio: 1,
+      margin: const EdgeInsets.symmetric(vertical: 2, horizontal: 0),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(0)),
+      elevation: 1,
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        mainAxisSize: MainAxisSize.min,
         children: [
-          Expanded(
-            child: Row(
-              children: [
-                Expanded(child: _buildImageTile(urls[0], 0)),
-                Container(width: 2, color: colors.background),
-                Expanded(child: _buildImageTile(urls[1], 1)),
-              ],
-            ),
+          // Header
+          SocialCardHeader(
+            userId: widget.post.userId,
+            displayName: _vm.displayName,
+            userPhotoUrl: widget.post.userPhotoUrl,
+            createdAt: widget.post.createdAt.toDate(),
+            privacy: widget.post.privacy,
+            isFollowing: _vm.isFollowing,
+            isPending: _vm.isPending,
+            isOwnPost: _vm.isOwnPost,
+            onFollowTap: _handleFollow,
+            onMoreTap: _showOptionsMenu,
+            onUserTap: () => _navigateToUserProfile(context),
           ),
-          Container(height: 2, color: colors.background),
-          Expanded(
-            child: Row(
-              children: [
-                Expanded(child: _buildImageTile(urls[2], 2)),
-                Container(width: 2, color: colors.background),
-                Expanded(
-                  child: Stack(
-                    fit: StackFit.expand,
-                    children: [
-                      _buildImageTile(urls[3], 3),
-                      if (hasMoreThanFour)
-                        Container(
-                          color: Colors.black.withOpacity(0.6),
-                          child: Center(
-                            child: Text(
-                              '+$displayCount',
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 32,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ),
-                        ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
 
-  Widget _buildImageTile(String url, int index) {
-    return GestureDetector(
-      onTap: () => _openImageViewer(index),
-      child: CachedNetworkImage(
-        imageUrl: url,
-        fit: BoxFit.cover,
-        placeholder: (context, url) => Container(
-          color: context.colors.background,
-          child: const Center(
-            child: SizedBox(
-              width: 20,
-              height: 20,
-              child: CircularProgressIndicator(
-                strokeWidth: 1.5,
-                valueColor: AlwaysStoppedAnimation<Color>(Colors.grey),
+          // Caption (Expandable)
+          if (widget.post.caption.isNotEmpty)
+            ExpandableCaption(
+              text: widget.post.caption,
+              maxLines: 3,
+              style: const TextStyle(fontSize: 14, height: 1.4),
+              onExpand: () {
+                // Optional: Track expansion analytics
+              },
+            ),
+
+          // Media
+          if (widget.post.imageUrls.isNotEmpty)
+            RepaintBoundary(
+              child: SocialCardMedia(
+                imageUrls: widget.post.imageUrls,
+                onImageTap: _openImageViewer,
               ),
             ),
+
+          // Actions with inline stats
+          SocialCardActions(
+            isLiked: _vm.isLiked,
+            isBookmarked: _vm.isBookmarked,
+            likesCount: _vm.likesCount,
+            commentsCount: _vm.commentsCount,
+            sharesCount: _vm.sharesCount,
+            onLikeTap: _handleLike,
+            onCommentTap: _handleComment,
+            onShareTap: _handleShare,
+            onBookmarkTap: _handleBookmark,
           ),
-        ),
-        errorWidget: (context, url, error) {
-          AppLogger.e('Image load error for $url: $error');
-          return Container(
-            color: context.colors.borderLight,
-            child: const Icon(Icons.broken_image, size: 32, color: Colors.grey),
-          );
-        },
-        memCacheWidth: 400,
-        memCacheHeight: 400,
+        ],
       ),
     );
   }
@@ -748,103 +457,6 @@ class _SocialCardState extends State<SocialCard> {
           post: widget.post,
           initialIndex: initialIndex,
         ),
-      ),
-    );
-  }
-
-  Widget _buildFooter() {
-    final colors = context.colors;
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-      child: Row(
-        children: [
-          IconButton(
-            icon: Icon(
-              _vm.isLiked ? Icons.favorite : Icons.favorite_border,
-              color: _vm.isLiked ? Colors.red : colors.textSecondary,
-              size: 24,
-            ),
-            onPressed: _handleLike,
-            constraints: const BoxConstraints(),
-            padding: const EdgeInsets.all(8),
-          ),
-          if (_vm.likesCount > 0) ...[
-            const SizedBox(width: 4),
-            Text(
-              '${_vm.likesCount}',
-              style: TextStyle(
-                color: colors.textSecondary,
-                fontWeight: FontWeight.w500,
-                fontSize: 14,
-              ),
-            ),
-          ],
-          const SizedBox(width: 16),
-          GestureDetector(
-            onTap: _handleComment,
-            child: Padding(
-              padding: const EdgeInsets.all(8),
-              child: Row(
-                children: [
-                  Icon(
-                    Icons.chat_bubble_outline_rounded,
-                    color: colors.textSecondary,
-                    size: 23,
-                  ),
-                  if (_vm.commentsCount > 0) ...[
-                    const SizedBox(width: 6),
-                    Text(
-                      '${_vm.commentsCount}',
-                      style: TextStyle(
-                        color: colors.textSecondary,
-                        fontWeight: FontWeight.w500,
-                        fontSize: 14,
-                      ),
-                    ),
-                  ],
-                ],
-              ),
-            ),
-          ),
-          const SizedBox(width: 16),
-          GestureDetector(
-            onTap: _handleShare,
-            child: Padding(
-              padding: const EdgeInsets.all(8),
-              child: Row(
-                children: [
-                  Icon(
-                    Icons.share_outlined,
-                    color: colors.textSecondary,
-                    size: 22,
-                  ),
-                  if (_vm.sharesCount > 0) ...[
-                    const SizedBox(width: 6),
-                    Text(
-                      '${_vm.sharesCount}',
-                      style: TextStyle(
-                        color: colors.textSecondary,
-                        fontWeight: FontWeight.w500,
-                        fontSize: 14,
-                      ),
-                    ),
-                  ],
-                ],
-              ),
-            ),
-          ),
-          const Spacer(),
-          IconButton(
-            icon: Icon(
-              _vm.isBookmarked ? Icons.bookmark : Icons.bookmark_border,
-              color: _vm.isBookmarked ? colors.primary : colors.textSecondary,
-              size: 24,
-            ),
-            onPressed: _handleBookmark,
-            constraints: const BoxConstraints(),
-            padding: const EdgeInsets.all(8),
-          ),
-        ],
       ),
     );
   }
