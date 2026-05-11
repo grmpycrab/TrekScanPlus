@@ -188,4 +188,3 @@ Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   AppLogger.i('Handling background message: ${message.notification?.title}');
   // Handle background messages here
 }
-
