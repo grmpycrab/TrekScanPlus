@@ -106,3 +106,7 @@ class _ExpandableCaptionState extends State<ExpandableCaption> {
     );
   }
 }
+/**
+ *  I am Keynt Harly S. Adol, a graduating student of Davao Oriental State University - Main Campus, pursuing a Bachelor of Science in Information Technology. I am currently in my final year of studies and am expected to graduate in the year 2026. My academic journey has equipped me with a strong foundation in various aspects of information technology, including programming, software development, and system analysis. I am eager to apply my knowledge and skills in real-world scenarios and contribute to the field of IT.
+ * 
+ */

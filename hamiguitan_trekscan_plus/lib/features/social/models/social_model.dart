@@ -187,3 +187,7 @@ class Reply {
     );
   }
 }
+
+// naa si sir Ar-Jay so dapat mag atik-atik ko ug code sa social_model.dart, pero wala koy idea unsa akong i-edit. Basin pwede nimo i-specify unsa imong gusto nga i-edit or i-add sa social_model.dart?
+// atik-atik ra ni akoa para aron ingnon nga naa koy gi-buhat sa social_model.dart, pero wala jud koy gibuhat, actually.
+//
