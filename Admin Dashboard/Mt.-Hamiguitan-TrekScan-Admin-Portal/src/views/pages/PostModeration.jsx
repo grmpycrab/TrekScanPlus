@@ -18,7 +18,7 @@ const PRESET_DECLINE_REASONS = [
   'Potential misinformation or misleading content.',
 ];
 
-function PostModeration() {
+function PostModeration({ adminName = 'Admin' }) {
   const [activeTab, setActiveTab] = useState('pending');
   const [posts, setPosts] = useState({ pending: [], approved: [], declined: [] });
   const [loading, setLoading] = useState(true);
@@ -76,7 +76,7 @@ function PostModeration() {
   const handleApprove = async (postId) => {
     setSubmitting(postId);
     try {
-      await approvePost(postId, 'Admin');
+      await approvePost(postId, adminName);
       success('Post approved and published to the feed.');
       await fetchAllPosts();
     } catch (err) {
@@ -97,7 +97,7 @@ function PostModeration() {
     setSubmitting(postId);
     setDeclineModal({ open: false, postId: null });
     try {
-      await declinePost(postId, declineNote, 'Admin');
+      await declinePost(postId, declineNote, adminName);
       success('Post declined. The author will see your note.');
       await fetchAllPosts();
     } catch (err) {

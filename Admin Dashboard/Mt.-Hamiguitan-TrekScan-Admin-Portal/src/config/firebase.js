@@ -1,19 +1,16 @@
-// Firebase Configuration
 import { initializeApp } from 'firebase/app';
 import { getAuth } from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';
 import { getStorage } from 'firebase/storage';
 
-// Your Firebase configuration object
-// Get these values from your Firebase Console: Project Settings > General > Your apps
 const firebaseConfig = {
-  apiKey: "AIzaSyAr-3aDayxiHaRjbQoJ6wll1QRTvCoPAf8",
-  authDomain: "trekscanplus.firebaseapp.com",
-  projectId: "trekscanplus",
-  storageBucket: "trekscanplus.firebasestorage.app",
-  messagingSenderId: "431638508645",
-  appId: "1:431638508645:web:ad5f1ebd7e4c942baf028c",
-  measurementId: "G-CBEBE1C4LL"
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+  appId: import.meta.env.VITE_FIREBASE_APP_ID,
+  measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID,
 };
 
 // Initialize Firebase

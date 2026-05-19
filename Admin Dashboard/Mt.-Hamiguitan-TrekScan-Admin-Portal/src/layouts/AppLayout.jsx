@@ -19,7 +19,9 @@ import Certificates from '../views/pages/Certificates.jsx';
 import StationActivity from '../views/pages/StationActivity.jsx';
 import { useToast, ToastContainer } from '../components/Toast';
 
-function AppLayout({ onLogout }) {
+function AppLayout({ adminProfile, onLogout }) {
+  const adminName = [adminProfile?.firstName, adminProfile?.lastName].filter(Boolean).join(' ') || 'Administrator';
+
   const [activeItem, setActiveItem] = useState('dashboard');
   const [isAccountOpen, setIsAccountOpen] = useState(false);
   const [menuAnchor, setMenuAnchor] = useState(null);
@@ -43,13 +45,13 @@ function AppLayout({ onLogout }) {
   const actionsMenuRef = useRef(null);
   const { toasts, removeToast, success } = useToast();
   const [profileData, setProfileData] = useState({
-    firstName: 'Administrator',
-    lastName: '',
-    email: 'admin@trekscan.com',
-    gender: 'male',
-    address: '',
-    phoneNumber: '',
-    dateOfBirth: '',
+    firstName: adminProfile?.firstName || 'Administrator',
+    lastName: adminProfile?.lastName || '',
+    email: adminProfile?.email || '',
+    gender: adminProfile?.gender || 'male',
+    address: adminProfile?.homeAddress || '',
+    phoneNumber: adminProfile?.phoneNumber || '',
+    dateOfBirth: adminProfile?.birthDate || '',
     location: '',
     postalCode: ''
   });
@@ -834,7 +836,7 @@ function AppLayout({ onLogout }) {
                     )}
                   </div>
                   <div className="profile-info">
-                    <div className="profile-name">Administrator</div>
+                    <div className="profile-name">{adminName}</div>
                   </div>
                 </button>
                 
@@ -860,8 +862,8 @@ function AppLayout({ onLogout }) {
           {activeItem === 'users'        && <ManageSchedule />}
           {activeItem === 'reports'      && <Reports />}
           {activeItem === 'utility'      && <Utility />}
-          {activeItem === 'moderation'   && <PostModeration />}
-          {activeItem === 'certificates' && <Certificates />}
+          {activeItem === 'moderation'   && <PostModeration adminName={adminName} />}
+          {activeItem === 'certificates' && <Certificates adminName={adminName} />}
           {activeItem === 'stations'     && <StationActivity />}
         </main>
       </div>
@@ -900,7 +902,7 @@ function AppLayout({ onLogout }) {
                         </svg>
                       </label>
                     </div>
-                    <h2 className="profile-name">Administrator</h2>
+                    <h2 className="profile-name">{adminName}</h2>
                     <p className="profile-role">Administrator</p>
                   </div>
                   <nav className="profile-sidebar-nav">

@@ -72,6 +72,7 @@ class UserService {
 
       if (!doc.exists) {
         data['createdAt'] = FieldValue.serverTimestamp();
+        data['role'] = 'user';
         // Initialize social fields for new users
         data['postsCount'] = 0;
         data['followersCount'] = 0;

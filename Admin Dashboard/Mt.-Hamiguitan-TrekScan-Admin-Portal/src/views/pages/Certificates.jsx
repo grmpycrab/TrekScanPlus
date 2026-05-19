@@ -16,7 +16,7 @@ const CERT_COLORS = {
   camp3:         { bg: '#dbeafe', border: '#3b82f6', text: '#1e3a8a', dot: '#3b82f6' },
 };
 
-function Certificates() {
+function Certificates({ adminName = 'Admin' }) {
   const [eligibleUsers, setEligibleUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [issuing, setIssuing] = useState(null); // `${userId}_${certType}`
@@ -44,7 +44,7 @@ function Certificates() {
     const key = `${userId}_${certType}`;
     setIssuing(key);
     try {
-      await issueCertificate(userId, certType, trekkerName, session, 'Admin');
+      await issueCertificate(userId, certType, trekkerName, session, adminName);
       success(`${CERT_TYPE[certType].title} issued to ${trekkerName}.`);
       // Refresh to update issuedTypes
       await load();

@@ -87,12 +87,6 @@ function Login({ onLoginSuccess }) {
     }
   };
 
-  // Password validation checks
-  const passwordChecks = {
-    minLength: formData.password.length >= 6,
-    hasSpecialChar: /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(formData.password)
-  };
-
   // Validate form
   const validateForm = () => {
     const errors = {};
@@ -105,10 +99,6 @@ function Login({ onLoginSuccess }) {
     
     if (!formData.password) {
       errors.password = 'Password is required';
-    } else if (formData.password.length < 6) {
-      errors.password = 'Password must be at least 6 characters';
-    } else if (!/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(formData.password)) {
-      errors.password = 'Password must contain at least 1 special character';
     }
     
     setFormErrors(errors);
@@ -134,12 +124,8 @@ function Login({ onLoginSuccess }) {
       
       // Handle specific Firebase Auth errors
       let errorMessage = 'Login failed. Please try again.';
-      if (error.code === 'auth/user-not-found') {
-        errorMessage = 'No account found with this email.';
-        setFormErrors({ email: 'Email Validation Error' });
-      } else if (error.code === 'auth/wrong-password') {
-        errorMessage = 'Incorrect password.';
-        setFormErrors({ password: 'incorrect password' });
+      if (error.code === 'auth/invalid-credential' || error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password') {
+        errorMessage = 'Incorrect email or password.';
       } else if (error.code === 'auth/invalid-email') {
         errorMessage = 'Invalid email address.';
         setFormErrors({ email: 'Email Validation Error' });
@@ -224,30 +210,6 @@ function Login({ onLoginSuccess }) {
             )}
             {formErrors.password && formErrors.password !== 'incorrect password' && (
               <span className="field-error">{formErrors.password}</span>
-            )}
-            {formData.password && !formErrors.password && (
-              <div className="password-validation">
-                <div className={`password-check ${passwordChecks.minLength ? 'valid' : ''}`}>
-                  <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                    {passwordChecks.minLength ? (
-                      <path d="M13.3333 4L6 11.3333L2.66667 8" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                    ) : (
-                      <circle cx="8" cy="8" r="7" stroke="currentColor" strokeWidth="1.5"/>
-                    )}
-                  </svg>
-                  <span>Minimum 6 characters</span>
-                </div>
-                <div className={`password-check ${passwordChecks.hasSpecialChar ? 'valid' : ''}`}>
-                  <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                    {passwordChecks.hasSpecialChar ? (
-                      <path d="M13.3333 4L6 11.3333L2.66667 8" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                    ) : (
-                      <circle cx="8" cy="8" r="7" stroke="currentColor" strokeWidth="1.5"/>
-                    )}
-                  </svg>
-                  <span>Atleast 1 special character</span>
-                </div>
-              </div>
             )}
           </div>
 
