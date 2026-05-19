@@ -1,0 +1,134 @@
+/* ================================================================
+   TrekScan+ Admin — Design System Tokens
+   Single source of truth for all visual variables.
+   Import this file once in index.css — never in component files.
+================================================================ */
+
+:root {
+  /* ── Brand: Forest Green ──────────────────────────────────── */
+  --green-50:  #f0f7ee;
+  --green-100: #d4eacf;
+  --green-200: #a9d59e;
+  --green-300: #78bc6b;
+  --green-400: #4da038;
+  --green-500: #2d6b22;   /* brand primary */
+  --green-600: #245818;
+  --green-700: #1b4511;
+  --green-800: #12320c;
+  --green-900: #091f05;
+
+  /* ── Neutral ─────────────────────────────────────────────── */
+  --neutral-50:  #f8faf7;
+  --neutral-100: #f1f3ef;
+  --neutral-200: #e3e6e1;
+  --neutral-300: #cdd1ca;
+  --neutral-400: #9ea39b;
+  --neutral-500: #6b706a;
+  --neutral-600: #50554f;
+  --neutral-700: #383c37;
+  --neutral-800: #242824;
+  --neutral-900: #131513;
+
+  /* ── Status Colors ─────────────────────────────────────── */
+  --status-success-bg:   #ecfdf5;
+  --status-success-text: #14532d;
+  --status-success-border: #86efac;
+
+  --status-warning-bg:   #fffbeb;
+  --status-warning-text: #78350f;
+  --status-warning-border: #fcd34d;
+
+  --status-error-bg:     #fef2f2;
+  --status-error-text:   #7f1d1d;
+  --status-error-border: #fca5a5;
+
+  --status-info-bg:      #eff6ff;
+  --status-info-text:    #1e3a8a;
+  --status-info-border:  #93c5fd;
+
+  --status-pending-bg:   #fefce8;
+  --status-pending-text: #713f12;
+  --status-pending-border: #fde68a;
+
+  --status-neutral-bg:   #f3f4f6;
+  --status-neutral-text: #374151;
+  --status-neutral-border: #d1d5db;
+
+  /* ── Semantic Surfaces (Light) ─────────────────────────── */
+  --surface-page:        #f3f5f2;
+  --surface-card:        #ffffff;
+  --surface-raised:      #ffffff;
+  --surface-overlay:     rgba(0, 0, 0, 0.45);
+  --surface-input:       #f8faf7;
+
+  /* ── Header ─────────────────────────────────────────────── */
+  --header-bg:      #ffffff;
+  --header-border:  var(--neutral-200);
+  --header-height:  64px;
+
+  /* ── Sidebar (light) ────────────────────────────────────────── */
+  --sidebar-bg:             #ffffff;
+  --sidebar-border:         #e3e6e1;
+  --sidebar-text:           #6b706a;
+  --sidebar-text-hover:     #242824;
+  --sidebar-text-active:    #1b3118;
+  --sidebar-icon:           #9ea39b;
+  --sidebar-icon-hover:     #50554f;
+  --sidebar-icon-active:    #2d6b22;
+  --sidebar-item-hover:     #f1f3ef;
+  --sidebar-item-active:    #eaf5e7;
+  --sidebar-accent:         #2d6b22;
+  --sidebar-section-label:  #9ea39b;
+  --sidebar-logo-ring:      #e8f5e4;
+  --sidebar-width:          240px;
+  --sidebar-collapsed:      66px;
+
+  /* ── Typography ─────────────────────────────────────────── */
+  --text-primary:   #1a1f1a;
+  --text-secondary: #4f5450;
+  --text-muted:     #9ea39b;
+  --text-disabled:  #c4c8c3;
+  --text-on-dark:   #ffffff;
+  --text-link:      var(--green-500);
+
+  /* ── Border ──────────────────────────────────────────────── */
+  --border-default: var(--neutral-200);
+  --border-strong:  var(--neutral-300);
+  --border-subtle:  var(--neutral-100);
+  --border-focus:   var(--green-500);
+
+  /* ── Border Radius ───────────────────────────────────────── */
+  --radius-xs:   4px;
+  --radius-sm:   6px;
+  --radius-md:   8px;
+  --radius-lg:   12px;
+  --radius-xl:   16px;
+  --radius-2xl:  20px;
+  --radius-full: 9999px;
+
+  /* ── Elevation / Shadows ─────────────────────────────────── */
+  --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.04);
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.07), 0 1px 4px rgba(0, 0, 0, 0.04);
+  --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.09), 0 2px 8px rgba(0, 0, 0, 0.05);
+  --shadow-xl: 0 16px 40px rgba(0, 0, 0, 0.11), 0 4px 12px rgba(0, 0, 0, 0.06);
+
+  /* ── Spacing Scale ───────────────────────────────────────── */
+  --sp-1:   4px;
+  --sp-2:   8px;
+  --sp-3:   12px;
+  --sp-4:   16px;
+  --sp-5:   20px;
+  --sp-6:   24px;
+  --sp-8:   32px;
+  --sp-10:  40px;
+  --sp-12:  48px;
+  --sp-16:  64px;
+
+  /* ── Transitions ─────────────────────────────────────────── */
+  --t-fast:   120ms ease;
+  --t-base:   180ms ease;
+  --t-slow:   280ms ease;
+}
+
+/* Admin portal is always light — no dark-mode overrides. */

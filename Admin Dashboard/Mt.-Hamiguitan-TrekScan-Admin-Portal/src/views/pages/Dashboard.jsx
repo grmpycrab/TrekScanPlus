@@ -5,7 +5,8 @@ import { getAllBookings, formatBookingDate, subscribeToBookings } from '../../se
 import { getUserById } from '../../services/userService';
 import { getCurrentUser, onAuthStateChange } from '../../services/firebaseAuthService';
 import { Timestamp } from 'firebase/firestore';
-import '../style/Reports.css';
+import '../style/Dashboard.css';
+import '../style/shared.css';
 
 function Dashboard({ onNavigate }) {
   const [trekActivityData, setTrekActivityData] = useState({ days: [], values: [] });
@@ -467,7 +468,7 @@ function Dashboard({ onNavigate }) {
   );
 
   return (
-    <div style={{ paddingTop: '24px', paddingLeft: '32px', paddingRight: '32px', paddingBottom: '300px' }}>
+    <div>
         {/* Stats Cards Section */}
         <div className="dashboard-stats-cards" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '16px', marginBottom: '24px' }}>
           {/* Monthly Bookings Card */}
