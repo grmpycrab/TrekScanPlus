@@ -29,17 +29,24 @@
 
 .sidebar.collapsed { width: var(--sidebar-collapsed); }
 
-/* Header row inside sidebar */
+/* Header row inside sidebar — height locked to match top-header */
 .sidebar-head {
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 18px 16px 16px;
+  padding: 0 16px;
   border-bottom: 1px solid var(--sidebar-border);
-  min-height: 64px;
+  height: var(--header-height);
   flex-shrink: 0;
 }
 
+/* When collapsed, center the logo (now the only visible element) */
+.sidebar.collapsed .sidebar-head {
+  justify-content: center;
+  padding: 0 8px;
+}
+
+/* Logo wrap doubles as the collapse/expand toggle */
 .sidebar-logo-wrap {
   width: 36px;
   height: 36px;
@@ -51,6 +58,14 @@
   justify-content: center;
   flex-shrink: 0;
   overflow: hidden;
+  cursor: pointer;
+  transition: background var(--t-fast), border-color var(--t-fast), box-shadow var(--t-fast);
+}
+
+.sidebar-logo-wrap:hover {
+  background: var(--green-100);
+  border-color: var(--green-200);
+  box-shadow: var(--shadow-xs);
 }
 
 .sidebar-logo-wrap img {
@@ -84,26 +99,6 @@
   text-transform: uppercase;
 }
 
-/* Collapse toggle */
-.sidebar-toggle {
-  width: 28px;
-  height: 28px;
-  border-radius: var(--radius-sm);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--sidebar-text);
-  background: transparent;
-  border: none;
-  cursor: pointer;
-  flex-shrink: 0;
-  transition: background var(--t-fast), color var(--t-fast);
-}
-
-.sidebar-toggle:hover {
-  background: var(--sidebar-item-hover);
-  color: var(--sidebar-text-hover);
-}
 
 /* ── Nav items ─────────────────────────────────────────────── */
 .sidebar-nav {
@@ -267,10 +262,14 @@
   height: 36px;
   border-radius: var(--radius-md);
   color: var(--text-secondary);
-  transition: background var(--t-fast);
+  background: none;
+  border: none;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background var(--t-fast), color var(--t-fast);
 }
 
-.mobile-burger:hover { background: var(--neutral-100); }
+.mobile-burger:hover { background: var(--neutral-100); color: var(--text-primary); }
 
 .header-page-title {
   font-size: 1rem;

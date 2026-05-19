@@ -1,0 +1,189 @@
+/* ================================================================
+   Utility Center — hub & module-view styles
+================================================================ */
+
+/* ── Hub header ─────────────────────────────────────────────── */
+.uc-hub-header { margin-bottom: var(--sp-8); }
+
+.uc-breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: var(--sp-3);
+}
+
+.uc-breadcrumb-root  { font-size: 0.8125rem; color: var(--text-muted); }
+.uc-breadcrumb-sep   { color: var(--text-muted); flex-shrink: 0; }
+.uc-breadcrumb-current { font-size: 0.8125rem; font-weight: 500; color: var(--text-secondary); }
+
+.uc-hub-title {
+  font-size: 1.875rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  line-height: 1.2;
+  margin-bottom: var(--sp-2);
+  letter-spacing: -0.02em;
+}
+
+.uc-hub-desc {
+  font-size: 0.9375rem;
+  color: var(--text-secondary);
+  max-width: 580px;
+  line-height: 1.65;
+  margin: 0;
+}
+
+/* ── Module card grid ───────────────────────────────────────── */
+.uc-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--sp-5);
+}
+
+/* ── Module card ────────────────────────────────────────────── */
+.uc-card {
+  background: var(--surface-card);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-sm);
+  padding: var(--sp-6);
+  text-align: left;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+  cursor: pointer;
+  transition: box-shadow var(--t-base), border-color var(--t-base), transform var(--t-base);
+  position: relative;
+  overflow: hidden;
+}
+
+.uc-card::after {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, var(--green-400), var(--green-600));
+  opacity: 0;
+  transition: opacity var(--t-base);
+}
+
+.uc-card:hover {
+  box-shadow: var(--shadow-md);
+  border-color: var(--green-200);
+  transform: translateY(-3px);
+}
+
+.uc-card:hover::after { opacity: 1; }
+
+.uc-card-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--sp-3);
+}
+
+.uc-card-icon {
+  width: 52px;
+  height: 52px;
+  border-radius: var(--radius-lg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.uc-card-category {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 10px;
+  border-radius: var(--radius-full);
+  font-size: 0.625rem;
+  font-weight: 700;
+  background: var(--neutral-100);
+  color: var(--text-muted);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  align-self: flex-start;
+  margin-top: 4px;
+}
+
+.uc-card-title {
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  line-height: 1.3;
+  margin: 0;
+}
+
+.uc-card-desc {
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  line-height: 1.65;
+  flex: 1;
+  margin: 0;
+}
+
+.uc-card-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--green-600);
+  margin-top: var(--sp-2);
+  transition: gap var(--t-fast), color var(--t-fast);
+}
+
+.uc-card:hover .uc-card-cta {
+  gap: 8px;
+  color: var(--green-700);
+}
+
+/* ── Module view (full page with breadcrumb back) ──────────── */
+.uc-module-view {
+  display: flex;
+  flex-direction: column;
+}
+
+.uc-module-nav {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: var(--sp-5);
+  padding-bottom: var(--sp-4);
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.uc-back-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--green-600);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 6px 12px;
+  border-radius: var(--radius-md);
+  transition: background var(--t-fast), color var(--t-fast);
+}
+
+.uc-back-btn:hover {
+  background: var(--green-50);
+  color: var(--green-700);
+}
+
+.uc-nav-sep   { color: var(--text-muted); font-size: 0.875rem; }
+.uc-nav-label { font-size: 0.875rem; font-weight: 500; color: var(--text-secondary); }
+
+/* ── Responsive ─────────────────────────────────────────────── */
+@media (max-width: 900px) {
+  .uc-grid { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 640px) {
+  .uc-hub-title { font-size: 1.5rem; }
+  .uc-card { padding: var(--sp-5); }
+}

@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import './AppLayout.css';
 import logoImage from '../assets/TrekScan.png';
-import { Home, BarChart2, Settings, FileText, Shield, Award, MapPin, Calendar, ChevronLeft, ChevronRight, Bell, X, Search, CheckCircle, Trash2, MoreVertical, LogOut, Clock } from 'lucide-react';
+import { Home, BarChart2, Settings, FileText, Shield, Award, MapPin, Calendar, Bell, X, Search, CheckCircle, Trash2, MoreVertical, LogOut, Clock } from 'lucide-react';
 import { Hiking, Build, RateReview, CardMembership, LocationOn } from '@mui/icons-material';
 import { getAllBookings } from '../services/bookingService';
 import { getUserById } from '../services/userService';
@@ -12,33 +12,24 @@ import Dashboard from '../views/pages/Dashboard.jsx';
 import ClimbRequest from '../views/pages/ClimbRequest.jsx';
 import ManageSchedule from '../views/pages/ManageSchedule.jsx';
 import Reports from '../views/pages/Reports.jsx';
-import Utility from '../views/pages/Utility.jsx';
-import PostModeration from '../views/pages/PostModeration.jsx';
-import Certificates from '../views/pages/Certificates.jsx';
-import StationActivity from '../views/pages/StationActivity.jsx';
+import UtilityCenter from '../views/pages/UtilityCenter.jsx';
 import { useToast, ToastContainer } from '../components/Toast';
 
 // ── Nav configuration ──────────────────────────────────────────────────────
 const NAV_ITEMS = [
-  { id: 'dashboard',    label: 'Dashboard',        Icon: Home },
-  { id: 'climb',        label: 'Climb Requests',    Icon: Hiking,         muiIcon: true },
-  { id: 'users',        label: 'Booking Schedule',  Icon: Calendar },
-  { id: 'reports',      label: 'Reports',           Icon: BarChart2 },
-  { id: 'utility',      label: 'Utility',           Icon: Build,          muiIcon: true },
-  { id: 'moderation',   label: 'Post Moderation',   Icon: RateReview,     muiIcon: true },
-  { id: 'certificates', label: 'Certificates',      Icon: Award },
-  { id: 'stations',     label: 'Station Activity',  Icon: MapPin },
+  { id: 'dashboard', label: 'Dashboard',       Icon: Home },
+  { id: 'climb',     label: 'Climb Requests',  Icon: Hiking,    muiIcon: true },
+  { id: 'users',     label: 'Booking Schedule',Icon: Calendar },
+  { id: 'reports',   label: 'Reports',         Icon: BarChart2 },
+  { id: 'utility',   label: 'Utility Center',  Icon: Build,     muiIcon: true },
 ];
 
 const PAGE_TITLES = {
-  dashboard:    'Dashboard',
-  climb:        'Climb Requests',
-  users:        'Booking Schedule',
-  reports:      'Reports',
-  utility:      'Utility',
-  moderation:   'Post Moderation',
-  certificates: 'Certificates',
-  stations:     'Station Activity',
+  dashboard: 'Dashboard',
+  climb:     'Climb Requests',
+  users:     'Booking Schedule',
+  reports:   'Reports',
+  utility:   'Utility Center',
 };
 
 function timeAgoStr(date) {
@@ -229,25 +220,19 @@ function AppLayout({ adminProfile, onLogout }) {
       <aside className={`sidebar${collapsed ? ' collapsed' : ''}${mobileOpen ? ' mobile-open' : ''}`}>
         {/* Brand */}
         <div className="sidebar-head">
-          <div className="sidebar-logo-wrap">
+          <button
+            className="sidebar-logo-wrap"
+            onClick={() => setCollapsed(c => !c)}
+            title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+          >
             <img src={logoImage} alt="TrekScan+" />
-          </div>
+          </button>
           {!collapsed && (
             <div className="sidebar-brand">
               <div className="sidebar-brand-name">TrekScan+</div>
               <div className="sidebar-brand-sub">Heritage Admin</div>
             </div>
           )}
-          <button
-            className="sidebar-toggle"
-            onClick={() => setCollapsed(c => !c)}
-            title={collapsed ? 'Expand' : 'Collapse'}
-          >
-            {collapsed
-              ? <ChevronRight size={16} />
-              : <ChevronLeft  size={16} />
-            }
-          </button>
         </div>
 
         {/* Navigation */}
@@ -279,7 +264,7 @@ function AppLayout({ adminProfile, onLogout }) {
         {/* Header */}
         <header className="top-header">
           <div className="header-left">
-            <button className="mobile-burger header-icon-btn" onClick={() => setMobileOpen(o => !o)}>
+            <button className="mobile-burger" onClick={() => setMobileOpen(o => !o)}>
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
                 <path d="M3 12H21M3 6H21M3 18H21" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
               </svg>
@@ -425,14 +410,11 @@ function AppLayout({ adminProfile, onLogout }) {
 
         {/* Page content */}
         <main className="page-content">
-          {activeItem === 'dashboard'    && <Dashboard onNavigate={setActiveItem} />}
-          {activeItem === 'climb'        && <ClimbRequest bookingIdToOpen={bookingIdToOpen} onBookingOpened={() => setBookingIdToOpen(null)} />}
-          {activeItem === 'users'        && <ManageSchedule />}
-          {activeItem === 'reports'      && <Reports />}
-          {activeItem === 'utility'      && <Utility />}
-          {activeItem === 'moderation'   && <PostModeration adminName={adminName} />}
-          {activeItem === 'certificates' && <Certificates adminName={adminName} />}
-          {activeItem === 'stations'     && <StationActivity />}
+          {activeItem === 'dashboard' && <Dashboard onNavigate={setActiveItem} />}
+          {activeItem === 'climb'     && <ClimbRequest bookingIdToOpen={bookingIdToOpen} onBookingOpened={() => setBookingIdToOpen(null)} />}
+          {activeItem === 'users'     && <ManageSchedule />}
+          {activeItem === 'reports'   && <Reports />}
+          {activeItem === 'utility'   && <UtilityCenter adminName={adminName} />}
         </main>
       </div>
 
