@@ -2,15 +2,25 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 
 enum PostPrivacy { public, followers, private }
 
+/// Moderation lifecycle for a social post.
+/// - pending  : default on creation, not visible in public feed
+/// - approved : visible in public feed (set by admin)
+/// - declined : rejected by moderator, never visible in public feed
+enum PostStatus { pending, approved, declined }
+
 class SocialPost {
   String? id;
   final String userId;
   final String userName;
   final String? userPhotoUrl;
-  final String? userRole; // e.g., "Designer", "Trekker", etc.
+  final String? userRole;
   final String caption;
   final List<String> imageUrls; // Max 4 images
   final PostPrivacy privacy;
+  final PostStatus status;
+  final String? moderatorNote; // populated when status == declined
+  final Timestamp? reviewedAt;
+  final String? reviewedBy; // admin UID who reviewed
   final int likesCount;
   final int commentsCount;
   final int sharesCount;
@@ -27,6 +37,10 @@ class SocialPost {
     required this.caption,
     required this.imageUrls,
     this.privacy = PostPrivacy.public,
+    this.status = PostStatus.pending,
+    this.moderatorNote,
+    this.reviewedAt,
+    this.reviewedBy,
     this.likesCount = 0,
     this.commentsCount = 0,
     this.sharesCount = 0,
@@ -45,6 +59,10 @@ class SocialPost {
       'caption': caption,
       'imageUrls': imageUrls,
       'privacy': privacy.name,
+      'status': status.name,
+      if (moderatorNote != null) 'moderatorNote': moderatorNote,
+      if (reviewedAt != null) 'reviewedAt': reviewedAt,
+      if (reviewedBy != null) 'reviewedBy': reviewedBy,
       'likesCount': likesCount,
       'commentsCount': commentsCount,
       'sharesCount': sharesCount,
@@ -72,6 +90,15 @@ class SocialPost {
         (p) => p.name == (data['privacy'] as String? ?? 'public'),
         orElse: () => PostPrivacy.public,
       ),
+      // Existing posts without a status field default to approved for
+      // backward compatibility — only new posts start as pending.
+      status: PostStatus.values.firstWhere(
+        (s) => s.name == (data['status'] as String? ?? 'approved'),
+        orElse: () => PostStatus.approved,
+      ),
+      moderatorNote: data['moderatorNote'] as String?,
+      reviewedAt: data['reviewedAt'] as Timestamp?,
+      reviewedBy: data['reviewedBy'] as String?,
       likesCount: (data['likesCount'] as num?)?.toInt() ?? 0,
       commentsCount: (data['commentsCount'] as num?)?.toInt() ?? 0,
       sharesCount: (data['sharesCount'] as num?)?.toInt() ?? 0,
@@ -188,6 +215,3 @@ class Reply {
   }
 }
 
-// naa si sir Ar-Jay so dapat mag atik-atik ko ug code sa social_model.dart, pero wala koy idea unsa akong i-edit. Basin pwede nimo i-specify unsa imong gusto nga i-edit or i-add sa social_model.dart?
-// atik-atik ra ni akoa para aron ingnon nga naa koy gi-buhat sa social_model.dart, pero wala jud koy gibuhat, actually.
-//

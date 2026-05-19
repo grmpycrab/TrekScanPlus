@@ -5,6 +5,7 @@ import '../features/auth/screens/signup_screen.dart';
 import '../features/auth/screens/email_verification_screen.dart';
 import '../screens/main/main_screen.dart';
 import '../features/booking/screens/book_a_climb_screen.dart';
+import '../features/social/screens/my_posts_screen.dart';
 
 /// Global navigator key — required for navigation outside of widget context
 /// (deep links, push notifications).
@@ -42,6 +43,12 @@ class AppRouter {
       return MaterialPageRoute(
         builder: (context) =>
             BookAClimbScreenRefactored(highlightBookingId: bookingId),
+      );
+    }
+
+    if (settings.name == '/my-posts') {
+      return MaterialPageRoute(
+        builder: (context) => const MyPostsScreen(),
       );
     }
 

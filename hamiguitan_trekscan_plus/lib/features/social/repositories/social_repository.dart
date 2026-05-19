@@ -34,6 +34,9 @@ class SocialRepository {
   }
 
   /// Create a new post.
+  ///
+  /// All new posts start with [PostStatus.pending] and become visible in the
+  /// public feed only after an admin approves them.
   Future<String> createPost({
     required String caption,
     required List<String> imageUrls,
@@ -49,6 +52,7 @@ class SocialRepository {
       caption: caption,
       imageUrls: imageUrls,
       privacy: privacy,
+      status: PostStatus.pending,
     );
 
     final docRef = await _firestore.collection('posts').add(post.toMap());
@@ -63,8 +67,8 @@ class SocialRepository {
     }
 
     NotificationManager.showSuccess(
-      title: 'Post Created ✓',
-      message: 'Your post has been shared successfully!',
+      title: 'Post Submitted ✓',
+      message: 'Your post is pending review and will appear once approved.',
     );
 
     return docRef.id;
@@ -181,6 +185,8 @@ class SocialRepository {
                 .map((doc) {
                   try {
                     final post = SocialPost.fromDoc(doc);
+                    // Only approved posts appear in the public feed.
+                    if (post.status != PostStatus.approved) return null;
                     if (post.privacy == PostPrivacy.public) return post;
                     if (post.privacy == PostPrivacy.followers) {
                       if (post.userId == currentUser.uid ||
@@ -274,6 +280,8 @@ class SocialRepository {
           }
 
           final filteredPosts = posts.where((post) {
+            // Non-owners only see approved posts.
+            if (post.status != PostStatus.approved) return false;
             if (post.privacy == PostPrivacy.public) return true;
             if (post.privacy == PostPrivacy.private) return false;
             if (post.privacy == PostPrivacy.followers) {
@@ -348,6 +356,28 @@ class SocialRepository {
       title: 'Post Deleted',
       message: 'Your post has been removed successfully.',
     );
+  }
+
+  /// Stream all posts created by the currently authenticated user,
+  /// regardless of status. Used by the My Posts management screen so
+  /// users can see their pending/declined posts and any rejection notes.
+  Stream<List<SocialPost>> streamMyPosts() {
+    final user = _auth.currentUser;
+    if (user == null) return Stream.value([]);
+
+    return _firestore
+        .collection('posts')
+        .where('userId', isEqualTo: user.uid)
+        .orderBy('createdAt', descending: true)
+        .limit(maxPostsLimit)
+        .snapshots()
+        .map(
+          (snap) => snap.docs.map((doc) => SocialPost.fromDoc(doc)).toList(),
+        )
+        .handleError((error) {
+          AppLogger.e('Stream error in streamMyPosts: $error');
+          return <SocialPost>[];
+        });
   }
 
   // ---------------------------------------------------------------------------
@@ -790,6 +820,10 @@ class SocialRepository {
                     commentsCount: post.commentsCount,
                     sharesCount: post.sharesCount,
                     privacy: post.privacy,
+                    status: post.status,
+                    moderatorNote: post.moderatorNote,
+                    reviewedAt: post.reviewedAt,
+                    reviewedBy: post.reviewedBy,
                     isBookmarked: true,
                   ),
                 );

@@ -45,6 +45,54 @@ class BookingStatusHelper {
 }
 
 // -----------------------------------------------------------------------------
+// POST MODERATION STATUS  (pending / approved / declined)
+// -----------------------------------------------------------------------------
+
+/// Centralised color, icon, and label mappings for social post moderation statuses.
+class PostStatusHelper {
+  PostStatusHelper._();
+
+  static Color color(String status) {
+    switch (status) {
+      case 'approved':
+        return Colors.green;
+      case 'declined':
+        return Colors.red;
+      case 'pending':
+        return Colors.orange;
+      default:
+        return Colors.grey.shade500;
+    }
+  }
+
+  static IconData icon(String status) {
+    switch (status) {
+      case 'approved':
+        return Icons.check_circle;
+      case 'declined':
+        return Icons.cancel;
+      case 'pending':
+        return Icons.hourglass_empty;
+      default:
+        return Icons.help_outline;
+    }
+  }
+
+  static String label(String status) {
+    switch (status) {
+      case 'approved':
+        return 'Approved';
+      case 'declined':
+        return 'Declined';
+      case 'pending':
+        return 'Pending Review';
+      default:
+        return 'Unknown';
+    }
+  }
+}
+
+// -----------------------------------------------------------------------------
 // CLIMB SESSION STATUS  (ongoing / completed / abandoned)
 // -----------------------------------------------------------------------------
 
