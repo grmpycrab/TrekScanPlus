@@ -279,23 +279,40 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
     TextInputType keyboardType = TextInputType.text,
     int maxLines = 1,
   }) {
+    final colors = context.colors;
     return Padding(
-      padding: const EdgeInsets.only(bottom: 16),
+      padding: const EdgeInsets.only(bottom: 14),
       child: TextFormField(
         controller: controller,
         enabled: !_isLoading,
         keyboardType: keyboardType,
         maxLines: maxLines,
+        style: TextStyle(fontSize: 14, color: colors.text),
         decoration: InputDecoration(
           labelText: label,
           hintText: hint,
-          border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+          labelStyle: TextStyle(fontSize: 13, color: colors.textSecondary),
+          hintStyle: TextStyle(fontSize: 13, color: colors.textTertiary),
+          contentPadding:
+              const EdgeInsets.symmetric(horizontal: 14, vertical: 13),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(10),
+            borderSide: BorderSide(color: colors.border, width: 0.8),
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(10),
+            borderSide: BorderSide(color: colors.border, width: 0.8),
+          ),
           focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(8),
-            borderSide: BorderSide(color: context.colors.primary),
+            borderRadius: BorderRadius.circular(10),
+            borderSide: BorderSide(color: colors.primary, width: 1.5),
+          ),
+          disabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(10),
+            borderSide: BorderSide(color: colors.borderLight, width: 0.6),
           ),
           filled: true,
-          fillColor: context.colors.inputFill,
+          fillColor: colors.inputFill,
         ),
       ),
     );
@@ -304,362 +321,441 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
   @override
   Widget build(BuildContext context) {
     final colors = context.colors;
+
     if (_isInitializing) {
       return Scaffold(
         backgroundColor: colors.background,
-        appBar: AppBar(
-          title: const Text(
-            'Account Settings',
-            style: TextStyle(fontWeight: FontWeight.bold),
+        body: SafeArea(
+          child: Column(
+            children: [
+              _buildHeader(context, colors),
+              const Expanded(child: Center(child: CircularProgressIndicator())),
+            ],
           ),
-          leading: IconButton(
-            icon: const Icon(Icons.arrow_back),
-            onPressed: () => Navigator.pop(context),
-          ),
-          elevation: 0,
         ),
-        body: const Center(child: CircularProgressIndicator()),
       );
     }
 
     return Scaffold(
       backgroundColor: colors.background,
-      appBar: AppBar(
-        title: const Text(
-          'Account Settings',
-          style: TextStyle(fontWeight: FontWeight.bold),
-        ),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () => Navigator.pop(context),
-        ),
-        elevation: 0,
-      ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
+      body: SafeArea(
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Error Message
-            if (_errorMessage != null)
-              Container(
-                padding: const EdgeInsets.all(12),
-                margin: const EdgeInsets.only(bottom: 16),
-                decoration: BoxDecoration(
-                  color: Color(0xFFFFEBEE),
-                  border: Border.all(color: Colors.red.shade200),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Row(
+            _buildHeader(context, colors),
+            Expanded(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.fromLTRB(16, 20, 16, 40),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Icon(Icons.error_outline, color: Colors.red.shade700),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Text(
-                        _errorMessage!,
-                        style: TextStyle(color: Colors.red.shade700),
+                    if (_errorMessage != null)
+                      _StatusBanner(
+                        icon: Icons.error_outline_rounded,
+                        message: _errorMessage!,
+                        bgColor: Colors.red.withValues(alpha: 0.08),
+                        borderColor: Colors.red.withValues(alpha: 0.25),
+                        textColor: Colors.red.shade700,
                       ),
-                    ),
-                  ],
-                ),
-              ),
-
-            // Success Message
-            if (_successMessage != null)
-              Container(
-                padding: const EdgeInsets.all(12),
-                margin: const EdgeInsets.only(bottom: 16),
-                decoration: BoxDecoration(
-                  color: colors.green50,
-                  border: Border.all(color: colors.green200),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Row(
-                  children: [
-                    Icon(Icons.check_circle_outline, color: colors.green700),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Text(
-                        _successMessage!,
-                        style: TextStyle(color: colors.green700),
+                    if (_successMessage != null)
+                      _StatusBanner(
+                        icon: Icons.check_circle_outline_rounded,
+                        message: _successMessage!,
+                        bgColor: colors.green50,
+                        borderColor: colors.green200,
+                        textColor: colors.green700,
                       ),
-                    ),
-                  ],
-                ),
-              ),
-
-            // Name Change Cooldown Warning
-            if (_nameChangeCooldownDays > 0)
-              Container(
-                padding: const EdgeInsets.all(12),
-                margin: const EdgeInsets.only(bottom: 16),
-                decoration: BoxDecoration(
-                  color: Color(0xFFFFE0B2),
-                  border: Border.all(color: Color(0xFFFFCC80)),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Row(
-                  children: [
-                    Icon(Icons.info_outline, color: Color(0xFFF57C00)),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Text(
-                        'You can change your name in $_nameChangeCooldownDays days',
-                        style: TextStyle(color: Color(0xFFF57C00)),
+                    if (_nameChangeCooldownDays > 0)
+                      _StatusBanner(
+                        icon: Icons.schedule_rounded,
+                        message:
+                            'You can change your name in $_nameChangeCooldownDays days',
+                        bgColor: Colors.orange.withValues(alpha: 0.08),
+                        borderColor: Colors.orange.withValues(alpha: 0.3),
+                        textColor: Colors.orange.shade800,
                       ),
-                    ),
-                  ],
-                ),
-              ),
 
-            // Personal Information Section
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: colors.surface,
-                borderRadius: BorderRadius.circular(12),
-                boxShadow: [
-                  BoxShadow(
-                    color: colors.shadowLight,
-                    blurRadius: 10,
-                    offset: const Offset(0, 1),
-                  ),
-                ],
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.all(8),
-                        decoration: BoxDecoration(
-                          color: colors.primary.withValues(alpha: 0.1),
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: Icon(
-                          Icons.person_outline,
-                          color: colors.primary,
-                          size: 24,
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Text(
-                        'Personal Information',
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                          color: colors.text,
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 20),
-
-                  // First Name
-                  _buildTextField(
-                    controller: _firstNameController,
-                    label: 'First Name',
-                    hint: 'Enter your first name',
-                  ),
-
-                  // Last Name
-                  _buildTextField(
-                    controller: _lastNameController,
-                    label: 'Last Name',
-                    hint: 'Enter your last name',
-                  ),
-
-                  // Phone Number
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: 16),
-                    child: TextFormField(
-                      controller: _phoneController,
-                      enabled: !_isLoading,
-                      keyboardType: TextInputType.phone,
-                      decoration: InputDecoration(
-                        labelText: 'Phone Number',
-                        hintText: 'e.g., 09123456789 or (02)1234567',
-                        helperText: _phoneValidationError == null
-                            ? 'Philippine mobile or landline number'
-                            : null,
-                        errorText: _phoneValidationError,
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(8),
-                          borderSide: BorderSide(
-                            color: _phoneValidationError != null
-                                ? Colors.red
-                                : Colors.grey,
+                    // ── Personal Information card ────────────────────────────
+                    Container(
+                      decoration: BoxDecoration(
+                        color: colors.surface,
+                        borderRadius: BorderRadius.circular(14),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.05),
+                            blurRadius: 8,
+                            offset: const Offset(0, 2),
                           ),
-                        ),
-                        enabledBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(8),
-                          borderSide: BorderSide(
-                            color: _phoneValidationError != null
-                                ? Colors.red
-                                : Colors.grey.shade300,
-                          ),
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(8),
-                          borderSide: BorderSide(
-                            color: _phoneValidationError != null
-                                ? Colors.red
-                                : colors.primary,
-                          ),
-                        ),
-                        filled: true,
-                        fillColor: context.colors.inputFill,
-                        prefixIcon: Icon(
-                          Icons.phone,
-                          color: _phoneValidationError != null
-                              ? Colors.red
-                              : null,
-                        ),
+                        ],
                       ),
-                      onChanged: (value) {
-                        // Real-time validation
-                        setState(() {
-                          _phoneValidationError = _validatePhoneNumber(value);
-                        });
-
-                        // Clear general error message when user starts typing
-                        if (_errorMessage != null &&
-                            _errorMessage!.contains('phone')) {
-                          setState(() {
-                            _errorMessage = null;
-                          });
-                        }
-                      },
-                    ),
-                  ),
-
-                  // Birth Date
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: 16),
-                    child: TextFormField(
-                      controller: _birthDateController,
-                      enabled: !_isLoading,
-                      readOnly: true,
-                      onTap: _selectDate,
-                      decoration: InputDecoration(
-                        labelText: 'Birth Date',
-                        hintText: 'Select your birth date',
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(8),
-                          borderSide: BorderSide(color: colors.primary),
-                        ),
-                        filled: true,
-                        fillColor: context.colors.inputFill,
-                        suffixIcon: const Icon(Icons.calendar_today),
-                      ),
-                    ),
-                  ),
-
-                  // Gender
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: 24),
-                    child: DropdownButtonFormField<String>(
-                      value: _selectedGender,
-                      decoration: InputDecoration(
-                        labelText: 'Gender',
-                        hintText: 'Select your gender',
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(8),
-                          borderSide: BorderSide(color: colors.primary),
-                        ),
-                        filled: true,
-                        fillColor: context.colors.inputFill,
-                      ),
-                      items: const [
-                        DropdownMenuItem(value: 'Male', child: Text('Male')),
-                        DropdownMenuItem(
-                          value: 'Female',
-                          child: Text('Female'),
-                        ),
-                        DropdownMenuItem(value: 'Other', child: Text('Other')),
-                      ],
-                      onChanged: _isLoading
-                          ? null
-                          : (value) {
-                              setState(() {
-                                _selectedGender = value;
-                              });
-                            },
-                    ),
-                  ),
-
-                  // Nationality
-                  _buildTextField(
-                    controller: _nationalityController,
-                    label: 'Nationality',
-                    hint: 'Enter your nationality',
-                  ),
-
-                  // Home Address
-                  _buildTextField(
-                    controller: _homeAddressController,
-                    label: 'Home Address',
-                    hint: 'Enter your home address',
-                    maxLines: 2,
-                  ),
-                ],
-              ),
-            ),
-
-            const SizedBox(height: 20),
-
-            // Save Button
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                onPressed: _isLoading ? null : _saveChanges,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: colors.primary,
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  elevation: 2,
-                ),
-                child: _isLoading
-                    ? const SizedBox(
-                        height: 20,
-                        width: 20,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          valueColor: AlwaysStoppedAnimation<Color>(
-                            SharedColors.white,
-                          ),
-                        ),
-                      )
-                    : const Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Icon(Icons.save, color: SharedColors.white, size: 20),
-                          SizedBox(width: 8),
-                          Text(
-                            'Save Changes',
-                            style: TextStyle(
-                              color: SharedColors.white,
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
+                          // Card header
+                          Padding(
+                            padding: const EdgeInsets.fromLTRB(16, 14, 16, 12),
+                            child: Row(
+                              children: [
+                                Container(
+                                  width: 32,
+                                  height: 32,
+                                  alignment: Alignment.center,
+                                  decoration: BoxDecoration(
+                                    color: colors.primary.withValues(alpha: 0.08),
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  child: Icon(
+                                    Icons.person_outline_rounded,
+                                    color: colors.primary,
+                                    size: 16,
+                                  ),
+                                ),
+                                const SizedBox(width: 11),
+                                Text(
+                                  'Personal Information',
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w600,
+                                    color: colors.text,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          Divider(
+                            height: 1,
+                            thickness: 0.6,
+                            color: colors.borderLight,
+                          ),
+                          // Form fields
+                          Padding(
+                            padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
+                            child: Column(
+                              children: [
+                                _buildTextField(
+                                  controller: _firstNameController,
+                                  label: 'First Name',
+                                  hint: 'Enter your first name',
+                                ),
+                                _buildTextField(
+                                  controller: _lastNameController,
+                                  label: 'Last Name',
+                                  hint: 'Enter your last name',
+                                ),
+                                Padding(
+                                  padding: const EdgeInsets.only(bottom: 14),
+                                  child: TextFormField(
+                                    controller: _phoneController,
+                                    enabled: !_isLoading,
+                                    keyboardType: TextInputType.phone,
+                                    style: TextStyle(
+                                        fontSize: 14, color: colors.text),
+                                    decoration: InputDecoration(
+                                      labelText: 'Phone Number',
+                                      hintText: 'e.g., 09123456789',
+                                      labelStyle: TextStyle(
+                                          fontSize: 13,
+                                          color: colors.textSecondary),
+                                      hintStyle: TextStyle(
+                                          fontSize: 13,
+                                          color: colors.textTertiary),
+                                      helperText: _phoneValidationError == null
+                                          ? 'Philippine mobile or landline number'
+                                          : null,
+                                      errorText: _phoneValidationError,
+                                      contentPadding:
+                                          const EdgeInsets.symmetric(
+                                              horizontal: 14, vertical: 13),
+                                      border: OutlineInputBorder(
+                                        borderRadius:
+                                            BorderRadius.circular(10),
+                                        borderSide: BorderSide(
+                                            color: colors.border, width: 0.8),
+                                      ),
+                                      enabledBorder: OutlineInputBorder(
+                                        borderRadius:
+                                            BorderRadius.circular(10),
+                                        borderSide: BorderSide(
+                                          color: _phoneValidationError != null
+                                              ? Colors.red
+                                              : colors.border,
+                                          width: 0.8,
+                                        ),
+                                      ),
+                                      focusedBorder: OutlineInputBorder(
+                                        borderRadius:
+                                            BorderRadius.circular(10),
+                                        borderSide: BorderSide(
+                                          color: _phoneValidationError != null
+                                              ? Colors.red
+                                              : colors.primary,
+                                          width: 1.5,
+                                        ),
+                                      ),
+                                      filled: true,
+                                      fillColor: colors.inputFill,
+                                      prefixIcon: Icon(
+                                        Icons.phone_outlined,
+                                        size: 18,
+                                        color: _phoneValidationError != null
+                                            ? Colors.red
+                                            : colors.iconMuted,
+                                      ),
+                                    ),
+                                    onChanged: (value) {
+                                      setState(() {
+                                        _phoneValidationError =
+                                            _validatePhoneNumber(value);
+                                      });
+                                      if (_errorMessage != null &&
+                                          _errorMessage!.contains('phone')) {
+                                        setState(() => _errorMessage = null);
+                                      }
+                                    },
+                                  ),
+                                ),
+                                Padding(
+                                  padding: const EdgeInsets.only(bottom: 14),
+                                  child: TextFormField(
+                                    controller: _birthDateController,
+                                    enabled: !_isLoading,
+                                    readOnly: true,
+                                    onTap: _selectDate,
+                                    style: TextStyle(
+                                        fontSize: 14, color: colors.text),
+                                    decoration: InputDecoration(
+                                      labelText: 'Birth Date',
+                                      hintText: 'Select your birth date',
+                                      labelStyle: TextStyle(
+                                          fontSize: 13,
+                                          color: colors.textSecondary),
+                                      contentPadding:
+                                          const EdgeInsets.symmetric(
+                                              horizontal: 14, vertical: 13),
+                                      border: OutlineInputBorder(
+                                        borderRadius:
+                                            BorderRadius.circular(10),
+                                        borderSide: BorderSide(
+                                            color: colors.border, width: 0.8),
+                                      ),
+                                      enabledBorder: OutlineInputBorder(
+                                        borderRadius:
+                                            BorderRadius.circular(10),
+                                        borderSide: BorderSide(
+                                            color: colors.border, width: 0.8),
+                                      ),
+                                      focusedBorder: OutlineInputBorder(
+                                        borderRadius:
+                                            BorderRadius.circular(10),
+                                        borderSide: BorderSide(
+                                            color: colors.primary, width: 1.5),
+                                      ),
+                                      filled: true,
+                                      fillColor: colors.inputFill,
+                                      suffixIcon: Icon(
+                                        Icons.calendar_today_outlined,
+                                        size: 18,
+                                        color: colors.iconMuted,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                                Padding(
+                                  padding: const EdgeInsets.only(bottom: 14),
+                                  child: DropdownButtonFormField<String>(
+                                    value: _selectedGender,
+                                    style: TextStyle(
+                                        fontSize: 14, color: colors.text),
+                                    decoration: InputDecoration(
+                                      labelText: 'Gender',
+                                      hintText: 'Select your gender',
+                                      labelStyle: TextStyle(
+                                          fontSize: 13,
+                                          color: colors.textSecondary),
+                                      contentPadding:
+                                          const EdgeInsets.symmetric(
+                                              horizontal: 14, vertical: 13),
+                                      border: OutlineInputBorder(
+                                        borderRadius:
+                                            BorderRadius.circular(10),
+                                        borderSide: BorderSide(
+                                            color: colors.border, width: 0.8),
+                                      ),
+                                      enabledBorder: OutlineInputBorder(
+                                        borderRadius:
+                                            BorderRadius.circular(10),
+                                        borderSide: BorderSide(
+                                            color: colors.border, width: 0.8),
+                                      ),
+                                      focusedBorder: OutlineInputBorder(
+                                        borderRadius:
+                                            BorderRadius.circular(10),
+                                        borderSide: BorderSide(
+                                            color: colors.primary, width: 1.5),
+                                      ),
+                                      filled: true,
+                                      fillColor: colors.inputFill,
+                                    ),
+                                    items: const [
+                                      DropdownMenuItem(
+                                          value: 'Male', child: Text('Male')),
+                                      DropdownMenuItem(
+                                          value: 'Female',
+                                          child: Text('Female')),
+                                      DropdownMenuItem(
+                                          value: 'Other', child: Text('Other')),
+                                    ],
+                                    onChanged: _isLoading
+                                        ? null
+                                        : (value) => setState(
+                                            () => _selectedGender = value),
+                                  ),
+                                ),
+                                _buildTextField(
+                                  controller: _nationalityController,
+                                  label: 'Nationality',
+                                  hint: 'Enter your nationality',
+                                ),
+                                _buildTextField(
+                                  controller: _homeAddressController,
+                                  label: 'Home Address',
+                                  hint: 'Enter your home address',
+                                  maxLines: 2,
+                                ),
+                              ],
                             ),
                           ),
                         ],
                       ),
+                    ),
+
+                    const SizedBox(height: 20),
+
+                    // ── Save Button ───────────────────────────────────────────
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton(
+                        onPressed: _isLoading ? null : _saveChanges,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: colors.primary,
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          elevation: 0,
+                        ),
+                        child: _isLoading
+                            ? const SizedBox(
+                                height: 20,
+                                width: 20,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  valueColor: AlwaysStoppedAnimation<Color>(
+                                    Colors.white,
+                                  ),
+                                ),
+                              )
+                            : const Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(Icons.save_outlined,
+                                      color: Colors.white, size: 18),
+                                  SizedBox(width: 8),
+                                  Text(
+                                    'Save Changes',
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 15,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
-
-            const SizedBox(height: 32),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildHeader(BuildContext context, AppTheme colors) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
+      decoration: BoxDecoration(
+        color: colors.surface,
+        border: Border(
+          bottom: BorderSide(color: colors.border, width: 0.8),
+        ),
+      ),
+      child: Row(
+        children: [
+          IconButton(
+            icon: Icon(
+              Icons.arrow_back_ios_new_rounded,
+              color: colors.text,
+              size: 20,
+            ),
+            onPressed: () => Navigator.pop(context),
+          ),
+          Expanded(
+            child: Text(
+              'Account Settings',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                color: colors.text,
+                fontSize: 17,
+                fontWeight: FontWeight.w600,
+                letterSpacing: 0.1,
+              ),
+            ),
+          ),
+          const SizedBox(width: 48),
+        ],
+      ),
+    );
+  }
+}
+
+class _StatusBanner extends StatelessWidget {
+  const _StatusBanner({
+    required this.icon,
+    required this.message,
+    required this.bgColor,
+    required this.borderColor,
+    required this.textColor,
+  });
+
+  final IconData icon;
+  final String message;
+  final Color bgColor;
+  final Color borderColor;
+  final Color textColor;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
+      margin: const EdgeInsets.only(bottom: 14),
+      decoration: BoxDecoration(
+        color: bgColor,
+        border: Border.all(color: borderColor),
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: Row(
+        children: [
+          Icon(icon, color: textColor, size: 18),
+          const SizedBox(width: 11),
+          Expanded(
+            child: Text(
+              message,
+              style: TextStyle(color: textColor, fontSize: 13, height: 1.4),
+            ),
+          ),
+        ],
       ),
     );
   }

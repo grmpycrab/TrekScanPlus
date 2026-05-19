@@ -14,13 +14,17 @@ class BadgesScreen extends StatefulWidget {
   State<BadgesScreen> createState() => _BadgesScreenState();
 }
 
-class _BadgesScreenState extends State<BadgesScreen> {
+class _BadgesScreenState extends State<BadgesScreen>
+    with SingleTickerProviderStateMixin {
   late Future<List<UserBadge>> _badgesFuture;
   Set<String> _selectedRarities = {};
   Set<String> _selectedCategories = {};
   Set<String> _selectedDifficulties = {};
   late AchievementService _achievementService;
   Map<String, DateTime> _acquiredBadges = {};
+
+  // Grid / list view toggle
+  bool _isGridView = true;
 
   @override
   void initState() {
@@ -30,13 +34,8 @@ class _BadgesScreenState extends State<BadgesScreen> {
   }
 
   Future<List<UserBadge>> _loadBadgesAndAchievements() async {
-    // Initialize achievement service if not already done
     await _achievementService.init();
-
-    // Load acquired achievements
     _updateAcquiredBadges();
-
-    // Load badges
     return _loadAllBadges();
   }
 
@@ -64,15 +63,12 @@ class _BadgesScreenState extends State<BadgesScreen> {
 
   List<UserBadge> _filterBadges(List<UserBadge> badges) {
     return badges.where((badge) {
-      bool matchesRarity =
-          _selectedRarities.isEmpty || _selectedRarities.contains(badge.rarity);
-      bool matchesCategory =
-          _selectedCategories.isEmpty ||
+      final matchesRarity = _selectedRarities.isEmpty ||
+          _selectedRarities.contains(badge.rarity);
+      final matchesCategory = _selectedCategories.isEmpty ||
           _selectedCategories.contains(badge.category);
-      bool matchesDifficulty =
-          _selectedDifficulties.isEmpty ||
+      final matchesDifficulty = _selectedDifficulties.isEmpty ||
           _selectedDifficulties.contains(badge.difficulty);
-
       return matchesRarity && matchesCategory && matchesDifficulty;
     }).toList();
   }
@@ -97,6 +93,41 @@ class _BadgesScreenState extends State<BadgesScreen> {
     );
   }
 
+  void _navigateToDetail(UserBadge badge) {
+    final isAcquired = _acquiredBadges.containsKey(badge.id);
+    final acquiredDate = _acquiredBadges[badge.id];
+    Navigator.push(
+      context,
+      PageRouteBuilder(
+        pageBuilder: (context, animation, secondaryAnimation) =>
+            BadgeDetailScreen(
+          badge: badge,
+          isAcquired: isAcquired,
+          acquiredDate: acquiredDate,
+        ),
+        transitionsBuilder: (context, animation, secondaryAnimation, child) {
+          return FadeTransition(
+            opacity: CurvedAnimation(
+              parent: animation,
+              curve: Curves.easeOut,
+            ),
+            child: SlideTransition(
+              position: Tween<Offset>(
+                begin: const Offset(0, 0.06),
+                end: Offset.zero,
+              ).animate(CurvedAnimation(
+                parent: animation,
+                curve: Curves.easeOutCubic,
+              )),
+              child: child,
+            ),
+          );
+        },
+        transitionDuration: const Duration(milliseconds: 300),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final colors = context.colors;
@@ -105,7 +136,7 @@ class _BadgesScreenState extends State<BadgesScreen> {
       body: SafeArea(
         child: Column(
           children: [
-            _buildHeader(),
+            _buildHeader(colors),
             Expanded(
               child: FutureBuilder<List<UserBadge>>(
                 future: _badgesFuture,
@@ -113,82 +144,67 @@ class _BadgesScreenState extends State<BadgesScreen> {
                   if (snapshot.connectionState == ConnectionState.waiting) {
                     return const Center(child: CircularProgressIndicator());
                   }
-
                   if (snapshot.hasError) {
-                    return Center(
-                      child: Text('Error loading badges: ${snapshot.error}'),
-                    );
+                    return _ErrorState(error: '${snapshot.error}', colors: colors);
                   }
 
                   final allBadges = snapshot.data ?? [];
-                  final filteredBadges = _filterBadges(allBadges);
-
                   if (allBadges.isEmpty) {
-                    return Center(
-                      child: Text(
-                        'No badges available',
-                        style: TextStyle(color: colors.textSecondary),
-                      ),
+                    return _EmptyState(
+                      icon: Icons.emoji_events_outlined,
+                      message: 'No badges available',
+                      colors: colors,
                     );
                   }
 
+                  final filteredBadges = _filterBadges(allBadges);
                   if (filteredBadges.isEmpty) {
-                    return Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(
-                            Icons.filter_none,
-                            size: 48,
-                            color: colors.textSecondary,
-                          ),
-                          const SizedBox(height: 12),
-                          Text(
-                            'No badges match your filters',
-                            style: TextStyle(
-                              color: colors.textSecondary,
-                              fontSize: 16,
-                            ),
-                          ),
-                        ],
-                      ),
+                    return _EmptyState(
+                      icon: Icons.filter_list_off_rounded,
+                      message: 'No badges match your filters',
+                      colors: colors,
                     );
                   }
 
-                  return GridView.builder(
-                    padding: const EdgeInsets.all(16),
-                    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: MediaQuery.of(context).size.width > 600
-                          ? 4
-                          : 3, // 4 columns on tablets, 3 on phones
-                      childAspectRatio: 0.85,
-                      mainAxisSpacing: 12,
-                      crossAxisSpacing: 12,
-                    ),
-                    itemCount: filteredBadges.length,
-                    itemBuilder: (context, index) {
-                      final badge = filteredBadges[index];
-                      final isAcquired = _acquiredBadges.containsKey(badge.id);
-                      final acquiredDate = _acquiredBadges[badge.id];
+                  // Stats bar
+                  final acquiredCount = filteredBadges
+                      .where((b) => _acquiredBadges.containsKey(b.id))
+                      .length;
 
-                      return BadgeCard(
-                        badge: badge,
-                        isAcquired: isAcquired,
-                        acquiredDate: acquiredDate,
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => BadgeDetailScreen(
-                                badge: badge,
-                                isAcquired: isAcquired,
-                                acquiredDate: acquiredDate,
-                              ),
+                  return Column(
+                    children: [
+                      _StatsBar(
+                        total: filteredBadges.length,
+                        acquired: acquiredCount,
+                        colors: colors,
+                      ),
+                      Expanded(
+                        child: AnimatedSwitcher(
+                          duration: const Duration(milliseconds: 280),
+                          transitionBuilder: (child, animation) =>
+                              FadeTransition(
+                            opacity: CurvedAnimation(
+                              parent: animation,
+                              curve: Curves.easeOut,
                             ),
-                          );
-                        },
-                      );
-                    },
+                            child: child,
+                          ),
+                          child: _isGridView
+                              ? _GridView(
+                                  key: const ValueKey('grid'),
+                                  badges: filteredBadges,
+                                  acquiredBadges: _acquiredBadges,
+                                  onTap: _navigateToDetail,
+                                )
+                              : _ListView(
+                                  key: const ValueKey('list'),
+                                  badges: filteredBadges,
+                                  acquiredBadges: _acquiredBadges,
+                                  onTap: _navigateToDetail,
+                                ),
+                        ),
+                      ),
+                    ],
                   );
                 },
               ),
@@ -199,35 +215,255 @@ class _BadgesScreenState extends State<BadgesScreen> {
     );
   }
 
-  Widget _buildHeader() {
-    final colors = context.colors;
+  Widget _buildHeader(AppTheme colors) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
-      color: context.isDarkMode ? Colors.black : Colors.white,
+      decoration: BoxDecoration(
+        color: colors.surface,
+        border: Border(
+          bottom: BorderSide(color: colors.border, width: 0.8),
+        ),
+      ),
       child: Row(
         children: [
           IconButton(
-            icon: Icon(Icons.arrow_back, color: colors.text),
+            icon: Icon(
+              Icons.arrow_back_ios_new_rounded,
+              color: colors.text,
+              size: 20,
+            ),
             onPressed: () => Navigator.pop(context),
           ),
-          const SizedBox(width: 8),
           Expanded(
-            child: Center(
-              child: Text(
-                'All Badges',
-                style: TextStyle(
-                  color: colors.text,
-                  fontSize: 17,
-                  fontWeight: FontWeight.w600,
-                ),
+            child: Text(
+              'All Badges',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                color: colors.text,
+                fontSize: 17,
+                fontWeight: FontWeight.w600,
+                letterSpacing: 0.1,
               ),
             ),
           ),
+          // View toggle
+          AnimatedSwitcher(
+            duration: const Duration(milliseconds: 200),
+            child: IconButton(
+              key: ValueKey(_isGridView),
+              icon: Icon(
+                _isGridView
+                    ? Icons.view_list_rounded
+                    : Icons.grid_view_rounded,
+                color: colors.text,
+                size: 22,
+              ),
+              onPressed: () => setState(() => _isGridView = !_isGridView),
+              tooltip: _isGridView ? 'Switch to list' : 'Switch to grid',
+            ),
+          ),
           IconButton(
-            icon: Icon(Icons.filter_list, color: colors.text),
+            icon: Icon(Icons.filter_list_rounded, color: colors.text, size: 22),
             onPressed: _showFilterBottomSheet,
+            tooltip: 'Filter badges',
           ),
         ],
+      ),
+    );
+  }
+}
+
+// ── Stats bar ────────────────────────────────────────────────────────────────
+
+class _StatsBar extends StatelessWidget {
+  const _StatsBar({
+    required this.total,
+    required this.acquired,
+    required this.colors,
+  });
+
+  final int total;
+  final int acquired;
+  final AppTheme colors;
+
+  @override
+  Widget build(BuildContext context) {
+    final progress = total > 0 ? acquired / total : 0.0;
+    return Container(
+      padding: const EdgeInsets.fromLTRB(16, 10, 16, 10),
+      decoration: BoxDecoration(
+        color: colors.surface,
+        border: Border(
+          bottom: BorderSide(color: colors.borderLight, width: 0.6),
+        ),
+      ),
+      child: Row(
+        children: [
+          Text(
+            '$acquired / $total badges',
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+              color: colors.textSecondary,
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(4),
+              child: LinearProgressIndicator(
+                value: progress,
+                minHeight: 5,
+                backgroundColor: colors.borderLight,
+                valueColor: AlwaysStoppedAnimation<Color>(colors.primary),
+              ),
+            ),
+          ),
+          const SizedBox(width: 10),
+          Text(
+            '${(progress * 100).round()}%',
+            style: TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.w700,
+              color: colors.primary,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ── Grid view ────────────────────────────────────────────────────────────────
+
+class _GridView extends StatelessWidget {
+  const _GridView({
+    super.key,
+    required this.badges,
+    required this.acquiredBadges,
+    required this.onTap,
+  });
+
+  final List<UserBadge> badges;
+  final Map<String, DateTime> acquiredBadges;
+  final ValueChanged<UserBadge> onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final crossAxisCount =
+        MediaQuery.of(context).size.width > 600 ? 4 : 3;
+    return GridView.builder(
+      padding: const EdgeInsets.all(14),
+      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: crossAxisCount,
+        childAspectRatio: 0.82,
+        mainAxisSpacing: 10,
+        crossAxisSpacing: 10,
+      ),
+      itemCount: badges.length,
+      itemBuilder: (context, index) {
+        final badge = badges[index];
+        final isAcquired = acquiredBadges.containsKey(badge.id);
+        final acquiredDate = acquiredBadges[badge.id];
+        return BadgeCard(
+          badge: badge,
+          isAcquired: isAcquired,
+          acquiredDate: acquiredDate,
+          isListView: false,
+          onTap: () => onTap(badge),
+        );
+      },
+    );
+  }
+}
+
+// ── List view ────────────────────────────────────────────────────────────────
+
+class _ListView extends StatelessWidget {
+  const _ListView({
+    super.key,
+    required this.badges,
+    required this.acquiredBadges,
+    required this.onTap,
+  });
+
+  final List<UserBadge> badges;
+  final Map<String, DateTime> acquiredBadges;
+  final ValueChanged<UserBadge> onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return ListView.separated(
+      padding: const EdgeInsets.all(14),
+      itemCount: badges.length,
+      separatorBuilder: (_, __) => const SizedBox(height: 8),
+      itemBuilder: (context, index) {
+        final badge = badges[index];
+        final isAcquired = acquiredBadges.containsKey(badge.id);
+        final acquiredDate = acquiredBadges[badge.id];
+        return BadgeCard(
+          badge: badge,
+          isAcquired: isAcquired,
+          acquiredDate: acquiredDate,
+          isListView: true,
+          onTap: () => onTap(badge),
+        );
+      },
+    );
+  }
+}
+
+// ── Empty / error states ─────────────────────────────────────────────────────
+
+class _EmptyState extends StatelessWidget {
+  const _EmptyState({
+    required this.icon,
+    required this.message,
+    required this.colors,
+  });
+
+  final IconData icon;
+  final String message;
+  final AppTheme colors;
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(icon, size: 52, color: colors.iconMuted),
+          const SizedBox(height: 14),
+          Text(
+            message,
+            style: TextStyle(
+              color: colors.textSecondary,
+              fontSize: 15,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ErrorState extends StatelessWidget {
+  const _ErrorState({required this.error, required this.colors});
+
+  final String error;
+  final AppTheme colors;
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Text(
+          'Error loading badges: $error',
+          style: TextStyle(color: colors.textSecondary),
+          textAlign: TextAlign.center,
+        ),
       ),
     );
   }

@@ -121,36 +121,75 @@ class _ArchivedBookingsScreenState extends State<ArchivedBookingsScreen> {
     final colors = context.colors;
     return Scaffold(
       backgroundColor: colors.background,
-      appBar: AppBar(
-        elevation: 0,
-        title: const Text(
-          'Archived Bookings',
-          style: TextStyle(fontWeight: FontWeight.bold),
+      body: SafeArea(
+        child: Column(
+          children: [
+            _buildHeader(context, colors),
+            Expanded(
+              child: _isLoading
+                  ? const Center(child: CircularProgressIndicator())
+                  : _archivedItems.isEmpty
+                      ? _buildEmptyState()
+                      : RefreshIndicator(
+                          onRefresh: _loadArchived,
+                          child: ListView.builder(
+                            padding: const EdgeInsets.all(16),
+                            itemCount: _archivedItems.length,
+                            itemBuilder: (context, index) {
+                              final item = _archivedItems[index];
+                              final climb = item['climb'] as Climb;
+                              final booking = item['booking'] as BookingModel;
+                              final isDraft = item['isDraft'] as bool;
+                              return _ArchivedCard(
+                                climb: climb,
+                                booking: booking,
+                                isDraft: isDraft,
+                                onUnarchive: () => _unarchive(booking, isDraft),
+                              );
+                            },
+                          ),
+                        ),
+            ),
+          ],
         ),
       ),
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : _archivedItems.isEmpty
-          ? _buildEmptyState()
-          : RefreshIndicator(
-              onRefresh: _loadArchived,
-              child: ListView.builder(
-                padding: const EdgeInsets.all(16),
-                itemCount: _archivedItems.length,
-                itemBuilder: (context, index) {
-                  final item = _archivedItems[index];
-                  final climb = item['climb'] as Climb;
-                  final booking = item['booking'] as BookingModel;
-                  final isDraft = item['isDraft'] as bool;
-                  return _ArchivedCard(
-                    climb: climb,
-                    booking: booking,
-                    isDraft: isDraft,
-                    onUnarchive: () => _unarchive(booking, isDraft),
-                  );
-                },
+    );
+  }
+
+  Widget _buildHeader(BuildContext context, AppTheme colors) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
+      decoration: BoxDecoration(
+        color: colors.surface,
+        border: Border(
+          bottom: BorderSide(color: colors.border, width: 0.8),
+        ),
+      ),
+      child: Row(
+        children: [
+          IconButton(
+            icon: Icon(
+              Icons.arrow_back_ios_new_rounded,
+              color: colors.text,
+              size: 20,
+            ),
+            onPressed: () => Navigator.pop(context),
+          ),
+          Expanded(
+            child: Text(
+              'Archived Bookings',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                color: colors.text,
+                fontSize: 17,
+                fontWeight: FontWeight.w600,
+                letterSpacing: 0.1,
               ),
             ),
+          ),
+          const SizedBox(width: 48),
+        ],
+      ),
     );
   }
 
