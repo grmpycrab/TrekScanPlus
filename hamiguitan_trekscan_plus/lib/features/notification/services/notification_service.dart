@@ -4,6 +4,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import '../../../utils/app_logger.dart';
+import 'notification_manager.dart';
 import 'dart:io';
 
 /// Service for handling both local and push notifications
@@ -22,6 +23,9 @@ class NotificationService {
 
   static const String _trekChannelId = 'trek_session_reminders';
   static const String _trekChannelName = 'Trek Session Reminders';
+
+  static const String _postChannelId = 'post_updates';
+  static const String _postChannelName = 'Post Updates';
 
   final FlutterLocalNotificationsPlugin _localNotifications =
       FlutterLocalNotificationsPlugin();
@@ -87,12 +91,22 @@ class NotificationService {
         enableVibration: true,
       );
 
+      const AndroidNotificationChannel postChannel = AndroidNotificationChannel(
+        _postChannelId,
+        _postChannelName,
+        description: 'Notifications when your posts are approved or declined',
+        importance: Importance.high,
+        playSound: true,
+        enableVibration: true,
+      );
+
       final androidPlugin = _localNotifications
           .resolvePlatformSpecificImplementation<
             AndroidFlutterLocalNotificationsPlugin
           >();
       await androidPlugin?.createNotificationChannel(channel);
       await androidPlugin?.createNotificationChannel(trekChannel);
+      await androidPlugin?.createNotificationChannel(postChannel);
     }
   }
 
@@ -517,6 +531,102 @@ class NotificationService {
           );
     } catch (e) {
       AppLogger.i('[NotificationService] Failed to setup booking listener: $e');
+    }
+  }
+
+  /// Listen to post moderation results (approved / declined) for the current
+  /// user. When the admin writes a new notification doc with actionType 'post',
+  /// this fires both a system (local) notification and an in-app banner.
+  Future<void> listenToPostModerationNotifications() async {
+    try {
+      final user = FirebaseAuth.instance.currentUser;
+      if (user == null) {
+        AppLogger.d('[NotificationService] No user for post moderation listener');
+        return;
+      }
+
+      AppLogger.i('[NotificationService] Listening to post moderation notifications for: ${user.uid}');
+
+      FirebaseFirestore.instance
+          .collection('users')
+          .doc(user.uid)
+          .collection('notifications')
+          .where('actionType', isEqualTo: 'post')
+          .orderBy('timestamp', descending: true)
+          .limit(10)
+          .snapshots()
+          .listen(
+            (snapshot) {
+              for (final change in snapshot.docChanges) {
+                if (change.type != DocumentChangeType.added) continue;
+
+                final data = change.doc.data();
+                if (data == null) continue;
+
+                final timestamp = (data['timestamp'] as Timestamp?)?.toDate();
+                if (timestamp == null) continue;
+
+                // Only react to docs written within the last 2 minutes
+                if (DateTime.now().difference(timestamp).inMinutes > 2) continue;
+
+                final title = data['title'] as String? ?? 'Post Update';
+                final message = data['message'] as String? ?? '';
+                final type = data['type'] as String? ?? 'info';
+                final isApproved = type == 'success';
+
+                // System notification (visible in tray, works in background)
+                _showPostSystemNotification(title: title, body: message);
+
+                // In-app banner (visible while app is open)
+                if (isApproved) {
+                  NotificationManager.showSuccess(title: title, message: message);
+                } else {
+                  NotificationManager.showWarning(title: title, message: message);
+                }
+
+                AppLogger.i('[NotificationService] Post moderation notification shown: $title');
+              }
+            },
+            onError: (e) {
+              AppLogger.e('[NotificationService] Post moderation listener error: $e');
+            },
+          );
+    } catch (e) {
+      AppLogger.e('[NotificationService] Failed to set up post moderation listener: $e');
+    }
+  }
+
+  Future<void> _showPostSystemNotification({
+    required String title,
+    required String body,
+  }) async {
+    try {
+      const AndroidNotificationDetails androidDetails = AndroidNotificationDetails(
+        _postChannelId,
+        _postChannelName,
+        channelDescription: 'Notifications when your posts are approved or declined',
+        importance: Importance.high,
+        priority: Priority.high,
+        playSound: true,
+        enableVibration: true,
+        autoCancel: true,
+      );
+
+      const DarwinNotificationDetails iosDetails = DarwinNotificationDetails(
+        presentAlert: true,
+        presentBadge: true,
+        presentSound: true,
+      );
+
+      const NotificationDetails details = NotificationDetails(
+        android: androidDetails,
+        iOS: iosDetails,
+      );
+
+      final id = DateTime.now().millisecondsSinceEpoch ~/ 1000;
+      await _localNotifications.show(id, title, body, details, payload: 'post_moderation');
+    } catch (e) {
+      AppLogger.e('[NotificationService] Failed to show post system notification: $e');
     }
   }
 

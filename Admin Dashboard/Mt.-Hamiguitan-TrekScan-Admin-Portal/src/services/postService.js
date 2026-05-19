@@ -1,8 +1,11 @@
 import {
   collection,
   doc,
+  addDoc,
+  getDoc,
   getDocs,
   updateDoc,
+  increment,
   query,
   orderBy,
   onSnapshot,
@@ -56,13 +59,45 @@ export const getAllPosts = async (status = null) => {
  */
 export const approvePost = async (postId, adminName = 'Admin') => {
   try {
-    await updateDoc(doc(db, POSTS_COLLECTION, postId), {
+    const postRef = doc(db, POSTS_COLLECTION, postId);
+    const postSnap = await getDoc(postRef);
+    if (!postSnap.exists()) throw new Error('Post not found');
+    const { userId } = postSnap.data();
+
+    await updateDoc(postRef, {
       status: 'approved',
       moderatorNote: null,
       reviewedBy: adminName,
       reviewedAt: Timestamp.now(),
       updatedAt: Timestamp.now(),
     });
+
+    // Increment postsCount now that the post is published.
+    if (userId) {
+      try {
+        await updateDoc(doc(db, 'users', userId), { postsCount: increment(1) });
+      } catch (e) {
+        console.warn('approvePost: could not increment postsCount', e);
+      }
+
+      // Notify the post author in-app.
+      try {
+        await addDoc(
+          collection(db, 'users', userId, 'notifications'),
+          {
+            title: 'Post Approved!',
+            message: 'Your post is now live on the community feed.',
+            type: 'success',
+            timestamp: Timestamp.now(),
+            isRead: false,
+            actionType: 'post',
+            actionData: postId,
+          },
+        );
+      } catch (e) {
+        console.warn('approvePost: could not send notification', e);
+      }
+    }
   } catch (error) {
     console.error('postService.approvePost error:', error);
     throw error;
@@ -80,13 +115,38 @@ export const declinePost = async (postId, moderatorNote, adminName = 'Admin') =>
     throw new Error('A moderator note is required when declining a post.');
   }
   try {
-    await updateDoc(doc(db, POSTS_COLLECTION, postId), {
+    const postRef = doc(db, POSTS_COLLECTION, postId);
+    const postSnap = await getDoc(postRef);
+    if (!postSnap.exists()) throw new Error('Post not found');
+    const { userId } = postSnap.data();
+
+    await updateDoc(postRef, {
       status: 'declined',
       moderatorNote: moderatorNote.trim(),
       reviewedBy: adminName,
       reviewedAt: Timestamp.now(),
       updatedAt: Timestamp.now(),
     });
+
+    // Notify the post author with the moderator reason.
+    if (userId) {
+      try {
+        await addDoc(
+          collection(db, 'users', userId, 'notifications'),
+          {
+            title: 'Post Declined',
+            message: `Your post was declined: ${moderatorNote.trim()}`,
+            type: 'warning',
+            timestamp: Timestamp.now(),
+            isRead: false,
+            actionType: 'post',
+            actionData: postId,
+          },
+        );
+      } catch (e) {
+        console.warn('declinePost: could not send notification', e);
+      }
+    }
   } catch (error) {
     console.error('postService.declinePost error:', error);
     throw error;

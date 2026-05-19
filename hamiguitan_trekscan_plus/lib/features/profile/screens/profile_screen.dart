@@ -610,6 +610,37 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   );
                 },
               ),
+              // "My Posts" shortcut — own profile only
+              if (_vm.isOwnProfile) ...[
+                const Spacer(),
+                GestureDetector(
+                  onTap: () => Navigator.pushNamed(context, '/my-posts'),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                    decoration: BoxDecoration(
+                      color: colors.primary.withAlpha(20),
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(color: colors.primary.withAlpha(60)),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(Icons.manage_accounts_outlined,
+                            size: 13, color: colors.primary),
+                        const SizedBox(width: 4),
+                        Text(
+                          'Manage',
+                          style: TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w600,
+                            color: colors.primary,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
             ],
           ),
         ),

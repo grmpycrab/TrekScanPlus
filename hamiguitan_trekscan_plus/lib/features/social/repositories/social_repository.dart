@@ -1,7 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
-import 'package:flutter/foundation.dart';
 import 'package:image/image.dart' as img;
 import 'dart:io';
 import '../models/social_model.dart';
@@ -56,15 +55,7 @@ class SocialRepository {
     );
 
     final docRef = await _firestore.collection('posts').add(post.toMap());
-
-    try {
-      await _firestore.collection('users').doc(user.uid).update({
-        'postsCount': FieldValue.increment(1),
-      });
-      if (kDebugMode) AppLogger.i('Post count incremented');
-    } catch (e) {
-      AppLogger.w('Error updating post count: $e');
-    }
+    // postsCount is incremented only when the admin approves — not on submission.
 
     NotificationManager.showSuccess(
       title: 'Post Submitted ✓',
@@ -227,20 +218,30 @@ class SocialRepository {
     final user = _auth.currentUser;
     if (user == null) return Stream.value([]);
 
+    final isOwnFeed = userId == user.uid;
+
     return _firestore
         .collection('posts')
         .where(
           'privacy',
           whereIn: [
             PostPrivacy.public.name,
-            if (userId == user.uid) PostPrivacy.private.name,
+            if (isOwnFeed) PostPrivacy.private.name,
           ],
         )
         .orderBy('createdAt', descending: true)
         .snapshots()
-        .map(
-          (snap) => snap.docs.map((doc) => SocialPost.fromDoc(doc)).toList(),
-        );
+        .map((snap) {
+          return snap.docs
+              .map((doc) => SocialPost.fromDoc(doc))
+              .where((post) {
+                // Own feed shows own pending posts so the user can see their
+                // submission status. Other users only see approved posts.
+                if (isOwnFeed) return true;
+                return post.status == PostStatus.approved;
+              })
+              .toList();
+        });
   }
 
   /// Stream a single user's own posts, respecting privacy for other viewers.
@@ -249,14 +250,17 @@ class SocialRepository {
     final isOwnProfile = currentUser?.uid == userId;
 
     if (isOwnProfile) {
+      // Profile shows only approved posts — pending/declined are visible
+      // exclusively in the Post Status Management screen (/my-posts).
       yield* _firestore
           .collection('posts')
           .where('userId', isEqualTo: userId)
           .orderBy('createdAt', descending: true)
           .snapshots()
-          .map(
-            (snap) => snap.docs.map((doc) => SocialPost.fromDoc(doc)).toList(),
-          );
+          .map((snap) => snap.docs
+              .map((doc) => SocialPost.fromDoc(doc))
+              .where((p) => p.status == PostStatus.approved)
+              .toList());
       return;
     }
 
@@ -343,13 +347,15 @@ class SocialRepository {
 
     await _firestore.collection('posts').doc(postId).delete();
 
-    try {
-      await _firestore.collection('users').doc(postUserId).update({
-        'postsCount': FieldValue.increment(-1),
-      });
-      AppLogger.i('Post count decremented for $postUserId');
-    } catch (e) {
-      AppLogger.w('Error updating post count: $e');
+    // Only decrement postsCount if the post was approved — pending/declined were never counted.
+    if (postDoc.data()?['status'] == 'approved') {
+      try {
+        await _firestore.collection('users').doc(postUserId).update({
+          'postsCount': FieldValue.increment(-1),
+        });
+      } catch (e) {
+        AppLogger.w('Error updating post count: $e');
+      }
     }
 
     NotificationManager.showInfo(

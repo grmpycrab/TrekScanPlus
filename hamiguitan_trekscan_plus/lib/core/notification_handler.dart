@@ -69,6 +69,8 @@ class NotificationHandler {
       'follow_request' => NotificationBannerType.info,
       'post_liked' => NotificationBannerType.success,
       'post_commented' => NotificationBannerType.info,
+      'post_approved' => NotificationBannerType.success,
+      'post_declined' => NotificationBannerType.warning,
       _ => NotificationBannerType.info,
     };
   }

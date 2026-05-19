@@ -597,11 +597,9 @@ class ClimbSessionService extends ChangeNotifier {
         AppLogger.i('Climb session "${session.name}" $action on Firebase');
       }
     } catch (e) {
-      if (kDebugMode) {
-        AppLogger.e('Error syncing climb session to Firebase: $e');
-      }
-      // Don't throw — app should work offline.
-      rethrow;
+      AppLogger.e('Error syncing climb session to Firebase: $e');
+      // Swallowed intentionally — sync failures are non-fatal and the app
+      // must continue working offline.
     }
   }
 

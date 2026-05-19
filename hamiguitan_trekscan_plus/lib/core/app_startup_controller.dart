@@ -77,6 +77,9 @@ class AppStartupController {
     unawaited(
       Future.microtask(() => NotificationService().listenToBookingUpdates()),
     );
+    unawaited(
+      Future.microtask(() => NotificationService().listenToPostModerationNotifications()),
+    );
 
     // Achievement init — no context needed, silent fail on error
     unawaited(

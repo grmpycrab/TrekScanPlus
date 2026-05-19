@@ -20,21 +20,22 @@ class FeedPaginationService {
   // Pagination config
   static const int postsPerPage = 10;
 
-  /// Load first page of public posts (10 posts)
-  /// Returns: List of posts and a boolean indicating if more posts exist
+  /// Load first page of approved public/followers posts.
   Future<(List<SocialPost>, bool)> loadPublicPostsFirstPage() async {
     try {
       AppLogger.i('Loading first page of public posts...');
 
-      final query = _firestore
+      final snapshot = await _firestore
           .collection('posts')
-          .where('privacy', whereIn: ['public', 'followers'])
+          .where('status', isEqualTo: PostStatus.approved.name)
+          .where('privacy', whereIn: [
+            PostPrivacy.public.name,
+            PostPrivacy.followers.name,
+          ])
           .orderBy('createdAt', descending: true)
-          .limit(postsPerPage + 1); // +1 to check if more posts exist
+          .limit(postsPerPage + 1)
+          .get();
 
-      final snapshot = await query.get();
-
-      // Clear previous pagination state
       _lastPublicPostDocument = null;
       _postCache.clear();
 
@@ -49,15 +50,13 @@ class FeedPaginationService {
         }
       }
 
-      // Store last document for next page (if it exists)
       if (snapshot.docs.isNotEmpty) {
-        _lastPublicPostDocument = snapshot.docs[snapshot.docs.length - 1];
+        _lastPublicPostDocument =
+            snapshot.docs[snapshot.docs.length - 1];
       }
 
-      // Check if more posts exist
       final hasMore = snapshot.docs.length > postsPerPage;
-
-      AppLogger.i('Loaded ${posts.length} posts (more available: $hasMore)');
+      AppLogger.i('Loaded ${posts.length} posts (more: $hasMore)');
       return (posts, hasMore);
     } catch (e) {
       AppLogger.e('Error loading public posts: $e');
@@ -65,8 +64,7 @@ class FeedPaginationService {
     }
   }
 
-  /// Load next page of public posts (pagination)
-  /// Returns: List of new posts and a boolean indicating if more posts exist
+  /// Load next page of approved public/followers posts.
   Future<(List<SocialPost>, bool)> loadPublicPostsNextPage() async {
     if (_lastPublicPostDocument == null) {
       AppLogger.d('No more posts to load');
@@ -76,20 +74,22 @@ class FeedPaginationService {
     try {
       AppLogger.i('Loading next page of public posts...');
 
-      final query = _firestore
+      final snapshot = await _firestore
           .collection('posts')
-          .where('privacy', whereIn: ['public', 'followers'])
+          .where('status', isEqualTo: PostStatus.approved.name)
+          .where('privacy', whereIn: [
+            PostPrivacy.public.name,
+            PostPrivacy.followers.name,
+          ])
           .orderBy('createdAt', descending: true)
           .startAfterDocument(_lastPublicPostDocument!)
-          .limit(postsPerPage + 1); // +1 to check if more posts exist
-
-      final snapshot = await query.get();
+          .limit(postsPerPage + 1)
+          .get();
 
       final posts = <SocialPost>[];
       for (int i = 0; i < snapshot.docs.length && i < postsPerPage; i++) {
         try {
           final post = SocialPost.fromDoc(snapshot.docs[i]);
-          // Only add if not already cached
           if (!_postCache.containsKey(post.id)) {
             posts.add(post);
             _postCache[post.id ?? ''] = post;
@@ -99,18 +99,15 @@ class FeedPaginationService {
         }
       }
 
-      // Store last document for next page
       if (snapshot.docs.isNotEmpty) {
-        _lastPublicPostDocument = snapshot.docs[snapshot.docs.length - 1];
+        _lastPublicPostDocument =
+            snapshot.docs[snapshot.docs.length - 1];
       } else {
         _lastPublicPostDocument = null;
       }
 
       final hasMore = snapshot.docs.length > postsPerPage;
-
-      AppLogger.i(
-        'Loaded ${posts.length} more posts (more available: $hasMore)',
-      );
+      AppLogger.i('Loaded ${posts.length} more posts (more: $hasMore)');
       return (posts, hasMore);
     } catch (e) {
       AppLogger.e('Error loading next page of public posts: $e');
