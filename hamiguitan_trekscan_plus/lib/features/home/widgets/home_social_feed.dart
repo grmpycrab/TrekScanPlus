@@ -97,15 +97,13 @@ class _HomeSocialFeedState extends State<HomeSocialFeed> {
 
     return ListView.builder(
       controller: _scrollController,
-      padding: const EdgeInsets.symmetric(
-        vertical: 8,
-      ).copyWith(top: 20, bottom: 30),
+      padding: const EdgeInsets.only(top: 4, bottom: 30),
       itemCount: itemCount,
       itemBuilder: (context, index) {
         // ── Header ──────────────────────────────────────────────────────────
         if (index == 0) {
           return Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            padding: const EdgeInsets.fromLTRB(16, 6, 16, 10),
             child: Row(
               children: [
                 const Text(

@@ -1,18 +1,23 @@
 import 'package:flutter/material.dart';
 import '../../../theme/app_theme.dart';
 
-/// Expandable FAB group: main + button, calendar sub-button, create-post
-/// sub-button. All expansion state is managed internally via [StatefulBuilder]
-/// so the parent doesn't need to track it.
+/// Expandable FAB group with an externally-observable expanded state.
+///
+/// [expandedNotifier] is owned by the parent (HomeScreen) so the parent can
+/// show a backdrop overlay and collapse the FAB when the overlay is tapped.
 class HomeActionButtons extends StatefulWidget {
   const HomeActionButtons({
     super.key,
     required this.onCreatePost,
     required this.onShowCalendar,
+    required this.expandedNotifier,
   });
 
   final VoidCallback onCreatePost;
   final VoidCallback onShowCalendar;
+
+  /// Shared state between the FAB and the parent's backdrop overlay.
+  final ValueNotifier<bool> expandedNotifier;
 
   @override
   State<HomeActionButtons> createState() => _HomeActionButtonsState();
@@ -20,6 +25,45 @@ class HomeActionButtons extends StatefulWidget {
 
 class _HomeActionButtonsState extends State<HomeActionButtons> {
   bool _expanded = false;
+
+  @override
+  void initState() {
+    super.initState();
+    widget.expandedNotifier.addListener(_onNotifierChanged);
+  }
+
+  @override
+  void didUpdateWidget(HomeActionButtons oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.expandedNotifier != widget.expandedNotifier) {
+      oldWidget.expandedNotifier.removeListener(_onNotifierChanged);
+      widget.expandedNotifier.addListener(_onNotifierChanged);
+    }
+  }
+
+  @override
+  void dispose() {
+    widget.expandedNotifier.removeListener(_onNotifierChanged);
+    super.dispose();
+  }
+
+  void _onNotifierChanged() {
+    // Parent collapsed us (e.g. backdrop tap)
+    if (!widget.expandedNotifier.value && _expanded) {
+      setState(() => _expanded = false);
+    }
+  }
+
+  void _toggle() {
+    final next = !_expanded;
+    setState(() => _expanded = next);
+    widget.expandedNotifier.value = next;
+  }
+
+  void _collapse() {
+    setState(() => _expanded = false);
+    widget.expandedNotifier.value = false;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -39,7 +83,7 @@ class _HomeActionButtonsState extends State<HomeActionButtons> {
             color: Colors.white,
           ),
           onPressed: () {
-            setState(() => _expanded = false);
+            _collapse();
             widget.onShowCalendar();
           },
         ),
@@ -49,13 +93,13 @@ class _HomeActionButtonsState extends State<HomeActionButtons> {
           label: 'Create Post',
           child: const Icon(Icons.edit, color: Colors.white),
           onPressed: () {
-            setState(() => _expanded = false);
+            _collapse();
             widget.onCreatePost();
           },
         ),
         FloatingActionButton(
           heroTag: 'main_fab',
-          onPressed: () => setState(() => _expanded = !_expanded),
+          onPressed: _toggle,
           backgroundColor: colors.primary,
           child: AnimatedRotation(
             turns: _expanded ? 0.125 : 0.0,
@@ -124,9 +168,10 @@ class _HomeActionButtonsState extends State<HomeActionButtons> {
                         ),
                         child: Text(
                           label,
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 14,
                             fontWeight: FontWeight.w500,
+                            color: colors.text,
                           ),
                         ),
                       ),

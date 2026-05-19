@@ -523,11 +523,11 @@ class _DoAndDontOverlayState extends State<DoAndDontOverlay> {
               ),
               child: Row(
                 children: [
-                  const Icon(Icons.rule, color: Colors.white, size: 28),
+                  const Icon(Icons.shield_outlined, color: Colors.white, size: 28),
                   const SizedBox(width: 12),
                   const Expanded(
                     child: Text(
-                      "Do's & Don'ts",
+                      'Community Guidelines',
                       style: TextStyle(
                         fontSize: 22,
                         fontWeight: FontWeight.bold,

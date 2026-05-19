@@ -15,22 +15,32 @@ class BottomNavigation extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = context.colors;
     final isDark = context.isDarkMode;
-    final bgColor = isDark ? Colors.black : Colors.white;
-    final activeColor = colors.primary;
+    // Dark: slightly lifted surface so it reads as a distinct layer above 0xFF121212 bg
+    final bgColor = isDark ? const Color(0xFF1C1C1C) : Colors.white;
+    // Dark: white active icon is clearly visible on dark nav surface
+    final activeColor = isDark ? Colors.white : colors.primary;
     final inactiveColor = colors.textSecondary;
 
     return Container(
       height: 65,
       decoration: BoxDecoration(
         color: bgColor,
-        border: Border(top: BorderSide(color: colors.border, width: 0.5)),
-        boxShadow: [
-          BoxShadow(
-            color: colors.shadowLight,
-            blurRadius: 8,
-            offset: const Offset(0, -2),
+        border: Border(
+          top: BorderSide(
+            // Dark: visible separator line; light: hairline border
+            color: isDark ? const Color(0xFF2E2E2E) : colors.borderLight,
+            width: isDark ? 0.8 : 0.5,
           ),
-        ],
+        ),
+        boxShadow: isDark
+            ? const [] // shadows are invisible on dark bg — border handles separation
+            : [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.07),
+                  blurRadius: 14,
+                  offset: const Offset(0, -3),
+                ),
+              ],
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,

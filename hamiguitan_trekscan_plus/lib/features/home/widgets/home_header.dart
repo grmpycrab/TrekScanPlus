@@ -4,60 +4,36 @@ import '../../../core/widgets/profile_avatar_with_status.dart';
 import '../../../core/services/presence_service.dart';
 import '../../../core/services/user_service.dart';
 import '../../../theme/app_theme.dart';
-import '../../notification/screens/notification_screen.dart';
 
-/// Top app-bar row: greeting / avatar, search field, notifications bell.
+/// Top app-bar row: greeting/avatar on the left, hamburger menu on the right.
 ///
-/// Stateless data inputs; state (expanded search, query text) is owned by
-/// the parent via [isSearchExpanded], [searchController], [searchFocusNode]
-/// and [searchQuery].
+/// Tapping the avatar/greeting navigates to the profile screen via [onProfileTap].
+/// Tapping the hamburger opens the end drawer via [onMenuTap].
+/// An unread-notification dot appears on the hamburger when there are unread items.
 class HomeHeader extends StatelessWidget {
   const HomeHeader({
     super.key,
     required this.userId,
     required this.userPhotoUrl,
-    required this.isSearchExpanded,
-    required this.searchController,
-    required this.searchFocusNode,
-    required this.searchQuery,
-    required this.onToggleSearch,
     required this.onProfileTap,
+    required this.onMenuTap,
   });
 
   final String? userId;
   final String? userPhotoUrl;
-  final bool isSearchExpanded;
-  final TextEditingController searchController;
-  final FocusNode searchFocusNode;
-  final String searchQuery;
-  final VoidCallback onToggleSearch;
   final VoidCallback onProfileTap;
+  final VoidCallback onMenuTap;
 
   @override
   Widget build(BuildContext context) {
     final colors = context.colors;
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
-      color: colors.background,
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      color: colors.surface,
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          if (!isSearchExpanded) _buildGreeting(context),
-          if (isSearchExpanded)
-            Expanded(
-              child: TextField(
-                controller: searchController,
-                focusNode: searchFocusNode,
-                decoration: InputDecoration(
-                  hintText: 'Search posts and users...',
-                  hintStyle: TextStyle(color: colors.textSecondary),
-                  border: InputBorder.none,
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 16),
-                ),
-                style: const TextStyle(fontSize: 14),
-              ),
-            ),
-          _buildActions(context),
+          Expanded(child: _buildGreeting(context)),
+          _buildMenuButton(context),
         ],
       ),
     );
@@ -65,151 +41,116 @@ class HomeHeader extends StatelessWidget {
 
   Widget _buildGreeting(BuildContext context) {
     final colors = context.colors;
+
     if (userId == null) {
-      return Expanded(
-        child: GestureDetector(
-          onTap: onProfileTap,
-          child: Row(
-            children: [
-              CircleAvatar(
-                backgroundColor: colors.primary,
-                child: Icon(Icons.person, color: colors.primary),
-              ),
-              const SizedBox(width: 12),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Welcome,',
-                    style: TextStyle(color: colors.textSecondary, fontSize: 14),
-                  ),
-                  const Text(
-                    'Traveler!',
-                    style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
-                  ),
-                ],
-              ),
-            ],
-          ),
+      return GestureDetector(
+        onTap: onProfileTap,
+        child: Row(
+          children: [
+            CircleAvatar(
+              radius: 20,
+              backgroundColor: colors.primary,
+              child: const Icon(Icons.person, color: Colors.white, size: 22),
+            ),
+            const SizedBox(width: 12),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Welcome,',
+                  style: TextStyle(color: colors.textSecondary, fontSize: 12),
+                ),
+                const Text(
+                  'Traveler!',
+                  style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
+                ),
+              ],
+            ),
+          ],
         ),
       );
     }
 
-    return Expanded(
-      child: GestureDetector(
-        onTap: onProfileTap,
-        child: StreamBuilder<DocumentSnapshot<Map<String, dynamic>>>(
-          stream: UserService.instance.streamUser(userId!),
-          builder: (context, snapshot) {
-            String firstName = '';
-            String lastName = '';
+    return GestureDetector(
+      onTap: onProfileTap,
+      child: StreamBuilder<DocumentSnapshot<Map<String, dynamic>>>(
+        stream: UserService.instance.streamUser(userId!),
+        builder: (context, snapshot) {
+          String firstName = '';
+          String lastName = '';
+          if (snapshot.hasData && snapshot.data != null) {
+            final data = snapshot.data!.data() ?? {};
+            firstName = data['firstName'] ?? '';
+            lastName = data['lastName'] ?? '';
+          }
+          if (firstName.isEmpty && lastName.isEmpty) firstName = 'Traveler';
 
-            if (snapshot.hasData && snapshot.data != null) {
-              final userData = snapshot.data!.data() ?? {};
-              firstName = userData['firstName'] ?? '';
-              lastName = userData['lastName'] ?? '';
-            }
-
-            if (firstName.isEmpty && lastName.isEmpty) {
-              firstName = 'Traveler';
-            }
-
-            return Row(
-              children: [
-                ProfileAvatarWithStatus(
-                  userId: userId!,
-                  photoUrl: userPhotoUrl,
-                  radius: 20,
+          return Row(
+            children: [
+              ProfileAvatarWithStatus(
+                userId: userId!,
+                photoUrl: userPhotoUrl,
+                radius: 20,
+              ),
+              const SizedBox(width: 10),
+              Flexible(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Welcome,',
+                      style: TextStyle(
+                        color: colors.textSecondary,
+                        fontSize: 12,
+                      ),
+                    ),
+                    Text(
+                      firstName.isNotEmpty
+                          ? '$firstName ${lastName.isNotEmpty ? lastName : ''}'
+                                .trim()
+                          : 'Traveler!',
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w600,
+                        fontSize: 14,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    StreamBuilder<bool>(
+                      stream: PresenceService.instance.userOnlineStatus(
+                        userId!,
+                      ),
+                      builder: (context, snap) {
+                        final isOnline = snap.data ?? false;
+                        return Text(
+                          isOnline ? 'Online' : 'Offline',
+                          style: TextStyle(
+                            color: isOnline ? Colors.green : Colors.red,
+                            fontSize: 10,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        );
+                      },
+                    ),
+                  ],
                 ),
-                const SizedBox(width: 4),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Welcome,',
-                        style: TextStyle(
-                          color: colors.textSecondary,
-                          fontSize: 12,
-                        ),
-                      ),
-                      Text(
-                        firstName.isNotEmpty
-                            ? '$firstName ${lastName.isNotEmpty ? lastName : ''}'
-                                  .trim()
-                            : 'Traveler!',
-                        style: const TextStyle(
-                          fontWeight: FontWeight.w600,
-                          fontSize: 14,
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      StreamBuilder<bool>(
-                        stream: PresenceService.instance.userOnlineStatus(
-                          userId!,
-                        ),
-                        builder: (context, snapshot) {
-                          final isOnline = snapshot.data ?? false;
-                          return Text(
-                            isOnline ? 'Online' : 'Offline',
-                            style: TextStyle(
-                              color: isOnline ? Colors.green : Colors.red,
-                              fontSize: 10,
-                              fontWeight: FontWeight.w500,
-                            ),
-                          );
-                        },
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            );
-          },
-        ),
+              ),
+            ],
+          );
+        },
       ),
     );
   }
 
-  Widget _buildActions(BuildContext context) {
-    final colors = context.colors;
-    return Row(
-      children: [
-        // Search toggle
-        IconButton(
-          icon: isSearchExpanded
-              ? Icon(Icons.close, size: 20, color: colors.primary)
-              : Image.asset(
-                  'assets/icons/search.png',
-                  width: 20,
-                  height: 20,
-                  color: searchQuery.isNotEmpty ? colors.primary : colors.text,
-                ),
-          tooltip: isSearchExpanded ? 'Close search' : 'Search posts',
-          onPressed: onToggleSearch,
-        ),
-        // Notifications bell (hidden during search)
-        if (!isSearchExpanded) _buildNotificationBell(context),
-      ],
-    );
-  }
-
-  Widget _buildNotificationBell(BuildContext context) {
+  Widget _buildMenuButton(BuildContext context) {
     final colors = context.colors;
     return Stack(
+      clipBehavior: Clip.none,
       children: [
         IconButton(
-          icon: Image.asset(
-            'assets/icons/bell.png',
-            width: 20,
-            height: 20,
-            color: colors.text,
-          ),
-          onPressed: () => Navigator.push(
-            context,
-            MaterialPageRoute(builder: (_) => const NotificationScreen()),
-          ),
+          icon: Icon(Icons.menu, color: colors.text, size: 26),
+          onPressed: onMenuTap,
+          tooltip: 'Open menu',
         ),
         if (userId != null)
           StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
@@ -223,22 +164,19 @@ class HomeHeader extends StatelessWidget {
             builder: (context, snapshot) {
               final hasUnread =
                   snapshot.hasData && snapshot.data!.docs.isNotEmpty;
-              return hasUnread
-                  ? Positioned(
-                      right: 12,
-                      top: 12,
-                      child: SizedBox(
-                        width: 8,
-                        height: 8,
-                        child: DecoratedBox(
-                          decoration: BoxDecoration(
-                            color: Colors.red,
-                            shape: BoxShape.circle,
-                          ),
-                        ),
-                      ),
-                    )
-                  : const SizedBox.shrink();
+              if (!hasUnread) return const SizedBox.shrink();
+              return Positioned(
+                right: 8,
+                top: 8,
+                child: Container(
+                  width: 8,
+                  height: 8,
+                  decoration: const BoxDecoration(
+                    color: Colors.red,
+                    shape: BoxShape.circle,
+                  ),
+                ),
+              );
             },
           ),
       ],

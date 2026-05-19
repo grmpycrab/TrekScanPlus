@@ -5,38 +5,43 @@ import '../../../services/e_certificate_service.dart';
 import '../../../components/e_certificate_badge.dart';
 
 class BannerSlideshow extends StatefulWidget {
-  const BannerSlideshow({super.key});
+  const BannerSlideshow({
+    super.key,
+    required this.isCollapsed,
+    required this.onToggle,
+  });
+
+  final bool isCollapsed;
+  final VoidCallback onToggle;
 
   @override
   State<BannerSlideshow> createState() => _BannerSlideshowState();
 }
 
 class _BannerSlideshowState extends State<BannerSlideshow> {
-  late PageController _bannerPageController;
-  int _currentBannerIndex = 0;
-  Timer? _bannerTimer;
+  int _currentIndex = 0;
+  Timer? _timer;
+
+  static const double _expandedHeight = 180;
+  static const double _collapsedHeight = 52;
 
   final List<String> _bannerImages = [
     'assets/images/station10.jpg',
     'assets/images/station3.jpg',
-    'assets/images/station16.jpg',
+    'assets/station_images/Lantawan 2/20241030_154550.jpg',
   ];
 
   @override
   void initState() {
     super.initState();
-    _bannerPageController = PageController();
-    _startBannerAutoplay();
+    _startAutoplay();
   }
 
-  void _startBannerAutoplay() {
-    _bannerTimer = Timer.periodic(const Duration(seconds: 5), (timer) {
-      if (_bannerPageController.hasClients) {
-        final nextPage = (_currentBannerIndex + 1) % _bannerImages.length;
-        _bannerPageController.animateToPage(
-          nextPage,
-          duration: const Duration(milliseconds: 800),
-          curve: Curves.easeInOut,
+  void _startAutoplay() {
+    _timer = Timer.periodic(const Duration(seconds: 5), (_) {
+      if (mounted) {
+        setState(
+          () => _currentIndex = (_currentIndex + 1) % _bannerImages.length,
         );
       }
     });
@@ -44,142 +49,256 @@ class _BannerSlideshowState extends State<BannerSlideshow> {
 
   @override
   void dispose() {
-    _bannerPageController.dispose();
-    _bannerTimer?.cancel();
+    _timer?.cancel();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     final colors = context.colors;
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-      height: 180,
-      clipBehavior: Clip.hardEdge,
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.06),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Stack(
-        children: [
-          // Background slideshow
-          PageView.builder(
-            controller: _bannerPageController,
-            onPageChanged: (index) {
-              setState(() {
-                _currentBannerIndex = index;
-              });
-            },
-            itemCount: _bannerImages.length,
-            itemBuilder: (context, index) {
-              return Image.asset(
-                _bannerImages[index],
-                fit: BoxFit.cover,
-                width: double.infinity,
-                height: double.infinity,
-                errorBuilder: (context, error, stack) =>
-                    Container(color: colors.primary),
-              );
-            },
-          ),
 
-          // Gradient overlay from bottom (primary color) to top (transparent)
-          Positioned.fill(
-            child: DecoratedBox(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.bottomCenter,
-                  end: Alignment.topCenter,
-                  colors: [
-                    colors.primary.withValues(alpha: 0.9),
-                    colors.primary.withValues(alpha: 0.6),
-                    Colors.black.withValues(alpha: 0.3),
-                    Colors.transparent,
-                  ],
-                  stops: const [0.0, 0.3, 0.6, 1.0],
+    return GestureDetector(
+      onTap: widget.onToggle,
+      child: Container(
+        margin: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+        clipBehavior: Clip.hardEdge,
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: colors.border.withValues(alpha: 0.45),
+            width: 0.8,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.12),
+              blurRadius: 14,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 380),
+          curve: Curves.easeInOutCubic,
+          height: widget.isCollapsed ? _collapsedHeight : _expandedHeight,
+          child: Stack(
+            fit: StackFit.expand,
+            children: [
+              // ── Crossfade slideshow images ──────────────────────────────
+              AnimatedSwitcher(
+                duration: const Duration(milliseconds: 1200),
+                transitionBuilder: (child, animation) => FadeTransition(
+                  opacity: CurvedAnimation(
+                    parent: animation,
+                    curve: Curves.easeInOut,
+                  ),
+                  child: child,
+                ),
+                child: Image.asset(
+                  _bannerImages[_currentIndex],
+                  key: ValueKey(_currentIndex),
+                  fit: BoxFit.cover,
+                  width: double.infinity,
+                  height: double.infinity,
+                  errorBuilder: (_, __, ___) =>
+                      ColoredBox(color: colors.primary),
                 ),
               ),
-            ),
-          ),
 
-          // Content overlay
-          Positioned.fill(
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  const Text(
-                    'Mt. Hamiguitan TrekScan+',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 20,
-                      fontWeight: FontWeight.w800,
-                      height: 1.2,
-                      shadows: [
-                        Shadow(
-                          color: Colors.black45,
-                          offset: Offset(0, 1),
-                          blurRadius: 4,
-                        ),
-                      ],
-                    ),
+              // ── Dark gradient overlay (always visible) ───────────────────
+              DecoratedBox(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.bottomCenter,
+                    end: Alignment.topCenter,
+                    colors: [
+                      colors.primary.withValues(alpha: 0.92),
+                      colors.primary.withValues(alpha: 0.6),
+                      Colors.black.withValues(alpha: 0.3),
+                      Colors.transparent,
+                    ],
+                    stops: const [0.0, 0.3, 0.6, 1.0],
                   ),
-                  const SizedBox(height: 6),
-                  const Text(
-                    'Explore the unique beauty and biodiversity of Mt. Hamiguitan, a UNESCO World Heritage Site.',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 14,
-                      height: 1.4,
-                      shadows: [
-                        Shadow(
-                          color: Colors.black45,
-                          offset: Offset(0, 1),
-                          blurRadius: 3,
-                        ),
-                      ],
-                    ),
-                    maxLines: 3,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  const SizedBox(height: 12),
-                  // Page indicators
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: List.generate(
-                      _bannerImages.length,
-                      (index) => Container(
-                        margin: const EdgeInsets.symmetric(horizontal: 3),
-                        width: _currentBannerIndex == index ? 24 : 8,
-                        height: 8,
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(4),
-                          color: _currentBannerIndex == index
-                              ? Colors.white
-                              : Colors.white.withValues(alpha: 0.5),
-                        ),
+                ),
+              ),
+
+              // ── Expanded content (crossfades out when collapsing) ────────
+              IgnorePointer(
+                ignoring: widget.isCollapsed,
+                child: AnimatedOpacity(
+                  duration: const Duration(milliseconds: 180),
+                  opacity: widget.isCollapsed ? 0.0 : 1.0,
+                  child: OverflowBox(
+                    maxHeight: _expandedHeight,
+                    alignment: Alignment.bottomCenter,
+                    child: Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        children: [
+                          const Text(
+                            'Mt. Hamiguitan TrekScan+',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 18,
+                              fontFamily: 'Montserrat',
+                              fontWeight: FontWeight.w600,
+                              height: 1.2,
+                              letterSpacing: 0.2,
+                              shadows: [
+                                Shadow(
+                                  color: Colors.black54,
+                                  offset: Offset(0, 1),
+                                  blurRadius: 6,
+                                ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(height: 5),
+                          const Text(
+                            'Discover · Trek · Experience',
+                            style: TextStyle(
+                              color: Color(0xCCFFFFFF),
+                              fontSize: 11,
+                              fontFamily: 'Montserrat',
+                              fontWeight: FontWeight.w300,
+                              letterSpacing: 1.8,
+                              height: 1.4,
+                              shadows: [
+                                Shadow(
+                                  color: Colors.black45,
+                                  offset: Offset(0, 1),
+                                  blurRadius: 4,
+                                ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                          Row(
+                            crossAxisAlignment: CrossAxisAlignment.center,
+                            children: [
+                              // Page indicator dots
+                              ...List.generate(
+                                _bannerImages.length,
+                                (i) => AnimatedContainer(
+                                  duration: const Duration(milliseconds: 300),
+                                  margin: const EdgeInsets.symmetric(
+                                    horizontal: 3,
+                                  ),
+                                  width: _currentIndex == i ? 22 : 7,
+                                  height: 7,
+                                  decoration: BoxDecoration(
+                                    borderRadius: BorderRadius.circular(4),
+                                    color: _currentIndex == i
+                                        ? Colors.white
+                                        : Colors.white.withValues(alpha: 0.45),
+                                  ),
+                                ),
+                              ),
+                              const Spacer(),
+                              // Collapse affordance pill
+                              _ActionPill(
+                                icon: Icons.keyboard_arrow_up_rounded,
+                                label: 'Hide',
+                              ),
+                            ],
+                          ),
+                        ],
                       ),
                     ),
                   ),
-                ],
+                ),
               ),
-            ),
-          ),
 
-          // E-Certificate Trophy Badge - Top Right Corner
-          Positioned(
-            top: 6,
-            right: 6,
-            child: ECertificateBadge(
-              certificateService: ECertificateService.instance,
+              // ── Collapsed strip (crossfades in when collapsing) ──────────
+              IgnorePointer(
+                ignoring: !widget.isCollapsed,
+                child: AnimatedOpacity(
+                  duration: const Duration(milliseconds: 180),
+                  opacity: widget.isCollapsed ? 1.0 : 0.0,
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    child: Row(
+                      children: [
+                        Icon(
+                          Icons.terrain_rounded,
+                          color: Colors.white.withValues(alpha: 0.9),
+                          size: 18,
+                        ),
+                        const SizedBox(width: 10),
+                        const Expanded(
+                          child: Text(
+                            'Mt. Hamiguitan TrekScan+',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 13,
+                              fontFamily: 'Montserrat',
+                              fontWeight: FontWeight.w600,
+                              letterSpacing: 0.2,
+                            ),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        _ActionPill(
+                          icon: Icons.keyboard_arrow_down_rounded,
+                          label: 'Show',
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+
+              // ── Trophy badge (hidden when collapsed to avoid overlap) ─────
+              Positioned(
+                top: 6,
+                right: 6,
+                child: AnimatedOpacity(
+                  duration: const Duration(milliseconds: 150),
+                  opacity: widget.isCollapsed ? 0.0 : 1.0,
+                  child: IgnorePointer(
+                    ignoring: widget.isCollapsed,
+                    child: ECertificateBadge(
+                      certificateService: ECertificateService.instance,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Small frosted-glass pill used as a tap affordance label inside the banner.
+class _ActionPill extends StatelessWidget {
+  const _ActionPill({required this.icon, required this.label});
+
+  final IconData icon;
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.18),
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, color: Colors.white.withValues(alpha: 0.85), size: 13),
+          const SizedBox(width: 3),
+          Text(
+            label,
+            style: TextStyle(
+              color: Colors.white.withValues(alpha: 0.85),
+              fontSize: 11,
+              fontWeight: FontWeight.w600,
             ),
           ),
         ],

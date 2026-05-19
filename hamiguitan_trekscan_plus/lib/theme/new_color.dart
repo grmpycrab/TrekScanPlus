@@ -284,12 +284,12 @@ class AppColorsDark {
   static const Color notificationDot = Colors.red;
 
   // Additional Text Variant
-  static const Color textTertiary = Color(0xFF999999);
-  static const Color textGrey700 = Color(0xFF9E9E9E);
+  static const Color textTertiary = Color(0xFF8A8A8A);
+  static const Color textGrey700 = Color(0xFFAAAAAA);
 
-  // Icon Colors
-  static const Color iconGrey400 = Color(0xFF424242);
-  static const Color iconGrey600 = Color(0xFF212121);
+  // Icon Colors — must be LIGHT on dark backgrounds
+  static const Color iconGrey400 = Color(0xFF757575); // muted but visible on dark bg
+  static const Color iconGrey600 = Color(0xFFBDBDBD); // subtle but clearly readable
 
   // Border Colors (aliases)
   static const Color borderColor = Color(0xFF333333);
