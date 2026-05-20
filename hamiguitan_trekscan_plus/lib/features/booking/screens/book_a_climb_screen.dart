@@ -24,6 +24,7 @@ import '../widgets/trekker_card.dart';
 import '../widgets/member_edit_dialog.dart';
 import '../services/date_validation_service.dart';
 import '../models/document_requirements.dart';
+import 'group_booking_entry_screen.dart';
 
 /// Refactored main booking screen
 /// Uses provider for state management and extracted widgets
@@ -72,15 +73,14 @@ class _BookAClimbScreenRefactoredState
     _initializeProvider();
     _setupAuthListener();
 
-    // If a date was selected from the home calendar, pre-fill it and auto-show form
-    if (widget.selectedDate != null) {
+    // If a date was selected from the home calendar, open the group booking entry
+    if (widget.selectedDate != null && widget.autoShowBookingForm) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        _bookingProvider.setTrekDate(widget.selectedDate!);
-        if (widget.autoShowBookingForm && mounted) {
-          _showBookingForm();
-          // Notify parent that form was shown
-          widget.onFormShown?.call();
-        }
+        if (!mounted) return;
+        widget.onFormShown?.call();
+        Navigator.of(context).push(
+          MaterialPageRoute(builder: (_) => const GroupBookingEntryScreen()),
+        );
       });
     }
   }
@@ -321,7 +321,9 @@ class _BookAClimbScreenRefactoredState
         ),
         floatingActionButton: FloatingActionButton(
           backgroundColor: colors.primary,
-          onPressed: _showBookingForm,
+          onPressed: () => Navigator.of(context).push(
+            MaterialPageRoute(builder: (_) => const GroupBookingEntryScreen()),
+          ),
           child: const Icon(Icons.add, color: SharedColors.white),
         ),
       ),
@@ -514,52 +516,6 @@ class _BookAClimbScreenRefactoredState
         ],
       ),
     );
-  }
-
-  /// Show booking form in modal
-  void _showBookingForm() {
-    // Show modal immediately without blocking - improves perceived performance
-    if (!mounted) return;
-
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: SharedColors.transparent,
-      builder: (modalContext) => _BuildBookingFormModal(
-        bookingProvider: _bookingProvider,
-        contactController: _contactController,
-        affiliationController: _affiliationController,
-        formKey: _formKey,
-        dateValidationService: _dateValidationService,
-        onDraftSaved: _handleDraftSaved,
-      ),
-    );
-
-    // Initialize in background if needed (non-blocking)
-    if (!_bookingProvider.isPrimaryContactInitialized) {
-      _bookingProvider.initializePrimaryContact().then((_) {
-        if (mounted) {
-          _updateContactFromProvider();
-        }
-      });
-    } else {
-      _updateContactFromProvider();
-    }
-  }
-
-  /// Handle draft saved - show feedback and refresh display
-  void _handleDraftSaved() {
-    if (!mounted) return;
-    // Show success feedback
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: const Text('Booking saved as draft!'),
-        backgroundColor: Colors.green,
-        duration: const Duration(seconds: 2),
-      ),
-    );
-    // Refresh the bookings list to show draft
-    _refreshBookingsWithDrafts();
   }
 
   /// Confirm and cancel booking

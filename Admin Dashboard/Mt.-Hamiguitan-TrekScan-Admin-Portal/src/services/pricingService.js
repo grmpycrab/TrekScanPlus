@@ -132,13 +132,14 @@ export const subscribeToPricingVersions = (onData, onError) =>
  *   3. Back-fill supersededBy on the old version.
  *
  * @param {Object} opts
- * @param {Object}        opts.pricing         - Full pricing data (DEFAULT_PRICING shape)
- * @param {Date|string}   opts.effectiveFrom   - When the new version takes effect
- * @param {string}        opts.resolutionRef   - Reference number / title (required)
- * @param {string}        opts.resolutionType  - One of RESOLUTION_TYPES[].value (required)
- * @param {string}        [opts.resolutionNotes] - Free-text remarks
- * @param {string}        opts.versionNumber   - Sequential version number (computed by caller)
- * @param {string}        opts.adminUid        - UID of the admin making the change
+ * @param {Object}        opts.pricing               - Full pricing data (DEFAULT_PRICING shape)
+ * @param {Date|string}   opts.effectiveFrom         - When the new version takes effect
+ * @param {string}        opts.resolutionRef         - Reference number / title (required)
+ * @param {string}        opts.resolutionType        - One of RESOLUTION_TYPES[].value (required)
+ * @param {string}        [opts.resolutionNotes]     - Free-text remarks
+ * @param {string}        opts.versionNumber         - Sequential version number (computed by caller)
+ * @param {string}        opts.adminUid              - UID of the admin making the change
+ * @param {Object|null}   [opts.memorandumAttachment] - Attachment metadata ({ storagePath, downloadURL, fileName, mimeType, size, uploadedAt })
  * @returns {string}  ID of the new version document
  */
 export const createPricingVersion = async ({
@@ -149,6 +150,7 @@ export const createPricingVersion = async ({
   resolutionNotes = '',
   versionNumber,
   adminUid,
+  memorandumAttachment = null,
 }) => {
   const effectiveFromTs =
     effectiveFrom instanceof Date
@@ -175,17 +177,18 @@ export const createPricingVersion = async ({
   // 2. Insert the new active version
   batch.set(newRef, {
     ...sanitisePricing(pricing),
-    versionNumber:   versionNumber ?? 1,
-    effectiveFrom:   effectiveFromTs,
-    effectiveUntil:  null,
-    status:          'active',
+    versionNumber:        versionNumber ?? 1,
+    effectiveFrom:        effectiveFromTs,
+    effectiveUntil:       null,
+    status:               'active',
     resolutionRef,
     resolutionType,
     resolutionNotes,
-    createdBy:       adminUid,
-    createdAt:       serverTimestamp(),
-    supersededAt:    null,
-    supersededBy:    null,
+    memorandumAttachment: memorandumAttachment ?? null,
+    createdBy:            adminUid,
+    createdAt:            serverTimestamp(),
+    supersededAt:         null,
+    supersededBy:         null,
   });
 
   await batch.commit();

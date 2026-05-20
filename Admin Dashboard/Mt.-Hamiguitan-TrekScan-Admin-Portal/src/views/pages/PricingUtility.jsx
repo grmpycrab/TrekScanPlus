@@ -11,6 +11,7 @@ import {
   calculateMemberPrice,
 } from '../../services/pricingService';
 import { getCurrentUser } from '../../services/firebaseAuthService';
+import { uploadFile } from '../../services/firebaseService';
 import '../style/PricingUtility.css';
 
 // ---------------------------------------------------------------------------
@@ -154,6 +155,19 @@ function VersionRow({ version, defaultOpen = false }) {
               {version.resolutionNotes}
             </div>
           )}
+          {version.memorandumAttachment?.downloadURL && (
+            <div className="pu-version-memo">
+              <span className="pu-version-memo-label">Policy Document: </span>
+              <a
+                href={version.memorandumAttachment.downloadURL}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="pu-version-memo-link"
+              >
+                {version.memorandumAttachment.fileName ?? 'View Attachment'}
+              </a>
+            </div>
+          )}
           <PricingSummary version={version} />
           <div className="pu-version-footer">
             Created by UID {version.createdBy ?? '—'} on {formatVersionDate(version.createdAt)}
@@ -183,6 +197,8 @@ function NewVersionModal({ activeVersion, versionCount, onClose, onSuccess }) {
   const [form, setForm] = useState(() => emptyForm(activeVersion));
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState(null);
+  const [memorandumFile, setMemorandumFile] = useState(null);
+  const fileInputRef = React.useRef(null);
 
   const set = (key, val) => setForm((f) => ({ ...f, [key]: val }));
 
@@ -235,14 +251,30 @@ function NewVersionModal({ activeVersion, versionCount, onClose, onSuccess }) {
         seasonalRules: form.seasonalRules,
       };
 
+      let memorandumAttachment = null;
+      if (memorandumFile) {
+        const safeName = memorandumFile.name.replace(/[^a-zA-Z0-9._-]/g, '_');
+        const storagePath = `pricing/memorandums/${Date.now()}_${safeName}`;
+        const downloadURL = await uploadFile(memorandumFile, storagePath);
+        memorandumAttachment = {
+          storagePath,
+          downloadURL,
+          fileName:   memorandumFile.name,
+          mimeType:   memorandumFile.type || null,
+          size:       memorandumFile.size,
+          uploadedAt: new Date().toISOString(),
+        };
+      }
+
       await createPricingVersion({
         pricing,
-        effectiveFrom:   new Date(form.effectiveFrom),
-        resolutionRef:   form.resolutionRef.trim(),
-        resolutionType:  form.resolutionType,
-        resolutionNotes: form.resolutionNotes.trim(),
-        versionNumber:   (versionCount ?? 0) + 1,
-        adminUid:        user.uid,
+        effectiveFrom:        new Date(form.effectiveFrom),
+        resolutionRef:        form.resolutionRef.trim(),
+        resolutionType:       form.resolutionType,
+        resolutionNotes:      form.resolutionNotes.trim(),
+        versionNumber:        (versionCount ?? 0) + 1,
+        adminUid:             user.uid,
+        memorandumAttachment,
       });
 
       onSuccess?.();
@@ -315,6 +347,44 @@ function NewVersionModal({ activeVersion, versionCount, onClose, onSuccess }) {
                 onChange={(e) => set('effectiveFrom', e.target.value)}
                 required
               />
+            </div>
+            <div className="pu-field">
+              <label className="pu-label">Policy / Memorandum Document</label>
+              <div className="pu-upload-row">
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
+                  style={{ display: 'none' }}
+                  onChange={(e) => setMemorandumFile(e.target.files?.[0] ?? null)}
+                />
+                <button
+                  type="button"
+                  className="pu-btn-ghost pu-upload-btn"
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={saving}
+                >
+                  {memorandumFile ? 'Change File' : 'Attach Document'}
+                </button>
+                {memorandumFile ? (
+                  <span className="pu-upload-filename">
+                    {memorandumFile.name}
+                    <button
+                      type="button"
+                      className="pu-upload-remove"
+                      onClick={() => {
+                        setMemorandumFile(null);
+                        if (fileInputRef.current) fileInputRef.current.value = '';
+                      }}
+                      aria-label="Remove file"
+                    >
+                      ✕
+                    </button>
+                  </span>
+                ) : (
+                  <span className="pu-upload-hint">PDF, Word, or image — optional</span>
+                )}
+              </div>
             </div>
           </div>
 
