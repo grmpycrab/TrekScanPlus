@@ -312,10 +312,10 @@ class _LoginScreenState extends State<LoginScreen> {
                                     final user = await FirebaseAuthService
                                         .instance
                                         .signInWithGoogle();
-                                    if (user != null && mounted) {
-                                      await FirebaseAuthService.instance
-                                          .signInWithGoogle();
-                                    } else if (mounted) {
+                                    // If user is null the chooser was cancelled;
+                                    // if non-null, AuthGate navigates automatically
+                                    // via authStateChanges — no second call needed.
+                                    if (user == null && mounted) {
                                       setState(() {
                                         _isLoading = false;
                                       });

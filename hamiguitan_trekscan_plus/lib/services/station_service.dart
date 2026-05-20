@@ -196,7 +196,7 @@ class StationService extends ChangeNotifier {
 
       // Store both the actual ID and QR code (if different)
       Set<String> visitedStationIds =
-          prefs.getStringList(VISITED_STATIONS_KEY)?.toSet() ?? {};
+          prefs.getStringList(_userVisitedStationsKey)?.toSet() ?? {};
 
       if (isVisited) {
         visitedStationIds.add(station.id);
@@ -504,5 +504,54 @@ class StationService extends ChangeNotifier {
 
   Future<String?> getQRKeyForStation(String stationId) async {
     return prefs.getString(_getUserQRKey(stationId));
+  }
+
+  /// Fetch visited stations from Firestore for [userId] and apply them to the
+  /// in-memory station list and user-scoped SharedPreferences cache.
+  ///
+  /// Safe to call on already-loaded stations — does not reset [_isLoaded].
+  /// Call this from [AppStartupController.initializeUserServices] after auth
+  /// resolves so Device B picks up scans made on Device A.
+  Future<void> syncFromFirebase(String userId) async {
+    setCurrentUser(userId);
+
+    try {
+      final firebaseIds = await FirestoreStationService.instance
+          .getVisitedStationIds();
+
+      // Merge remote ids with anything already saved locally for this user.
+      final localIds =
+          prefs.getStringList(_userVisitedStationsKey)?.toSet() ?? {};
+      final mergedIds = {...localIds, ...firebaseIds};
+
+      for (final station in _stations) {
+        station.updateVisited(mergedIds.contains(station.id));
+      }
+
+      await prefs.setStringList(_userVisitedStationsKey, mergedIds.toList());
+
+      notifyListeners();
+
+      if (kDebugMode) {
+        AppLogger.i(
+          'Station sync: ${firebaseIds.length} from Firebase, '
+          '${mergedIds.length} total visited',
+        );
+      }
+    } catch (e) {
+      if (kDebugMode) AppLogger.w('Station Firebase sync failed: $e');
+    }
+  }
+
+  /// Clear visited state and user scope on logout.
+  ///
+  /// Station JSON structure (from assets) is preserved so the next login
+  /// does not need to reload from disk — only [syncFromFirebase] is needed.
+  void clearUserData() {
+    _currentUserId = null;
+    for (final station in _stations) {
+      station.updateVisited(false);
+    }
+    notifyListeners();
   }
 }

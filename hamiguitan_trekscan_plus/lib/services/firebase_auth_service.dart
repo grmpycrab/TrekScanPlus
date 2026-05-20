@@ -330,18 +330,6 @@ class FirebaseAuthService {
         AppLogger.i('  - Display name: ${googleUser.displayName}');
       }
 
-      // Check if this email is already used with email/password authentication
-      final signInMethods = await getSignInMethodsForEmail(googleUser.email);
-      if (signInMethods.contains('password') &&
-          !signInMethods.contains('google.com')) {
-        // Email is already registered with email/password, not Google
-        throw FirebaseAuthException(
-          code: 'account-exists-with-different-credential',
-          message:
-              'An account already exists with this email address but was registered using email and password. Please sign in using your email and password instead.',
-        );
-      }
-
       final GoogleSignInAuthentication googleAuth =
           await googleUser.authentication;
 
@@ -413,11 +401,15 @@ class FirebaseAuthService {
         }
 
         return userCredential.user;
+      } on FirebaseAuthException {
+        // FirebaseAuthExceptions (e.g. account-exists-with-different-credential)
+        // must propagate to the outer handler — never swallow them here.
+        rethrow;
       } catch (e, st) {
-        // Sometimes a mismatch between plugin/platform generated Pigeon
-        // types causes a Dart-side cast error even though the native SDK
-        // has completed the sign-in. Detect that case and return the
-        // current user if available.
+        // Only non-Firebase errors reach here (e.g. Pigeon type-cast mismatches
+        // between plugin/platform code). If the native SDK already signed the
+        // user in despite the Dart-side error, return that user so the app
+        // can continue without interruption.
         if (kDebugMode) {
           AppLogger.i('Error while converting UserCredential: $e');
           print(st);
@@ -430,13 +422,11 @@ class FirebaseAuthService {
               'Returning fallback currentUser: ${fallbackUser.email}',
             );
           }
-          // Ensure Firestore has a user document for this account and then return it.
           try {
             await UserService.instance.createOrUpdateUserFromFirebase(
               fallbackUser,
             );
           } catch (e) {
-            // Log Firestore error but don't block sign-in
             if (kDebugMode) {
               AppLogger.i(
                 'Warning: Failed to create user document in Firestore: $e',

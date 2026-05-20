@@ -201,11 +201,33 @@ class ScannerViewModel extends ChangeNotifier {
   /// This method only translates [ScanGateResult] values into ViewModel state;
   /// it contains no session or geofence logic of its own.
   Future<void> _processStation(StationData station) async {
-    // Fire and forget — non-blocking, so the UI remains responsive offline.
+    // Mark visited locally + sync to Firestore — non-blocking so the UI
+    // stays responsive even on slow networks.
     StationService.instance
         .updateStationVisited(station.id, true)
         .then((_) => AppLogger.i('Station marked as visited in local cache'))
         .catchError((e) => AppLogger.w('Error updating station visited: $e'));
+
+    // Check and unlock badges for this scan.  updateStationVisited updates
+    // the in-memory list synchronously before its first await, so
+    // getVisitedStations() already reflects the new scan when we read it here.
+    // _syncSingleAchievementToFirebase inside checkAndUnlockAchievements writes
+    // newly unlocked badges to Firestore, making them visible on other devices.
+    unawaited(
+      Future.microtask(() async {
+        try {
+          final visited = StationService.instance.getVisitedStations();
+          await _achievementService.checkAndUnlockAchievements(
+            visited.length,
+            visited.map((s) => s.id).toList(),
+            currentStationId: station.id,
+            currentStationIndex: visited.length,
+          );
+        } catch (e) {
+          AppLogger.w('Achievement check: $e');
+        }
+      }),
+    );
 
     final result = await ClimbSessionGuard.instance.processStationScan(
       station: station,

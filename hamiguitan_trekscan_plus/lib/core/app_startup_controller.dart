@@ -63,6 +63,22 @@ class AppStartupController {
       AppLogger.w('ClimbSessionService: $e (offline mode available)');
     }
 
+    // Scope the station service to this user and pull their visited stations
+    // from Firestore.  This is the primary cross-device sync path: when the
+    // user logs in on Device B the in-memory station list is refreshed with
+    // whatever they scanned on Device A.
+    StationService.instance.setCurrentUser(userId);
+    unawaited(
+      Future.microtask(() async {
+        try {
+          await StationService.instance.syncFromFirebase(userId);
+          AppLogger.i('  Stations synced from Firebase');
+        } catch (e) {
+          AppLogger.w('Station sync: $e');
+        }
+      }),
+    );
+
     unawaited(
       Future.delayed(const Duration(milliseconds: 300), () async {
         try {
@@ -129,6 +145,10 @@ class AppStartupController {
   void resetForLogout() {
     _servicesInitialized = false;
     _permissionsRequested = false;
+    // Clear visited state so a different user logging in does not briefly see
+    // the previous user's scanned stations before their own sync completes.
+    StationService.instance.clearUserData();
+    AchievementService().resetInitialization();
   }
 
   /// Handles app foreground/background transitions for presence tracking.
@@ -151,12 +171,25 @@ class AppStartupController {
   // ---------------------------------------------------------------------------
 
   /// Ensures ClimbSessionService starts even when there is no network user.
+  ///
+  /// Previously this called [initializeUserServices] with a garbage offline
+  /// userId which set [_servicesInitialized] = true and blocked the real
+  /// per-user init from running after login.  Now we only init the one
+  /// service that genuinely needs an offline-first cold start.
   void _handleOfflineFallback() {
     if (!ClimbSessionService.isInitialized &&
         FirebaseAuth.instance.currentUser == null) {
       AppLogger.i('Initializing ClimbSessionService in offline mode...');
-      initializeUserServices(
-        'offline_${DateTime.now().millisecondsSinceEpoch}',
+      unawaited(
+        Future(() async {
+          try {
+            await ClimbSessionService.init(
+              userId: 'offline_${DateTime.now().millisecondsSinceEpoch}',
+            );
+          } catch (e) {
+            AppLogger.w('ClimbSessionService offline: $e');
+          }
+        }),
       );
     }
   }
