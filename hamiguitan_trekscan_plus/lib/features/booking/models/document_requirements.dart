@@ -51,7 +51,7 @@ class DocumentRequirements {
         ),
       ],
     ),
-    'dav_oriental_resident': DocumentType(
+    'davao_oriental_resident': DocumentType(
       name: 'Davao Oriental Resident',
       discount: 50,
       discountDescription: '50% discount for Davao Oriental residents',
@@ -74,8 +74,8 @@ class DocumentRequirements {
         ),
       ],
     ),
-    'outdoor_club_federation': DocumentType(
-      name: 'Outdoor Club Federation Member',
+    'ocfdo': DocumentType(
+      name: 'OCFDO Member',
       discount: 67,
       discountDescription: '67% discount (equivalent to 2,000 pesos)',
       requiredDocs: [
@@ -96,7 +96,7 @@ class DocumentRequirements {
         ),
       ],
     ),
-    'children': DocumentType(
+    'children_8_15': DocumentType(
       name: 'Children (8-15 years old)',
       discount: 50,
       discountDescription:
@@ -137,6 +137,23 @@ class DocumentRequirements {
         DocumentField(
           name: 'MFSM ID',
           description: 'Official MFSM ID',
+          extension: ['pdf', 'jpg', 'jpeg', 'png'],
+        ),
+      ],
+    ),
+    'outside_davao_oriental': DocumentType(
+      name: 'Outside Davao Oriental',
+      discount: 0,
+      discountDescription: 'Full price — no discount',
+      requiredDocs: [
+        DocumentField(
+          name: 'Medical Certificate',
+          description: 'Original medical certificate',
+          extension: ['pdf', 'jpg', 'jpeg', 'png'],
+        ),
+        DocumentField(
+          name: 'Valid Government ID',
+          description: 'Photocopy of valid government ID',
           extension: ['pdf', 'jpg', 'jpeg', 'png'],
         ),
       ],

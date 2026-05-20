@@ -11,6 +11,7 @@ import 'package:image/image.dart' as img;
 
 import '../models/booking_model.dart';
 import '../models/group_booking.dart';
+import 'pricing_service.dart';
 import '../models/join_request.dart';
 import '../features/notification/models/notification_model.dart';
 import '../features/notification/services/firestore_notification_service.dart';
@@ -58,12 +59,10 @@ class GroupBookingService {
   // OFF-SEASON HELPER
   // ──────────────────────────────────────────────────────────────────────────
 
-  /// Returns true if [date] falls within the annual off-season recovery period
-  /// (July 1 – September 30).
-  static bool isOffSeason(DateTime date) {
-    final month = date.month;
-    return month >= 7 && month <= 9;
-  }
+  /// Delegates to [PricingService] so the off-season window is configured
+  /// in a single place (Firestore `pricingVersions` → `seasonalRules`).
+  static bool isOffSeason(DateTime date) =>
+      PricingService.instance.isOffSeason(date);
 
   static String resolveSeasonType(DateTime date) =>
       isOffSeason(date) ? 'off_season' : 'regular';
@@ -89,7 +88,7 @@ class GroupBookingService {
 
     final data = group.toMap()
       ..['seasonType'] = resolveSeasonType(trekDate)
-      ..['currentSlots'] = 1
+      ..['currentSlots'] = 1 + group.guestMembers.length
       ..['status'] = 'open';
 
     data.remove('id');

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../models/member.dart';
+import '../../../services/pricing_service.dart';
 import '../../../theme/app_theme.dart';
 import '../models/document_requirements.dart';
 
@@ -108,15 +109,11 @@ class PriceSummaryWidget extends StatelessWidget {
 
   /// Build individual member price rows
   Widget _buildMemberPrices(AppTheme colors) {
+    final ps = PricingService.instance;
     return Column(
-      children: members.asMap().entries.map((entry) {
-        final member = entry.value;
-
-        // Base price is 3000 PHP for three days
-        final basePricePerPerson = 3000.0;
-        final discountPercent = _getDiscountPercent(member.category);
-        final discountAmount = basePricePerPerson * (discountPercent / 100);
-        final memberPrice = basePricePerPerson - discountAmount;
+      children: members.map((member) {
+        final memberPrice = ps.calculateMemberPrice(member.category);
+        final discountPercent = ps.getDiscountPercent(member.category);
 
         return Padding(
           padding: const EdgeInsets.only(bottom: 8.0),
@@ -125,7 +122,7 @@ class PriceSummaryWidget extends StatelessWidget {
             children: [
               Expanded(
                 child: Text(
-                  '${member.firstName} ${member.lastName} (${member.category})',
+                  '${member.firstName} ${member.lastName} — ${member.categoryDisplayName}',
                   style: const TextStyle(fontSize: 13),
                   overflow: TextOverflow.ellipsis,
                 ),
@@ -142,7 +139,7 @@ class PriceSummaryWidget extends StatelessWidget {
                   ),
                   if (discountPercent > 0)
                     Text(
-                      '(${discountPercent.toStringAsFixed(0)}% off)',
+                      '($discountPercent% off)',
                       style: TextStyle(fontSize: 11, color: colors.green700),
                     ),
                 ],
@@ -154,30 +151,38 @@ class PriceSummaryWidget extends StatelessWidget {
     );
   }
 
-  /// Build total price row
+  /// Build total price row with estimate disclaimer
   Widget _buildTotalPrice(AppTheme colors) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
-          'Total Estimated Price',
-          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            const Text(
+              'Total Estimated Price',
+              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+            ),
+            Text(
+              '₱${estimatedTotalPrice.toStringAsFixed(0)}',
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 16,
+                color: colors.primary,
+              ),
+            ),
+          ],
         ),
+        const SizedBox(height: 6),
         Text(
-          '₱${estimatedTotalPrice.toStringAsFixed(0)}',
+          'Estimate only — actual payment is collected at the ranger station on trek day. No online payment is required.',
           style: TextStyle(
-            fontWeight: FontWeight.bold,
-            fontSize: 16,
-            color: colors.primary,
+            fontSize: 11,
+            color: colors.textTertiary,
+            fontStyle: FontStyle.italic,
           ),
         ),
       ],
     );
-  }
-
-  /// Get discount percentage for category from centralized DocumentRequirements
-  double _getDiscountPercent(String category) {
-    final discount = DocumentRequirements.getDiscountForCategory(category);
-    return discount?.toDouble() ?? 0.0;
   }
 }

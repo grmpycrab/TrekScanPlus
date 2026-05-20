@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../theme/app_theme.dart';
 import 'active_groups_screen.dart';
-import 'create_group_screen.dart';
+import 'create_group_flow_screen.dart';
 
 /// Entry point for the group booking workflow.
 ///
@@ -51,7 +51,7 @@ class GroupBookingEntryScreen extends StatelessWidget {
                   'Other trekkers can request to join your group.',
               accentColor: colors.primary,
               onTap: () => Navigator.of(context).push(
-                MaterialPageRoute(builder: (_) => const CreateGroupScreen()),
+                MaterialPageRoute(builder: (_) => const CreateGroupFlowScreen()),
               ),
             ),
             const SizedBox(height: 16),

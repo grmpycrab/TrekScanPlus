@@ -147,7 +147,9 @@ class PricingConfig {
             )
           : SeasonalRules.defaults,
       version: ((d['versionNumber'] ?? d['version']) as num?)?.toInt() ?? 1,
-      updatedAt: (d['updatedAt'] as Timestamp?)?.toDate(),
+      updatedAt: d['updatedAt'] is Timestamp
+          ? (d['updatedAt'] as Timestamp).toDate()
+          : null,
     );
   }
 

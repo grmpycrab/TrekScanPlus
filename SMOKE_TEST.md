@@ -90,6 +90,48 @@ Mark each item ✅ Pass, ❌ Fail (note the failure), or ⏭ Skip (with reason).
 
 ---
 
+---
+
+## 8. Porter Ratio & Slot Capacity
+
+| # | Check | Result |
+|---|-------|--------|
+| 8.1 | Group with 5 trekkers shows **1 porter** automatically allocated in Step 2 slot counter | |
+| 8.2 | Group with 9 trekkers shows **1 porter**; group with 10 trekkers shows **2 porters** | |
+| 8.3 | Step 3 Review shows "Porter Allocation" card when `porterCount > 0` with correct ₱ total | |
+| 8.4 | Date picker availability shows "X trekkers + Y porters" breakdown in "Site Capacity Used" | |
+| 8.5 | `DateValidationService` counts both `bookings` AND `groupBookings` toward site slots used | |
+| 8.6 | Remaining trekker slots = `floor((maxSlots − usedSiteSlots) × 5 / 6)` — verify with 30-slot day | |
+| 8.7 | Group booking with 25 trekkers (5 porters) on a 30-slot day shows 0 remaining trekker slots | |
+
+---
+
+## 9. Pricing Display (Estimate Only)
+
+| # | Check | Result |
+|---|-------|--------|
+| 9.1 | `PriceSummaryWidget` shows correct per-member price from **PricingService** (not hardcoded ₱3000) | |
+| 9.2 | After admin updates base price in Pricing Utility, mobile booking flow reflects new price within ~5 s | |
+| 9.3 | `PriceSummaryWidget` footer reads "Estimate only — actual payment is collected at the ranger station" | |
+| 9.4 | Step 3 Review in group flow footer reads "Payment is collected at the ranger station on trek day" | |
+| 9.5 | No screen in the app shows a payment form, checkout button, or online payment option | |
+| 9.6 | Category discount labels use correct keys: `student`, `senior_citizen`, `davao_oriental_resident`, `ocfdo`, `children_8_15`, `mfsm`, `outside_davao_oriental` | |
+
+---
+
+## 10. Document Requirements (Group & Guest Members)
+
+| # | Check | Result |
+|---|-------|--------|
+| 10.1 | `DocumentRequirements.getRequiredDocumentsForCategory('davao_oriental_resident')` returns 3 docs (not null) | |
+| 10.2 | `DocumentRequirements.getRequiredDocumentsForCategory('ocfdo')` returns 3 docs including OCF ID | |
+| 10.3 | `DocumentRequirements.getRequiredDocumentsForCategory('children_8_15')` returns 3 docs including Parent Consent | |
+| 10.4 | `DocumentRequirements.getRequiredDocumentsForCategory('outside_davao_oriental')` returns 2 docs (Medical + Gov't ID) | |
+| 10.5 | `DocumentRequirements.getDiscountForCategory('davao_oriental_resident')` returns `50` (was silently returning `null` before fix) | |
+| 10.6 | `PriceSummaryWidget` shows discount badge for `davao_oriental_resident`, `ocfdo`, `children_8_15` members | |
+
+---
+
 ## Notes
 
 - **Environment tested:** `[ ] Local` `[ ] Staging` `[ ] Production`

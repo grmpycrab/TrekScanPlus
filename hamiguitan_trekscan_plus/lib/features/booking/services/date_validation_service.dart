@@ -140,36 +140,63 @@ class DateValidationService {
         return result;
       }
 
-      // Get max slots for this date
+      // Get max slots for this date (total site capacity: trekkers + porters)
       final maxSlots = dateConfig.maxSlots;
 
-      // Query approved bookings for this date
       final startOfDay = DateTime(date.year, date.month, date.day, 0, 0, 0);
       final endOfDay = DateTime(date.year, date.month, date.day, 23, 59, 59);
+      final tsStart = Timestamp.fromDate(startOfDay);
+      final tsEnd = Timestamp.fromDate(endOfDay);
 
-      final snapshot = await _firestore
+      // Count approved individual bookings
+      final indivSnap = await _firestore
           .collection('bookings')
           .where('status', isEqualTo: 'approved')
-          .where(
-            'trekDate',
-            isGreaterThanOrEqualTo: Timestamp.fromDate(startOfDay),
-          )
-          .where('trekDate', isLessThanOrEqualTo: Timestamp.fromDate(endOfDay))
+          .where('trekDate', isGreaterThanOrEqualTo: tsStart)
+          .where('trekDate', isLessThanOrEqualTo: tsEnd)
           .get();
+      final indivTrekkers = indivSnap.docs.length;
 
-      // Count approved bookings (all docs in snapshot are already approved due to filter)
-      int slotsUsed = snapshot.docs.length;
+      // Count trekkers from active group bookings (open / pending_review / approved / full)
+      final groupSnap = await _firestore
+          .collection('groupBookings')
+          .where('trekDate', isGreaterThanOrEqualTo: tsStart)
+          .where('trekDate', isLessThanOrEqualTo: tsEnd)
+          .get();
+      final groupTrekkers = groupSnap.docs
+          .where((d) {
+            final s = d['status'] as String? ?? '';
+            return s != 'cancelled' && s != 'declined';
+          })
+          .fold<int>(
+              0, (acc, d) => acc + ((d['currentSlots'] as num?)?.toInt() ?? 0));
 
-      final slotsNeeded = 1; // Only count primary trekker
+      // Total trekkers on site for this date
+      final bookedTrekkers = indivTrekkers + groupTrekkers;
+
+      // Porter ratio: 1 porter per every 5 trekkers (floor division).
+      // Porter positions count toward total site capacity.
+      final allocatedPorters = bookedTrekkers ~/ 5;
+      final slotsUsed = bookedTrekkers + allocatedPorters;
+
+      // How many porters the incoming party will require
+      final incomingPorters = totalMembers ~/ 5;
+      final slotsNeeded = totalMembers + incomingPorters;
+
       final available = (slotsUsed + slotsNeeded) <= maxSlots;
       final remaining = maxSlots - slotsUsed;
+      // Express remaining in trekker-equivalent slots (5 trekkers use 6 site slots)
+      final remainingTrekkerSlots = (remaining * 5) ~/ 6;
 
       final result = {
         'available': available,
         'slotsUsed': slotsUsed,
+        'bookedTrekkers': bookedTrekkers,
+        'allocatedPorters': allocatedPorters,
         'slotsNeeded': slotsNeeded,
         'maxSlots': maxSlots,
         'remaining': remaining,
+        'remainingTrekkerSlots': remainingTrekkerSlots,
         'isClosed': false,
       };
       _availabilityCache[dateStr] = result;
@@ -180,9 +207,12 @@ class DateValidationService {
       return {
         'available': true,
         'slotsUsed': 0,
-        'slotsNeeded': 1,
+        'bookedTrekkers': 0,
+        'allocatedPorters': 0,
+        'slotsNeeded': totalMembers,
         'maxSlots': 30,
         'remaining': 30,
+        'remainingTrekkerSlots': 25,
         'isClosed': false,
       };
     }

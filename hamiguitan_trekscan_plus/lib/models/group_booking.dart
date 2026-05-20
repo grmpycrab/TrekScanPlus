@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'booking_model.dart';
+import 'member.dart';
 
 /// Firestore collection: `groupBookings`
 ///
@@ -50,6 +51,13 @@ class GroupBooking {
   /// approves the group (links group ↔ booking for roster tracking)
   final String? linkedBookingId;
 
+  /// Organizer's full member record (personal info + category + porter choice)
+  final Member? organizerMember;
+
+  /// Walk-in / guest members added by the organizer during group creation.
+  /// Registered app-users who join later appear as join requests instead.
+  final List<Member> guestMembers;
+
   final Timestamp createdAt;
   Timestamp? updatedAt;
 
@@ -72,6 +80,8 @@ class GroupBooking {
     this.letterOfCommunication,
     this.adminNotes,
     this.linkedBookingId,
+    this.organizerMember,
+    this.guestMembers = const [],
     Timestamp? createdAt,
     this.updatedAt,
   }) : createdAt = createdAt ?? Timestamp.now();
@@ -98,6 +108,8 @@ class GroupBooking {
     'letterOfCommunication': letterOfCommunication?.toMap(),
     'adminNotes': adminNotes,
     'linkedBookingId': linkedBookingId,
+    'organizerMember': organizerMember?.toMap(),
+    'guestMembers': guestMembers.map((m) => m.toMap()).toList(),
     'createdAt': createdAt,
     'updatedAt': updatedAt,
   };
@@ -127,6 +139,15 @@ class GroupBooking {
           : null,
       adminNotes: d['adminNotes'] as String?,
       linkedBookingId: d['linkedBookingId'] as String?,
+      organizerMember: d['organizerMember'] != null
+          ? Member.fromMap(
+              Map<String, dynamic>.from(d['organizerMember'] as Map),
+            )
+          : null,
+      guestMembers: (d['guestMembers'] as List<dynamic>?)
+              ?.map((e) => Member.fromMap(Map<String, dynamic>.from(e as Map)))
+              .toList() ??
+          [],
       createdAt: d['createdAt'] as Timestamp? ?? Timestamp.now(),
       updatedAt: d['updatedAt'] as Timestamp?,
     );
@@ -151,6 +172,8 @@ class GroupBooking {
     Attachment? letterOfCommunication,
     String? adminNotes,
     String? linkedBookingId,
+    Member? organizerMember,
+    List<Member>? guestMembers,
     Timestamp? createdAt,
     Timestamp? updatedAt,
   }) => GroupBooking(
@@ -172,6 +195,8 @@ class GroupBooking {
     letterOfCommunication: letterOfCommunication ?? this.letterOfCommunication,
     adminNotes: adminNotes ?? this.adminNotes,
     linkedBookingId: linkedBookingId ?? this.linkedBookingId,
+    organizerMember: organizerMember ?? this.organizerMember,
+    guestMembers: guestMembers ?? this.guestMembers,
     createdAt: createdAt ?? this.createdAt,
     updatedAt: updatedAt ?? this.updatedAt,
   );

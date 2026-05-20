@@ -98,9 +98,12 @@ class _TrekDatePickerState extends State<TrekDatePicker> {
     final available = _availabilityInfo!['available'] as bool? ?? false;
     final isClosed = _availabilityInfo!['isClosed'] as bool? ?? false;
     final isBufferDay = _availabilityInfo!['isBufferDay'] as bool? ?? false;
+    final bookedTrekkers = _availabilityInfo!['bookedTrekkers'] as int? ?? 0;
+    final allocatedPorters = _availabilityInfo!['allocatedPorters'] as int? ?? 0;
     final slotsUsed = _availabilityInfo!['slotsUsed'] as int? ?? 0;
     final maxSlots = _availabilityInfo!['maxSlots'] as int? ?? 30;
-    final remaining = _availabilityInfo!['remaining'] as int? ?? 0;
+    final remaining = _availabilityInfo!['remainingTrekkerSlots'] as int? ??
+        _availabilityInfo!['remaining'] as int? ?? 0;
     final closureReason = _availabilityInfo!['closureReason'] as String?;
     final conflictDate = _availabilityInfo!['conflictDate'] as String?;
 
@@ -217,7 +220,7 @@ class _TrekDatePickerState extends State<TrekDatePicker> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Slots Used',
+                      'Site Capacity Used',
                       style: TextStyle(
                         fontSize: 12,
                         color: colors.textSecondary,
@@ -230,20 +233,26 @@ class _TrekDatePickerState extends State<TrekDatePicker> {
                         fontSize: 14,
                       ),
                     ),
+                    const SizedBox(height: 2),
+                    Text(
+                      '$bookedTrekkers trekker${bookedTrekkers != 1 ? 's' : ''}'
+                      ' + $allocatedPorters porter${allocatedPorters != 1 ? 's' : ''}',
+                      style: TextStyle(fontSize: 11, color: colors.textTertiary),
+                    ),
                   ],
                 ),
                 Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                  crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
                     Text(
-                      'Remaining',
+                      'Trekker Slots Left',
                       style: TextStyle(
                         fontSize: 12,
                         color: colors.textSecondary,
                       ),
                     ),
                     Text(
-                      '$remaining slots',
+                      '$remaining',
                       style: TextStyle(
                         fontWeight: FontWeight.w600,
                         fontSize: 14,

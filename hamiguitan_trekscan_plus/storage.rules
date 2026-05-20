@@ -49,6 +49,13 @@ service firebase.storage {
       allow delete: if request.auth != null;
     }
 
+    // Pricing memorandums: authenticated users (admin portal users) can upload
+    match /pricing/memorandums/{allFiles=**} {
+      allow create, write: if request.auth != null;
+      allow read: if request.auth != null;
+      allow delete: if request.auth != null;
+    }
+
     // Deny all other access
     match /{allPaths=**} {
       allow read, write, delete: if false;
