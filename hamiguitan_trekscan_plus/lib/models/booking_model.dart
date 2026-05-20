@@ -52,6 +52,15 @@ class BookingModel {
   trekType; // 'special_trek', 'benchmarking_trek', 'research_trek', 'regular_trek'
   final String hometown; // Primary contact's hometown/city
   final String phoneNumber; // Primary contact's phone number
+  /// Non-null when this booking was created through a group booking workflow.
+  final String? groupId;
+
+  /// 'regular' | 'special' | 'government_official' | 'off_season'
+  final String bookingClassification;
+
+  /// 'regular' | 'off_season'
+  final String seasonType;
+
   final String? notes;
   final String? adminNotes;
   List<Attachment> attachments;
@@ -69,6 +78,9 @@ class BookingModel {
     required this.affiliation,
     required this.trekDate,
     required this.trekType,
+    this.groupId,
+    this.bookingClassification = 'regular',
+    this.seasonType = 'regular',
     this.hometown = '',
     this.phoneNumber = '',
     this.notes,
@@ -76,7 +88,7 @@ class BookingModel {
     this.attachments = const [],
     this.members = const [],
     this.status = 'pending',
-    this.submissionStatus = 'draft', // Default to draft when creating
+    this.submissionStatus = 'draft',
     this.isArchived = false,
     Timestamp? createdAt,
     this.updatedAt,
@@ -85,11 +97,14 @@ class BookingModel {
 
   Map<String, dynamic> toMap() {
     final map = <String, dynamic>{
-      'id': id, // Always include ID
+      'id': id,
       'userId': userId,
       'affiliation': affiliation,
       'trekDate': trekDate,
       'trekType': trekType,
+      if (groupId != null) 'groupId': groupId,
+      'bookingClassification': bookingClassification,
+      'seasonType': seasonType,
       'hometown': hometown,
       'phoneNumber': phoneNumber,
       'notes': notes,
@@ -181,6 +196,10 @@ class BookingModel {
       affiliation: data['affiliation'] as String? ?? '',
       trekDate: data['trekDate'] as Timestamp,
       trekType: data['trekType'] as String? ?? 'regular_trek',
+      groupId: data['groupId'] as String?,
+      bookingClassification:
+          data['bookingClassification'] as String? ?? 'regular',
+      seasonType: data['seasonType'] as String? ?? 'regular',
       hometown: data['hometown'] as String? ?? '',
       phoneNumber: data['phoneNumber'] as String? ?? '',
       notes: data['notes'] as String?,
@@ -207,6 +226,10 @@ class BookingModel {
       affiliation: data['affiliation'] as String? ?? '',
       trekDate: _parseTimestamp(data['trekDate']),
       trekType: data['trekType'] as String? ?? 'regular_trek',
+      groupId: data['groupId'] as String?,
+      bookingClassification:
+          data['bookingClassification'] as String? ?? 'regular',
+      seasonType: data['seasonType'] as String? ?? 'regular',
       hometown: data['hometown'] as String? ?? '',
       phoneNumber: data['phoneNumber'] as String? ?? '',
       notes: data['notes'] as String?,
@@ -274,6 +297,9 @@ class BookingModel {
     String? affiliation,
     Timestamp? trekDate,
     String? trekType,
+    String? groupId,
+    String? bookingClassification,
+    String? seasonType,
     String? hometown,
     String? phoneNumber,
     String? notes,
@@ -292,6 +318,10 @@ class BookingModel {
       affiliation: affiliation ?? this.affiliation,
       trekDate: trekDate ?? this.trekDate,
       trekType: trekType ?? this.trekType,
+      groupId: groupId ?? this.groupId,
+      bookingClassification:
+          bookingClassification ?? this.bookingClassification,
+      seasonType: seasonType ?? this.seasonType,
       hometown: hometown ?? this.hometown,
       phoneNumber: phoneNumber ?? this.phoneNumber,
       notes: notes ?? this.notes,

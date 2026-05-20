@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
-import { Calendar, Shield, Award, MapPin, ChevronRight, ArrowLeft } from 'lucide-react';
+import { Calendar, Shield, Award, MapPin, DollarSign, ChevronRight, ArrowLeft, PhilippinePeso } from 'lucide-react';
 import Utility from './Utility';
 import PostModeration from './PostModeration';
 import Certificates from './Certificates';
 import StationActivity from './StationActivity';
+import PricingUtility from './PricingUtility';
 import '../style/UtilityCenter.css';
 
 const MODULES = [
@@ -16,6 +17,16 @@ const MODULES = [
     Icon: Calendar,
     iconBg: '#eaf5e7',
     iconColor: '#2d6b22',
+  },
+  {
+    id: 'pricing',
+    title: 'Pricing Configuration',
+    category: 'Booking Control',
+    description:
+      'Set base trek fees, per-category discounts, service prices (porter, guide, scientist), and off-season rules. Changes sync instantly to the mobile app.',
+    Icon: PhilippinePeso,
+    iconBg: '#f0fdf4',
+    iconColor: '#15803d',
   },
   {
     id: 'moderation',
@@ -68,6 +79,7 @@ function UtilityCenter({ adminName }) {
         </div>
 
         {activeModule === 'calendar'     && <Utility />}
+        {activeModule === 'pricing'      && <PricingUtility />}
         {activeModule === 'moderation'   && <PostModeration adminName={adminName} />}
         {activeModule === 'certificates' && <Certificates adminName={adminName} />}
         {activeModule === 'stations'     && <StationActivity />}
@@ -85,8 +97,7 @@ function UtilityCenter({ adminName }) {
         </div>
         <h1 className="uc-hub-title">Utility Center</h1>
         <p className="uc-hub-desc">
-          Advanced administrative controls for Mount Hamiguitan World Heritage site — manage booking
-          calendars, moderate community content, issue certifications, and monitor trail stations.
+          Advanced administrative controls for Mount Hamiguitan World Heritage site — manage booking calendars, moderate community content, issue certifications, and monitor trail stations.
         </p>
       </div>
 

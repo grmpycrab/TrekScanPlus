@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import '../style/ClimbRequest.css';
+import GroupBookingsPanel from './GroupBookingsPanel';
 import { 
   getAllBookings, 
   getBookingById, 
@@ -16,6 +17,7 @@ import { useToast, ToastContainer } from '../../components/Toast';
 import { exportToExcel, exportToPDF, exportToCSV } from '../../utils/exportUtils';
 
 function ClimbRequest({ bookingIdToOpen, onBookingOpened }) {
+  const [activeTab, setActiveTab] = useState('individual');
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedRequest, setSelectedRequest] = useState(null);
   const [showDetailsModal, setShowDetailsModal] = useState(false);
@@ -828,6 +830,28 @@ function ClimbRequest({ bookingIdToOpen, onBookingOpened }) {
 
   return (
     <div className="climb-main">
+      {/* ── Tab switcher ──────────────────────────────────────── */}
+      <div className="cr-tab-bar">
+        {[
+          { key: 'individual', label: 'Individual Bookings' },
+          { key: 'groups',     label: 'Group Bookings' },
+        ].map(({ key, label }) => (
+          <button
+            key={key}
+            className={`cr-tab${activeTab === key ? ' cr-tab-active' : ''}`}
+            onClick={() => setActiveTab(key)}
+          >
+            {label}
+          </button>
+        ))}
+      </div>
+
+      {/* ── Group Bookings Panel ──────────────────────────────── */}
+      {activeTab === 'groups' && <GroupBookingsPanel />}
+
+      {/* ── Individual Bookings (existing content) ────────────── */}
+      {activeTab === 'individual' && <>
+
         {/* Error Display */}
         {error && (
           <div style={{
@@ -1790,6 +1814,8 @@ function ClimbRequest({ bookingIdToOpen, onBookingOpened }) {
           </div>
         </div>
       )}
+
+      </>}
 
       {/* Toast Notifications */}
       <ToastContainer toasts={toasts} removeToast={removeToast} />

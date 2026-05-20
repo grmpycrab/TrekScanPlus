@@ -2,6 +2,14 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
+    // Admin check: supports both custom-claim and Firestore-role approaches
+    function isAdmin() {
+      return request.auth != null && (
+        request.auth.token.admin == true ||
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin'
+      );
+    }
+
     // Users collection: users can read/write their own doc, admins can read all
     match /users/{userId} {
       // Allow ANY authenticated user to read basic user info (for followers/following lists, social features)
@@ -73,7 +81,7 @@ service cloud.firestore {
       allow read: if request.auth != null && (
         request.auth.uid == resource.data.userId ||
         resource.data.status == 'approved' ||
-        request.auth.token.admin == true
+        isAdmin()
       );
 
       // Update: owners can update their booking while it's pending or declined (to allow resubmission)
@@ -95,13 +103,13 @@ service cloud.firestore {
         || (resource.data.userId == request.auth.uid && 
             request.resource.data.status == 'cancelled')
         // admin override
-        || request.auth.token.admin == true
+        || isAdmin()
       );
 
       // Delete: owners can delete their own bookings, admins can delete any booking
       allow delete: if request.auth != null && (
         resource.data.userId == request.auth.uid || 
-        request.auth.token.admin == true
+        isAdmin()
       );
     }
 
@@ -198,7 +206,7 @@ service cloud.firestore {
       allow read: if true;
       
       // Only admins can write system settings
-      allow write: if request.auth != null && request.auth.token.admin == true;
+      allow write: if request.auth != null && isAdmin();
     }
 
     // Calendar configuration collection (date-specific settings)
@@ -207,10 +215,10 @@ service cloud.firestore {
       allow read: if true;
       
       // Only admins can write calendar configuration
-      allow create, update: if request.auth != null && request.auth.token.admin == true;
+      allow create, update: if request.auth != null && isAdmin();
       
       // Only admins can delete date configurations
-      allow delete: if request.auth != null && request.auth.token.admin == true;
+      allow delete: if request.auth != null && isAdmin();
       
       // Validate calendar config data structure
       allow create, update: if request.resource.data.keys().hasAll(['date', 'isClosed', 'maxSlots', 'lastUpdated']) &&
@@ -244,7 +252,88 @@ service cloud.firestore {
       allow create: if request.auth != null;
     }
 
-    // Station reviews: one document per user per station (doc id = userId)
+    // Group bookings collection
+    match /groupBookings/{groupId} {
+      // Authenticated users can read open/approved groups (for discovery)
+      allow read: if request.auth != null && (
+        resource.data.status == 'open' ||
+        resource.data.status == 'approved' ||
+        resource.data.organizerId == request.auth.uid ||
+        isAdmin()
+      );
+
+      // Authenticated users can create a group booking as the organizer
+      allow create: if request.auth != null &&
+        request.resource.data.organizerId == request.auth.uid;
+
+      // Organizer can update their own group; admins can update any
+      allow update: if request.auth != null && (
+        resource.data.organizerId == request.auth.uid ||
+        isAdmin()
+      );
+
+      // Only admins can delete group bookings
+      allow delete: if request.auth != null && isAdmin();
+
+      // Join requests subcollection
+      match /joinRequests/{requestId} {
+        // Group organizer and admins can read all join requests for a group
+        allow read: if request.auth != null && (
+          get(/databases/$(database)/documents/groupBookings/$(groupId)).data.organizerId == request.auth.uid ||
+          isAdmin() ||
+          resource.data.userId == request.auth.uid
+        );
+
+        // Authenticated users can submit a join request for themselves
+        allow create: if request.auth != null &&
+          request.resource.data.userId == request.auth.uid;
+
+        // Organizer can approve/decline; user can cancel their own; admins can do anything
+        allow update: if request.auth != null && (
+          get(/databases/$(database)/documents/groupBookings/$(groupId)).data.organizerId == request.auth.uid ||
+          resource.data.userId == request.auth.uid ||
+          isAdmin()
+        );
+
+        allow delete: if request.auth != null && (
+          resource.data.userId == request.auth.uid ||
+          isAdmin()
+        );
+      }
+    }
+
+    // Pricing configuration (read by mobile app, written by admins only)
+    match /pricingConfig/{configId} {
+      allow read: if request.auth != null;
+      allow write: if request.auth != null && isAdmin();
+    }
+
+    // Versioned pricing history (read by mobile app, written by admins only)
+    match /pricingVersions/{versionId} {
+      allow read: if request.auth != null;
+      allow write: if request.auth != null && isAdmin();
+    }
+
+    // Climb sessions (trekker check-in/out activity)
+    match /climb_sessions/{sessionId} {
+      allow read: if request.auth != null && (
+        resource.data.userId == request.auth.uid ||
+        isAdmin()
+      );
+      allow create: if request.auth != null &&
+        request.resource.data.userId == request.auth.uid;
+      allow update: if request.auth != null && (
+        resource.data.userId == request.auth.uid || isAdmin()
+      );
+      allow delete: if request.auth != null && isAdmin();
+    }
+
+    // Station reviews: top-level list + per-review subcollection
+    match /station_reviews/{stationId} {
+      allow read: if true;
+      allow write: if request.auth != null && isAdmin();
+    }
+
     match /station_reviews/{stationId}/reviews/{reviewId} {
       // Anyone can read (station detail is useful without signing in)
       allow read: if true;
