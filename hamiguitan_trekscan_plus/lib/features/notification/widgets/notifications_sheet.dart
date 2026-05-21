@@ -184,18 +184,14 @@ class _NotificationsSheetState extends State<NotificationsSheet> {
               Navigator.pushAndRemoveUntil(
                 context,
                 MaterialPageRoute(
-                  builder: (context) => const MainScreen(
-                    initialTabIndex: 3,
-                  ),
+                  builder: (context) => const MainScreen(initialTabIndex: 3),
                 ),
                 (route) => false,
               );
             }
           } else {
             // Backward compatibility for old notifications
-            AppLogger.i(
-              '🔔 No actionType/actionData - checking for old format',
-            );
+            AppLogger.i('No actionType/actionData - checking for old format');
 
             // Detect old booking notifications by title
             final bookingTitles = [
@@ -209,7 +205,7 @@ class _NotificationsSheetState extends State<NotificationsSheet> {
               (title) => notification.title.contains(title),
             )) {
               AppLogger.i(
-                '🔔 Old booking notification - navigating to book-climb',
+                'Old booking notification - navigating to book-climb',
               );
               // Navigate to MainScreen with booking tab selected
               Navigator.pushAndRemoveUntil(
@@ -222,7 +218,7 @@ class _NotificationsSheetState extends State<NotificationsSheet> {
                 (route) => false,
               );
             } else {
-              AppLogger.i('🔔 No navigation available');
+              AppLogger.i('No navigation available');
             }
 
             // Mark as read
@@ -401,7 +397,7 @@ class _NotificationTile extends StatelessWidget {
         ),
         child: ListTile(
           onTap: () {
-            AppLogger.i('🔴 ListTile tapped!');
+            AppLogger.i('ListTile tapped!');
             onTap();
           },
           leading: isSelectionMode

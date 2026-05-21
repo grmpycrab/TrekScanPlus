@@ -47,13 +47,44 @@ class _MyBookingsScreenState extends State<MyBookingsScreen>
     return Scaffold(
       backgroundColor: colors.background,
       appBar: AppBar(
-        title: const Text('Book a Climb'),
-        backgroundColor: colors.primary,
-        foregroundColor: Colors.white,
+        title: Text(
+          'Book a Climb',
+          style: TextStyle(color: colors.text, fontWeight: FontWeight.w700),
+        ),
+        backgroundColor: colors.surface,
+        foregroundColor: colors.text,
         elevation: 0,
+        scrolledUnderElevation: 0,
+        surfaceTintColor: Colors.transparent,
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(48),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Divider(height: 1, thickness: 1, color: colors.border),
+              TabBar(
+                controller: _tabController,
+                indicatorColor: colors.primary,
+                indicatorWeight: 2,
+                labelColor: colors.primary,
+                unselectedLabelColor: colors.textSecondary,
+                labelStyle: const TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                ),
+                unselectedLabelStyle: const TextStyle(fontSize: 13),
+                tabs: const [
+                  Tab(text: 'My Groups'),
+                  Tab(text: 'Discover'),
+                  Tab(text: 'Requests'),
+                ],
+              ),
+            ],
+          ),
+        ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.add_circle_outline_rounded),
+            icon: Icon(Icons.add_circle_outline_rounded, color: colors.primary),
             tooltip: 'Create new group',
             onPressed: () => Navigator.of(context).push(
               MaterialPageRoute(
@@ -62,23 +93,6 @@ class _MyBookingsScreenState extends State<MyBookingsScreen>
             ),
           ),
         ],
-        bottom: TabBar(
-          controller: _tabController,
-          indicatorColor: Colors.white,
-          indicatorWeight: 3,
-          labelColor: Colors.white,
-          unselectedLabelColor: Colors.white60,
-          labelStyle: const TextStyle(
-            fontSize: 13,
-            fontWeight: FontWeight.w600,
-          ),
-          unselectedLabelStyle: const TextStyle(fontSize: 13),
-          tabs: const [
-            Tab(text: 'My Groups'),
-            Tab(text: 'Discover'),
-            Tab(text: 'Requests'),
-          ],
-        ),
       ),
       body: TabBarView(
         controller: _tabController,
@@ -130,12 +144,9 @@ class _CreateGroupBanner extends StatelessWidget {
       margin: const EdgeInsets.fromLTRB(16, 16, 16, 8),
       padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [colors.primary, colors.primary.withOpacity(0.75)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
+        color: colors.primary.withOpacity(0.10),
         borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: colors.primary.withOpacity(0.25)),
       ),
       child: Row(
         children: [
@@ -143,10 +154,10 @@ class _CreateGroupBanner extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
+                Text(
                   'Plan Your Trek',
                   style: TextStyle(
-                    color: Colors.white,
+                    color: colors.text,
                     fontSize: 17,
                     fontWeight: FontWeight.bold,
                   ),
@@ -155,7 +166,7 @@ class _CreateGroupBanner extends StatelessWidget {
                 Text(
                   'Create a group and invite fellow trekkers.',
                   style: TextStyle(
-                    color: Colors.white.withOpacity(0.85),
+                    color: colors.textSecondary,
                     fontSize: 12,
                   ),
                 ),
@@ -167,8 +178,8 @@ class _CreateGroupBanner extends StatelessWidget {
             icon: const Icon(Icons.add_rounded, size: 18),
             label: const Text('Create'),
             style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.white,
-              foregroundColor: context.colors.primary,
+              backgroundColor: colors.primary,
+              foregroundColor: Colors.white,
               textStyle: const TextStyle(
                 fontSize: 13,
                 fontWeight: FontWeight.w600,
@@ -191,14 +202,28 @@ class _CreateGroupBanner extends StatelessWidget {
 
 // ── "Groups I Organise" section ───────────────────────────────────────────────
 
-class _OrganizerGroupsSection extends StatelessWidget {
+class _OrganizerGroupsSection extends StatefulWidget {
   final String uid;
   const _OrganizerGroupsSection({required this.uid});
 
   @override
+  State<_OrganizerGroupsSection> createState() =>
+      _OrganizerGroupsSectionState();
+}
+
+class _OrganizerGroupsSectionState extends State<_OrganizerGroupsSection> {
+  late final Stream<List<GroupBooking>> _stream;
+
+  @override
+  void initState() {
+    super.initState();
+    _stream = GroupBookingService.instance.streamOrganizerGroups(widget.uid);
+  }
+
+  @override
   Widget build(BuildContext context) {
     return StreamBuilder<List<GroupBooking>>(
-      stream: GroupBookingService.instance.streamOrganizerGroups(uid),
+      stream: _stream,
       builder: (context, snap) {
         if (snap.connectionState == ConnectionState.waiting) {
           return const _SectionSkeleton();
@@ -236,14 +261,27 @@ class _OrganizerGroupsSection extends StatelessWidget {
 
 // ── "Groups I Joined" section ─────────────────────────────────────────────────
 
-class _JoinedGroupsSection extends StatelessWidget {
+class _JoinedGroupsSection extends StatefulWidget {
   final String uid;
   const _JoinedGroupsSection({required this.uid});
 
   @override
+  State<_JoinedGroupsSection> createState() => _JoinedGroupsSectionState();
+}
+
+class _JoinedGroupsSectionState extends State<_JoinedGroupsSection> {
+  late final Stream<List<GroupBooking>> _stream;
+
+  @override
+  void initState() {
+    super.initState();
+    _stream = GroupBookingService.instance.streamJoinedGroups(widget.uid);
+  }
+
+  @override
   Widget build(BuildContext context) {
     return StreamBuilder<List<GroupBooking>>(
-      stream: GroupBookingService.instance.streamJoinedGroups(uid),
+      stream: _stream,
       builder: (context, snap) {
         if (snap.connectionState == ConnectionState.waiting) {
           return const _SectionSkeleton();
@@ -293,6 +331,21 @@ class _DiscoverTabState extends State<_DiscoverTab> {
   final _searchCtrl = TextEditingController();
   String _searchQuery = '';
   String _typeFilter = 'all';
+
+  late final Stream<Map<String, JoinRequest>> _myRequestsStream;
+  late final Stream<List<GroupBooking>> _openGroupsStream;
+
+  @override
+  void initState() {
+    super.initState();
+    final uid = FirebaseAuth.instance.currentUser?.uid ?? '';
+    _myRequestsStream = uid.isEmpty
+        ? Stream.value(<String, JoinRequest>{})
+        : GroupBookingService.instance
+            .streamUserJoinRequests(uid)
+            .map((list) => {for (final r in list) r.groupId: r});
+    _openGroupsStream = GroupBookingService.instance.streamOpenGroups();
+  }
 
   @override
   void dispose() {
@@ -363,15 +416,11 @@ class _DiscoverTabState extends State<_DiscoverTab> {
         // ── Group list ───────────────────────────────────────────────────────
         Expanded(
           child: StreamBuilder<Map<String, JoinRequest>>(
-            stream: uid.isEmpty
-                ? Stream.value(<String, JoinRequest>{})
-                : GroupBookingService.instance
-                    .streamUserJoinRequests(uid)
-                    .map((list) => {for (final r in list) r.groupId: r}),
+            stream: _myRequestsStream,
             builder: (context, myReqSnap) {
               final myRequests = myReqSnap.data ?? {};
               return StreamBuilder<List<GroupBooking>>(
-                stream: GroupBookingService.instance.streamOpenGroups(),
+                stream: _openGroupsStream,
                 builder: (context, snap) {
                   if (snap.connectionState == ConnectionState.waiting) {
                     return const Center(child: CircularProgressIndicator());
@@ -913,6 +962,7 @@ class _FilterChip extends StatelessWidget {
       child: ChoiceChip(
         label: Text(label, style: const TextStyle(fontSize: 12)),
         selected: selected,
+        showCheckmark: false,
         onSelected: (_) => onSelect(value),
         selectedColor: colors.primary,
         backgroundColor: colors.inputFill,

@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import '../../../services/firebase_auth_service.dart';
 import '../../../utils/app_logger.dart';
+import '../../notification/services/notification_service.dart';
 
 class SettingsViewModel extends ChangeNotifier {
   bool _isLoggingOut = false;
@@ -14,6 +15,7 @@ class SettingsViewModel extends ChangeNotifier {
     _error = null;
     notifyListeners();
     try {
+      NotificationService().stopListeners();
       await FirebaseAuthService.instance.signOut();
       // AuthGate reacts to auth state change — no manual navigation needed.
       return true;

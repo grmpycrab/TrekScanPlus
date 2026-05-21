@@ -1,17 +1,29 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 
 import 'config/app_init.dart';
 import 'core/app_startup_controller.dart';
 import 'core/providers/app_providers.dart';
 import 'core/widgets/auth_gate.dart';
-
 import 'core/services/presence_service.dart';
 import 'screens/splash_screen.dart';
+import 'utils/app_logger.dart';
 
-void main() async {
-  WidgetsFlutterBinding.ensureInitialized();
-  await AppInit.initialize();
-  runApp(AppProviders(child: const MyApp()));
+void main() {
+  runZonedGuarded(() async {
+    WidgetsFlutterBinding.ensureInitialized();
+    await AppInit.initialize();
+    runApp(AppProviders(child: const MyApp()));
+  }, (error, stack) {
+    // Firestore streams emit permission-denied when the auth token is
+    // revoked on sign-out. This is expected — swallow it silently.
+    final msg = error.toString();
+    if (msg.contains('permission-denied') || msg.contains('PERMISSION_DENIED')) {
+      AppLogger.w('Firestore stream closed on sign-out (expected): $error');
+      return;
+    }
+    AppLogger.e('Unhandled error: $error\n$stack');
+  });
 }
 
 class MyApp extends StatefulWidget {
@@ -32,7 +44,6 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
 
     _controller = AppStartupController(
       isMounted: () => mounted,
-      getContext: () => context,
     );
 
     Future.delayed(const Duration(milliseconds: 1200), () {

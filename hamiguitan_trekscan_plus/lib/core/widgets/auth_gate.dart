@@ -48,8 +48,14 @@ class _AuthGateState extends State<AuthGate> {
   /// MaterialApp.home property (which only affects the initial route).
   void _handleStatusTransition(AuthViewModel vm) {
     if (vm.status == _prevStatus) return;
+    final prev = _prevStatus;
     final incoming = vm.status;
     _prevStatus = incoming;
+
+    // On the very first build _prevStatus is null; the switch statement in
+    // build() already renders the correct initial screen, so skip imperative
+    // navigation to avoid creating a duplicate MainScreen.
+    if (prev == null) return;
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;

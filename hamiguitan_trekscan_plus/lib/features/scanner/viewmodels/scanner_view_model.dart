@@ -87,6 +87,19 @@ class ScannerViewModel extends ChangeNotifier {
   /// Station held while the user is prompted to start a session.
   StationData? _pendingStation;
 
+  bool _disposed = false;
+
+  /// Calls [notifyListeners] only when the VM has not been disposed.
+  void _notify() {
+    if (!_disposed) notifyListeners();
+  }
+
+  @override
+  void dispose() {
+    _disposed = true;
+    super.dispose();
+  }
+
   // ---------------------------------------------------------------------------
   // Public API
   // ---------------------------------------------------------------------------
@@ -102,7 +115,7 @@ class ScannerViewModel extends ChangeNotifier {
     if (!status.isGranted) {
       permissionDenied = true;
       isLoading = false;
-      notifyListeners();
+      _notify();
       return;
     }
 
@@ -115,13 +128,13 @@ class ScannerViewModel extends ChangeNotifier {
     await _achievementService.init();
 
     isLoading = false;
-    notifyListeners();
+    _notify();
   }
 
   /// Toggle geofencing on/off.
   void toggleGeofencing() {
     geofencingEnabled = !geofencingEnabled;
-    notifyListeners();
+    _notify();
   }
 
   /// Call after the screen has consumed [stationToNavigate].
@@ -193,7 +206,7 @@ class ScannerViewModel extends ChangeNotifier {
       AppLogger.e('CRITICAL ERROR in QR detection: $e');
     } finally {
       isProcessing = false;
-      notifyListeners();
+      _notify();
     }
   }
 
@@ -235,7 +248,7 @@ class ScannerViewModel extends ChangeNotifier {
           );
           if (unlocked != null) {
             pendingAchievementNotification = unlocked;
-            notifyListeners();
+            _notify();
           }
         } catch (e) {
           AppLogger.w('Achievement check: $e');
@@ -248,23 +261,23 @@ class ScannerViewModel extends ChangeNotifier {
       geofencingEnabled: geofencingEnabled,
       onGeofenceValidating: (validating) {
         isValidatingGeofence = validating;
-        notifyListeners();
+        _notify();
       },
     );
 
     switch (result) {
       case ScanGateSuccess(:final station):
         stationToNavigate = station;
-        notifyListeners();
+        _notify();
 
       case ScanGateNeedsSession():
         _pendingStation = station;
         requiresActiveSession = true;
-        notifyListeners();
+        _notify();
 
       case ScanGateBlocked(:final message, :final isWarning):
         pendingError = ScannerErrorEvent(message, isWarning: isWarning);
-        notifyListeners();
+        _notify();
     }
   }
 }

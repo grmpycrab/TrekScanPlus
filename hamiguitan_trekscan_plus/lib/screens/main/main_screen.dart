@@ -22,23 +22,23 @@ class MainScreen extends StatefulWidget {
 
 class _MainScreenState extends State<MainScreen> {
   late int _currentIndex;
+  late final List<Widget> _screens;
 
   void _navigateToBookingWithDate(DateTime _) {
     setState(() => _currentIndex = 3);
   }
 
-  List<Widget> get _screens => [
-    HomeScreen(onNavigateToBooking: _navigateToBookingWithDate),
-    const StationScreen(),
-    const ScannerScreen(),
-    const MyBookingsScreen(),
-    const SettingsScreen(),
-  ];
-
   @override
   void initState() {
     super.initState();
     _currentIndex = widget.initialTabIndex;
+    _screens = [
+      HomeScreen(onNavigateToBooking: _navigateToBookingWithDate),
+      const StationScreen(),
+      const ScannerScreen(),
+      const MyBookingsScreen(),
+      const SettingsScreen(),
+    ];
   }
 
   @override
@@ -54,7 +54,20 @@ class _MainScreenState extends State<MainScreen> {
         return true;
       },
       child: Scaffold(
-        body: _screens[_currentIndex],
+        body: Stack(
+          fit: StackFit.expand,
+          children: [
+            // Tabs 0, 1, 3, 4: always in the tree, hidden when inactive.
+            // Offstage preserves state + stream connections across tab switches.
+            Offstage(offstage: _currentIndex != 0, child: _screens[0]),
+            Offstage(offstage: _currentIndex != 1, child: _screens[1]),
+            Offstage(offstage: _currentIndex != 3, child: _screens[3]),
+            Offstage(offstage: _currentIndex != 4, child: _screens[4]),
+            // Tab 2 (Scanner): lazy-mounted so camera permission is only
+            // requested when the user actually navigates to the scanner.
+            if (_currentIndex == 2) _screens[2],
+          ],
+        ),
         bottomNavigationBar: BottomNavigation(
           currentIndex: _currentIndex,
           onTap: (index) {

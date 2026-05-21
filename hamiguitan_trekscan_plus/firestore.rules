@@ -252,6 +252,16 @@ service cloud.firestore {
       allow create: if request.auth != null;
     }
 
+    // Collection-group rule: lets a user read their own join requests across ALL
+    // groups in a collectionGroup('joinRequests') query.  Without this wildcard
+    // path, Firestore rejects collection-group queries even when the per-document
+    // rule would allow them, because the SDK can't resolve the groupId at query
+    // planning time.
+    match /{path=**}/joinRequests/{requestId} {
+      allow read: if request.auth != null &&
+        resource.data.userId == request.auth.uid;
+    }
+
     // Group bookings collection
     match /groupBookings/{groupId} {
       // Authenticated users can read open/approved groups (for discovery)

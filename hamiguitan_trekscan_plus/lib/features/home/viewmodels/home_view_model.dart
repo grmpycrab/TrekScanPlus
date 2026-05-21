@@ -11,6 +11,13 @@ import 'package:hamiguitan_trekscan_plus/features/social/models/social_model.dar
 import '../../../core/services/analytics_service.dart';
 
 class HomeViewModel extends ChangeNotifier {
+  bool _disposed = false;
+  bool _initialized = false;
+
+  void _notify() {
+    if (!_disposed) notifyListeners();
+  }
+
   // ── Auth ─────────────────────────────────────────────────────────────────
   User? _firebaseUser;
   StreamSubscription<User?>? _authSubscription;
@@ -32,9 +39,9 @@ class HomeViewModel extends ChangeNotifier {
   bool get isLoadingMore => _isLoadingMore;
   bool get hasMorePosts => _hasMorePosts;
 
-  /// The context is needed for ImageCacheManager.preloadImages only; pass via
-  /// [initialize] so we avoid storing a stale BuildContext.
   void initialize() {
+    if (_initialized) return;
+    _initialized = true;
     _initializeTrekDays();
     _firebaseUser = FirebaseAuthService.instance.currentUser;
 
@@ -42,7 +49,7 @@ class HomeViewModel extends ChangeNotifier {
       user,
     ) {
       _firebaseUser = user;
-      notifyListeners();
+      _notify();
     });
 
     _subscribeBookingsForMonth(DateTime.now());
@@ -51,6 +58,7 @@ class HomeViewModel extends ChangeNotifier {
 
   @override
   void dispose() {
+    _disposed = true;
     _authSubscription?.cancel();
     _bookingsSubscription?.cancel();
     trekDaysNotifier.dispose();
@@ -93,9 +101,13 @@ class HomeViewModel extends ChangeNotifier {
         .where('trekDate', isGreaterThanOrEqualTo: startTs)
         .where('trekDate', isLessThanOrEqualTo: endTs)
         .snapshots()
-        .listen((snap) async {
-          await _updateTrekDaysFromSnap(snap.docs, month);
-        });
+        .listen(
+          (snap) async {
+            await _updateTrekDaysFromSnap(snap.docs, month);
+          },
+          onError: (e) => AppLogger.w('Bookings stream error: $e'),
+          cancelOnError: true,
+        );
   }
 
   Future<void> _updateTrekDaysFromSnap(
@@ -197,7 +209,7 @@ class HomeViewModel extends ChangeNotifier {
         ..addAll(posts);
       _hasMorePosts = hasMore;
       _isLoadingMore = false;
-      notifyListeners();
+      _notify();
 
       // Image pre-loading is handled by the widget layer (HomeSocialFeed/HomeScreen)
       // where a valid BuildContext is available.
@@ -206,7 +218,7 @@ class HomeViewModel extends ChangeNotifier {
     } catch (e) {
       AppLogger.e('Error loading first page: $e');
       _isLoadingMore = false;
-      notifyListeners();
+      _notify();
       rethrow;
     }
   }
@@ -215,7 +227,7 @@ class HomeViewModel extends ChangeNotifier {
     if (_isLoadingMore || !_hasMorePosts) return;
 
     _isLoadingMore = true;
-    notifyListeners();
+    _notify();
 
     try {
       AppLogger.i('Loading next page of posts...');
@@ -225,13 +237,13 @@ class HomeViewModel extends ChangeNotifier {
       _loadedPosts.addAll(posts);
       _hasMorePosts = hasMore;
       _isLoadingMore = false;
-      notifyListeners();
+      _notify();
 
       AppLogger.i('  Next page loaded: ${posts.length} new posts');
     } catch (e) {
       AppLogger.e('Error loading next page: $e');
       _isLoadingMore = false;
-      notifyListeners();
+      _notify();
       rethrow;
     }
   }

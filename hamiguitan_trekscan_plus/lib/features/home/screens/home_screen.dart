@@ -45,11 +45,6 @@ class _HomeScreenState extends State<HomeScreen> {
   void initState() {
     super.initState();
     _viewModel = HomeViewModel();
-  }
-
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
     _viewModel.addListener(_onViewModelChanged);
     _viewModel.initialize();
     _viewModel.loadFirstPage().then((_) {

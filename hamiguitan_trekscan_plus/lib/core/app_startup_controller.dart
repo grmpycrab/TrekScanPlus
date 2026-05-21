@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import '../config/app_router.dart';
 import '../services/achievement_service.dart';
 import '../services/onboarding_service.dart';
 import '../services/station_service.dart';
@@ -21,18 +22,18 @@ import '../utils/app_logger.dart';
 /// widget that only manages Flutter lifecycle hooks.
 ///
 /// Dependencies on widget context are injected via callbacks:
-/// - [isMounted]  — guards async operations after widget disposal
-/// - [getContext] — provides [BuildContext] for permission dialogs
+/// - [isMounted] — guards async operations after widget disposal
+///
+/// Navigation uses [navigatorKey] directly instead of a BuildContext callback.
 ///
 /// MVVM role: ViewModel (app-level, not feature-level).
 class AppStartupController {
   final bool Function() isMounted;
-  final BuildContext Function() getContext;
 
   bool _servicesInitialized = false;
   bool _permissionsRequested = false;
 
-  AppStartupController({required this.isMounted, required this.getContext});
+  AppStartupController({required this.isMounted});
 
   // ---------------------------------------------------------------------------
   // Public API
@@ -109,16 +110,18 @@ class AppStartupController {
       }),
     );
 
-    // Onboarding check — uses getContext() for navigation
+    // Onboarding check — uses navigatorKey for navigation
     unawaited(
       Future.delayed(const Duration(milliseconds: 300), () async {
         if (!isMounted()) return;
+        final ctx = navigatorKey.currentContext;
         try {
           final hasSeenOnboarding = await OnboardingService.hasSeenOnboarding(
             userId,
           );
-          if (!hasSeenOnboarding && isMounted()) {
-            await OnboardingService.showOnboarding(getContext(), userId);
+          // ignore: use_build_context_synchronously — navigatorKey context is global, not widget-scoped
+          if (!hasSeenOnboarding && isMounted() && ctx != null) {
+            unawaited(OnboardingService.showOnboarding(ctx, userId));
           }
         } catch (e) {
           AppLogger.e('Onboarding check error: $e');
@@ -145,6 +148,9 @@ class AppStartupController {
   void resetForLogout() {
     _servicesInitialized = false;
     _permissionsRequested = false;
+    // Stop Firestore listeners before auth is revoked to prevent
+    // permission-denied errors from streams that are still open.
+    NotificationService().stopListeners();
     // Clear visited state so a different user logging in does not briefly see
     // the previous user's scanned stations before their own sync completes.
     StationService.instance.clearUserData();
@@ -228,11 +234,11 @@ class AppStartupController {
   }
 
   Future<void> _requestPermissions() async {
-    if (isMounted()) {
+    final ctx = navigatorKey.currentContext;
+    if (isMounted() && ctx != null) {
       try {
-        await PermissionService.instance.requestInitialPermissions(
-          getContext(),
-        );
+        // ignore: use_build_context_synchronously — navigatorKey context is global, not widget-scoped
+        await PermissionService.instance.requestInitialPermissions(ctx);
       } catch (e) {
         AppLogger.e('Permission request error: $e');
       }

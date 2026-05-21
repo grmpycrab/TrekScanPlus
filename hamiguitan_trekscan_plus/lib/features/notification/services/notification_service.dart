@@ -1,3 +1,5 @@
+import 'dart:async';
+import 'dart:io';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -5,7 +7,6 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import '../../../utils/app_logger.dart';
 import 'notification_manager.dart';
-import 'dart:io';
 
 /// Service for handling both local and push notifications
 /// Watches for booking updates and notifies users in real-time
@@ -32,6 +33,9 @@ class NotificationService {
   final FirebaseMessaging _firebaseMessaging = FirebaseMessaging.instance;
 
   bool _isInitialized = false;
+
+  StreamSubscription? _bookingSubscription;
+  StreamSubscription? _postModerationSubscription;
 
   /// Initialize notification service
   /// Call this once in the app's main or during app initialization
@@ -440,7 +444,8 @@ class NotificationService {
         '[NotificationService] Listening to booking updates for user: ${user.uid}',
       );
 
-      FirebaseFirestore.instance
+      _bookingSubscription?.cancel();
+      _bookingSubscription = FirebaseFirestore.instance
           .collection('bookings')
           .where('userId', isEqualTo: user.uid)
           .orderBy('lastModified', descending: true)
@@ -528,6 +533,7 @@ class NotificationService {
                 '[NotificationService] Error listening to bookings: $error',
               );
             },
+            cancelOnError: true,
           );
     } catch (e) {
       AppLogger.i('[NotificationService] Failed to setup booking listener: $e');
@@ -547,7 +553,8 @@ class NotificationService {
 
       AppLogger.i('[NotificationService] Listening to post moderation notifications for: ${user.uid}');
 
-      FirebaseFirestore.instance
+      _postModerationSubscription?.cancel();
+      _postModerationSubscription = FirebaseFirestore.instance
           .collection('users')
           .doc(user.uid)
           .collection('notifications')
@@ -590,10 +597,20 @@ class NotificationService {
             onError: (e) {
               AppLogger.e('[NotificationService] Post moderation listener error: $e');
             },
+            cancelOnError: true,
           );
     } catch (e) {
       AppLogger.e('[NotificationService] Failed to set up post moderation listener: $e');
     }
+  }
+
+  /// Cancel all Firestore listeners. Call on user sign-out to prevent
+  /// permission-denied errors from open streams.
+  void stopListeners() {
+    _bookingSubscription?.cancel();
+    _bookingSubscription = null;
+    _postModerationSubscription?.cancel();
+    _postModerationSubscription = null;
   }
 
   Future<void> _showPostSystemNotification({
