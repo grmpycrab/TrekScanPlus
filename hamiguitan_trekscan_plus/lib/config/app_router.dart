@@ -47,7 +47,7 @@ class AppRouter {
       final bookingId = settings.arguments as String?;
       return MaterialPageRoute(
         builder: (context) =>
-            BookAClimbScreenRefactored(highlightBookingId: bookingId),
+            BookAClimbScreen(highlightBookingId: bookingId),
       );
     }
 

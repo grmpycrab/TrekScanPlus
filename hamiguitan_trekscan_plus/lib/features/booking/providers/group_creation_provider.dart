@@ -1,7 +1,9 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:file_picker/file_picker.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import '../../../models/member.dart';
+import '../../../models/trek_type.dart';
 import '../../../services/pricing_service.dart';
 
 class GroupCreationProvider extends ChangeNotifier {
@@ -19,7 +21,7 @@ class GroupCreationProvider extends ChangeNotifier {
   String affiliation = '';
   int maxSlots = 10;
   DateTime? trekDate;
-  String trekType = 'regular_trek';
+  String trekType = TrekType.regular.value;
   String bookingClassification = 'regular';
   bool guideRequired = false;
   bool scientistRequired = false;
@@ -39,6 +41,12 @@ class GroupCreationProvider extends ChangeNotifier {
   // ── Step 2: Guest Members ─────────────────────────────────────────────────
   final List<Member> guestMembers = [];
   final List<bool> guestPorterRequested = [];
+
+  // ── Documents: keyed by document field name → files ───────────────────────
+  // Organizer documents (set during Step 1).
+  final Map<String, List<PlatformFile>> _organizerDocuments = {};
+  // Per-guest documents, index-parallel to [guestMembers].
+  final List<Map<String, List<PlatformFile>>> _guestDocuments = [];
 
   // ── Init ──────────────────────────────────────────────────────────────────
   void prefillFromAuth() {
@@ -149,6 +157,7 @@ class GroupCreationProvider extends ChangeNotifier {
     if (index >= 0 && index < guestMembers.length) {
       guestMembers.removeAt(index);
       guestPorterRequested.removeAt(index);
+      if (index < _guestDocuments.length) _guestDocuments.removeAt(index);
       notifyListeners();
     }
   }
@@ -159,6 +168,56 @@ class GroupCreationProvider extends ChangeNotifier {
       if (porterRequested != null) guestPorterRequested[index] = porterRequested;
       notifyListeners();
     }
+  }
+
+  // ── Document management ───────────────────────────────────────────────────
+
+  void setOrganizerDocumentFiles(String fieldName, List<PlatformFile> files) {
+    _organizerDocuments[fieldName] = files;
+    notifyListeners();
+  }
+
+  List<PlatformFile> getOrganizerDocumentFiles(String fieldName) =>
+      _organizerDocuments[fieldName] ?? [];
+
+  void setGuestDocumentFiles(
+    int guestIndex,
+    String fieldName,
+    List<PlatformFile> files,
+  ) {
+    while (_guestDocuments.length <= guestIndex) {
+      _guestDocuments.add({});
+    }
+    _guestDocuments[guestIndex][fieldName] = files;
+    notifyListeners();
+  }
+
+  List<PlatformFile> getGuestDocumentFiles(int guestIndex, String fieldName) {
+    if (guestIndex >= _guestDocuments.length) return [];
+    return _guestDocuments[guestIndex][fieldName] ?? [];
+  }
+
+  /// All (file, memberName) pairs to be uploaded when the group is submitted.
+  List<(PlatformFile, String)> get allDocumentFilesForUpload {
+    final pairs = <(PlatformFile, String)>[];
+    final organizerName =
+        '$organizerFirstName $organizerLastName'.trim();
+    for (final files in _organizerDocuments.values) {
+      for (final f in files) {
+        pairs.add((f, organizerName));
+      }
+    }
+    for (var i = 0; i < guestMembers.length; i++) {
+      final guestName = guestMembers[i].fullName;
+      final docs =
+          i < _guestDocuments.length ? _guestDocuments[i] : <String, List<PlatformFile>>{};
+      for (final files in docs.values) {
+        for (final f in files) {
+          pairs.add((f, guestName));
+        }
+      }
+    }
+    return pairs;
   }
 
   // ── Derived ───────────────────────────────────────────────────────────────

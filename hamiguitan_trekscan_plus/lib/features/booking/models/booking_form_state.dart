@@ -73,6 +73,7 @@ class BookingFormState {
       ? bookingMembers[0]
       : null;
 
-  /// Total estimated slots needed (only trekkers, not porters)
+  /// Number of trekker slots needed. Porter slots are NOT included here —
+  /// they are auto-allocated by [DateValidationService] at 1 per 5 trekkers.
   int get totalSlotsNeeded => bookingMembers.length;
 }

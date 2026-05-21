@@ -7,7 +7,6 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../models/station_data.dart';
 import 'geofencing_service.dart';
 import 'firestore_station_service.dart';
-import 'e_certificate_service.dart';
 import '../../utils/app_logger.dart';
 
 class StationService extends ChangeNotifier {
@@ -226,30 +225,6 @@ class StationService extends ChangeNotifier {
       } catch (firestoreError) {
         AppLogger.i('Warning: Failed to sync with Firestore: $firestoreError');
         // Don't rethrow - local update was successful
-      }
-
-      // Check and award e-certificates when station is visited (Phase 1)
-      if (isVisited) {
-        try {
-          final certificateService = ECertificateService.instance;
-          final visitedStations = getVisitedStations();
-
-          final awardedCertificate = await certificateService
-              .checkAndAwardCertificate(visitedStations);
-
-          if (awardedCertificate != null) {
-            AppLogger.i(
-              'Certificate awarded: ${awardedCertificate.certificateType.name}',
-            );
-            // TODO: Trigger UI notification/dialog to show certificate earned
-            // This will be implemented in Phase 2 (UI phase)
-          }
-        } catch (certificateError) {
-          AppLogger.i(
-            'Warning: Failed to check certificate eligibility: $certificateError',
-          );
-          // Don't rethrow - this is non-critical
-        }
       }
     } catch (e) {
       AppLogger.i('Error updating station visited status: $e');

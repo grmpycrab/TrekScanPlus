@@ -41,7 +41,7 @@ class _MainScreenState extends State<MainScreen> {
     HomeScreen(onNavigateToBooking: _navigateToBookingWithDate),
     const StationScreen(),
     const ScannerScreen(),
-    BookAClimbScreenRefactored(
+    BookAClimbScreen(
       selectedDate: _selectedDateForBooking,
       autoShowBookingForm: _autoShowBookingForm && !_bookingFormShown,
       highlightBookingId: widget.highlightBookingId,

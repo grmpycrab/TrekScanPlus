@@ -5,6 +5,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:uuid/uuid.dart';
 import 'dart:convert';
 
 import '../../../models/booking_model.dart';
@@ -222,15 +223,32 @@ class BookingProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// Remove a member by index
+  /// Remove a member by index, shifting document-map keys for members that
+  /// followed the removed one so indices stay consistent with the member list.
   void removeMember(int index) {
-    if (index >= 0 && index < _state.bookingMembers.length) {
-      final updated = List<Member>.from(_state.bookingMembers);
-      updated.removeAt(index);
-      _state = _state.copyWith(bookingMembers: updated);
-      _updateEstimatedPrice();
-      notifyListeners();
+    if (index < 0 || index >= _state.bookingMembers.length) return;
+
+    final updatedMembers = List<Member>.from(_state.bookingMembers)
+      ..removeAt(index);
+
+    // Re-index both document maps: drop the removed entry, shift keys > index.
+    Map<String, V> reindex<V>(Map<String, V> source) {
+      final result = <String, V>{};
+      for (final entry in source.entries) {
+        final key = int.tryParse(entry.key);
+        if (key == null || key == index) continue;
+        result[(key > index ? key - 1 : key).toString()] = entry.value;
+      }
+      return result;
     }
+
+    _state = _state.copyWith(
+      bookingMembers: updatedMembers,
+      memberDocuments: reindex(_state.memberDocuments),
+      memberDocumentMetadata: reindex(_state.memberDocumentMetadata),
+    );
+    _updateEstimatedPrice();
+    notifyListeners();
   }
 
   /// Update a member at specific index
@@ -282,6 +300,7 @@ class BookingProvider extends ChangeNotifier {
 
       if (currentUser == null) {
         _setError('No authenticated user found');
+        _setLoading(false);
         return;
       }
 
@@ -312,11 +331,12 @@ class BookingProvider extends ChangeNotifier {
 
       _state = _state.copyWith(bookingMembers: [primaryContact]);
       _isPrimaryContactInitialized = true;
-      _setLoading(false);
       _clearError();
     } catch (e) {
       _setError('Failed to initialize primary contact: $e');
       AppLogger.e('Error initializing primary contact: $e');
+    } finally {
+      _setLoading(false);
     }
   }
 
@@ -490,57 +510,12 @@ class BookingProvider extends ChangeNotifier {
   /// Also saves file metadata so user can see previously selected files
   Future<void> saveDraftBooking(BookingModel booking) async {
     try {
-      final prefs = await SharedPreferences.getInstance();
       final currentUser = FirebaseAuth.instance.currentUser;
       if (currentUser == null) return;
 
-      // Add to draft list
       _draftBookings.add(booking);
-
-      final key = 'draft_bookings_${currentUser.uid}';
-      final metadataKey = 'draft_bookings_metadata_${currentUser.uid}';
-
-      // Convert bookings to JSON-serializable format
-      final jsonData = _draftBookings.map((b) {
-        final map = b.toMap();
-        // Convert Timestamp objects to ISO strings for JSON serialization
-        if (map['trekDate'] is Timestamp) {
-          map['trekDate'] = (map['trekDate'] as Timestamp)
-              .toDate()
-              .toIso8601String();
-        }
-        if (map['createdAt'] is Timestamp) {
-          map['createdAt'] = (map['createdAt'] as Timestamp)
-              .toDate()
-              .toIso8601String();
-        }
-        // Convert member timestamps
-        if (map['members'] is List) {
-          map['members'] = (map['members'] as List).map((member) {
-            if (member is Map<String, dynamic>) {
-              if (member['createdAt'] is Timestamp) {
-                member['createdAt'] = (member['createdAt'] as Timestamp)
-                    .toDate()
-                    .toIso8601String();
-              }
-              if (member['updatedAt'] is Timestamp) {
-                member['updatedAt'] = (member['updatedAt'] as Timestamp)
-                    .toDate()
-                    .toIso8601String();
-              }
-            }
-            return member;
-          }).toList();
-        }
-        return map;
-      }).toList();
-
-      await prefs.setString(key, jsonEncode(jsonData));
-
-      // Save/update file metadata for this booking
       _draftBookingMetadata[booking.id] = _state.memberDocumentMetadata;
-      await prefs.setString(metadataKey, jsonEncode(_draftBookingMetadata));
-
+      await _persistDraftState(currentUser.uid);
       notifyListeners();
     } catch (e) {
       AppLogger.e('Error saving draft booking: $e');
@@ -551,11 +526,9 @@ class BookingProvider extends ChangeNotifier {
   /// Update an existing draft booking in local storage
   Future<void> updateDraftBooking(BookingModel updatedBooking) async {
     try {
-      final prefs = await SharedPreferences.getInstance();
       final currentUser = FirebaseAuth.instance.currentUser;
       if (currentUser == null) return;
 
-      // Replace the existing draft entry
       final index = _draftBookings.indexWhere((b) => b.id == updatedBooking.id);
       if (index >= 0) {
         _draftBookings[index] = updatedBooking;
@@ -563,47 +536,8 @@ class BookingProvider extends ChangeNotifier {
         _draftBookings.add(updatedBooking);
       }
 
-      // Update metadata for this booking
       _draftBookingMetadata[updatedBooking.id] = _state.memberDocumentMetadata;
-
-      final key = 'draft_bookings_${currentUser.uid}';
-      final metadataKey = 'draft_bookings_metadata_${currentUser.uid}';
-
-      // Persist the updated draft list
-      final jsonData = _draftBookings.map((b) {
-        final map = b.toMap();
-        if (map['trekDate'] is Timestamp) {
-          map['trekDate'] = (map['trekDate'] as Timestamp)
-              .toDate()
-              .toIso8601String();
-        }
-        if (map['createdAt'] is Timestamp) {
-          map['createdAt'] = (map['createdAt'] as Timestamp)
-              .toDate()
-              .toIso8601String();
-        }
-        if (map['members'] is List) {
-          map['members'] = (map['members'] as List).map((member) {
-            if (member is Map<String, dynamic>) {
-              if (member['createdAt'] is Timestamp) {
-                member['createdAt'] = (member['createdAt'] as Timestamp)
-                    .toDate()
-                    .toIso8601String();
-              }
-              if (member['updatedAt'] is Timestamp) {
-                member['updatedAt'] = (member['updatedAt'] as Timestamp)
-                    .toDate()
-                    .toIso8601String();
-              }
-            }
-            return member;
-          }).toList();
-        }
-        return map;
-      }).toList();
-
-      await prefs.setString(key, jsonEncode(jsonData));
-      await prefs.setString(metadataKey, jsonEncode(_draftBookingMetadata));
+      await _persistDraftState(currentUser.uid);
       notifyListeners();
     } catch (e) {
       AppLogger.e('Error updating draft booking: $e');
@@ -613,56 +547,18 @@ class BookingProvider extends ChangeNotifier {
   /// Remove draft booking
   Future<void> removeDraftBooking(String bookingId) async {
     try {
-      final prefs = await SharedPreferences.getInstance();
       final currentUser = FirebaseAuth.instance.currentUser;
       if (currentUser == null) return;
 
       _draftBookings.removeWhere((b) => b.id == bookingId);
       _draftBookingMetadata.remove(bookingId);
 
-      final key = 'draft_bookings_${currentUser.uid}';
-      final metadataKey = 'draft_bookings_metadata_${currentUser.uid}';
       if (_draftBookings.isEmpty) {
-        await prefs.remove(key);
-        await prefs.remove(metadataKey);
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.remove('draft_bookings_${currentUser.uid}');
+        await prefs.remove('draft_bookings_metadata_${currentUser.uid}');
       } else {
-        // Convert bookings to JSON-serializable format
-        final jsonData = _draftBookings.map((b) {
-          final map = b.toMap();
-          // Convert Timestamp objects to ISO strings for JSON serialization
-          if (map['trekDate'] is Timestamp) {
-            map['trekDate'] = (map['trekDate'] as Timestamp)
-                .toDate()
-                .toIso8601String();
-          }
-          if (map['createdAt'] is Timestamp) {
-            map['createdAt'] = (map['createdAt'] as Timestamp)
-                .toDate()
-                .toIso8601String();
-          }
-          // Convert member timestamps
-          if (map['members'] is List) {
-            map['members'] = (map['members'] as List).map((member) {
-              if (member is Map<String, dynamic>) {
-                if (member['createdAt'] is Timestamp) {
-                  member['createdAt'] = (member['createdAt'] as Timestamp)
-                      .toDate()
-                      .toIso8601String();
-                }
-                if (member['updatedAt'] is Timestamp) {
-                  member['updatedAt'] = (member['updatedAt'] as Timestamp)
-                      .toDate()
-                      .toIso8601String();
-                }
-              }
-              return member;
-            }).toList();
-          }
-          return map;
-        }).toList();
-
-        await prefs.setString(key, jsonEncode(jsonData));
-        await prefs.setString(metadataKey, jsonEncode(_draftBookingMetadata));
+        await _persistDraftState(currentUser.uid);
       }
 
       notifyListeners();
@@ -722,7 +618,7 @@ class BookingProvider extends ChangeNotifier {
     final currentUser = FirebaseAuth.instance.currentUser;
 
     return BookingModel(
-      id: DateTime.now().millisecondsSinceEpoch.toString(),
+      id: const Uuid().v4(),
       userId: currentUser?.uid ?? '',
       status: 'draft',
       submissionStatus: 'draft',
@@ -731,6 +627,7 @@ class BookingProvider extends ChangeNotifier {
       hometown: _state.hometown,
       trekType: _state.climbType.toLowerCase(),
       trekDate: Timestamp.fromDate(_state.selectedDate ?? DateTime.now()),
+      notes: _state.notes,
       members: _state.bookingMembers,
       attachments: [],
       adminNotes: '',
@@ -739,6 +636,51 @@ class BookingProvider extends ChangeNotifier {
   }
 
   // Private helper methods
+
+  /// Serializes a single [BookingModel] map so all [Timestamp] fields are
+  /// converted to ISO-8601 strings, making the result safe for JSON encoding.
+  Map<String, dynamic> _serializeBookingToJsonMap(BookingModel booking) {
+    final map = booking.toMap();
+
+    void convertTimestamp(Map<String, dynamic> m, String key) {
+      if (m[key] is Timestamp) {
+        m[key] = (m[key] as Timestamp).toDate().toIso8601String();
+      }
+    }
+
+    convertTimestamp(map, 'trekDate');
+    convertTimestamp(map, 'createdAt');
+    convertTimestamp(map, 'updatedAt');
+
+    if (map['members'] is List) {
+      map['members'] = (map['members'] as List).map((member) {
+        if (member is Map<String, dynamic>) {
+          convertTimestamp(member, 'createdAt');
+          convertTimestamp(member, 'updatedAt');
+        }
+        return member;
+      }).toList();
+    }
+
+    return map;
+  }
+
+  /// Persists the current [_draftBookings] list and [_draftBookingMetadata]
+  /// to [SharedPreferences] for the given [userId].
+  Future<void> _persistDraftState(String userId) async {
+    final prefs = await SharedPreferences.getInstance();
+    final jsonData = _draftBookings
+        .map(_serializeBookingToJsonMap)
+        .toList();
+    await prefs.setString(
+      'draft_bookings_$userId',
+      jsonEncode(jsonData),
+    );
+    await prefs.setString(
+      'draft_bookings_metadata_$userId',
+      jsonEncode(_draftBookingMetadata),
+    );
+  }
 
   void _setLoading(bool value) {
     _isLoading = value;

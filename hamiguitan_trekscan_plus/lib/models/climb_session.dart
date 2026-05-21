@@ -1,4 +1,5 @@
 import 'station_data.dart';
+import 'trek_type.dart';
 
 /// Represents a single climbing/trekking session with time tracking
 class ClimbSession {
@@ -6,7 +7,7 @@ class ClimbSession {
   final String name;
   final String description;
   final String
-  trekType; // 'special_trek', 'benchmarking_trek', 'research_trek', 'regular_trek'
+  trekType; // see TrekType enum for valid values
   DateTime createdAt;
   DateTime? trekStartDate; // Planned trek start date
   DateTime? trekEndDate; // Planned trek end date
@@ -193,7 +194,7 @@ class ClimbSession {
       id: map['id'] as String,
       name: map['name'] as String,
       description: map['description'] as String,
-      trekType: map['trekType'] as String? ?? 'regular_trek',
+      trekType: map['trekType'] as String? ?? TrekType.regular.value,
       createdAt: _parseDateTime(map['createdAt']),
       trekStartDate: map['trekStartDate'] != null
           ? _parseDateTime(map['trekStartDate'])

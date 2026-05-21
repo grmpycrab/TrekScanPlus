@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:permission_handler/permission_handler.dart';
 import '../../../models/station_data.dart';
+import '../../../models/achievement.dart';
 import '../../../services/station_service.dart';
 import '../../../services/climb_session_guard.dart';
 import '../../../services/achievement_service.dart';
@@ -73,6 +74,10 @@ class ScannerViewModel extends ChangeNotifier {
   /// [ClimbSessionService], then call [retryPendingStation].
   bool requiresActiveSession = false;
 
+  /// Non-null when a scan just unlocked an achievement.
+  /// Read once, then call [clearAchievementNotification].
+  Achievement? pendingAchievementNotification;
+
   // ---------------------------------------------------------------------------
   // Private
   // ---------------------------------------------------------------------------
@@ -127,6 +132,11 @@ class ScannerViewModel extends ChangeNotifier {
   /// Call after the screen has consumed [pendingError].
   void clearError() {
     pendingError = null;
+  }
+
+  /// Call after the screen has consumed [pendingAchievementNotification].
+  void clearAchievementNotification() {
+    pendingAchievementNotification = null;
   }
 
   /// Called by the screen after the user has successfully created or selected
@@ -217,12 +227,16 @@ class ScannerViewModel extends ChangeNotifier {
       Future.microtask(() async {
         try {
           final visited = StationService.instance.getVisitedStations();
-          await _achievementService.checkAndUnlockAchievements(
+          final unlocked = await _achievementService.checkAndUnlockAchievements(
             visited.length,
             visited.map((s) => s.id).toList(),
             currentStationId: station.id,
             currentStationIndex: visited.length,
           );
+          if (unlocked != null) {
+            pendingAchievementNotification = unlocked;
+            notifyListeners();
+          }
         } catch (e) {
           AppLogger.w('Achievement check: $e');
         }

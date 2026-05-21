@@ -1,6 +1,7 @@
 // ignore_for_file: use_build_context_synchronously
 
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:provider/provider.dart';
@@ -11,7 +12,9 @@ import '../../../services/group_booking_service.dart';
 import '../../../services/pricing_service.dart';
 import '../../../theme/app_theme.dart';
 import '../../../utils/app_logger.dart';
+import '../models/document_requirements.dart';
 import '../providers/group_creation_provider.dart';
+import '../widgets/document_upload_widget.dart';
 import '../widgets/trek_date_picker.dart';
 import 'organizer_requests_screen.dart';
 
@@ -175,6 +178,24 @@ class _CreateGroupFlowScreenState extends State<_CreateGroupFlowScreen> {
 
       final groupId =
           await GroupBookingService.instance.createGroupBooking(group);
+
+      // Upload organizer and guest documents in parallel.
+      final filesToUpload = p.allDocumentFilesForUpload;
+      if (filesToUpload.isNotEmpty) {
+        await Future.wait(
+          filesToUpload.map(((PlatformFile, String) pair) async {
+            try {
+              await GroupBookingService.instance.uploadMemberAttachment(
+                groupId,
+                pair.$1,
+                memberName: pair.$2,
+              );
+            } catch (e) {
+              AppLogger.w('Failed to upload ${pair.$1.name}: $e');
+            }
+          }),
+        );
+      }
 
       if (!mounted) return;
       Navigator.of(context).pushReplacement(
@@ -490,6 +511,7 @@ class _Step1OrganizerDetails extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final p = context.watch<GroupCreationProvider>();
+    final colors = context.colors;
 
     return Form(
       key: formKey,
@@ -593,6 +615,71 @@ class _Step1OrganizerDetails extends StatelessWidget {
                 .read<GroupCreationProvider>()
                 .setOrganizerPorterRequested,
           ),
+
+          const SizedBox(height: 20),
+          _SectionLabel('Required Documents'),
+          ...() {
+            final docType = DocumentRequirements.getDocumentsForCategory(
+              p.organizerCategory,
+            );
+            if (docType == null) return <Widget>[];
+            return docType.requiredDocs.map((docField) {
+              final files = p.getOrganizerDocumentFiles(docField.name);
+              return Padding(
+                padding: const EdgeInsets.only(bottom: 16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      docField.name,
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w600,
+                        fontSize: 14,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      docField.description,
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: colors.textSecondary,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    DocumentUploadWidget(
+                      pickedFiles: files,
+                      onPickFiles: () async {
+                        final result = await FilePicker.platform.pickFiles(
+                          allowMultiple: true,
+                          type: FileType.custom,
+                          allowedExtensions: docField.extension,
+                          withData: true,
+                        );
+                        if (result != null) {
+                          context
+                              .read<GroupCreationProvider>()
+                              .setOrganizerDocumentFiles(
+                                docField.name,
+                                result.files,
+                              );
+                        }
+                      },
+                      onRemoveFile: (file) {
+                        final updated = List<PlatformFile>.from(files)
+                          ..remove(file);
+                        context
+                            .read<GroupCreationProvider>()
+                            .setOrganizerDocumentFiles(
+                              docField.name,
+                              updated,
+                            );
+                      },
+                    ),
+                  ],
+                ),
+              );
+            }).toList();
+          }(),
           const SizedBox(height: 16),
         ],
       ),
@@ -944,6 +1031,7 @@ class _AddGuestMemberSheetState extends State<_AddGuestMemberSheet> {
   DateTime? _birthDate;
   String _category = 'outside_davao_oriental';
   bool _porterRequested = false;
+  final Map<String, List<PlatformFile>> _documentFiles = {};
 
   @override
   void dispose() {
@@ -983,10 +1071,17 @@ class _AddGuestMemberSheetState extends State<_AddGuestMemberSheet> {
       createdAt: Timestamp.now(),
     );
 
-    context.read<GroupCreationProvider>().addGuestMember(
-          member,
-          porterRequested: _porterRequested,
-        );
+    final provider = context.read<GroupCreationProvider>();
+    provider.addGuestMember(member, porterRequested: _porterRequested);
+
+    // Associate any uploaded documents with the newly added guest slot.
+    final guestIndex = provider.guestMembers.length - 1;
+    for (final entry in _documentFiles.entries) {
+      if (entry.value.isNotEmpty) {
+        provider.setGuestDocumentFiles(guestIndex, entry.key, entry.value);
+      }
+    }
+
     Navigator.of(context).pop();
   }
 
@@ -1111,7 +1206,12 @@ class _AddGuestMemberSheetState extends State<_AddGuestMemberSheet> {
                     const SizedBox(height: 12),
                     _CategoryDropdown(
                       value: _category,
-                      onChanged: (v) => setState(() => _category = v!),
+                      onChanged: (v) => setState(() {
+                        _category = v!;
+                        // Different categories require different documents —
+                        // clear any previously selected files on category change.
+                        _documentFiles.clear();
+                      }),
                     ),
                     const SizedBox(height: 4),
                     _PriceHint(
@@ -1119,6 +1219,66 @@ class _AddGuestMemberSheetState extends State<_AddGuestMemberSheet> {
                       amount: PricingService.instance
                           .calculateMemberPrice(_category),
                     ),
+                    const SizedBox(height: 16),
+                    _SectionLabel('Required Documents'),
+                    ...() {
+                      final docType =
+                          DocumentRequirements.getDocumentsForCategory(
+                        _category,
+                      );
+                      if (docType == null) return <Widget>[];
+                      return docType.requiredDocs.map((docField) {
+                        final files =
+                            _documentFiles[docField.name] ?? <PlatformFile>[];
+                        return Padding(
+                          padding: const EdgeInsets.only(bottom: 16),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                docField.name,
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: 14,
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                docField.description,
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: context.colors.textSecondary,
+                                ),
+                              ),
+                              const SizedBox(height: 8),
+                              DocumentUploadWidget(
+                                pickedFiles: files,
+                                onPickFiles: () async {
+                                  final result =
+                                      await FilePicker.platform.pickFiles(
+                                    allowMultiple: true,
+                                    type: FileType.custom,
+                                    allowedExtensions: docField.extension,
+                                    withData: true,
+                                  );
+                                  if (result != null && mounted) {
+                                    setState(() {
+                                      _documentFiles[docField.name] =
+                                          result.files;
+                                    });
+                                  }
+                                },
+                                onRemoveFile: (file) {
+                                  setState(() {
+                                    _documentFiles[docField.name]?.remove(file);
+                                  });
+                                },
+                              ),
+                            ],
+                          ),
+                        );
+                      }).toList();
+                    }(),
                     const SizedBox(height: 4),
                     SwitchListTile(
                       value: _porterRequested,

@@ -152,7 +152,6 @@ class _MemberFormCardState extends State<MemberFormCard> {
       isPrimaryContact: widget.member.isPrimaryContact,
       hasAccount: widget.member.hasAccount,
       userId: widget.member.userId,
-      attachments: widget.member.attachments,
       memberStatus: widget.member.memberStatus,
       createdAt: widget.member.createdAt,
       updatedAt: widget.member.updatedAt,

@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/member.dart';
+import '../models/trek_type.dart';
 import '../utils/app_logger.dart';
 
 // ---------------------------------------------------------------------------
@@ -85,7 +86,11 @@ class SeasonalRules {
     offSeasonEnd: d['offSeasonEnd'] as String? ?? '09-30',
     allowedBookingTypes: List<String>.from(
       d['allowedBookingTypes'] as List? ??
-          ['special_trek', 'government_official', 'research_trek'],
+          [
+            TrekType.special.value,
+            'government_official',
+            TrekType.research.value,
+          ],
     ),
   );
 
@@ -95,6 +100,8 @@ class SeasonalRules {
     'allowedBookingTypes': allowedBookingTypes,
   };
 
+  // const context — TrekType enum fields cannot be used here; values must
+  // match TrekType.special.value, TrekType.research.value etc.
   static const SeasonalRules defaults = SeasonalRules(
     offSeasonStart: '07-01',
     offSeasonEnd: '09-30',

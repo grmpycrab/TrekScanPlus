@@ -3,9 +3,12 @@ import 'package:mobile_scanner/mobile_scanner.dart';
 import '../../../theme/app_theme.dart';
 import '../../../utils/app_logger.dart';
 import '../../../models/station_data.dart';
+import '../../../models/achievement.dart';
+import '../../../services/achievement_service.dart';
 import '../viewmodels/scanner_view_model.dart';
 import '../widgets/start_climb_dialog.dart';
 import '../../stations/screens/station_detail_screen.dart';
+import '../../notification/widgets/achievement_notification.dart';
 
 class ScannerScreen extends StatefulWidget {
   const ScannerScreen({super.key});
@@ -110,6 +113,13 @@ class _ScannerScreenState extends State<ScannerScreen>
       _navigateToStation(station);
     }
 
+    // Consume pending achievement unlock.
+    if (_vm.pendingAchievementNotification != null) {
+      final achievement = _vm.pendingAchievementNotification!;
+      _vm.clearAchievementNotification();
+      _showAchievementNotification(achievement);
+    }
+
     setState(() {});
   }
 
@@ -145,6 +155,20 @@ class _ScannerScreenState extends State<ScannerScreen>
     if (mounted && Navigator.of(context).canPop()) {
       Navigator.of(context).pop();
     }
+  }
+
+  /// Shows the achievement-unlock dialog and marks the notification as read.
+  Future<void> _showAchievementNotification(Achievement achievement) async {
+    if (!mounted) return;
+    await showDialog<void>(
+      context: context,
+      barrierDismissible: true,
+      builder: (_) => AchievementUnlockNotification(
+        achievement: achievement,
+        onDismiss: () {},
+      ),
+    );
+    AchievementService().markNotificationAsShown(achievement.id);
   }
 
   /// Show the StartClimbDialog and, when the user successfully creates a

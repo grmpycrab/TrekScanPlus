@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:math';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'member.dart';
+import 'trek_type.dart';
 
 class Attachment {
   final String storagePath;
@@ -49,7 +50,7 @@ class BookingModel {
   final String affiliation;
   final Timestamp trekDate;
   final String
-  trekType; // 'special_trek', 'benchmarking_trek', 'research_trek', 'regular_trek'
+  trekType; // see TrekType enum for valid values
   final String hometown; // Primary contact's hometown/city
   final String phoneNumber; // Primary contact's phone number
   /// Non-null when this booking was created through a group booking workflow.
@@ -195,7 +196,7 @@ class BookingModel {
       userId: data['userId'] as String,
       affiliation: data['affiliation'] as String? ?? '',
       trekDate: data['trekDate'] as Timestamp,
-      trekType: data['trekType'] as String? ?? 'regular_trek',
+      trekType: data['trekType'] as String? ?? TrekType.regular.value,
       groupId: data['groupId'] as String?,
       bookingClassification:
           data['bookingClassification'] as String? ?? 'regular',
@@ -225,7 +226,7 @@ class BookingModel {
       userId: data['userId'] as String,
       affiliation: data['affiliation'] as String? ?? '',
       trekDate: _parseTimestamp(data['trekDate']),
-      trekType: data['trekType'] as String? ?? 'regular_trek',
+      trekType: data['trekType'] as String? ?? TrekType.regular.value,
       groupId: data['groupId'] as String?,
       bookingClassification:
           data['bookingClassification'] as String? ?? 'regular',

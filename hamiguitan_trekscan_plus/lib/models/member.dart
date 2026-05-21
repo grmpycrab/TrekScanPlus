@@ -15,8 +15,6 @@ class Member {
   final bool isPrimaryContact; // true if this member is the booking creator
   final bool hasAccount; // true if member has Firebase account
   final String? userId; // Firebase Auth UID if hasAccount=true
-  final List<Map<String, dynamic>>
-  attachments; // Category-specific file attachments
   String
   memberStatus; // 'pending', 'incomplete', 'complete', 'verified', 'rejected'
   final Timestamp createdAt;
@@ -35,7 +33,6 @@ class Member {
     this.isPrimaryContact = false,
     this.hasAccount = false,
     this.userId,
-    this.attachments = const [],
     this.memberStatus = 'pending',
     Timestamp? createdAt,
     this.updatedAt,
@@ -54,7 +51,6 @@ class Member {
     'isPrimaryContact': isPrimaryContact,
     'hasAccount': hasAccount,
     if (userId != null) 'userId': userId,
-    'attachments': attachments,
     'memberStatus': memberStatus,
     'createdAt': createdAt,
     'updatedAt': updatedAt,
@@ -73,11 +69,6 @@ class Member {
     isPrimaryContact: map['isPrimaryContact'] as bool? ?? false,
     hasAccount: map['hasAccount'] as bool? ?? false,
     userId: map['userId'] as String?,
-    attachments:
-        (map['attachments'] as List<dynamic>?)
-            ?.map((e) => Map<String, dynamic>.from(e as Map))
-            .toList() ??
-        [],
     memberStatus: map['memberStatus'] as String? ?? 'pending',
     createdAt: map['createdAt'] as Timestamp? ?? Timestamp.now(),
     updatedAt: map['updatedAt'] as Timestamp?,
@@ -125,7 +116,6 @@ class Member {
     bool? isPrimaryContact,
     bool? hasAccount,
     String? userId,
-    List<Map<String, dynamic>>? attachments,
     String? memberStatus,
     Timestamp? createdAt,
     Timestamp? updatedAt,
@@ -142,7 +132,6 @@ class Member {
     isPrimaryContact: isPrimaryContact ?? this.isPrimaryContact,
     hasAccount: hasAccount ?? this.hasAccount,
     userId: userId ?? this.userId,
-    attachments: attachments ?? this.attachments,
     memberStatus: memberStatus ?? this.memberStatus,
     createdAt: createdAt ?? this.createdAt,
     updatedAt: updatedAt ?? this.updatedAt,

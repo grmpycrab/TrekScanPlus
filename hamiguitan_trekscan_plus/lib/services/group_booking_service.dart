@@ -11,6 +11,7 @@ import 'package:image/image.dart' as img;
 
 import '../models/booking_model.dart';
 import '../models/group_booking.dart';
+import '../models/trek_type.dart';
 import 'pricing_service.dart';
 import '../models/join_request.dart';
 import '../features/notification/models/notification_model.dart';
@@ -78,7 +79,7 @@ class GroupBookingService {
   Future<String> createGroupBooking(GroupBooking group) async {
     final trekDate = group.trekDate.toDate();
     if (isOffSeason(trekDate) &&
-        group.trekType == 'regular_trek' &&
+        group.trekType == TrekType.regular.value &&
         group.bookingClassification == 'regular') {
       throw Exception(
         'Regular bookings are restricted during the off-season '
@@ -422,6 +423,63 @@ class GroupBookingService {
 
     await _groups.doc(groupId).update({
       'letterOfCommunication': attachment.toMap(),
+      'updatedAt': FieldValue.serverTimestamp(),
+    });
+
+    return attachment;
+  }
+
+  /// Upload a document for the group organizer or a guest member.
+  ///
+  /// Files are stored at `groupBookings/{groupId}/attachments/` and appended
+  /// to the group document's `attachments` array so admins can review them.
+  Future<Attachment> uploadMemberAttachment(
+    String groupId,
+    PlatformFile file, {
+    String? memberName,
+  }) async {
+    final rand = Random().nextInt(100000);
+    final name =
+        '${DateTime.now().millisecondsSinceEpoch}_${rand}_${file.name}';
+    final path = 'groupBookings/$groupId/attachments/$name';
+    final ref = _storage.ref(path);
+
+    final metadata = SettableMetadata(
+      contentType: file.extension != null
+          ? _mimeType(file.extension!)
+          : 'application/octet-stream',
+    );
+
+    UploadTask task;
+    if (file.bytes != null) {
+      var bytes = file.bytes!;
+      if (_isImage(file.extension)) {
+        try {
+          final compressed = await compute(_compressImageBytes, bytes);
+          if (compressed.length < bytes.length) bytes = compressed;
+        } catch (_) {}
+      }
+      task = ref.putData(bytes, metadata);
+    } else if (file.path != null) {
+      task = ref.putFile(File(file.path!), metadata);
+    } else {
+      throw ArgumentError('File has neither path nor bytes');
+    }
+
+    final snapshot = await task;
+    final url = await ref.getDownloadURL();
+    final attachment = Attachment(
+      storagePath: snapshot.ref.fullPath,
+      downloadURL: url,
+      fileName: file.name,
+      mimeType: snapshot.metadata?.contentType,
+      size: snapshot.totalBytes,
+      uploadedAt: Timestamp.now(),
+      memberName: memberName,
+    );
+
+    await _groups.doc(groupId).update({
+      'attachments': FieldValue.arrayUnion([attachment.toMap()]),
       'updatedAt': FieldValue.serverTimestamp(),
     });
 

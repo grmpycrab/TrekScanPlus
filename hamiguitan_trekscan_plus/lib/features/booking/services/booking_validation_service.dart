@@ -1,3 +1,7 @@
+import 'package:file_picker/file_picker.dart';
+import '../../../models/member.dart';
+import '../models/document_requirements.dart';
+
 class BookingValidationService {
   /// Validates member name (no numbers, no special chars, reasonable length)
   static String? validateName(String? value, String fieldName) {
@@ -316,6 +320,30 @@ class BookingValidationService {
     } catch (e) {
       return null;
     }
+  }
+
+  /// Returns a map of member display name → list of missing required document
+  /// names. An empty map means every member has all required documents uploaded.
+  static Map<String, List<String>> validateAllMemberDocuments(
+    List<Member> members,
+    Map<String, Map<String, List<PlatformFile>>> memberDocuments,
+  ) {
+    final missing = <String, List<String>>{};
+    for (var i = 0; i < members.length; i++) {
+      final member = members[i];
+      final memberDocs = memberDocuments[i.toString()] ?? {};
+      final requiredDocs =
+          DocumentRequirements.getRequiredDocumentsForCategory(member.category);
+      final missingForMember = requiredDocs
+          .where((docName) => memberDocs[docName]?.isNotEmpty != true)
+          .toList();
+      if (missingForMember.isNotEmpty) {
+        final displayName = '${member.firstName} ${member.lastName}'.trim();
+        missing[displayName.isEmpty ? 'Member ${i + 1}' : displayName] =
+            missingForMember;
+      }
+    }
+    return missing;
   }
 
   /// Format phone number for display

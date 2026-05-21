@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'booking_model.dart';
 import 'member.dart';
+import 'trek_type.dart';
 
 /// Firestore collection: `groupBookings`
 ///
@@ -122,7 +123,7 @@ class GroupBooking {
       organizerName: d['organizerName'] as String? ?? '',
       groupName: d['groupName'] as String? ?? '',
       trekDate: d['trekDate'] as Timestamp,
-      trekType: d['trekType'] as String? ?? 'regular_trek',
+      trekType: d['trekType'] as String? ?? TrekType.regular.value,
       bookingClassification: d['bookingClassification'] as String? ?? 'regular',
       seasonType: d['seasonType'] as String? ?? 'regular',
       affiliation: d['affiliation'] as String? ?? '',
@@ -217,17 +218,10 @@ class GroupBooking {
 
   /// Human-readable trek type label
   String get trekTypeLabel {
-    switch (trekType) {
-      case 'research_trek':
-        return 'Research';
-      case 'special_trek':
-        return 'Special';
-      case 'government_official':
-        return 'Government / Official';
-      case 'benchmarking_trek':
-        return 'Benchmarking';
-      default:
-        return 'Regular';
-    }
+    if (trekType == TrekType.research.value) return 'Research';
+    if (trekType == TrekType.special.value) return 'Special';
+    if (trekType == TrekType.benchmarking.value) return 'Benchmarking';
+    if (trekType == 'government_official') return 'Government / Official';
+    return 'Regular';
   }
 }

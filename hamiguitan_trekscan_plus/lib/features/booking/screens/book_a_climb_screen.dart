@@ -22,19 +22,20 @@ import '../widgets/category_selector.dart';
 import '../widgets/document_upload_widget.dart';
 import '../widgets/trekker_card.dart';
 import '../widgets/member_edit_dialog.dart';
+import '../services/booking_validation_service.dart';
 import '../services/date_validation_service.dart';
 import '../models/document_requirements.dart';
 import 'group_booking_entry_screen.dart';
 
-/// Refactored main booking screen
-/// Uses provider for state management and extracted widgets
-class BookAClimbScreenRefactored extends StatefulWidget {
+/// Main booking screen.
+/// Uses provider for state management and extracted widgets.
+class BookAClimbScreen extends StatefulWidget {
   final String? highlightBookingId;
   final DateTime? selectedDate;
   final bool autoShowBookingForm;
   final VoidCallback? onFormShown;
 
-  const BookAClimbScreenRefactored({
+  const BookAClimbScreen({
     super.key,
     this.highlightBookingId,
     this.selectedDate,
@@ -43,12 +44,12 @@ class BookAClimbScreenRefactored extends StatefulWidget {
   });
 
   @override
-  State<BookAClimbScreenRefactored> createState() =>
-      _BookAClimbScreenRefactoredState();
+  State<BookAClimbScreen> createState() =>
+      _BookAClimbScreenState();
 }
 
-class _BookAClimbScreenRefactoredState
-    extends State<BookAClimbScreenRefactored> {
+class _BookAClimbScreenState
+    extends State<BookAClimbScreen> {
   final _formKey = GlobalKey<FormState>();
   final _scrollController = ScrollController();
   final TextEditingController _contactController = TextEditingController();
@@ -647,6 +648,38 @@ class _BookAClimbScreenRefactoredState
 
     if (confirmed != true) return;
 
+    // Validate that all required documents have been selected before uploading.
+    final memberDocuments = _bookingProvider.state.memberDocuments;
+    final missingDocs = BookingValidationService.validateAllMemberDocuments(
+      draft.members,
+      memberDocuments,
+    );
+    if (missingDocs.isNotEmpty && mounted) {
+      await showDialog<void>(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          title: const Text('Missing Required Documents'),
+          content: SingleChildScrollView(
+            child: Text(
+              missingDocs.entries
+                  .map(
+                    (e) =>
+                        '${e.key}:\n${e.value.map((d) => '  • $d').join('\n')}',
+                  )
+                  .join('\n\n'),
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: const Text('OK'),
+            ),
+          ],
+        ),
+      );
+      return;
+    }
+
     try {
       if (mounted) {
         AppDialogueHandler.showLoading(
@@ -663,7 +696,6 @@ class _BookAClimbScreenRefactoredState
       );
 
       // Upload files if any exist for this draft — all in parallel
-      final memberDocuments = _bookingProvider.state.memberDocuments;
       int uploadedCount = 0;
       int failedCount = 0;
 
@@ -1243,11 +1275,24 @@ class _BuildBookingFormModalState extends State<_BuildBookingFormModal> {
     );
     final colors = context.colors;
 
+    final memberKey = memberIndex.toString();
+    final savedMeta = provider.state.memberDocumentMetadata[memberKey];
+    final hasSavedMeta =
+        savedMeta?.values.any((files) => files.isNotEmpty) ?? false;
+    final hasInMemoryFiles =
+        provider.state.memberDocuments[memberKey]?.values.any(
+          (files) => files.isNotEmpty,
+        ) ??
+        false;
+    final needsReselect = hasSavedMeta && !hasInMemoryFiles;
+
     return Padding(
       padding: const EdgeInsets.only(bottom: 20),
       child: Container(
         decoration: BoxDecoration(
-          border: Border.all(color: Colors.black26),
+          border: Border.all(
+            color: needsReselect ? Colors.orange : Colors.black26,
+          ),
           borderRadius: BorderRadius.circular(12),
         ),
         child: ExpansionTile(
@@ -1255,10 +1300,22 @@ class _BuildBookingFormModalState extends State<_BuildBookingFormModal> {
             '${member.firstName} ${member.lastName} - ${member.category.toUpperCase()}',
             style: const TextStyle(fontWeight: FontWeight.w600),
           ),
-          subtitle: Text(
-            _getFileRequirmentsForCategory(member.category),
-            style: TextStyle(fontSize: 12, color: colors.textSecondary),
-          ),
+          subtitle: needsReselect
+              ? const Text(
+                  'Files need to be re-selected — tap to re-upload',
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: Colors.orange,
+                    fontWeight: FontWeight.w500,
+                  ),
+                )
+              : Text(
+                  _getFileRequirmentsForCategory(member.category),
+                  style: TextStyle(fontSize: 12, color: colors.textSecondary),
+                ),
+          trailing: needsReselect
+              ? const Icon(Icons.warning_amber_rounded, color: Colors.orange)
+              : null,
           children: [
             Padding(
               padding: const EdgeInsets.all(16),
