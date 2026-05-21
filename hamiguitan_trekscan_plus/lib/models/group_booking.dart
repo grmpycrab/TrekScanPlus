@@ -59,6 +59,10 @@ class GroupBooking {
   /// Registered app-users who join later appear as join requests instead.
   final List<Member> guestMembers;
 
+  /// Documents uploaded for the organizer and guest members during group
+  /// creation, stored at `groupBookings/{id}/attachments/`.
+  final List<Attachment> attachments;
+
   final Timestamp createdAt;
   Timestamp? updatedAt;
 
@@ -83,6 +87,7 @@ class GroupBooking {
     this.linkedBookingId,
     this.organizerMember,
     this.guestMembers = const [],
+    this.attachments = const [],
     Timestamp? createdAt,
     this.updatedAt,
   }) : createdAt = createdAt ?? Timestamp.now();
@@ -111,6 +116,7 @@ class GroupBooking {
     'linkedBookingId': linkedBookingId,
     'organizerMember': organizerMember?.toMap(),
     'guestMembers': guestMembers.map((m) => m.toMap()).toList(),
+    'attachments': attachments.map((a) => a.toMap()).toList(),
     'createdAt': createdAt,
     'updatedAt': updatedAt,
   };
@@ -149,6 +155,10 @@ class GroupBooking {
               ?.map((e) => Member.fromMap(Map<String, dynamic>.from(e as Map)))
               .toList() ??
           [],
+      attachments: (d['attachments'] as List<dynamic>?)
+              ?.map((e) => Attachment.fromMap(Map<String, dynamic>.from(e as Map)))
+              .toList() ??
+          [],
       createdAt: d['createdAt'] as Timestamp? ?? Timestamp.now(),
       updatedAt: d['updatedAt'] as Timestamp?,
     );
@@ -175,6 +185,7 @@ class GroupBooking {
     String? linkedBookingId,
     Member? organizerMember,
     List<Member>? guestMembers,
+    List<Attachment>? attachments,
     Timestamp? createdAt,
     Timestamp? updatedAt,
   }) => GroupBooking(
@@ -198,6 +209,7 @@ class GroupBooking {
     linkedBookingId: linkedBookingId ?? this.linkedBookingId,
     organizerMember: organizerMember ?? this.organizerMember,
     guestMembers: guestMembers ?? this.guestMembers,
+    attachments: attachments ?? this.attachments,
     createdAt: createdAt ?? this.createdAt,
     updatedAt: updatedAt ?? this.updatedAt,
   );

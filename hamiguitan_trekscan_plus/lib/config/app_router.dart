@@ -8,6 +8,8 @@ import '../features/booking/screens/book_a_climb_screen.dart';
 import '../features/booking/screens/group_booking_entry_screen.dart';
 import '../features/booking/screens/active_groups_screen.dart';
 import '../features/booking/screens/organizer_requests_screen.dart';
+import '../features/booking/screens/group_detail_screen.dart';
+import '../features/booking/screens/my_bookings_screen.dart';
 import '../features/social/screens/my_posts_screen.dart';
 
 /// Global navigator key — required for navigation outside of widget context
@@ -64,6 +66,21 @@ class AppRouter {
           builder: (context) => OrganizerRequestsScreen(groupId: groupId),
         );
       }
+    }
+
+    if (settings.name == '/group-detail') {
+      final groupId = settings.arguments as String?;
+      if (groupId != null) {
+        return MaterialPageRoute(
+          builder: (context) => GroupDetailScreen(groupId: groupId),
+        );
+      }
+    }
+
+    if (settings.name == '/my-bookings') {
+      return MaterialPageRoute(
+        builder: (context) => const MyBookingsScreen(),
+      );
     }
 
     return null;

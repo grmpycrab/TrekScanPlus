@@ -442,13 +442,12 @@ class _NotificationScreenState extends State<NotificationScreen> {
           Navigator.pushNamed(context, '/post-detail', arguments: postId);
         }
       } else if (notification.actionType == 'booking') {
-        final bookingId = notification.actionData!;
         if (mounted) {
           Navigator.pushAndRemoveUntil(
             context,
             MaterialPageRoute(
               builder: (context) =>
-                  MainScreen(initialTabIndex: 3, highlightBookingId: bookingId),
+                  MainScreen(initialTabIndex: 3),
             ),
             (route) => false,
           );

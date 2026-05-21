@@ -4,18 +4,16 @@ import '../../features/home/screens/home_screen.dart';
 import '../../features/stations/screens/station_screen.dart';
 import '../../features/scanner/screens/scanner_screen.dart';
 import '../../features/settings/screens/settings_screen.dart';
-import '../../features/booking/screens/book_a_climb_screen.dart';
+import '../../features/booking/screens/my_bookings_screen.dart';
 
 // ignore_for_file: unnecessary_brace_in_string_interps
 // ignore_for_file: use_key_in_widget_constructors, deprecated_member_use, use_build_context_synchronously
 class MainScreen extends StatefulWidget {
   final int initialTabIndex;
-  final String? highlightBookingId;
 
   const MainScreen({
     super.key,
     this.initialTabIndex = 0,
-    this.highlightBookingId,
   });
 
   @override
@@ -24,35 +22,16 @@ class MainScreen extends StatefulWidget {
 
 class _MainScreenState extends State<MainScreen> {
   late int _currentIndex;
-  DateTime? _selectedDateForBooking;
-  bool _autoShowBookingForm = false;
-  bool _bookingFormShown = false; // Track if form has been auto-shown
 
-  void _navigateToBookingWithDate(DateTime date) {
-    setState(() {
-      _selectedDateForBooking = date;
-      _autoShowBookingForm = true;
-      _bookingFormShown = false; // Reset when new date is selected
-      _currentIndex = 3; // Index of BookAClimbScreen
-    });
+  void _navigateToBookingWithDate(DateTime _) {
+    setState(() => _currentIndex = 3);
   }
 
   List<Widget> get _screens => [
     HomeScreen(onNavigateToBooking: _navigateToBookingWithDate),
     const StationScreen(),
     const ScannerScreen(),
-    BookAClimbScreen(
-      selectedDate: _selectedDateForBooking,
-      autoShowBookingForm: _autoShowBookingForm && !_bookingFormShown,
-      highlightBookingId: widget.highlightBookingId,
-      onFormShown: () {
-        // Called when the booking form is auto-shown
-        setState(() {
-          _bookingFormShown = true;
-          _autoShowBookingForm = false;
-        });
-      },
-    ),
+    const MyBookingsScreen(),
     const SettingsScreen(),
   ];
 
@@ -79,14 +58,7 @@ class _MainScreenState extends State<MainScreen> {
         bottomNavigationBar: BottomNavigation(
           currentIndex: _currentIndex,
           onTap: (index) {
-            setState(() {
-              // Clear booking form state when switching away from booking tab
-              if (_currentIndex == 3 && index != 3) {
-                _selectedDateForBooking = null;
-                _autoShowBookingForm = false;
-              }
-              _currentIndex = index;
-            });
+            setState(() => _currentIndex = index);
           },
         ),
       ),

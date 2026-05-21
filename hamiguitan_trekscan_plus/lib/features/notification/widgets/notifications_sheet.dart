@@ -184,9 +184,8 @@ class _NotificationsSheetState extends State<NotificationsSheet> {
               Navigator.pushAndRemoveUntil(
                 context,
                 MaterialPageRoute(
-                  builder: (context) => MainScreen(
-                    initialTabIndex: 3, // Booking tab
-                    highlightBookingId: bookingId,
+                  builder: (context) => const MainScreen(
+                    initialTabIndex: 3,
                   ),
                 ),
                 (route) => false,

@@ -224,6 +224,13 @@ class GroupBookingService {
         .map((snap) => snap.docs.map(JoinRequest.fromDoc).toList());
   }
 
+  /// Real-time stream of a single [GroupBooking] document.
+  Stream<GroupBooking?> streamGroup(String groupId) {
+    return _groups.doc(groupId).snapshots().map(
+          (doc) => doc.exists ? GroupBooking.fromDoc(doc) : null,
+        );
+  }
+
   /// Stream a single user's own join request for a group.
   Stream<JoinRequest?> streamMyRequest(String groupId, String userId) {
     return _requests(groupId)
@@ -232,6 +239,42 @@ class GroupBookingService {
         .snapshots()
         .map((snap) =>
             snap.docs.isEmpty ? null : JoinRequest.fromDoc(snap.docs.first));
+  }
+
+  /// Real-time stream of ALL join requests submitted by [userId] across every
+  /// group.  Powers the "Requests" tab in [MyBookingsScreen].
+  ///
+  /// Requires a Firestore composite index on `joinRequests`:
+  ///   userId ASC, createdAt DESC
+  Stream<List<JoinRequest>> streamUserJoinRequests(String userId) {
+    return _db
+        .collectionGroup('joinRequests')
+        .where('userId', isEqualTo: userId)
+        .orderBy('createdAt', descending: true)
+        .snapshots()
+        .map((snap) => snap.docs.map(JoinRequest.fromDoc).toList());
+  }
+
+  /// Allows a trekker to withdraw their own pending join request.
+  Future<void> withdrawJoinRequest(String groupId, String requestId) async {
+    final uid = _auth.currentUser?.uid;
+    if (uid == null) throw Exception('Not authenticated');
+
+    final doc = await _requests(groupId).doc(requestId).get();
+    if (!doc.exists) throw Exception('Request not found');
+
+    final request = JoinRequest.fromDoc(doc);
+    if (request.userId != uid) throw Exception('Not authorised');
+    if (!request.isPending) {
+      throw Exception('Only pending requests can be withdrawn');
+    }
+
+    await _requests(groupId).doc(requestId).update({
+      'status': 'withdrawn',
+      'updatedAt': FieldValue.serverTimestamp(),
+    });
+
+    AppLogger.i('JoinRequest $requestId withdrawn by $uid');
   }
 
   /// Organizer approves a join request.

@@ -1,6 +1,7 @@
 // ignore_for_file: use_build_context_synchronously
 
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../../../models/group_booking.dart';
@@ -10,6 +11,7 @@ import '../../../services/group_booking_service.dart';
 import '../../../services/pricing_service.dart';
 import '../../../theme/app_theme.dart';
 import '../../../utils/app_logger.dart';
+import '../models/document_requirements.dart';
 
 /// Form for submitting a [JoinRequest] to an existing [GroupBooking].
 ///
@@ -40,6 +42,9 @@ class _JoinRequestScreenState extends State<JoinRequestScreen> {
   bool _porterRequested = false;
   bool _isSubmitting = false;
 
+  // document uploads keyed by DocumentField.name
+  final Map<String, List<PlatformFile>> _docFiles = {};
+
   double get _memberPrice =>
       PricingService.instance.calculateMemberPrice(_category);
 
@@ -66,6 +71,22 @@ class _JoinRequestScreenState extends State<JoinRequestScreen> {
     }
   }
 
+  List<String> _missingDocs() {
+    final required =
+        DocumentRequirements.getRequiredDocumentsForCategory(_category);
+    return required.where((d) => (_docFiles[d] ?? []).isEmpty).toList();
+  }
+
+  Future<void> _pickFiles(String docName) async {
+    final result = await FilePicker.platform.pickFiles(
+      type: FileType.custom,
+      allowedExtensions: ['pdf', 'jpg', 'jpeg', 'png', 'docx'],
+      allowMultiple: true,
+    );
+    if (result == null) return;
+    setState(() => _docFiles[docName] = result.files);
+  }
+
   @override
   void dispose() {
     _firstNameCtrl.dispose();
@@ -90,6 +111,12 @@ class _JoinRequestScreenState extends State<JoinRequestScreen> {
 
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) return;
+
+    final missing = _missingDocs();
+    if (missing.isNotEmpty) {
+      _snack('Please upload: ${missing.join(', ')}', isError: true);
+      return;
+    }
 
     setState(() => _isSubmitting = true);
     try {
@@ -120,7 +147,25 @@ class _JoinRequestScreenState extends State<JoinRequestScreen> {
         createdAt: Timestamp.now(),
       );
 
-      await GroupBookingService.instance.submitJoinRequest(request);
+      final requestId =
+          await GroupBookingService.instance.submitJoinRequest(request);
+
+      final memberName =
+          '${_firstNameCtrl.text.trim()} ${_lastNameCtrl.text.trim()}'.trim();
+      for (final entry in _docFiles.entries) {
+        for (final file in entry.value) {
+          try {
+            await GroupBookingService.instance.uploadJoinRequestAttachment(
+              widget.group.id,
+              requestId,
+              file,
+              memberName: memberName,
+            );
+          } catch (e) {
+            AppLogger.w('Upload skipped (${file.name}): $e');
+          }
+        }
+      }
 
       if (!mounted) return;
       _showSuccessSheet();
@@ -295,6 +340,15 @@ class _JoinRequestScreenState extends State<JoinRequestScreen> {
               onChanged: (v) => setState(() => _category = v),
             ),
 
+            // ── Required documents ───────────────────────────────────────
+            const SizedBox(height: 20),
+            _SectionLabel('Required Documents'),
+            _DocUploadSection(
+              category: _category,
+              docFiles: _docFiles,
+              onPick: _pickFiles,
+            ),
+
             // ── Add-ons ─────────────────────────────────────────────────
             const SizedBox(height: 20),
             _SectionLabel('Add-ons'),
@@ -368,6 +422,137 @@ class _JoinRequestScreenState extends State<JoinRequestScreen> {
 // ---------------------------------------------------------------------------
 // Local widgets
 // ---------------------------------------------------------------------------
+
+// ---------------------------------------------------------------------------
+// Document upload section
+// ---------------------------------------------------------------------------
+
+class _DocUploadSection extends StatelessWidget {
+  final String category;
+  final Map<String, List<PlatformFile>> docFiles;
+  final Future<void> Function(String docName) onPick;
+
+  const _DocUploadSection({
+    required this.category,
+    required this.docFiles,
+    required this.onPick,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.colors;
+    final docType = DocumentRequirements.getDocumentsForCategory(category);
+    if (docType == null || docType.requiredDocs.isEmpty) {
+      return Padding(
+        padding: const EdgeInsets.symmetric(vertical: 4),
+        child: Text(
+          'No documents required for this category.',
+          style: TextStyle(fontSize: 13, color: colors.textSecondary),
+        ),
+      );
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        for (final field in docType.requiredDocs) ...[
+          _DocFieldRow(
+            field: field,
+            files: docFiles[field.name] ?? [],
+            onPick: () => onPick(field.name),
+          ),
+          const SizedBox(height: 10),
+        ],
+      ],
+    );
+  }
+}
+
+class _DocFieldRow extends StatelessWidget {
+  final DocumentField field;
+  final List<PlatformFile> files;
+  final VoidCallback onPick;
+
+  const _DocFieldRow({
+    required this.field,
+    required this.files,
+    required this.onPick,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.colors;
+    final hasFiles = files.isNotEmpty;
+
+    return Container(
+      decoration: BoxDecoration(
+        color: colors.inputFill,
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(
+          color: hasFiles
+              ? Colors.green.withOpacity(0.6)
+              : colors.border,
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          ListTile(
+            contentPadding:
+                const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
+            leading: Icon(
+              hasFiles
+                  ? Icons.check_circle_rounded
+                  : Icons.upload_file_rounded,
+              color: hasFiles ? Colors.green : colors.primary,
+              size: 22,
+            ),
+            title: Text(
+              field.name,
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+                color: colors.text,
+              ),
+            ),
+            subtitle: Text(
+              field.description,
+              style: TextStyle(fontSize: 11, color: colors.textSecondary),
+            ),
+            trailing: TextButton(
+              onPressed: onPick,
+              child: Text(
+                hasFiles ? 'Change' : 'Upload',
+                style: TextStyle(fontSize: 12, color: colors.primary),
+              ),
+            ),
+          ),
+          if (hasFiles)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(12, 0, 12, 10),
+              child: Wrap(
+                spacing: 6,
+                runSpacing: 4,
+                children: files.map((f) {
+                  return Chip(
+                    materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                    visualDensity: VisualDensity.compact,
+                    label: Text(
+                      f.name,
+                      style: const TextStyle(fontSize: 11),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    avatar: const Icon(Icons.insert_drive_file_rounded,
+                        size: 14),
+                  );
+                }).toList(),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+}
 
 class _GroupBanner extends StatelessWidget {
   final GroupBooking group;
