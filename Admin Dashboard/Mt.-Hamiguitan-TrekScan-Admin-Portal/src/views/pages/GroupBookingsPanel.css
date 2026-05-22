@@ -317,3 +317,162 @@
   justify-content: flex-end;
   gap: var(--sp-2);
 }
+
+/* ── Section title (shared heading for all expanded subsections) ── */
+
+.gbp-section-title {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  margin-bottom: var(--sp-3);
+}
+
+/* ── Gap L2: Guide / scientist requirement badges ──────────────── */
+
+.gbp-badge-guide { background: #fff7ed; color: #c2410c; }
+.gbp-badge-sci   { background: #f0f9ff; color: #0369a1; }
+
+/* ── Gap M1: Admin notes bar ───────────────────────────────────── */
+
+.gbp-notes-bar {
+  margin-bottom: var(--sp-5);
+  padding-bottom: var(--sp-4);
+  border-bottom: 1px solid var(--border-default);
+}
+
+.gbp-notes-hint {
+  font-size: 0.75rem;
+  font-weight: 400;
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+.gbp-notes-textarea {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 8px 10px;
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-md);
+  font-size: 0.875rem;
+  resize: vertical;
+  background: var(--surface-input);
+  color: var(--text-primary);
+  margin: var(--sp-2) 0 var(--sp-2);
+  display: block;
+}
+
+.gbp-notes-textarea:focus { outline: none; border-color: var(--green-500); }
+
+.gbp-notes-save {
+  background: #dcfce7;
+  color: #15803d;
+}
+
+.gbp-notes-save:hover:not(:disabled) { background: #bbf7d0; }
+
+.gbp-notes-save:disabled { opacity: 0.4; cursor: not-allowed; }
+
+/* ── Gap M2: Member section ────────────────────────────────────── */
+
+.gbp-members-section {
+  margin-bottom: var(--sp-5);
+  padding-bottom: var(--sp-4);
+  border-bottom: 1px solid var(--border-default);
+}
+
+.gbp-member-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+}
+
+.gbp-member-card {
+  padding: 10px 14px;
+  background: var(--surface-card);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-md);
+}
+
+.gbp-member-role {
+  font-size: 0.6875rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-muted);
+  margin-bottom: 2px;
+}
+
+.gbp-member-name {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: var(--sp-1);
+}
+
+.gbp-member-detail {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 14px;
+}
+
+/* ── Gap C1: Document / attachment bars ────────────────────────── */
+
+.gbp-doc-bar {
+  margin-bottom: var(--sp-4);
+  padding-bottom: var(--sp-3);
+  border-bottom: 1px solid var(--border-default);
+}
+
+.gbp-attach-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-2);
+  margin-top: var(--sp-1);
+}
+
+.gbp-attach-link {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 10px;
+  border-radius: var(--radius-full);
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: #2563eb;
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  text-decoration: none;
+  transition: background var(--t-fast);
+}
+
+.gbp-attach-link:hover { background: #dbeafe; }
+
+/* ── Gap H1: Member detail grid inside join request rows ───────── */
+
+.gbp-req-detail {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 3px 14px;
+  margin-top: var(--sp-1);
+}
+
+.gbp-req-detail-item {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+}
+
+.gbp-req-detail-full {
+  flex-basis: 100%;
+}
+
+.gbp-detail-label {
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+/* ── Gap C1: Attachments inside join request row ───────────────── */
+
+.gbp-req-attach {
+  margin-top: var(--sp-2);
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}

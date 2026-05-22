@@ -124,29 +124,34 @@ class GroupBookingService {
   }
 
   /// Real-time stream of groups the user has joined (approved requests).
-  Stream<List<GroupBooking>> streamJoinedGroups(String userId) async* {
-    // Firestore can't do cross-collection group-queries here easily;
-    // collect group IDs from approved join requests then stream those groups.
-    final requestSnap = await _db
+  ///
+  /// Listens to the [joinRequests] collectionGroup so the "Groups I Joined"
+  /// tab updates immediately when a new request is approved — fixing the
+  /// stale-tab bug where a one-shot [getDocs] was used as the trigger.
+  ///
+  /// Requires the composite index:
+  ///   collectionGroup(joinRequests) → userId ASC, status ASC
+  /// (Already created by the original [getDocs] query in this method.)
+  Stream<List<GroupBooking>> streamJoinedGroups(String userId) {
+    return _db
         .collectionGroup('joinRequests')
         .where('userId', isEqualTo: userId)
         .where('status', isEqualTo: 'approved')
-        .get();
-
-    final groupIds = requestSnap.docs
-        .map((d) => d['groupId'] as String)
-        .toSet()
-        .toList();
-
-    if (groupIds.isEmpty) {
-      yield [];
-      return;
-    }
-
-    yield* _groups
-        .where(FieldPath.documentId, whereIn: groupIds)
         .snapshots()
-        .map((snap) => snap.docs.map(GroupBooking.fromDoc).toList());
+        .asyncMap((snap) async {
+          final groupIds = snap.docs
+              .map((d) => d['groupId'] as String)
+              .toSet()
+              .toList();
+
+          if (groupIds.isEmpty) return <GroupBooking>[];
+
+          final groupSnap = await _groups
+              .where(FieldPath.documentId, whereIn: groupIds)
+              .get();
+
+          return groupSnap.docs.map(GroupBooking.fromDoc).toList();
+        });
   }
 
   /// Update group status (admin use).
