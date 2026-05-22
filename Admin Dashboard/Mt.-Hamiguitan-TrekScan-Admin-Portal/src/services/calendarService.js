@@ -10,7 +10,7 @@ import {
   timestampToDate,
   dateToTimestamp
 } from './firebaseService';
-import { Timestamp, doc, setDoc } from 'firebase/firestore';
+import { Timestamp, doc, setDoc, getDoc, deleteDoc, collection, query as fbQuery, where, getDocs } from 'firebase/firestore';
 import { db } from '../config/firebase';
 
 const CALENDAR_CONFIG_COLLECTION = 'calendar_config';
@@ -27,7 +27,7 @@ export const getCalendarSettings = async () => {
     // Return defaults if document doesn't exist
     if (!settings) {
       return {
-        advanceBookingDays: 1825,
+        advanceBookingDays: 90,
         allowWeekendBookings: true,
         criticalThreshold: 5,
         defaultMaxSlots: 30,
@@ -35,7 +35,7 @@ export const getCalendarSettings = async () => {
       };
     }
     return {
-      advanceBookingDays: settings.advanceBookingDays || 1825,
+      advanceBookingDays: settings.advanceBookingDays || 90,
       allowWeekendBookings: settings.allowWeekendBookings !== undefined ? settings.allowWeekendBookings : true,
       criticalThreshold: settings.criticalThreshold || 5,
       defaultMaxSlots: settings.defaultMaxSlots || 30,
@@ -45,7 +45,7 @@ export const getCalendarSettings = async () => {
     console.error('Error getting calendar settings:', error);
     // Return defaults if document doesn't exist
     return {
-      advanceBookingDays: 1825,
+      advanceBookingDays: 90,
       allowWeekendBookings: true,
       criticalThreshold: 5,
       defaultMaxSlots: 30,
@@ -115,7 +115,21 @@ export const getCalendarConfigForDate = async (date) => {
 };
 
 /**
- * Get all calendar configurations within a date range
+ * Parse a YYYY-MM-DD date key in local time (avoids UTC midnight shifting).
+ * Using new Date('YYYY-MM-DD') would parse as UTC and shift the date in non-UTC
+ * timezones. This function always returns the correct local date.
+ * @param {string} dateKey - Date key in YYYY-MM-DD format
+ * @returns {Date} Local-time Date object
+ */
+const parseDateKeySafe = (dateKey) => {
+  const [year, month, day] = dateKey.split('-').map(Number);
+  return new Date(year, month - 1, day);
+};
+
+/**
+ * Get all calendar configurations within a date range.
+ * Uses a document-ID range query (same strategy as the mobile CalendarConfigService)
+ * instead of a full-collection scan.
  * @param {Date} startDate - Start date
  * @param {Date} endDate - End date
  * @returns {Promise<Array>} Array of calendar configs
@@ -124,39 +138,28 @@ export const getCalendarConfigsInRange = async (startDate, endDate) => {
   try {
     const startStr = formatDateForId(startDate);
     const endStr = formatDateForId(endDate);
-    
-    // Query documents where ID is between start and end dates
-    // Note: Firestore doesn't support range queries on document IDs directly
-    // So we'll get all configs and filter, or use date field if it exists
-    const allConfigs = await getAllDocuments(CALENDAR_CONFIG_COLLECTION);
-    
-    return allConfigs
-      .filter(config => {
-        const configId = config.id || config.date;
-        if (!configId) return false;
-        
-        // If config has date field, use it; otherwise parse ID
-        let configDate;
-        if (config.date) {
-          configDate = config.date instanceof Timestamp 
-            ? config.date.toDate() 
-            : new Date(config.date);
-        } else {
-          // Parse YYYY-MM-DD format
-          configDate = new Date(configId);
-        }
-        
-        return configDate >= startDate && configDate <= endDate;
-      })
-      .map(config => ({
-        id: config.id,
-        date: config.date ? timestampToDate(config.date) : new Date(config.id),
-        maxSlots: config.maxSlots || null,
-        isClosed: config.isClosed || false,
-        customNote: config.customNote || null,
-        reason: config.reason || null,
-        lastUpdated: config.lastUpdated ? timestampToDate(config.lastUpdated) : null
-      }));
+
+    // Document IDs are YYYY-MM-DD strings — lexicographic range query works correctly.
+    const snap = await getDocs(
+      fbQuery(
+        collection(db, CALENDAR_CONFIG_COLLECTION),
+        where('__name__', '>=', startStr),
+        where('__name__', '<=', endStr),
+      ),
+    );
+
+    return snap.docs.map((d) => {
+      const data = d.data();
+      return {
+        id: d.id,
+        date: data.date ? timestampToDate(data.date) : parseDateKeySafe(d.id),
+        maxSlots: data.maxSlots || null,
+        isClosed: data.isClosed || false,
+        customNote: data.customNote || null,
+        reason: data.reason || null,
+        lastUpdated: data.lastUpdated ? timestampToDate(data.lastUpdated) : null,
+      };
+    });
   } catch (error) {
     console.error('Error getting calendar configs in range:', error);
     throw error;
@@ -336,6 +339,69 @@ export const subscribeToCalendarConfigs = (callback, startDate, endDate) => {
     });
   } catch (error) {
     console.error('Error setting up calendar config listener:', error);
+    throw error;
+  }
+};
+
+/**
+ * Mark the day after a trek date as a "trek down day" (buffer/recovery day).
+ * Mirrors CalendarConfigService.markTrekDownDay() in the mobile app.
+ * Idempotent — safe to call multiple times for the same trek date.
+ *
+ * @param {Date} trekDate - The approved trek start date
+ */
+export const markTrekDownDay = async (trekDate) => {
+  try {
+    const trekDateObj = trekDate instanceof Date ? trekDate : trekDate.toDate();
+    const dayAfter = new Date(trekDateObj);
+    dayAfter.setDate(dayAfter.getDate() + 1);
+    const dateStr = formatDateForId(dayAfter);
+    const trekDateStr = formatDateForId(trekDateObj);
+
+    const docRef = doc(db, CALENDAR_CONFIG_COLLECTION, dateStr);
+    await setDoc(docRef, {
+      date: Timestamp.fromDate(dayAfter),
+      isClosed: true,
+      maxSlots: 0,
+      reason: 'Trek down day - Trekkers descending',
+      customNote: `Blocked due to approved trek starting on ${trekDateStr}`,
+      isTrekDownDay: true,
+      originalTrekDate: trekDateStr,
+      lastUpdated: Timestamp.now(),
+    }, { merge: true });
+  } catch (error) {
+    console.error('Error marking trek down day:', error);
+    throw error;
+  }
+};
+
+/**
+ * Remove a trek-down-day entry if no other approved bookings remain for the
+ * original trek date. Only deletes if the isTrekDownDay flag matches.
+ * Mirrors CalendarConfigService.removeTrekDownDay() in the mobile app.
+ *
+ * @param {Date} trekDate - The trek date whose buffer day should be cleared
+ */
+export const removeTrekDownDay = async (trekDate) => {
+  try {
+    const trekDateObj = trekDate instanceof Date ? trekDate : trekDate.toDate();
+    const dayAfter = new Date(trekDateObj);
+    dayAfter.setDate(dayAfter.getDate() + 1);
+    const dateStr = formatDateForId(dayAfter);
+    const trekDateStr = formatDateForId(trekDateObj);
+
+    const docRef = doc(db, CALENDAR_CONFIG_COLLECTION, dateStr);
+    const docSnap = await getDoc(docRef);
+
+    if (
+      docSnap.exists() &&
+      docSnap.data().isTrekDownDay === true &&
+      docSnap.data().originalTrekDate === trekDateStr
+    ) {
+      await deleteDoc(docRef);
+    }
+  } catch (error) {
+    console.error('Error removing trek down day:', error);
     throw error;
   }
 };

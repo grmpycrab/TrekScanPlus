@@ -63,24 +63,52 @@ class _EventCalendarState extends State<EventCalendar> {
         .where('trekDate', isLessThanOrEqualTo: endTs)
         .snapshots()
         .listen((snap) async {
-          // Only count approved bookings toward the slot limit
-          final Map<String, int> slotsPerDay = {};
-
+          // Count individual bookings (1 per booking doc = 1 trekker)
+          final Map<String, int> individualByDay = {};
           for (final doc in snap.docs) {
             final data = doc.data();
             final status = (data['status'] as String?)?.toLowerCase() ?? '';
-
-            // Only count approved bookings - pending bookings don't reserve slots
             if (status != 'approved') continue;
-
             final Timestamp? t = data['trekDate'] as Timestamp?;
             if (t == null) continue;
             final d = t.toDate();
             final key =
                 '${d.year}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
-            // Only count trekker, not porters
-            final used = 1;
-            slotsPerDay[key] = (slotsPerDay[key] ?? 0) + used;
+            individualByDay[key] = (individualByDay[key] ?? 0) + 1;
+          }
+
+          // Fetch group bookings and sum currentSlots by day
+          final Map<String, int> groupSlotsByDay = {};
+          try {
+            final groupSnap = await FirebaseFirestore.instance
+                .collection('groupBookings')
+                .where('trekDate', isGreaterThanOrEqualTo: startTs)
+                .where('trekDate', isLessThanOrEqualTo: endTs)
+                .get();
+            for (final doc in groupSnap.docs) {
+              final data = doc.data();
+              final status = (data['status'] as String?)?.toLowerCase() ?? '';
+              if (status == 'cancelled' || status == 'declined' || status == 'rejected') continue;
+              final Timestamp? t = data['trekDate'] as Timestamp?;
+              if (t == null) continue;
+              final d = t.toDate();
+              final key =
+                  '${d.year}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
+              final slots = (data['currentSlots'] as int?) ?? 0;
+              groupSlotsByDay[key] = (groupSlotsByDay[key] ?? 0) + slots;
+            }
+          } catch (_) {
+            // Non-fatal: fall back to individual bookings only
+          }
+
+          // Apply canonical formula: slotsUsed = (indiv + group) + floor((indiv + group) / 5)
+          final Map<String, int> slotsPerDay = {};
+          final allKeys = {...individualByDay.keys, ...groupSlotsByDay.keys};
+          for (final key in allKeys) {
+            final indiv = individualByDay[key] ?? 0;
+            final grp = groupSlotsByDay[key] ?? 0;
+            final bookedTrekkers = indiv + grp;
+            slotsPerDay[key] = bookedTrekkers + bookedTrekkers ~/ 5;
           }
 
           // Get calendar configuration for the month

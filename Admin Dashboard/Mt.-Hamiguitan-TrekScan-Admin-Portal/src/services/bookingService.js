@@ -12,7 +12,7 @@ import {
 } from './firebaseService';
 import BookingModel from '../models/BookingModel';
 import { Timestamp } from 'firebase/firestore';
-import { getMaxSlotsForDate, isDateClosed } from './calendarService';
+import { getMaxSlotsForDate, isDateClosed, markTrekDownDay, removeTrekDownDay } from './calendarService';
 
 const COLLECTION_NAME = 'bookings';
 
@@ -423,19 +423,23 @@ export const updateBookingStatus = async (bookingId, status, adminNotes = null) 
       throw new Error('Status is required');
     }
     
-    const validStatuses = ['pending', 'approved', 'rejected', 'cancelled', 'changes_required'];
+    const validStatuses = ['pending', 'approved', 'rejected', 'cancelled', 'completed', 'changes_required'];
     if (!validStatuses.includes(status.toLowerCase())) {
       throw new Error(`Invalid status: ${status}. Must be one of: ${validStatuses.join(', ')}`);
     }
     
     console.log(`Updating booking ${bookingId} status to ${status}`);
-    
+
+    // Captured trek date used later for trek-down-day management
+    let trekDateForTDD = null;
+
     // If approving, check capacity first
     if (status === 'approved') {
       console.log('Checking capacity before approval...');
       // Get the booking to check its trek date
       const booking = await getBookingById(bookingId);
       console.log('Booking fetched:', booking);
+      trekDateForTDD = booking?.trekDate ?? null;
       
       if (!booking) {
         throw new Error('Booking not found');
@@ -498,6 +502,32 @@ export const updateBookingStatus = async (bookingId, status, adminNotes = null) 
     console.log('Updating document with data:', updateData);
     await updateDocument(COLLECTION_NAME, bookingId, updateData);
     console.log('Booking status updated successfully');
+
+    // Trek-down-day management: non-fatal, runs after the primary write.
+    // Approved  → mark next day as buffer/recovery day.
+    // Cancelled/Rejected → remove buffer day if no other approved bookings remain.
+    try {
+      if (status === 'approved' && trekDateForTDD) {
+        const tdd = trekDateForTDD instanceof Timestamp
+          ? trekDateForTDD.toDate()
+          : new Date(trekDateForTDD);
+        await markTrekDownDay(tdd);
+      } else if (status === 'rejected' || status === 'cancelled') {
+        // Fetch booking to retrieve trekDate (not fetched in non-approved path)
+        const bk = await getBookingById(bookingId);
+        if (bk?.trekDate) {
+          const tdd = bk.trekDate instanceof Timestamp
+            ? bk.trekDate.toDate()
+            : new Date(bk.trekDate);
+          // Only remove if no other approved bookings remain for this date
+          const remaining = await countApprovedBookingsForDate(bk.trekDate);
+          if (remaining === 0) await removeTrekDownDay(tdd);
+        }
+      }
+    } catch (tddError) {
+      // Non-fatal — log but do not fail the status update
+      console.warn('Trek-down-day sync failed (non-fatal):', tddError);
+    }
   } catch (error) {
     console.error(`Error updating booking status ${bookingId}:`, error);
     console.error('Error details:', {
@@ -601,6 +631,33 @@ export const subscribeToBookings = (callback, filters = {}) => {
   } catch (error) {
     console.error('Error setting up bookings listener:', error);
     throw error;
+  }
+};
+
+/**
+ * Get group bookings for a specific month (used by calendar slot calculation).
+ * Returns only active group bookings (excludes cancelled/declined/rejected).
+ * @param {number} month - Month (0-11)
+ * @param {number} year - Year
+ * @returns {Promise<Array>} Array of group booking plain objects
+ */
+export const getGroupBookingsForMonth = async (month, year) => {
+  try {
+    const startDate = new Date(year, month, 1, 0, 0, 0);
+    const endDate = new Date(year, month + 1, 0, 23, 59, 59);
+
+    const results = await queryDocuments('groupBookings', [
+      { field: 'trekDate', operator: '>=', value: dateToTimestamp(startDate) },
+      { field: 'trekDate', operator: '<=', value: dateToTimestamp(endDate) },
+    ]);
+
+    return results.filter((g) => {
+      const s = (g.status || '').toLowerCase();
+      return s !== 'cancelled' && s !== 'declined' && s !== 'rejected';
+    });
+  } catch (error) {
+    console.error('Error getting group bookings for month:', error);
+    return [];
   }
 };
 

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../../../theme/app_theme.dart';
+import '../../../services/calendar_config_service.dart';
 import '../services/date_validation_service.dart';
 
 /// Trek date picker widget with availability checking
@@ -27,6 +28,8 @@ class _TrekDatePickerState extends State<TrekDatePicker> {
   DateTime? _selectedDate;
   Map<String, dynamic>? _availabilityInfo;
   bool _isChecking = false;
+  DateTime _lastDate = DateTime.now().add(const Duration(days: 90));
+  bool _allowWeekendBookings = true;
 
   @override
   void initState() {
@@ -35,6 +38,21 @@ class _TrekDatePickerState extends State<TrekDatePicker> {
     _selectedDate = widget.selectedDate;
     if (_selectedDate != null) {
       _checkDateAvailability(_selectedDate!);
+    }
+    _loadSystemSettings();
+  }
+
+  Future<void> _loadSystemSettings() async {
+    try {
+      final settings = await CalendarConfigService().getSystemSettings();
+      if (!mounted) return;
+      final advanceDays = (settings['advanceBookingDays'] as int?) ?? 90;
+      setState(() {
+        _lastDate = DateTime.now().add(Duration(days: advanceDays));
+        _allowWeekendBookings = (settings['allowWeekendBookings'] as bool?) ?? true;
+      });
+    } catch (_) {
+      // Keep defaults on error
     }
   }
 
@@ -67,7 +85,12 @@ class _TrekDatePickerState extends State<TrekDatePicker> {
       context: context,
       initialDate: _selectedDate ?? DateTime.now(),
       firstDate: DateTime.now(),
-      lastDate: DateTime.now().add(const Duration(days: 365)),
+      lastDate: _lastDate,
+      selectableDayPredicate: _allowWeekendBookings
+          ? null
+          : (date) =>
+              date.weekday != DateTime.saturday &&
+              date.weekday != DateTime.sunday,
       builder: (context, child) {
         return Theme(
           data: Theme.of(context).copyWith(

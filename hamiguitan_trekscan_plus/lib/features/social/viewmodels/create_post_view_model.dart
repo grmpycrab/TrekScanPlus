@@ -60,10 +60,11 @@ class CreatePostViewModel extends ChangeNotifier {
       AppLogger.d('Generated post ID: $postId');
 
       AppLogger.i('Starting image upload for ${_selectedImages.length} images');
-      final uploadFutures = _selectedImages.map(
-        (imageFile) => _repository.uploadImage(imageFile, postId),
-      );
-      final imageUrls = await Future.wait(uploadFutures);
+      final imageUrls = <String>[];
+      for (final imageFile in _selectedImages) {
+        final url = await _repository.uploadImage(imageFile, postId);
+        imageUrls.add(url);
+      }
       AppLogger.i('Image upload complete. URLs: $imageUrls');
 
       if (imageUrls.isEmpty) throw Exception('No images were uploaded');

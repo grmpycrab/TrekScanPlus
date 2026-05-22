@@ -80,7 +80,7 @@ class _JoinRequestScreenState extends State<JoinRequestScreen> {
   Future<void> _pickFiles(String docName) async {
     final result = await FilePicker.platform.pickFiles(
       type: FileType.custom,
-      allowedExtensions: ['pdf', 'jpg', 'jpeg', 'png', 'docx'],
+      allowedExtensions: ['pdf', 'jpg', 'jpeg', 'png', 'webp', 'heic', 'gif', 'docx'],
       allowMultiple: true,
     );
     if (result == null) return;

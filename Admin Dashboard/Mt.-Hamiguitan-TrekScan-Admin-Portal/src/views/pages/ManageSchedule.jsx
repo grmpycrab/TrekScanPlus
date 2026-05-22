@@ -6,7 +6,7 @@ import TaskAltIcon from '@mui/icons-material/TaskAlt';
 import FilterListAltIcon from '@mui/icons-material/FilterListAlt';
 import SearchIcon from '@mui/icons-material/Search';
 import EventNoteIcon from '@mui/icons-material/EventNote';
-import { getAllBookings, updateBookingStatus, subscribeToBookings } from '../../services/bookingService';
+import { getAllBookings, updateBookingStatus, subscribeToBookings, getGroupBookingsForMonth } from '../../services/bookingService';
 import { getUserById } from '../../services/userService';
 import { getCurrentUser, onAuthStateChange } from '../../services/firebaseAuthService';
 import { 
@@ -26,6 +26,7 @@ function ManageSchedule() {
   const [showMonthYearDropdown, setShowMonthYearDropdown] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [allBookings, setAllBookings] = useState([]);
+  const [allGroupBookings, setAllGroupBookings] = useState([]);
   const [loading, setLoading] = useState(true);
   const [calendarConfigs, setCalendarConfigs] = useState({}); // Map of date strings to configs
   const [calendarSettings, setCalendarSettings] = useState(null);
@@ -140,21 +141,26 @@ function ManageSchedule() {
           return;
         }
 
-        // Fetch bookings and calendar data in parallel
-        const [bookings, settings] = await Promise.all([
+        // Fetch bookings, group bookings, and calendar settings in parallel
+        const currentMonth = new Date().getMonth();
+        const currentYear = new Date().getFullYear();
+        const [bookings, settings, groupBookings] = await Promise.all([
           getAllBookings(),
-          getCalendarSettings()
+          getCalendarSettings(),
+          getGroupBookingsForMonth(currentMonth, currentYear),
         ]);
-        
+
         // Automatically mark past approved bookings as completed
         const updatedBookings = await markPastApprovedBookingsAsCompleted(bookings);
-        
+
         setAllBookings(updatedBookings);
         setCalendarSettings(settings);
+        setAllGroupBookings(groupBookings);
       } catch (error) {
         console.error('Error fetching data:', error);
         setAllBookings([]);
         setCalendarSettings(null);
+        setAllGroupBookings([]);
       } finally {
         setLoading(false);
       }
@@ -192,28 +198,6 @@ function ManageSchedule() {
     };
   }, []);
 
-  // Check for past approved bookings when bookings are first loaded
-  const bookingsInitialized = useRef(false);
-  useEffect(() => {
-    const currentUser = getCurrentUser();
-    if (!currentUser || allBookings.length === 0) {
-      bookingsInitialized.current = false;
-      return;
-    }
-
-    // Only run once when bookings are first loaded
-    if (!bookingsInitialized.current) {
-      bookingsInitialized.current = true;
-      const checkPastBookings = async () => {
-        const updatedBookings = await markPastApprovedBookingsAsCompleted(allBookings);
-        if (updatedBookings) {
-          setAllBookings(updatedBookings);
-        }
-      };
-      checkPastBookings();
-    }
-  }, [allBookings.length]); // Run when bookings are loaded
-
   // Periodic check for past approved bookings (every 5 minutes)
   useEffect(() => {
     const currentUser = getCurrentUser();
@@ -238,21 +222,22 @@ function ManageSchedule() {
     return () => clearInterval(intervalId);
   }, []); // Only run once on mount
 
-  // Fetch calendar configs for current month
+  // Fetch calendar configs for current month (runs whenever month changes,
+  // regardless of whether calendarSettings has loaded yet)
   useEffect(() => {
     const fetchCalendarConfigs = async () => {
       try {
         const currentMonth = currentDate.getMonth();
         const currentYear = currentDate.getFullYear();
         const configs = await getCalendarConfigsForMonth(currentMonth, currentYear);
-        
+
         // Convert to map for easy lookup
         const configMap = {};
         configs.forEach(config => {
           const dateKey = formatDateKey(config.date);
           configMap[dateKey] = config;
         });
-        
+
         setCalendarConfigs(configMap);
       } catch (error) {
         console.error('Error fetching calendar configs:', error);
@@ -260,10 +245,24 @@ function ManageSchedule() {
       }
     };
 
-    if (calendarSettings) {
-      fetchCalendarConfigs();
-    }
-  }, [currentDate, calendarSettings]);
+    fetchCalendarConfigs();
+  }, [currentDate]);
+
+  // Re-fetch group bookings when month changes
+  useEffect(() => {
+    const refetchGroupBookings = async () => {
+      try {
+        const groupBookings = await getGroupBookingsForMonth(
+          currentDate.getMonth(),
+          currentDate.getFullYear(),
+        );
+        setAllGroupBookings(groupBookings);
+      } catch (error) {
+        console.error('Error refetching group bookings:', error);
+      }
+    };
+    refetchGroupBookings();
+  }, [currentDate]);
 
   // Helper function to format date as YYYY-MM-DD key
   const formatDateKey = (date) => {
@@ -274,6 +273,29 @@ function ManageSchedule() {
     const day = String(d.getDate()).padStart(2, '0');
     return `${year}-${month}-${day}`;
   };
+
+  // Canonical slot formula matching DateValidationService on mobile:
+  // slotsUsed = (individualBookings + groupCurrentSlots) + floor((individualBookings + groupCurrentSlots) / 5)
+  const computeCanonicalSlots = (individualCount, groupSlots) => {
+    const bookedTrekkers = individualCount + groupSlots;
+    const allocatedPorters = Math.floor(bookedTrekkers / 5);
+    return bookedTrekkers + allocatedPorters;
+  };
+
+  // Aggregate group booking currentSlots by calendar day for the current month
+  const groupSlotsByDay = useMemo(() => {
+    const currentMonth = currentDate.getMonth();
+    const currentYear = currentDate.getFullYear();
+    const byDay = {};
+    allGroupBookings.forEach(g => {
+      if (!g.trekDate) return;
+      const d = g.trekDate instanceof Timestamp ? g.trekDate.toDate() : new Date(g.trekDate);
+      if (d.getMonth() !== currentMonth || d.getFullYear() !== currentYear) return;
+      const day = d.getDate();
+      byDay[day] = (byDay[day] || 0) + (g.currentSlots || 0);
+    });
+    return byDay;
+  }, [allGroupBookings, currentDate]);
 
   // Convert bookings to events format based on trekDate
   const convertBookingsToEvents = async (bookings) => {
@@ -473,6 +495,21 @@ function ManageSchedule() {
     });
   }, [allBookings, currentDate]);
 
+  // Group bookings filtered to a specific calendar day (excludes declined/cancelled)
+  const getGroupEventsForDay = useCallback((day) => {
+    const currentMonth = currentDate.getMonth();
+    const currentYear = currentDate.getFullYear();
+    return allGroupBookings.filter(g => {
+      if (!g.trekDate) return false;
+      const s = (g.status || '').toLowerCase();
+      if (s === 'cancelled' || s === 'declined' || s === 'rejected') return false;
+      const trekDate = g.trekDate instanceof Timestamp ? g.trekDate.toDate() : new Date(g.trekDate);
+      const bookingDate = new Date(trekDate.getFullYear(), trekDate.getMonth(), trekDate.getDate());
+      const targetDate = new Date(currentYear, currentMonth, day);
+      return bookingDate.getTime() === targetDate.getTime();
+    });
+  }, [allGroupBookings, currentDate]);
+
   const formatMonthYear = (date) => {
     return date.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
   };
@@ -553,104 +590,104 @@ function ManageSchedule() {
     }
   };
 
-  // Calculate event counts by status from real bookings
+  // Calculate event counts by status from real bookings (individual + group)
   const eventCounts = useMemo(() => {
     const currentMonth = currentDate.getMonth();
     const currentYear = currentDate.getFullYear();
-    
-    // Filter bookings by trekDate month/year
+
     const monthBookings = allBookings.filter(booking => {
       if (!booking.trekDate) return false;
-      const trekDate = booking.trekDate instanceof Timestamp 
-        ? booking.trekDate.toDate() 
+      const trekDate = booking.trekDate instanceof Timestamp
+        ? booking.trekDate.toDate()
         : new Date(booking.trekDate);
       return trekDate.getMonth() === currentMonth && trekDate.getFullYear() === currentYear;
     });
-    
-    const completed = monthBookings.filter(b => b.status?.toLowerCase() === 'completed').length;
-    const pending = monthBookings.filter(b => b.status?.toLowerCase() === 'pending').length;
-    const cancelled = monthBookings.filter(b => b.status?.toLowerCase() === 'cancelled' || b.status?.toLowerCase() === 'rejected').length;
-    const approved = monthBookings.filter(b => b.status?.toLowerCase() === 'approved').length;
-    
-    return {
-      completed: completed,
-      pending: pending,
-      cancelled: cancelled,
-      approved: approved
-    };
-  }, [allBookings, currentDate]);
+
+    let completed = monthBookings.filter(b => b.status?.toLowerCase() === 'completed').length;
+    let pending = monthBookings.filter(b => b.status?.toLowerCase() === 'pending').length;
+    let cancelled = monthBookings.filter(b => b.status?.toLowerCase() === 'cancelled' || b.status?.toLowerCase() === 'rejected').length;
+    let approved = monthBookings.filter(b => b.status?.toLowerCase() === 'approved').length;
+
+    // Add group booking counts (allGroupBookings is already filtered to current month)
+    allGroupBookings.forEach(g => {
+      const s = (g.status || '').toLowerCase();
+      if (s === 'completed') completed++;
+      else if (s === 'pending_review' || s === 'open') pending++;
+      else if (s === 'declined' || s === 'cancelled') cancelled++;
+      else if (s === 'approved' || s === 'full') approved++;
+    });
+
+    return { completed, pending, cancelled, approved };
+  }, [allBookings, allGroupBookings, currentDate]);
   const totalEvents = eventCounts.completed + eventCounts.pending + eventCounts.cancelled + eventCounts.approved;
 
-  // Calculate slot availability for calendar view from real bookings
+  // Calculate slot availability for calendar view using canonical formula
   const slotAvailability = useMemo(() => {
     const currentMonth = currentDate.getMonth();
     const currentYear = currentDate.getFullYear();
-    
-    // Filter bookings by trekDate month/year
+    const DEFAULT_MAX_CAPACITY = calendarSettings?.defaultMaxSlots || 30;
+    const threshold = calendarSettings?.criticalThreshold ?? 5;
+
     const monthBookings = allBookings.filter(booking => {
       if (!booking.trekDate) return false;
-      const trekDate = booking.trekDate instanceof Timestamp 
-        ? booking.trekDate.toDate() 
+      const trekDate = booking.trekDate instanceof Timestamp
+        ? booking.trekDate.toDate()
         : new Date(booking.trekDate);
       return trekDate.getMonth() === currentMonth && trekDate.getFullYear() === currentYear;
     });
-    
-    // Get default max capacity from calendar settings
-    const DEFAULT_MAX_CAPACITY = calendarSettings?.defaultMaxSlots || 30;
-    
-    let available = 0; // Green - 0-30% booked
-    let limited = 0;   // Yellow/Orange - 30-80% booked
-    let full = 0;      // Red - 80-100% booked
-    
-    // Group bookings by day (only count approved/pending bookings)
-    const bookingsByDay = {};
+
+    let available = 0;
+    let limited = 0;
+    let full = 0;
+
+    // Count individual bookings by day (1 per booking doc = 1 trekker)
+    const individualByDay = {};
     monthBookings.forEach(booking => {
       const status = booking.status?.toLowerCase();
-      if (status === 'cancelled' || status === 'rejected') return; // Don't count cancelled/rejected
-      
-      const trekDate = booking.trekDate instanceof Timestamp 
-        ? booking.trekDate.toDate() 
+      if (status === 'cancelled' || status === 'rejected') return;
+      const trekDate = booking.trekDate instanceof Timestamp
+        ? booking.trekDate.toDate()
         : new Date(booking.trekDate);
       const day = trekDate.getDate();
-      
-      if (!bookingsByDay[day]) {
-        bookingsByDay[day] = 0;
-      }
-      bookingsByDay[day] += (booking.numberOfPorters || 1);
+      individualByDay[day] = (individualByDay[day] || 0) + 1;
     });
-    
-    // Count days by availability status (using date-specific maxSlots if available)
-    Object.entries(bookingsByDay).forEach(([day, participants]) => {
-      const dayNum = parseInt(day);
-      const dateKey = formatDateKey(new Date(currentYear, currentMonth, dayNum));
+
+    // Union of all days that have individual or group bookings
+    const allDays = new Set([
+      ...Object.keys(individualByDay).map(Number),
+      ...Object.keys(groupSlotsByDay).map(Number),
+    ]);
+
+    allDays.forEach(day => {
+      const dateKey = formatDateKey(new Date(currentYear, currentMonth, day));
       const dateConfig = calendarConfigs[dateKey];
-      
-      // Use date-specific maxSlots or default
-      const maxCapacity = dateConfig?.maxSlots || DEFAULT_MAX_CAPACITY;
-      
-      // If date is closed, count as full
+
       if (dateConfig?.isClosed) {
         full++;
         return;
       }
-      
-      const percentage = (participants / maxCapacity) * 100;
-      if (percentage < 30) {
-        available++;
-      } else if (percentage < 80) {
+
+      const maxCapacity = dateConfig?.maxSlots || DEFAULT_MAX_CAPACITY;
+      const slotsUsed = computeCanonicalSlots(
+        individualByDay[day] || 0,
+        groupSlotsByDay[day] || 0,
+      );
+
+      if (slotsUsed >= maxCapacity) {
+        full++;
+      } else if ((maxCapacity - slotsUsed) <= threshold) {
         limited++;
       } else {
-        full++;
+        available++;
       }
     });
-    
-    // Count days with no bookings as available
+
+    // Days with no bookings at all are available
     const { daysInMonth } = getDaysInMonth(currentDate);
-    const daysWithBookings = Object.keys(bookingsByDay).length;
-    available += (daysInMonth - daysWithBookings);
-    
+    available += (daysInMonth - allDays.size);
+
     return { available, limited, full };
-  }, [allBookings, currentDate]);
+  }, [allBookings, groupSlotsByDay, currentDate, calendarConfigs, calendarSettings]);
 
   // Close dropdowns on outside click
   useEffect(() => {
@@ -883,49 +920,57 @@ function ManageSchedule() {
                     // Days of the current month
                     for (let day = 1; day <= daysInMonth; day++) {
                       const dayEvents = getEventsForDay(day);
+                      const groupDayEvents = getGroupEventsForDay(day);
                       const bookingCount = dayEvents.length;
-                      const hasEvents = bookingCount > 0;
+                      // Sum actual people in groups (currentSlots), not document count
+                      const groupPeopleCount = groupDayEvents.reduce((sum, g) => sum + (g.currentSlots || 0), 0);
+                      const totalCount = bookingCount + groupPeopleCount;
+                      const hasEvents = totalCount > 0;
                       const isSelected = day === selectedDay;
-                      
+
                       // Check calendar config for this day
                       const dateKey = formatDateKey(new Date(year, month, day));
                       const dateConfig = calendarConfigs[dateKey];
                       const isClosed = dateConfig?.isClosed || false;
                       const maxSlots = dateConfig?.maxSlots || calendarSettings?.defaultMaxSlots || 30;
-                      
-                      // Calculate availability percentage
+
+                      // Calculate availability using canonical formula + criticalThreshold
+                      const threshold = calendarSettings?.criticalThreshold ?? 5;
                       let availabilityClass = '';
                       if (isClosed) {
                         availabilityClass = 'closed';
-                      } else if (hasEvents) {
-                        const participants = dayEvents.reduce((sum, booking) => sum + (booking.numberOfPorters || 1), 0);
-                        const percentage = (participants / maxSlots) * 100;
-                        if (percentage >= 80) {
+                      } else {
+                        const slotsUsed = computeCanonicalSlots(
+                          dayEvents.length,
+                          groupSlotsByDay[day] || 0,
+                        );
+                        if (slotsUsed >= maxSlots) {
                           availabilityClass = 'full';
-                        } else if (percentage >= 30) {
+                        } else if ((maxSlots - slotsUsed) <= threshold) {
                           availabilityClass = 'limited';
                         } else {
                           availabilityClass = 'available';
                         }
-                      } else {
-                        availabilityClass = 'available';
                       }
-                      
+
+                      const titleParts = [];
+                      if (bookingCount > 0) titleParts.push(`${bookingCount} individual`);
+                      if (groupDayEvents.length > 0) titleParts.push(`${groupDayEvents.length} group`);
+
                       days.push(
-                        <div 
-                          key={day} 
+                        <div
+                          key={day}
                           className={`calendar-day-compact ${isSelected ? 'selected' : ''} ${hasEvents ? 'has-events' : ''} ${availabilityClass}`}
                           onClick={() => {
-                            // Toggle: if same day is clicked, deselect it (show all)
                             if (selectedDay === day) {
                               setSelectedDay(null);
                             } else {
                               setSelectedDay(day);
                             }
                           }}
-                          title={isClosed ? `Closed: ${dateConfig?.reason || 'No bookings allowed'}` : 
-                                 dateConfig?.customNote ? dateConfig.customNote : 
-                                 hasEvents ? `${bookingCount} booking${bookingCount > 1 ? 's' : ''}` : 'Available'}
+                          title={isClosed ? `Closed: ${dateConfig?.reason || 'No bookings allowed'}` :
+                                 dateConfig?.customNote ? dateConfig.customNote :
+                                 hasEvents ? titleParts.join(', ') + ` booking${totalCount !== 1 ? 's' : ''}` : 'Available'}
                         >
                           <div className="day-number-compact">{day}</div>
                           {isClosed && (
@@ -937,7 +982,7 @@ function ManageSchedule() {
                           )}
                           {hasEvents && !isClosed && (
                             <div className="booking-count-badge-compact">
-                              {bookingCount}
+                              {totalCount}
                             </div>
                           )}
                         </div>
@@ -1138,65 +1183,72 @@ function ManageSchedule() {
                 
                 const currentMonth = currentDate.getMonth();
                 const currentYear = currentDate.getFullYear();
-                
-                // Filter bookings by trekDate month/year, day (if selected), status filter, and search
-                const filteredBookings = allBookings
-                  .filter(booking => {
-                    if (!booking.trekDate) return false;
-                    
-                    const trekDate = booking.trekDate instanceof Timestamp 
-                      ? booking.trekDate.toDate() 
-                      : new Date(booking.trekDate);
-                    
-                    const matchesMonth = trekDate.getMonth() === currentMonth;
-                    const matchesYear = trekDate.getFullYear() === currentYear;
-                    // If a day is selected, filter by that day; otherwise show all days
-                    const matchesDay = selectedDay === null || trekDate.getDate() === selectedDay;
-                    
-                    // Apply status filter
-                    const status = booking.status?.toLowerCase();
-                    let matchesStatus = true;
-                    if (selectedFilter !== 'all') {
-                      if (selectedFilter === 'completed') {
-                        matchesStatus = status === 'completed';
-                      } else if (selectedFilter === 'approve') {
-                        matchesStatus = status === 'approved';
-                      } else if (selectedFilter === 'canceled') {
-                        matchesStatus = status === 'cancelled' || status === 'rejected';
-                      } else if (selectedFilter === 'pending') {
-                        matchesStatus = status === 'pending';
-                      }
-                    } else {
-                      // Show all statuses when 'all' is selected
-                      matchesStatus = true;
-                    }
-                    
-                    const searchTerm = searchQuery.trim().toLowerCase();
-                    const affiliation = (booking.affiliation || '').toLowerCase();
-                    const matchesSearch = searchTerm === '' || affiliation.includes(searchTerm);
-                    
-                    return matchesMonth && matchesYear && matchesDay && matchesStatus && matchesSearch;
-                  })
-                  .sort((a, b) => {
-                    const dateA = a.trekDate instanceof Timestamp ? a.trekDate.toDate() : new Date(a.trekDate);
-                    const dateB = b.trekDate instanceof Timestamp ? b.trekDate.toDate() : new Date(b.trekDate);
-                    return dateA.getDate() - dateB.getDate();
-                  });
-                
-                if (filteredBookings.length === 0) {
+
+                const filterIndividual = (booking) => {
+                  if (!booking.trekDate) return false;
+                  const trekDate = booking.trekDate instanceof Timestamp
+                    ? booking.trekDate.toDate() : new Date(booking.trekDate);
+                  if (trekDate.getMonth() !== currentMonth || trekDate.getFullYear() !== currentYear) return false;
+                  if (selectedDay !== null && trekDate.getDate() !== selectedDay) return false;
+                  const status = booking.status?.toLowerCase();
+                  if (selectedFilter === 'completed') return status === 'completed';
+                  if (selectedFilter === 'approve') return status === 'approved';
+                  if (selectedFilter === 'canceled') return status === 'cancelled' || status === 'rejected';
+                  if (selectedFilter === 'pending') return status === 'pending';
+                  return true;
+                };
+
+                const filterGroup = (g) => {
+                  if (!g.trekDate) return false;
+                  const trekDate = g.trekDate instanceof Timestamp
+                    ? g.trekDate.toDate() : new Date(g.trekDate);
+                  if (trekDate.getMonth() !== currentMonth || trekDate.getFullYear() !== currentYear) return false;
+                  if (selectedDay !== null && trekDate.getDate() !== selectedDay) return false;
+                  const s = (g.status || '').toLowerCase();
+                  if (selectedFilter === 'completed') return s === 'completed';
+                  if (selectedFilter === 'approve') return s === 'approved' || s === 'full';
+                  if (selectedFilter === 'canceled') return s === 'declined' || s === 'cancelled';
+                  if (selectedFilter === 'pending') return s === 'pending_review' || s === 'open';
+                  return true;
+                };
+
+                const searchTerm = searchQuery.trim().toLowerCase();
+
+                const combinedBookings = [
+                  ...allBookings
+                    .filter(filterIndividual)
+                    .filter(b => {
+                      if (!searchTerm) return true;
+                      return (b.affiliation || '').toLowerCase().includes(searchTerm);
+                    })
+                    .map(b => ({ ...b, _type: 'individual' })),
+                  ...allGroupBookings
+                    .filter(filterGroup)
+                    .filter(g => {
+                      if (!searchTerm) return true;
+                      return (g.groupName || '').toLowerCase().includes(searchTerm)
+                        || (g.affiliation || '').toLowerCase().includes(searchTerm);
+                    })
+                    .map(g => ({ ...g, _type: 'group' })),
+                ].sort((a, b) => {
+                  const dateA = a.trekDate instanceof Timestamp ? a.trekDate.toDate() : new Date(a.trekDate);
+                  const dateB = b.trekDate instanceof Timestamp ? b.trekDate.toDate() : new Date(b.trekDate);
+                  return dateA.getDate() - dateB.getDate();
+                });
+
+                if (combinedBookings.length === 0) {
                   let message = 'No scheduled booking';
                   if (selectedDay !== null) {
                     message = `No scheduled booking for ${selectedDay} ${currentDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}`;
                   } else if (selectedFilter !== 'all') {
-                    const filterLabel = selectedFilter === 'completed' ? 'completed' :
-                                      selectedFilter === 'approve' ? 'approved' :
-                                      selectedFilter === 'canceled' ? 'cancelled' :
-                                      selectedFilter === 'pending' ? 'pending' : '';
+                    const filterLabel = selectedFilter === 'completed' ? 'completed'
+                      : selectedFilter === 'approve' ? 'approved'
+                      : selectedFilter === 'canceled' ? 'cancelled'
+                      : selectedFilter === 'pending' ? 'pending' : '';
                     message = `No ${filterLabel} bookings for this month`;
                   } else {
                     message = 'No scheduled booking for this month';
                   }
-                  
                   return (
                     <div className="no-bookings-message">
                       <EventNoteIcon className="no-bookings-icon" />
@@ -1204,38 +1256,57 @@ function ManageSchedule() {
                     </div>
                   );
                 }
-                
-                return filteredBookings.map(booking => {
-                  const trekDate = booking.trekDate instanceof Timestamp 
-                    ? booking.trekDate.toDate() 
-                    : new Date(booking.trekDate);
+
+                return combinedBookings.map(item => {
+                  const trekDate = item.trekDate instanceof Timestamp
+                    ? item.trekDate.toDate() : new Date(item.trekDate);
                   const day = trekDate.getDate();
                   const month = trekDate.toLocaleDateString('en-US', { month: 'short' }).toUpperCase();
-                  
-                  // Get user data
-                  const user = booking.userId ? usersMap.get(booking.userId) : null;
-                  const trekkerName = user ? `${user.firstName} ${user.lastName}`.trim() : 'Unknown User';
-                  
-                  // Map status
-                  const status = booking.status?.toLowerCase();
-                  let statusDisplay = 'Pending';
-                  if (status === 'approved') {
-                    statusDisplay = 'Approved';
-                  } else if (status === 'completed') {
-                    statusDisplay = 'Completed';
-                  } else if (status === 'cancelled' || status === 'rejected') {
-                    statusDisplay = 'Cancelled';
+
+                  if (item._type === 'group') {
+                    const s = (item.status || '').toLowerCase();
+                    const statusDisplay = s === 'completed' ? 'Completed'
+                      : (s === 'approved' || s === 'full') ? 'Approved'
+                      : (s === 'declined' || s === 'cancelled') ? 'Cancelled'
+                      : 'Pending';
+                    return (
+                      <div key={`g-${item.id}`} className="upcoming-event-item group-booking">
+                        <div className="upcoming-event-left">
+                          <div className="upcoming-event-date">{day} {month}</div>
+                        </div>
+                        <div className="upcoming-event-content">
+                          <div className="upcoming-event-name">
+                            {item.groupName || item.affiliation || 'Group Booking'}
+                            <span className="group-type-badge">GROUP</span>
+                          </div>
+                          <div className="upcoming-event-affiliation">{item.affiliation || 'N/A'}</div>
+                          <div className="upcoming-event-trekkers">{item.currentSlots}/{item.maxSlots} Slots · {item.organizerName || 'Organizer'}</div>
+                        </div>
+                        <div className="upcoming-event-right">
+                          <div className={`upcoming-event-status status-${statusDisplay.toLowerCase()}`} data-status={statusDisplay}>{statusDisplay}</div>
+                        </div>
+                      </div>
+                    );
                   }
-                  
+
+                  // Individual booking
+                  const user = item.userId ? usersMap.get(item.userId) : null;
+                  const trekkerName = user ? `${user.firstName} ${user.lastName}`.trim() : 'Unknown User';
+                  const status = item.status?.toLowerCase();
+                  let statusDisplay = 'Pending';
+                  if (status === 'approved') statusDisplay = 'Approved';
+                  else if (status === 'completed') statusDisplay = 'Completed';
+                  else if (status === 'cancelled' || status === 'rejected') statusDisplay = 'Cancelled';
+
                   return (
-                    <div key={booking.id} className="upcoming-event-item">
+                    <div key={item.id} className="upcoming-event-item">
                       <div className="upcoming-event-left">
                         <div className="upcoming-event-date">{day} {month}</div>
                       </div>
                       <div className="upcoming-event-content">
                         <div className="upcoming-event-name">{trekkerName}</div>
-                        <div className="upcoming-event-affiliation">{booking.affiliation || 'N/A'}</div>
-                        <div className="upcoming-event-trekkers">{booking.numberOfPorters || 1} Porter{booking.numberOfPorters !== 1 ? 's' : ''}</div>
+                        <div className="upcoming-event-affiliation">{item.affiliation || 'N/A'}</div>
+                        <div className="upcoming-event-trekkers">{item.numberOfPorters || 1} Porter{item.numberOfPorters !== 1 ? 's' : ''}</div>
                       </div>
                       <div className="upcoming-event-right">
                         <div className={`upcoming-event-status status-${statusDisplay.toLowerCase()}`} data-status={statusDisplay}>{statusDisplay}</div>
@@ -1315,49 +1386,61 @@ function ManageSchedule() {
                 // Days of the current month
                 for (let day = 1; day <= daysInMonth; day++) {
                   const dayEvents = getEventsForDay(day);
+                  const groupDayEvents = getGroupEventsForDay(day);
                   const bookingCount = dayEvents.length;
-                  const hasEvents = bookingCount > 0;
+                  // Sum actual people in groups (currentSlots), not document count
+                  const groupPeopleCount = groupDayEvents.reduce((sum, g) => sum + (g.currentSlots || 0), 0);
+                  const totalCount = bookingCount + groupPeopleCount;
+                  const hasEvents = totalCount > 0;
                   const isSelected = day === selectedDay;
-                  
+
                   // Check calendar config for this day
                   const dateKey = formatDateKey(new Date(year, month, day));
                   const dateConfig = calendarConfigs[dateKey];
                   const isClosed = dateConfig?.isClosed || false;
                   const maxSlots = dateConfig?.maxSlots || calendarSettings?.defaultMaxSlots || 30;
-                  
-                  // Calculate availability percentage
+
+                  // Calculate availability using canonical formula + criticalThreshold
+                  const threshold = calendarSettings?.criticalThreshold ?? 5;
                   let availabilityClass = '';
                   if (isClosed) {
                     availabilityClass = 'closed';
-                  } else if (hasEvents) {
-                    const participants = dayEvents.reduce((sum, booking) => sum + (booking.numberOfPorters || 1), 0);
-                    const percentage = (participants / maxSlots) * 100;
-                    if (percentage >= 80) {
+                  } else {
+                    const slotsUsed = computeCanonicalSlots(
+                      dayEvents.length,
+                      groupSlotsByDay[day] || 0,
+                    );
+                    if (slotsUsed >= maxSlots) {
                       availabilityClass = 'full';
-                    } else if (percentage >= 30) {
+                    } else if ((maxSlots - slotsUsed) <= threshold) {
                       availabilityClass = 'limited';
                     } else {
                       availabilityClass = 'available';
                     }
-                  } else {
-                    availabilityClass = 'available';
                   }
-                  
+
+                  // Merge individual + group into a single chip list (max 3 visible)
+                  const allDayItems = [
+                    ...dayEvents.map(b => ({ ...b, _type: 'individual' })),
+                    ...groupDayEvents.map(g => ({ ...g, _type: 'group' })),
+                  ];
+                  const visibleChips = allDayItems.slice(0, 3);
+                  const moreCount = Math.max(0, allDayItems.length - 3);
+
                   days.push(
-                    <div 
-                      key={day} 
+                    <div
+                      key={day}
                       className={`calendar-day-cell ${isSelected ? 'selected' : ''} ${hasEvents ? 'has-events' : ''} ${availabilityClass}`}
                       onClick={() => {
-                        // Toggle: if same day is clicked, deselect it
                         if (selectedDay === day) {
                           setSelectedDay(null);
                         } else {
                           setSelectedDay(day);
                         }
                       }}
-                      title={isClosed ? `Closed: ${dateConfig?.reason || 'No bookings allowed'}` : 
-                             dateConfig?.customNote ? dateConfig.customNote : 
-                             hasEvents ? `${bookingCount} booking${bookingCount > 1 ? 's' : ''}` : 'Available'}
+                      title={isClosed ? `Closed: ${dateConfig?.reason || 'No bookings allowed'}` :
+                             dateConfig?.customNote ? dateConfig.customNote :
+                             hasEvents ? `${totalCount} booking${totalCount !== 1 ? 's' : ''}` : 'Available'}
                     >
                       <div className="calendar-day-number">{day}</div>
                       {isClosed && (
@@ -1368,9 +1451,43 @@ function ManageSchedule() {
                         </div>
                       )}
                       {hasEvents && !isClosed && (
-                        <div className="calendar-day-booking-count">
-                          <span className="booking-count-number">{bookingCount}</span>
-                          <span className="booking-count-label">{bookingCount === 1 ? 'booking' : 'bookings'}</span>
+                        <div className="calendar-day-events-list">
+                          {visibleChips.map(item => {
+                            if (item._type === 'group') {
+                              const gs = (item.status || '').toLowerCase();
+                              const chipClass = (gs === 'approved' || gs === 'full') ? 'approved'
+                                : gs === 'completed' ? 'completed'
+                                : (gs === 'declined' || gs === 'cancelled') ? 'cancelled'
+                                : 'pending';
+                              return (
+                                <div
+                                  key={`g-${item.id}`}
+                                  className={`calendar-event-chip group ${chipClass}`}
+                                  title={`GROUP: ${item.groupName || item.affiliation} — ${item.currentSlots}/${item.maxSlots} people (${item.status})`}
+                                >
+                                  {item.groupName || item.affiliation || 'Group'} ({item.currentSlots})
+                                </div>
+                              );
+                            }
+                            const user = item.userId ? usersMap.get(item.userId) : null;
+                            const name = user
+                              ? `${user.firstName || ''} ${user.lastName || ''}`.trim()
+                              : (item.affiliation || 'Unknown');
+                            const status = item.status?.toLowerCase() || 'pending';
+                            const chipClass = (status === 'cancelled' || status === 'rejected') ? 'cancelled' : status;
+                            return (
+                              <div
+                                key={item.id}
+                                className={`calendar-event-chip ${chipClass}`}
+                                title={`${name} — ${item.affiliation || ''} (${status})`}
+                              >
+                                {name}
+                              </div>
+                            );
+                          })}
+                          {moreCount > 0 && (
+                            <div className="calendar-event-more">+{moreCount} more</div>
+                          )}
                         </div>
                       )}
                     </div>
@@ -1430,8 +1547,13 @@ function ManageSchedule() {
                   }
                   
                   const dayBookings = getEventsForDay(selectedDay);
-                  
-                  if (dayBookings.length === 0) {
+                  const dayGroupBookings = getGroupEventsForDay(selectedDay);
+                  const allDayBookings = [
+                    ...dayBookings.map(b => ({ ...b, _type: 'individual' })),
+                    ...dayGroupBookings.map(g => ({ ...g, _type: 'group' })),
+                  ];
+
+                  if (allDayBookings.length === 0) {
                     return (
                       <div className="no-bookings-message">
                         <EventNoteIcon className="no-bookings-icon" />
@@ -1439,11 +1561,11 @@ function ManageSchedule() {
                       </div>
                     );
                   }
-                  
+
                   // Get calendar config for selected day
                   const selectedDateKey = formatDateKey(new Date(currentDate.getFullYear(), currentDate.getMonth(), selectedDay));
                   const selectedDateConfig = calendarConfigs[selectedDateKey];
-                  
+
                   return (
                     <>
                       {selectedDateConfig && (selectedDateConfig.isClosed || selectedDateConfig.customNote || selectedDateConfig.reason) && (
@@ -1477,37 +1599,56 @@ function ManageSchedule() {
                           )}
                         </div>
                       )}
-                      {dayBookings.map(booking => {
-                        const trekDate = booking.trekDate instanceof Timestamp 
-                          ? booking.trekDate.toDate() 
-                          : new Date(booking.trekDate);
+                      {allDayBookings.map(item => {
+                        const trekDate = item.trekDate instanceof Timestamp
+                          ? item.trekDate.toDate() : new Date(item.trekDate);
                         const day = trekDate.getDate();
                         const month = trekDate.toLocaleDateString('en-US', { month: 'short' }).toUpperCase();
-                        
-                        // Get user data
-                        const user = booking.userId ? usersMap.get(booking.userId) : null;
-                        const trekkerName = user ? `${user.firstName} ${user.lastName}`.trim() : 'Unknown User';
-                        
-                        // Map status
-                        const status = booking.status?.toLowerCase();
-                        let statusDisplay = 'Pending';
-                        if (status === 'approved') {
-                          statusDisplay = 'Approved';
-                        } else if (status === 'completed') {
-                          statusDisplay = 'Completed';
-                        } else if (status === 'cancelled' || status === 'rejected') {
-                          statusDisplay = 'Cancelled';
+
+                        if (item._type === 'group') {
+                          const s = (item.status || '').toLowerCase();
+                          const statusDisplay = s === 'completed' ? 'Completed'
+                            : (s === 'approved' || s === 'full') ? 'Approved'
+                            : (s === 'declined' || s === 'cancelled') ? 'Cancelled'
+                            : 'Pending';
+                          return (
+                            <div key={`g-${item.id}`} className="upcoming-event-item group-booking">
+                              <div className="upcoming-event-left">
+                                <div className="upcoming-event-date">{day} {month}</div>
+                              </div>
+                              <div className="upcoming-event-content">
+                                <div className="upcoming-event-name">
+                                  {item.groupName || item.affiliation || 'Group Booking'}
+                                  <span className="group-type-badge">GROUP</span>
+                                </div>
+                                <div className="upcoming-event-affiliation">{item.affiliation || 'N/A'}</div>
+                                <div className="upcoming-event-trekkers">{item.currentSlots}/{item.maxSlots} Slots · {item.organizerName || 'Organizer'}</div>
+                              </div>
+                              <div className="upcoming-event-right">
+                                <div className={`upcoming-event-status status-${statusDisplay.toLowerCase()}`} data-status={statusDisplay}>{statusDisplay}</div>
+                              </div>
+                            </div>
+                          );
                         }
-                        
+
+                        // Individual booking
+                        const user = item.userId ? usersMap.get(item.userId) : null;
+                        const trekkerName = user ? `${user.firstName} ${user.lastName}`.trim() : 'Unknown User';
+                        const status = item.status?.toLowerCase();
+                        let statusDisplay = 'Pending';
+                        if (status === 'approved') statusDisplay = 'Approved';
+                        else if (status === 'completed') statusDisplay = 'Completed';
+                        else if (status === 'cancelled' || status === 'rejected') statusDisplay = 'Cancelled';
+
                         return (
-                          <div key={booking.id} className="upcoming-event-item">
+                          <div key={item.id} className="upcoming-event-item">
                             <div className="upcoming-event-left">
                               <div className="upcoming-event-date">{day} {month}</div>
                             </div>
                             <div className="upcoming-event-content">
                               <div className="upcoming-event-name">{trekkerName}</div>
-                              <div className="upcoming-event-affiliation">{booking.affiliation || 'N/A'}</div>
-                              <div className="upcoming-event-trekkers">{booking.numberOfPorters || 1} Porter{booking.numberOfPorters !== 1 ? 's' : ''}</div>
+                              <div className="upcoming-event-affiliation">{item.affiliation || 'N/A'}</div>
+                              <div className="upcoming-event-trekkers">{item.numberOfPorters || 1} Porter{item.numberOfPorters !== 1 ? 's' : ''}</div>
                             </div>
                             <div className="upcoming-event-right">
                               <div className={`upcoming-event-status status-${statusDisplay.toLowerCase()}`} data-status={statusDisplay}>{statusDisplay}</div>

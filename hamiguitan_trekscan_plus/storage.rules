@@ -56,6 +56,26 @@ service firebase.storage {
       allow delete: if request.auth != null;
     }
 
+    // Group booking attachments: member documents and letter of communication
+    match /groupBookings/{groupId}/attachments/{allFiles=**} {
+      allow create, write: if request.auth != null;
+      allow read: if request.auth != null;
+      allow delete: if request.auth != null;
+    }
+
+    match /groupBookings/{groupId}/letter/{allFiles=**} {
+      allow create, write: if request.auth != null;
+      allow read: if request.auth != null;
+      allow delete: if request.auth != null;
+    }
+
+    // Join request attachments
+    match /groupBookings/{groupId}/joinRequests/{requestId}/attachments/{allFiles=**} {
+      allow create, write: if request.auth != null;
+      allow read: if request.auth != null;
+      allow delete: if request.auth != null;
+    }
+
     // Deny all other access
     match /{allPaths=**} {
       allow read, write, delete: if false;

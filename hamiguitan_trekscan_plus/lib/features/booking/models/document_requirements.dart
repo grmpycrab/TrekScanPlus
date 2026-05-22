@@ -10,22 +10,22 @@ class DocumentRequirements {
         DocumentField(
           name: 'Medical Certificate',
           description: 'Original medical certificate',
-          extension: ['pdf', 'jpg', 'jpeg', 'png'],
+          extension: ['pdf', 'jpg', 'jpeg', 'png', 'webp', 'heic', 'gif'],
         ),
         DocumentField(
           name: 'Valid Government ID',
           description: 'Photocopy of valid government ID',
-          extension: ['pdf', 'jpg', 'jpeg', 'png'],
+          extension: ['pdf', 'jpg', 'jpeg', 'png', 'webp', 'heic', 'gif'],
         ),
         DocumentField(
           name: 'Student ID',
           description: 'School or University Student ID',
-          extension: ['pdf', 'jpg', 'jpeg', 'png'],
+          extension: ['pdf', 'jpg', 'jpeg', 'png', 'webp', 'heic', 'gif'],
         ),
         DocumentField(
           name: 'Certificate of Registration',
           description: 'School/University Certificate of Registration',
-          extension: ['pdf', 'jpg', 'jpeg', 'png'],
+          extension: ['pdf', 'jpg', 'jpeg', 'png', 'webp', 'heic', 'gif'],
         ),
       ],
     ),
@@ -37,17 +37,17 @@ class DocumentRequirements {
         DocumentField(
           name: 'Medical Certificate',
           description: 'Original medical certificate',
-          extension: ['pdf', 'jpg', 'jpeg', 'png'],
+          extension: ['pdf', 'jpg', 'jpeg', 'png', 'webp', 'heic', 'gif'],
         ),
         DocumentField(
           name: 'Valid Government ID',
           description: 'Photocopy of valid government ID',
-          extension: ['pdf', 'jpg', 'jpeg', 'png'],
+          extension: ['pdf', 'jpg', 'jpeg', 'png', 'webp', 'heic', 'gif'],
         ),
         DocumentField(
           name: 'Senior Citizen ID',
           description: 'Official Senior Citizen ID',
-          extension: ['pdf', 'jpg', 'jpeg', 'png'],
+          extension: ['pdf', 'jpg', 'jpeg', 'png', 'webp', 'heic', 'gif'],
         ),
       ],
     ),
@@ -59,18 +59,18 @@ class DocumentRequirements {
         DocumentField(
           name: 'Medical Certificate',
           description: 'Original medical certificate',
-          extension: ['pdf', 'jpg', 'jpeg', 'png'],
+          extension: ['pdf', 'jpg', 'jpeg', 'png', 'webp', 'heic', 'gif'],
         ),
         DocumentField(
           name: 'Valid Government ID',
           description: 'Photocopy of valid government ID',
-          extension: ['pdf', 'jpg', 'jpeg', 'png'],
+          extension: ['pdf', 'jpg', 'jpeg', 'png', 'webp', 'heic', 'gif'],
         ),
         DocumentField(
           name: 'Barangay Certificate of Residency',
           description:
               'Barangay Certificate of Residency (Inside Davao Oriental)',
-          extension: ['pdf', 'jpg', 'jpeg', 'png'],
+          extension: ['pdf', 'jpg', 'jpeg', 'png', 'webp', 'heic', 'gif'],
         ),
       ],
     ),
@@ -82,17 +82,17 @@ class DocumentRequirements {
         DocumentField(
           name: 'Medical Certificate',
           description: 'Original medical certificate',
-          extension: ['pdf', 'jpg', 'jpeg', 'png'],
+          extension: ['pdf', 'jpg', 'jpeg', 'png', 'webp', 'heic', 'gif'],
         ),
         DocumentField(
           name: 'Valid Government ID',
           description: 'Valid Government ID',
-          extension: ['pdf', 'jpg', 'jpeg', 'png'],
+          extension: ['pdf', 'jpg', 'jpeg', 'png', 'webp', 'heic', 'gif'],
         ),
         DocumentField(
           name: 'OCF ID',
           description: 'Official Outdoor Club Federation ID',
-          extension: ['pdf', 'jpg', 'jpeg', 'png'],
+          extension: ['pdf', 'jpg', 'jpeg', 'png', 'webp', 'heic', 'gif'],
         ),
       ],
     ),
@@ -105,17 +105,17 @@ class DocumentRequirements {
         DocumentField(
           name: 'Medical Certificate',
           description: 'Original medical certificate',
-          extension: ['pdf', 'jpg', 'jpeg', 'png'],
+          extension: ['pdf', 'jpg', 'jpeg', 'png', 'webp', 'heic', 'gif'],
         ),
         DocumentField(
           name: 'Valid Government ID',
           description: 'Photocopy of valid government ID',
-          extension: ['pdf', 'jpg', 'jpeg', 'png'],
+          extension: ['pdf', 'jpg', 'jpeg', 'png', 'webp', 'heic', 'gif'],
         ),
         DocumentField(
           name: 'Parent Consent',
           description: 'Parent/Guardian Consent Form',
-          extension: ['pdf', 'docx', 'jpg', 'jpeg', 'png'],
+          extension: ['pdf', 'docx', 'jpg', 'jpeg', 'png', 'webp', 'heic', 'gif'],
         ),
       ],
     ),
@@ -127,17 +127,17 @@ class DocumentRequirements {
         DocumentField(
           name: 'Medical Certificate',
           description: 'Original medical certificate',
-          extension: ['pdf', 'jpg', 'jpeg', 'png'],
+          extension: ['pdf', 'jpg', 'jpeg', 'png', 'webp', 'heic', 'gif'],
         ),
         DocumentField(
           name: 'Valid Government ID',
           description: 'Photocopy of valid government ID',
-          extension: ['pdf', 'jpg', 'jpeg', 'png'],
+          extension: ['pdf', 'jpg', 'jpeg', 'png', 'webp', 'heic', 'gif'],
         ),
         DocumentField(
           name: 'MFSM ID',
           description: 'Official MFSM ID',
-          extension: ['pdf', 'jpg', 'jpeg', 'png'],
+          extension: ['pdf', 'jpg', 'jpeg', 'png', 'webp', 'heic', 'gif'],
         ),
       ],
     ),
@@ -149,12 +149,12 @@ class DocumentRequirements {
         DocumentField(
           name: 'Medical Certificate',
           description: 'Original medical certificate',
-          extension: ['pdf', 'jpg', 'jpeg', 'png'],
+          extension: ['pdf', 'jpg', 'jpeg', 'png', 'webp', 'heic', 'gif'],
         ),
         DocumentField(
           name: 'Valid Government ID',
           description: 'Photocopy of valid government ID',
-          extension: ['pdf', 'jpg', 'jpeg', 'png'],
+          extension: ['pdf', 'jpg', 'jpeg', 'png', 'webp', 'heic', 'gif'],
         ),
       ],
     ),

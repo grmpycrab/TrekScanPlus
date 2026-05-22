@@ -40,6 +40,22 @@
   flex-shrink: 0;
 }
 
+/* Per-card icon accent colors */
+.approved-card .metric-card-icon {
+  background: var(--status-success-bg);
+  color: var(--status-success-text);
+}
+
+.pending-card .metric-card-icon {
+  background: var(--status-pending-bg);
+  color: var(--status-pending-text);
+}
+
+.climbs-card .metric-card-icon {
+  background: #eff6ff;
+  color: #1e40af;
+}
+
 .metric-card-content { flex: 1; min-width: 0; }
 
 .metric-card-value {
@@ -377,6 +393,33 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.trekker-trek-type {
+  font-size: 0.6875rem;
+  color: var(--text-muted);
+  margin-top: 1px;
+}
+
+/* Trek type badge in table name cells */
+.table-name-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.trek-type-badge {
+  display: inline-block;
+  padding: 1px 6px;
+  border-radius: var(--radius-full);
+  background: var(--green-50);
+  color: var(--green-700);
+  border: 1px solid var(--green-100);
+  font-size: 0.625rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  width: fit-content;
 }
 
 .view-all-trekkers-btn {

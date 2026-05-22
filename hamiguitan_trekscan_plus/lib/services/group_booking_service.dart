@@ -612,7 +612,9 @@ class GroupBookingService {
   // ──────────────────────────────────────────────────────────────────────────
 
   bool _isImage(String? ext) =>
-      ext != null && ['jpg', 'jpeg', 'png', 'webp'].contains(ext.toLowerCase());
+      ext != null &&
+      ['jpg', 'jpeg', 'png', 'webp', 'heic', 'gif']
+          .contains(ext.toLowerCase());
 
   String _mimeType(String ext) {
     switch (ext.toLowerCase()) {
@@ -621,6 +623,12 @@ class GroupBookingService {
         return 'image/jpeg';
       case 'png':
         return 'image/png';
+      case 'webp':
+        return 'image/webp';
+      case 'heic':
+        return 'image/heic';
+      case 'gif':
+        return 'image/gif';
       case 'pdf':
         return 'application/pdf';
       case 'doc':

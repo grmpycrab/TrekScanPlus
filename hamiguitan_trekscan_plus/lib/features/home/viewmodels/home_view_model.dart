@@ -114,18 +114,50 @@ class HomeViewModel extends ChangeNotifier {
     List<QueryDocumentSnapshot> docs,
     DateTime month,
   ) async {
-    final Map<String, int> slotsPerDay = {};
-
+    // Count individual bookings (1 per booking doc = 1 trekker)
+    final Map<String, int> individualByDay = {};
     for (final doc in docs) {
       final data = doc.data() as Map<String, dynamic>;
       final status = (data['status'] as String?)?.toLowerCase() ?? '';
       if (status != 'approved') continue;
-
       final Timestamp? t = data['trekDate'] as Timestamp?;
       if (t == null) continue;
-      final d = t.toDate();
-      final key = _dateKey(d);
-      slotsPerDay[key] = (slotsPerDay[key] ?? 0) + 1;
+      final key = _dateKey(t.toDate());
+      individualByDay[key] = (individualByDay[key] ?? 0) + 1;
+    }
+
+    // Fetch group bookings for the month and sum currentSlots by day
+    final Map<String, int> groupSlotsByDay = {};
+    try {
+      final firstDay = DateTime(month.year, month.month, 1);
+      final lastDay = DateTime(month.year, month.month + 1, 0, 23, 59, 59);
+      final groupSnap = await FirebaseFirestore.instance
+          .collection('groupBookings')
+          .where('trekDate', isGreaterThanOrEqualTo: Timestamp.fromDate(firstDay))
+          .where('trekDate', isLessThanOrEqualTo: Timestamp.fromDate(lastDay))
+          .get();
+      for (final doc in groupSnap.docs) {
+        final data = doc.data();
+        final status = (data['status'] as String?)?.toLowerCase() ?? '';
+        if (status == 'cancelled' || status == 'declined' || status == 'rejected') continue;
+        final Timestamp? t = data['trekDate'] as Timestamp?;
+        if (t == null) continue;
+        final key = _dateKey(t.toDate());
+        final slots = (data['currentSlots'] as int?) ?? 0;
+        groupSlotsByDay[key] = (groupSlotsByDay[key] ?? 0) + slots;
+      }
+    } catch (e) {
+      AppLogger.w('Group bookings fetch failed (non-fatal): $e');
+    }
+
+    // Apply canonical formula: slotsUsed = (indiv + group) + floor((indiv + group) / 5)
+    final Map<String, int> slotsPerDay = {};
+    final allKeys = {...individualByDay.keys, ...groupSlotsByDay.keys};
+    for (final key in allKeys) {
+      final indiv = individualByDay[key] ?? 0;
+      final grp = groupSlotsByDay[key] ?? 0;
+      final bookedTrekkers = indiv + grp;
+      slotsPerDay[key] = bookedTrekkers + bookedTrekkers ~/ 5;
     }
 
     final calendarService = CalendarConfigService();

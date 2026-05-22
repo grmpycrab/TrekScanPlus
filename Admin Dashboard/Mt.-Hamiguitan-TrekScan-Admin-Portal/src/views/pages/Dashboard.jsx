@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Card, CardContent, Box, Typography, LinearProgress } from '@mui/material';
+import { Card, CardContent, Box, Typography } from '@mui/material';
 import { Hiking } from '@mui/icons-material';
 import { getAllBookings, formatBookingDate, subscribeToBookings } from '../../services/bookingService';
 import { getUserById } from '../../services/userService';
@@ -150,11 +150,13 @@ function Dashboard({ onNavigate }) {
       const allBookings = await getAllBookings();
       console.log('Dashboard: Total bookings fetched:', allBookings.length);
       
-      // Filter bookings for trek activity chart (include all bookings with trekDate to show all activity)
+      // Filter bookings for trek activity chart — approved and completed only
       const approvedBookings = allBookings.filter(booking => {
-        return booking.trekDate; // Include all bookings with a trekDate regardless of status
+        if (!booking.trekDate) return false;
+        const s = booking.status?.toLowerCase();
+        return s === 'approved' || s === 'completed';
       });
-      console.log('Dashboard: Bookings with trekDate:', approvedBookings.length);
+      console.log('Dashboard: Approved/completed bookings with trekDate:', approvedBookings.length);
       
       // Log status breakdown
       const statusBreakdown = {};
@@ -253,7 +255,8 @@ function Dashboard({ onNavigate }) {
             date: formatBookingDate(booking.trekDate, 'short'),
             name: user ? `${user.firstName} ${user.lastName}`.trim() : 'Unknown User',
             status: booking.status?.toLowerCase() || 'pending',
-            bookingId: booking.id
+            bookingId: booking.id,
+            trekType: booking.trekType || null
           };
         })
       );
@@ -285,7 +288,8 @@ function Dashboard({ onNavigate }) {
             date: formatBookingDate(booking.updatedAt || booking.createdAt, 'short'),
             name: user ? `${user.firstName} ${user.lastName}`.trim() : 'Unknown User',
             status: 'approved',
-            bookingId: booking.id
+            bookingId: booking.id,
+            trekType: booking.trekType || null
           };
         })
       );
@@ -314,52 +318,46 @@ function Dashboard({ onNavigate }) {
           return {
             id: booking.id,
             name: user ? `${user.firstName} ${user.lastName}`.trim() : 'Unknown User',
-            time: '6:00 AM', // Default time, could be enhanced with actual time if stored
             status: 'confirmed',
-            number: index + 1
+            number: index + 1,
+            trekType: booking.trekType || null
           };
         })
       );
       setTodaysTrekkers(todaysWithUsers);
 
       // Calculate stats
-      const approvedCount = allBookings.filter(b => b.status?.toLowerCase() === 'approved').length;
-      const pendingCount = allBookings.filter(b => b.status?.toLowerCase() === 'pending').length;
-      // Calculate active climbs - number of climbs scheduled for TODAY only
-      const activeClimbs = allBookings
-        .filter(b => {
-          const status = b.status?.toLowerCase();
-          const trekDate = b.trekDate;
-          if (!trekDate) return false;
-          
-          // Only count approved bookings as active climbs
-          if (status !== 'approved') return false;
-          
-          const trekDateTimestamp = trekDate instanceof Timestamp 
-            ? trekDate 
-            : Timestamp.fromDate(new Date(trekDate));
-          const trekDateOnly = new Date(trekDateTimestamp.toDate());
-          trekDateOnly.setHours(0, 0, 0, 0);
-          
-          // Count only climbs scheduled for TODAY (not future dates)
-          return trekDateOnly.getTime() === today.getTime();
-        })
-        .reduce((total, booking) => {
-          // Count number of trekkers: 1 (the booking user) + numberOfPorters (if porters are considered trekkers)
-          // For now, counting each booking as 1 trekker (the person who booked)
-          // If numberOfPorters represents additional trekkers, add: 1 + (booking.numberOfPorters || 0)
-          return total + 1;
-        }, 0);
-
-      // Monthly bookings (current month)
       const currentMonth = new Date().getMonth();
       const currentYear = new Date().getFullYear();
+      const approvedCount = allBookings.filter(b => {
+        if (b.status?.toLowerCase() !== 'approved') return false;
+        if (!b.trekDate) return false;
+        const d = b.trekDate instanceof Timestamp ? b.trekDate.toDate() : new Date(b.trekDate);
+        return d.getMonth() === currentMonth && d.getFullYear() === currentYear;
+      }).length;
+      const pendingCount = allBookings.filter(b => b.status?.toLowerCase() === 'pending').length;
+      // Active climbs = all approved bookings with trekDate >= today (upcoming pipeline)
+      const activeClimbs = allBookings.filter(b => {
+        const status = b.status?.toLowerCase();
+        const trekDate = b.trekDate;
+        if (!trekDate || status !== 'approved') return false;
+        const trekDateOnly = new Date(
+          (trekDate instanceof Timestamp ? trekDate.toDate() : new Date(trekDate))
+        );
+        trekDateOnly.setHours(0, 0, 0, 0);
+        return trekDateOnly.getTime() >= today.getTime();
+      }).length;
+
+      // Monthly bookings = approved/pending bookings with trekDate in current month
       const monthlyBookings = allBookings.filter(b => {
-        const createdAt = b.createdAt instanceof Timestamp 
-          ? b.createdAt.toDate() 
-          : new Date(b.createdAt);
-        return createdAt.getMonth() === currentMonth && 
-               createdAt.getFullYear() === currentYear;
+        if (!b.trekDate) return false;
+        const status = b.status?.toLowerCase();
+        if (status === 'cancelled' || status === 'rejected') return false;
+        const trekDate = b.trekDate instanceof Timestamp
+          ? b.trekDate.toDate()
+          : new Date(b.trekDate);
+        return trekDate.getMonth() === currentMonth &&
+               trekDate.getFullYear() === currentYear;
       }).length;
 
       setStats({
@@ -384,26 +382,23 @@ function Dashboard({ onNavigate }) {
       return;
     }
 
-    // Set up real-time subscription for bookings to detect cancellations
+    // Initial load
+    fetchDashboardData();
+
+    // Real-time subscription: skip the immediate first fire (already fetched above),
+    // only re-fetch on subsequent booking changes.
     let unsubscribeBookings = null;
-    if (currentUser) {
-      unsubscribeBookings = subscribeToBookings(() => {
-        // Refresh dashboard data when bookings change (including cancellations)
-        fetchDashboardData();
-      });
-    }
+    let isFirstFire = true;
+    unsubscribeBookings = subscribeToBookings(() => {
+      if (isFirstFire) {
+        isFirstFire = false;
+        return;
+      }
+      fetchDashboardData();
+    });
 
     const unsubscribe = onAuthStateChange((user) => {
-      if (user) {
-        fetchDashboardData();
-        // Set up subscription when user is authenticated
-        if (!unsubscribeBookings) {
-          unsubscribeBookings = subscribeToBookings(() => {
-            fetchDashboardData();
-          });
-        }
-      } else {
-        // Clean up subscription when user logs out
+      if (!user) {
         if (unsubscribeBookings) {
           unsubscribeBookings();
           unsubscribeBookings = null;
@@ -421,10 +416,6 @@ function Dashboard({ onNavigate }) {
       }
     });
 
-    if (currentUser) {
-      fetchDashboardData();
-    }
-
     return () => {
       unsubscribe();
       if (unsubscribeBookings) {
@@ -432,40 +423,6 @@ function Dashboard({ onNavigate }) {
       }
     };
   }, []);
-
-  const StatsCard = ({ title, value, subtitle, progress }) => (
-    <Card elevation={2} sx={{ borderRadius: 2 }}>
-      <CardContent>
-        <Typography variant="subtitle2" color="text.secondary" gutterBottom>
-          {title}
-        </Typography>
-        <Typography variant="h3" component="div">
-          {value}
-        </Typography>
-        {subtitle && (
-          <Typography variant="body2" sx={{ mt: 1, color: progress ? 'text.secondary' : 'success.main' }}>
-            {subtitle}
-          </Typography>
-        )}
-        {typeof progress === 'number' && (
-          <Box sx={{ mt: 2 }}>
-            <LinearProgress
-              variant="determinate"
-              value={progress}
-              sx={{
-                height: 8,
-                borderRadius: 9999,
-                backgroundColor: '#edf2f7',
-                '& .MuiLinearProgress-bar': {
-                  backgroundColor: '#3a451e'
-                }
-              }}
-            />
-          </Box>
-        )}
-      </CardContent>
-    </Card>
-  );
 
   return (
     <div>
@@ -483,12 +440,12 @@ function Dashboard({ onNavigate }) {
             </div>
             <div className="metric-card-content">
               <div className="metric-card-value">{loading ? '...' : stats.monthlyBookings.toLocaleString()}</div>
-              <div className="metric-card-label">Monthly Bookings</div>
+              <div className="metric-card-label">This Month's Treks</div>
             </div>
           </div>
           
           {/* Approved Card */}
-          <div className="metric-card">
+          <div className="metric-card approved-card">
             <div className="metric-card-icon">
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
                 <path d="M9 11L12 14L22 4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
@@ -497,16 +454,16 @@ function Dashboard({ onNavigate }) {
             </div>
             <div className="metric-card-content">
               <div className="metric-card-value">{loading ? '...' : stats.approvedCount.toLocaleString()}</div>
-              <div className="metric-card-label">Approved</div>
+              <div className="metric-card-label">Approved This Month</div>
             </div>
           </div>
           
           {/* Pending Card */}
-          <div className="metric-card">
+          <div className="metric-card pending-card">
             <div className="metric-card-icon">
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
                 <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2"/>
-                <path d="M15 9L9 15M9 9L15 15" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                <path d="M12 6V12L16 14" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
               </svg>
             </div>
             <div className="metric-card-content">
@@ -516,13 +473,13 @@ function Dashboard({ onNavigate }) {
           </div>
           
           {/* Active Climbs Card */}
-          <div className="metric-card">
+          <div className="metric-card climbs-card">
             <div className="metric-card-icon">
               <Hiking sx={{ fontSize: 24 }} />
             </div>
             <div className="metric-card-content">
               <div className="metric-card-value">{loading ? '...' : stats.activeClimbs.toLocaleString()}</div>
-              <div className="metric-card-label">Active Climbs</div>
+              <div className="metric-card-label">Upcoming Climbs</div>
             </div>
           </div>
         </div>
@@ -543,7 +500,7 @@ function Dashboard({ onNavigate }) {
                   </div>
                   <div className="trek-activity-title-content">
                     <Typography variant="h6" component="h2" className="trek-activity-title">
-                      Trekk Activity
+                      Trek Activity
                     </Typography>
                     <Typography variant="body2" className="trek-activity-subtitle">
                       Number of Trekkers over the past 30 days.
@@ -758,6 +715,9 @@ function Dashboard({ onNavigate }) {
                       <div className="trekker-badge">{trekker.number}</div>
                       <div className="trekker-info">
                         <div className="trekker-name">{trekker.name}</div>
+                        {trekker.trekType && (
+                          <div className="trekker-trek-type">{trekker.trekType}</div>
+                        )}
                       </div>
                     </div>
                   ))
@@ -846,7 +806,10 @@ function Dashboard({ onNavigate }) {
                   upcomingClimbs.map((climb, index) => (
                     <div key={climb.bookingId || index} className="table-row">
                       <div className="table-cell">{climb.date}</div>
-                      <div className="table-cell">{climb.name}</div>
+                      <div className="table-cell table-name-cell">
+                        <span>{climb.name}</span>
+                        {climb.trekType && <span className="trek-type-badge">{climb.trekType}</span>}
+                      </div>
                       <div className="table-cell">
                         <span className={`status-badge ${climb.status === 'approved' ? 'confirmed' : climb.status}`}>
                           {climb.status === 'approved' ? 'Confirmed' : 
@@ -866,7 +829,10 @@ function Dashboard({ onNavigate }) {
                   recentApprovals.map((approval, index) => (
                     <div key={approval.bookingId || index} className="table-row">
                       <div className="table-cell">{approval.date}</div>
-                      <div className="table-cell">{approval.name}</div>
+                      <div className="table-cell table-name-cell">
+                        <span>{approval.name}</span>
+                        {approval.trekType && <span className="trek-type-badge">{approval.trekType}</span>}
+                      </div>
                       <div className="table-cell">
                         <span className="status-badge approved">Approved</span>
                       </div>
