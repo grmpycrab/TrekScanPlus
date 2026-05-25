@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import '../../../theme/app_theme.dart';
 import 'package:hamiguitan_trekscan_plus/features/social/models/social_model.dart';
 import 'package:hamiguitan_trekscan_plus/features/social/widgets/social_card.dart';
+import 'package:hamiguitan_trekscan_plus/features/social/widgets/social_card_skeleton.dart';
+import 'package:hamiguitan_trekscan_plus/core/widgets/skeleton_placeholder.dart';
 import '../viewmodels/home_view_model.dart';
 
 /// Paginated social feed list. Owns the scroll controller and delegates
@@ -88,9 +90,16 @@ class _HomeSocialFeedState extends State<HomeSocialFeed> {
 
     // ── Initial loading ──────────────────────────────────────────────────────
     if (vm.loadedPosts.isEmpty && vm.isLoadingMore) {
-      return const Padding(
-        padding: EdgeInsets.all(16),
-        child: Center(child: CircularProgressIndicator()),
+      return SkeletonShimmer(
+        child: ListView(
+          padding: const EdgeInsets.only(top: 4),
+          physics: const NeverScrollableScrollPhysics(),
+          children: const [
+            SocialCardSkeleton(),
+            SocialCardSkeleton(),
+            SocialCardSkeleton(),
+          ],
+        ),
       );
     }
 

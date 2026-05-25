@@ -65,6 +65,7 @@ class GroupBooking {
 
   final Timestamp createdAt;
   Timestamp? updatedAt;
+  final bool isArchived;
 
   GroupBooking({
     required this.id,
@@ -90,6 +91,7 @@ class GroupBooking {
     this.attachments = const [],
     Timestamp? createdAt,
     this.updatedAt,
+    this.isArchived = false,
   }) : createdAt = createdAt ?? Timestamp.now();
 
   int get availableSlots => maxSlots - currentSlots;
@@ -119,6 +121,7 @@ class GroupBooking {
     'attachments': attachments.map((a) => a.toMap()).toList(),
     'createdAt': createdAt,
     'updatedAt': updatedAt,
+    'isArchived': isArchived,
   };
 
   factory GroupBooking.fromDoc(DocumentSnapshot doc) {
@@ -161,6 +164,7 @@ class GroupBooking {
           [],
       createdAt: d['createdAt'] as Timestamp? ?? Timestamp.now(),
       updatedAt: d['updatedAt'] as Timestamp?,
+      isArchived: d['isArchived'] as bool? ?? false,
     );
   }
 
@@ -188,6 +192,7 @@ class GroupBooking {
     List<Attachment>? attachments,
     Timestamp? createdAt,
     Timestamp? updatedAt,
+    bool? isArchived,
   }) => GroupBooking(
     id: id ?? this.id,
     organizerId: organizerId ?? this.organizerId,
@@ -212,6 +217,7 @@ class GroupBooking {
     attachments: attachments ?? this.attachments,
     createdAt: createdAt ?? this.createdAt,
     updatedAt: updatedAt ?? this.updatedAt,
+    isArchived: isArchived ?? this.isArchived,
   );
 
   /// Human-readable classification label

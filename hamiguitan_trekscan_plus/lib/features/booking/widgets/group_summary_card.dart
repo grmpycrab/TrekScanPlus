@@ -19,12 +19,26 @@ class GroupSummaryCard extends StatelessWidget {
   /// Optional widget rendered below the meta row (e.g. action button).
   final Widget? trailing;
 
+  /// Called when the user long-presses and selects "Leave group".
+  /// Only show this for non-organizer members.
+  final VoidCallback? onLeaveGroup;
+
+  /// Called when the user long-presses and selects "Cancel group".
+  /// Only show this for organizers.
+  final VoidCallback? onCancelGroup;
+
+  /// Called when the user long-presses and selects "Archive this group".
+  final VoidCallback? onArchive;
+
   const GroupSummaryCard({
     super.key,
     required this.group,
     required this.onTap,
     this.isOrganizer = false,
     this.trailing,
+    this.onLeaveGroup,
+    this.onCancelGroup,
+    this.onArchive,
   });
 
   @override
@@ -42,6 +56,9 @@ class GroupSummaryCard extends StatelessWidget {
       child: InkWell(
         borderRadius: BorderRadius.circular(16),
         onTap: onTap,
+        onLongPress: (onLeaveGroup != null || onCancelGroup != null || onArchive != null)
+            ? () => _showLongPressMenu(context)
+            : null,
         child: Container(
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
@@ -114,6 +131,115 @@ class GroupSummaryCard extends StatelessWidget {
               ],
             ],
           ),
+        ),
+      ),
+    );
+  }
+
+  void _showLongPressMenu(BuildContext context) {
+    final colors = context.colors;
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (_) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 40,
+              height: 4,
+              margin: const EdgeInsets.symmetric(vertical: 12),
+              decoration: BoxDecoration(
+                color: colors.border,
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+              child: Text(
+                group.groupName,
+                style: const TextStyle(
+                  fontWeight: FontWeight.w600,
+                  fontSize: 15,
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+            const Divider(height: 16),
+            if (onLeaveGroup != null)
+              ListTile(
+                leading: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: colors.borderLight,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Icon(
+                    Icons.exit_to_app_outlined,
+                    color: colors.textSecondary,
+                  ),
+                ),
+                title: const Text('Leave group'),
+                subtitle: const Text(
+                  'Remove yourself from this group',
+                  style: TextStyle(fontSize: 12),
+                ),
+                onTap: () {
+                  Navigator.pop(context);
+                  onLeaveGroup!();
+                },
+              ),
+            if (onCancelGroup != null)
+              ListTile(
+                leading: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: colors.borderLight,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Icon(
+                    Icons.cancel_outlined,
+                    color: colors.textSecondary,
+                  ),
+                ),
+                title: const Text('Cancel group'),
+                subtitle: const Text(
+                  'Cancel this group booking',
+                  style: TextStyle(fontSize: 12),
+                ),
+                onTap: () {
+                  Navigator.pop(context);
+                  onCancelGroup!();
+                },
+              ),
+            if (onArchive != null)
+              ListTile(
+                leading: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: colors.borderLight,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Icon(
+                    Icons.archive_outlined,
+                    color: colors.textSecondary,
+                  ),
+                ),
+                title: const Text('Archive this group'),
+                subtitle: const Text(
+                  'Hide from your groups list',
+                  style: TextStyle(fontSize: 12),
+                ),
+                onTap: () {
+                  Navigator.pop(context);
+                  onArchive!();
+                },
+              ),
+            const SizedBox(height: 8),
+          ],
         ),
       ),
     );

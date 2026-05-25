@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../../theme/app_theme.dart';
 import '../../../services/e_certificate_service.dart';
 import '../../../components/e_certificate_badge.dart';
+import '../../../core/widgets/precached_asset_image.dart';
 
 class BannerSlideshow extends StatefulWidget {
   const BannerSlideshow({
@@ -43,6 +44,14 @@ class _BannerSlideshowState extends State<BannerSlideshow> {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
+    // Warm all three banner images during the first frame so every 5-second
+    // rotation hits the cache instead of triggering a fresh JPEG decode.
+    for (final path in _bannerImages) {
+      precacheImage(
+        PrecachedAssetImage.provider(path, cacheWidth: 800),
+        context,
+      ).catchError((_) {});
+    }
     final colors = context.colors;
     _containerDecoration = BoxDecoration(
       borderRadius: BorderRadius.circular(16),
@@ -116,12 +125,13 @@ class _BannerSlideshowState extends State<BannerSlideshow> {
                   ),
                   child: child,
                 ),
-                child: Image.asset(
+                child: PrecachedAssetImage(
                   _bannerImages[_currentIndex],
                   key: ValueKey(_currentIndex),
                   fit: BoxFit.cover,
                   width: double.infinity,
                   height: double.infinity,
+                  cacheWidth: 800,
                   errorBuilder: (_, __, ___) =>
                       ColoredBox(color: colors.primary),
                 ),

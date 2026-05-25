@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../theme/app_theme.dart';
+import '../core/widgets/precached_asset_image.dart';
 
 class BottomNavigation extends StatelessWidget {
   final int currentIndex;
@@ -102,7 +103,13 @@ class BottomNavigation extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Image.asset(iconPath, width: 24, height: 24, color: itemColor),
+            PrecachedAssetImage(
+              iconPath,
+              width: 24,
+              height: 24,
+              color: itemColor,
+              cacheWidth: 72,
+            ),
             const SizedBox(height: 4),
             Text(
               label,

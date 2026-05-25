@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../theme/app_theme.dart';
+import '../core/widgets/precached_asset_image.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -13,6 +14,22 @@ class _SplashScreenState extends State<SplashScreen>
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
   late Animation<double> _scaleAnimation;
+  bool _assetsCached = false;
+
+  // Assets that must be warm before the first real screen paints.
+  // Keyed by logical display size so ResizeImage uses the right cache slot.
+  static const _globalAssets = <(String, int)>[
+    // Brand — shown on splash, login, signup, onboarding
+    ('assets/images/app_logo.png', 600),
+    // Auth — shown on login + signup
+    ('assets/icons/google_icon.png', 72),
+    // Bottom navigation — shown on every tab switch
+    ('assets/icons/home_icon.png', 72),
+    ('assets/icons/station.png', 72),
+    ('assets/icons/qr-code.png', 72),
+    ('assets/icons/appointment.png', 72),
+    ('assets/icons/setting.png', 72),
+  ];
 
   @override
   void initState() {
@@ -32,6 +49,22 @@ class _SplashScreenState extends State<SplashScreen>
     );
 
     _animationController.forward();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_assetsCached) return;
+    _assetsCached = true;
+    // Fire-and-forget: the 1 200 ms splash window is enough time for these
+    // small assets. We use the same ResizeImage provider that each consuming
+    // widget will request, so they share the exact same cache entry.
+    for (final (path, size) in _globalAssets) {
+      precacheImage(
+        PrecachedAssetImage.provider(path, cacheWidth: size),
+        context,
+      ).catchError((_) {});
+    }
   }
 
   @override
@@ -72,17 +105,17 @@ class _SplashScreenState extends State<SplashScreen>
                       ),
                       child: ClipRRect(
                         borderRadius: BorderRadius.circular(20),
-                        child: Image.asset(
+                        child: PrecachedAssetImage(
                           'assets/images/app_logo.png',
                           fit: BoxFit.cover,
+                          cacheWidth: 600,
                           errorBuilder: (context, error, stackTrace) {
-                            // Fallback if logo image doesn't exist
                             return Container(
                               decoration: BoxDecoration(
                                 color: colors.green700,
                                 borderRadius: BorderRadius.circular(20),
                               ),
-                              child: Icon(
+                              child: const Icon(
                                 Icons.terrain,
                                 size: 100,
                                 color: SharedColors.white,

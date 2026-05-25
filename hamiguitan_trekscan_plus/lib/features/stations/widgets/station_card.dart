@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../../theme/app_theme.dart';
 import '../../../utils/app_logger.dart';
 import '../utils/station_image_path.dart';
+import '../../../core/widgets/precached_asset_image.dart';
 
 class StationCard extends StatelessWidget {
   final String imagePath;
@@ -43,7 +44,13 @@ class StationCard extends StatelessWidget {
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(12),
           image: DecorationImage(
-            image: AssetImage(stationImageAssetPath(imagePath)),
+            // ResizeImage via provider() constrains the JPEG decode to 800 px
+            // wide — halves GPU texture memory for full-res station photos
+            // displayed at card thumbnail size.
+            image: PrecachedAssetImage.provider(
+              stationImageAssetPath(imagePath),
+              cacheWidth: 800,
+            ),
             fit: BoxFit.cover,
             colorFilter: isVisited
                 ? null

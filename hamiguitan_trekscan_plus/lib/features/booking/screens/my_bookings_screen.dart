@@ -272,6 +272,9 @@ class _OrganizerGroupsSectionState extends State<_OrganizerGroupsSection> {
                                 group: g,
                                 isOrganizer: true,
                                 onTap: () => _openDetail(context, g.id),
+                                onCancelGroup: () =>
+                                    _confirmCancelGroup(context, g),
+                                onArchive: () => _archiveGroup(context, g),
                               ),
                             ),
                           ),
@@ -283,6 +286,60 @@ class _OrganizerGroupsSectionState extends State<_OrganizerGroupsSection> {
         );
       },
     );
+  }
+
+  Future<void> _archiveGroup(BuildContext context, GroupBooking g) async {
+    try {
+      await GroupBookingService.instance.archiveGroup(g.id);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('"${g.groupName}" archived'),
+            backgroundColor: context.colors.textSecondary,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to archive group: $e')),
+        );
+      }
+    }
+  }
+
+  Future<void> _confirmCancelGroup(
+      BuildContext context, GroupBooking g) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: const Text('Cancel Group'),
+        content: Text('Cancel "${g.groupName}"? This cannot be undone.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Keep'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text(
+              'Cancel Group',
+              style: TextStyle(color: Colors.red),
+            ),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true) return;
+    try {
+      await GroupBookingService.instance.updateGroupStatus(g.id, 'cancelled');
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to cancel group: $e')),
+        );
+      }
+    }
   }
 }
 
@@ -344,6 +401,9 @@ class _JoinedGroupsSectionState extends State<_JoinedGroupsSection> {
                               child: GroupSummaryCard(
                                 group: g,
                                 onTap: () => _openDetail(context, g.id),
+                                onLeaveGroup: () =>
+                                    _confirmLeaveGroup(context, g),
+                                onArchive: () => _archiveGroup(context, g),
                               ),
                             ),
                           ),
@@ -355,6 +415,60 @@ class _JoinedGroupsSectionState extends State<_JoinedGroupsSection> {
         );
       },
     );
+  }
+
+  Future<void> _archiveGroup(BuildContext context, GroupBooking g) async {
+    try {
+      await GroupBookingService.instance.archiveGroup(g.id);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('"${g.groupName}" archived'),
+            backgroundColor: context.colors.textSecondary,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to archive group: $e')),
+        );
+      }
+    }
+  }
+
+  Future<void> _confirmLeaveGroup(
+      BuildContext context, GroupBooking g) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: const Text('Leave Group'),
+        content: Text('Leave "${g.groupName}"?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Stay'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text(
+              'Leave',
+              style: TextStyle(color: Colors.red),
+            ),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true) return;
+    try {
+      await GroupBookingService.instance.leaveGroup(g.id);
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to leave group: $e')),
+        );
+      }
+    }
   }
 }
 

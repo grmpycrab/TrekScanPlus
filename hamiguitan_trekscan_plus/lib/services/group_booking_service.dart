@@ -114,13 +114,16 @@ class GroupBookingService {
         .map((snap) => snap.docs.map(GroupBooking.fromDoc).toList());
   }
 
-  /// Real-time stream of groups created by [organizerId].
+  /// Real-time stream of groups created by [organizerId] (excludes archived).
   Stream<List<GroupBooking>> streamOrganizerGroups(String organizerId) {
     return _groups
         .where('organizerId', isEqualTo: organizerId)
         .orderBy('createdAt', descending: true)
         .snapshots()
-        .map((snap) => snap.docs.map(GroupBooking.fromDoc).toList());
+        .map((snap) => snap.docs
+            .map(GroupBooking.fromDoc)
+            .where((g) => !g.isArchived)
+            .toList());
   }
 
   /// Real-time stream of groups the user has joined (approved requests).
@@ -150,11 +153,17 @@ class GroupBookingService {
               .where(FieldPath.documentId, whereIn: groupIds)
               .get();
 
-          return groupSnap.docs.map(GroupBooking.fromDoc).toList();
+          return groupSnap.docs
+              .map(GroupBooking.fromDoc)
+              .where((g) => !g.isArchived)
+              .toList();
         });
   }
 
   /// Update group status (admin use).
+  ///
+  /// Setting status to 'cancelled' automatically marks the group as archived
+  /// so it is hidden from all users' "My Groups" lists.
   Future<void> updateGroupStatus(
     String groupId,
     String status, {
@@ -165,8 +174,18 @@ class GroupBookingService {
       'status': status,
       if (adminNotes != null) 'adminNotes': adminNotes,
       if (linkedBookingId != null) 'linkedBookingId': linkedBookingId,
+      if (status == 'cancelled') 'isArchived': true,
       'updatedAt': FieldValue.serverTimestamp(),
     });
+  }
+
+  /// Soft-deletes a group by marking it archived — hidden from all list views.
+  Future<void> archiveGroup(String groupId) async {
+    await _groups.doc(groupId).update({
+      'isArchived': true,
+      'updatedAt': FieldValue.serverTimestamp(),
+    });
+    AppLogger.i('GroupBooking $groupId archived');
   }
 
   // ──────────────────────────────────────────────────────────────────────────
@@ -258,6 +277,51 @@ class GroupBookingService {
         .orderBy('createdAt', descending: true)
         .snapshots()
         .map((snap) => snap.docs.map(JoinRequest.fromDoc).toList());
+  }
+
+  /// Allows an approved member to leave a group they joined.
+  ///
+  /// Batch-writes atomically:
+  /// - Marks the user's approved request as 'withdrawn'
+  /// - Decrements [currentSlots]
+  /// - Re-opens the group if it was previously 'full'
+  Future<void> leaveGroup(String groupId) async {
+    final uid = _auth.currentUser?.uid;
+    if (uid == null) throw Exception('Not authenticated');
+
+    final requestSnap = await _requests(groupId)
+        .where('userId', isEqualTo: uid)
+        .where('status', isEqualTo: 'approved')
+        .limit(1)
+        .get();
+
+    if (requestSnap.docs.isEmpty) {
+      throw Exception('No approved membership found for this group.');
+    }
+
+    final requestDocId = requestSnap.docs.first.id;
+    final groupDoc = await _groups.doc(groupId).get();
+    if (!groupDoc.exists) throw Exception('Group not found');
+
+    final group = GroupBooking.fromDoc(groupDoc);
+    final newSlots = (group.currentSlots - 1).clamp(0, group.maxSlots);
+    final newStatus = group.status == 'full' ? 'open' : group.status;
+
+    final batch = _db.batch();
+
+    batch.update(_requests(groupId).doc(requestDocId), {
+      'status': 'withdrawn',
+      'updatedAt': FieldValue.serverTimestamp(),
+    });
+
+    batch.update(_groups.doc(groupId), {
+      'currentSlots': newSlots,
+      'status': newStatus,
+      'updatedAt': FieldValue.serverTimestamp(),
+    });
+
+    await batch.commit();
+    AppLogger.i('User $uid left group $groupId');
   }
 
   /// Allows a trekker to withdraw their own pending join request.
