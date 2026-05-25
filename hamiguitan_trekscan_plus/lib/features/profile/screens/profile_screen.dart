@@ -1,5 +1,6 @@
 // ignore_for_file: use_build_context_synchronously
 
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:hamiguitan_trekscan_plus/features/social/models/social_model.dart';
 import 'package:hamiguitan_trekscan_plus/features/social/repositories/social_repository.dart';
@@ -32,6 +33,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
   final SocialSharingService _socialService = SocialSharingService.instance;
   late final Stream<List<SocialPost>> _userPostsStream;
 
+  // Cached follow-state future — prevents a new Firestore read on every
+  // outer StreamBuilder emit. Refreshed explicitly after follow/unfollow.
+  Future<bool>? _isFollowingFuture;
+
   late final ProfileViewModel _vm;
 
   void _onVmChanged() => setState(() {});
@@ -39,6 +44,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
   /// Get display name from user data, fallback to email if no first/last name
   String _getDisplayName(UserModel user) {
     return _vm.getDisplayName(user);
+  }
+
+  void _refreshFollowState() {
+    if (_vm.firebaseUser != null && widget.userId != null) {
+      setState(() {
+        _isFollowingFuture = _userService.isFollowing(
+          _vm.firebaseUser!.uid,
+          widget.userId!,
+        );
+      });
+    }
   }
 
   @override
@@ -53,6 +69,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
     _userPostsStream = profileUserId == null
         ? Stream<List<SocialPost>>.empty()
         : _socialService.streamUserPosts(profileUserId).asBroadcastStream();
+
+    // Initialise follow-state once for other-user profiles.
+    if (_vm.firebaseUser != null && widget.userId != null) {
+      _isFollowingFuture = _userService.isFollowing(
+        _vm.firebaseUser!.uid,
+        widget.userId!,
+      );
+    }
 
     if (_vm.firebaseUser != null && _vm.isOwnProfile) {
       _userService.fixNegativeCounts(_vm.firebaseUser!.uid).catchError((e) {
@@ -821,7 +845,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ),
               child: ClipOval(
                 child: user.profileImage != null
-                    ? Image.network(user.profileImage!, fit: BoxFit.cover)
+                    ? CachedNetworkImage(
+                    imageUrl: user.profileImage!,
+                    fit: BoxFit.cover,
+                    placeholder: (_, __) => const CircularProgressIndicator(),
+                    errorWidget: (_, __, ___) =>
+                        const Icon(Icons.person),
+                  )
                     : CircleAvatar(
                         radius: 45,
                         backgroundColor: colors.background,
@@ -859,11 +889,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      // Posts count
+                      // Posts count — reuses the same broadcast stream as
+                      // the posts list section to avoid a third Firestore listener.
                       StreamBuilder<List<SocialPost>>(
-                        stream: _socialService.streamUserPosts(
-                          widget.userId ?? _vm.firebaseUser!.uid,
-                        ),
+                        stream: _userPostsStream,
                         builder: (context, snapshot) {
                           final postsCount = snapshot.data?.length ?? 0;
                           return _buildStatColumn(
@@ -997,7 +1026,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     } else {
       // Other user's profile: Follow button
       return FutureBuilder<bool>(
-        future: _userService.isFollowing(_vm.firebaseUser!.uid, widget.userId!),
+        future: _isFollowingFuture,
         builder: (context, snapshot) {
           final isFollowing = snapshot.data ?? false;
           return SizedBox(
@@ -1114,9 +1143,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           );
         }
       }
-      if (mounted) {
-        setState(() {});
-      }
+      if (mounted) _refreshFollowState();
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -1252,6 +1279,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               return _buildFollowerListTile(
                                 user,
                                 setModalState,
+                                colors,
                               );
                             },
                           );
@@ -1380,6 +1408,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               return _buildFollowingListTile(
                                 user,
                                 setModalState,
+                                colors,
                               );
                             },
                           );
@@ -1458,8 +1487,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Widget _buildFollowerListTile(
     Map<String, dynamic> user,
     StateSetter setModalState,
+    AppTheme colors,
   ) {
-    final colors = context.colors;
     final firstName = user['firstName'] as String? ?? '';
     final lastName = user['lastName'] as String? ?? '';
     final email = user['email'] as String? ?? '';
@@ -1549,8 +1578,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Widget _buildFollowingListTile(
     Map<String, dynamic> user,
     StateSetter setModalState,
+    AppTheme colors,
   ) {
-    final colors = context.colors;
     final firstName = user['firstName'] as String? ?? '';
     final lastName = user['lastName'] as String? ?? '';
     final email = user['email'] as String? ?? '';

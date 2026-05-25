@@ -6,8 +6,6 @@ import '../../features/scanner/screens/scanner_screen.dart';
 import '../../features/settings/screens/settings_screen.dart';
 import '../../features/booking/screens/my_bookings_screen.dart';
 
-// ignore_for_file: unnecessary_brace_in_string_interps
-// ignore_for_file: use_key_in_widget_constructors, deprecated_member_use, use_build_context_synchronously
 class MainScreen extends StatefulWidget {
   final int initialTabIndex;
 
@@ -43,15 +41,10 @@ class _MainScreenState extends State<MainScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return WillPopScope(
-      onWillPop: () async {
-        if (_currentIndex != 0) {
-          setState(() {
-            _currentIndex = 0;
-          });
-          return false;
-        }
-        return true;
+    return PopScope(
+      canPop: _currentIndex == 0,
+      onPopInvokedWithResult: (didPop, _) {
+        if (!didPop) setState(() => _currentIndex = 0);
       },
       child: Scaffold(
         body: Stack(

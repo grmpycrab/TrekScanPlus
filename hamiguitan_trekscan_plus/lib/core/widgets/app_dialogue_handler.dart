@@ -171,9 +171,8 @@ class AppDialogueHandler {
     return showCupertinoDialog(
       context: context,
       barrierDismissible: false,
-      // ignore: deprecated_member_use
-      builder: (BuildContext context) => WillPopScope(
-        onWillPop: () async => false,
+      builder: (BuildContext context) => PopScope(
+        canPop: false,
         child: CupertinoAlertDialog(
           content: Column(
             mainAxisSize: MainAxisSize.min,
@@ -237,7 +236,7 @@ class AppDialogueHandler {
           ),
         ],
       ),
-    );
+    ).whenComplete(controller.dispose);
   }
 
   /// Show a choice dialogue with multiple options

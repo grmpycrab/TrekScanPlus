@@ -3,8 +3,12 @@ import 'package:cached_network_image/cached_network_image.dart';
 import '../services/presence_service.dart';
 import '../../theme/app_theme.dart';
 
-/// Reusable profile avatar with online/offline status indicator
-class ProfileAvatarWithStatus extends StatelessWidget {
+/// Reusable profile avatar with online/offline status indicator.
+///
+/// Uses [StatefulWidget] so the presence stream is subscribed once in
+/// [initState] rather than creating a new Firestore listener on every
+/// parent rebuild (important when this widget appears in list items).
+class ProfileAvatarWithStatus extends StatefulWidget {
   final String userId;
   final String? photoUrl;
   final double radius;
@@ -19,27 +23,42 @@ class ProfileAvatarWithStatus extends StatelessWidget {
   });
 
   @override
+  State<ProfileAvatarWithStatus> createState() =>
+      _ProfileAvatarWithStatusState();
+}
+
+class _ProfileAvatarWithStatusState extends State<ProfileAvatarWithStatus> {
+  late final Stream<bool> _onlineStream;
+
+  @override
+  void initState() {
+    super.initState();
+    _onlineStream =
+        PresenceService.instance.userOnlineStatus(widget.userId);
+  }
+
+  @override
   Widget build(BuildContext context) {
     final colors = context.colors;
     return Stack(
       children: [
         // Profile avatar
-        photoUrl != null
+        widget.photoUrl != null
             ? CircleAvatar(
-                radius: radius,
+                radius: widget.radius,
                 backgroundColor: colors.primary,
                 child: ClipOval(
                   child: CachedNetworkImage(
-                    imageUrl: photoUrl!,
-                    width: radius * 2,
-                    height: radius * 2,
+                    imageUrl: widget.photoUrl!,
+                    width: widget.radius * 2,
+                    height: widget.radius * 2,
                     fit: BoxFit.cover,
                     placeholder: (context, url) => Container(
                       color: colors.primary,
                       child: Icon(
                         Icons.person,
                         color: colors.primary,
-                        size: radius * 0.9,
+                        size: widget.radius * 0.9,
                       ),
                     ),
                     errorWidget: (context, url, error) => Container(
@@ -47,42 +66,41 @@ class ProfileAvatarWithStatus extends StatelessWidget {
                       child: Icon(
                         Icons.person,
                         color: colors.primary,
-                        size: radius * 0.9,
+                        size: widget.radius * 0.9,
                       ),
                     ),
-                    memCacheWidth: (radius * 4).round(),
-                    memCacheHeight: (radius * 4).round(),
+                    memCacheWidth: (widget.radius * 4).round(),
+                    memCacheHeight: (widget.radius * 4).round(),
                   ),
                 ),
               )
             : CircleAvatar(
-                radius: radius,
+                radius: widget.radius,
                 backgroundColor: colors.primary,
                 child: Icon(
                   Icons.person,
                   color: colors.primary,
-                  size: radius * 0.9,
+                  size: widget.radius * 0.9,
                 ),
               ),
         // Status indicator
-        if (showStatus)
+        if (widget.showStatus)
           Positioned(
             right: 0,
             bottom: 0,
             child: StreamBuilder<bool>(
-              stream: PresenceService.instance.userOnlineStatus(userId),
+              stream: _onlineStream,
               builder: (context, snapshot) {
                 final isOnline = snapshot.data ?? false;
-
                 return Container(
-                  width: radius * 0.6,
-                  height: radius * 0.6,
+                  width: widget.radius * 0.6,
+                  height: widget.radius * 0.6,
                   decoration: BoxDecoration(
                     color: isOnline ? Colors.green : Colors.red,
                     shape: BoxShape.circle,
                     border: Border.all(
                       color: Colors.white,
-                      width: radius * 0.08,
+                      width: widget.radius * 0.08,
                     ),
                   ),
                 );

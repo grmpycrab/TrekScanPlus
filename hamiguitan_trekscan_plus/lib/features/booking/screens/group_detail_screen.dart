@@ -1,5 +1,7 @@
 // ignore_for_file: use_build_context_synchronously
 
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -56,8 +58,40 @@ class _GroupDetailScreenState extends State<GroupDetailScreen>
   TabController? _tabController;
   GroupRole? _lastRole;
 
+  // Stream state — avoids nested StreamBuilders rebuilding the full Scaffold.
+  GroupBooking? _group;
+  JoinRequest? _myRequest;
+  bool _loading = true;
+  String? _errorMessage;
+  late StreamSubscription<GroupBooking?> _groupSub;
+  late StreamSubscription<JoinRequest?> _requestSub;
+
+  @override
+  void initState() {
+    super.initState();
+    final uid = FirebaseAuth.instance.currentUser?.uid ?? '';
+    _groupSub = GroupBookingService.instance
+        .streamGroup(widget.groupId)
+        .listen(
+          (group) => setState(() {
+            _group = group;
+            _loading = false;
+            _errorMessage = group == null ? 'Group not found.' : null;
+          }),
+          onError: (e) => setState(() {
+            _loading = false;
+            _errorMessage = 'Failed to load group.';
+          }),
+        );
+    _requestSub = GroupBookingService.instance
+        .streamMyRequest(widget.groupId, uid)
+        .listen((req) => setState(() => _myRequest = req));
+  }
+
   @override
   void dispose() {
+    _groupSub.cancel();
+    _requestSub.cancel();
     _tabController?.dispose();
     super.dispose();
   }
@@ -130,66 +164,40 @@ class _GroupDetailScreenState extends State<GroupDetailScreen>
 
   @override
   Widget build(BuildContext context) {
+    if (_loading) return _LoadingScaffold(groupId: widget.groupId);
+    if (_errorMessage != null) return _ErrorScaffold(message: _errorMessage!);
+
+    final group = _group!;
     final uid = FirebaseAuth.instance.currentUser?.uid ?? '';
+    final role = _deriveRole(group, _myRequest, uid);
+    _syncTabs(role);
 
-    return StreamBuilder<GroupBooking?>(
-      stream: GroupBookingService.instance.streamGroup(widget.groupId),
-      builder: (context, groupSnap) {
-        if (groupSnap.connectionState == ConnectionState.waiting) {
-          return _LoadingScaffold(groupId: widget.groupId);
-        }
-        if (groupSnap.hasError || groupSnap.data == null) {
-          return _ErrorScaffold(
-            message: groupSnap.hasError
-                ? 'Failed to load group.'
-                : 'Group not found.',
-          );
-        }
+    final colors = context.colors;
 
-        final group = groupSnap.data!;
-
-        return StreamBuilder<JoinRequest?>(
-          stream:
-              GroupBookingService.instance.streamMyRequest(group.id, uid),
-          builder: (context, reqSnap) {
-            final myRequest = reqSnap.data;
-            final role = _deriveRole(group, myRequest, uid);
-            _syncTabs(role);
-
-            final colors = context.colors;
-
-            return Scaffold(
-              backgroundColor: colors.background,
-              appBar: AppBar(
-                title: Text(
-                  group.groupName,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                backgroundColor: colors.primary,
-                foregroundColor: Colors.white,
-                elevation: 0,
-                bottom: TabBar(
-                  controller: _tabController!,
-                  indicatorColor: Colors.white,
-                  indicatorWeight: 3,
-                  labelColor: Colors.white,
-                  unselectedLabelColor: Colors.white60,
-                  isScrollable: _tabController!.length > 3,
-                  labelStyle: const TextStyle(
-                      fontSize: 13, fontWeight: FontWeight.w600),
-                  unselectedLabelStyle:
-                      const TextStyle(fontSize: 13),
-                  tabs: _tabs(role),
-                ),
-              ),
-              body: TabBarView(
-                controller: _tabController!,
-                children: _tabViews(group, role, myRequest),
-              ),
-            );
-          },
-        );
-      },
+    return Scaffold(
+      backgroundColor: colors.background,
+      appBar: AppBar(
+        title: Text(group.groupName, overflow: TextOverflow.ellipsis),
+        backgroundColor: colors.primary,
+        foregroundColor: Colors.white,
+        elevation: 0,
+        bottom: TabBar(
+          controller: _tabController!,
+          indicatorColor: Colors.white,
+          indicatorWeight: 3,
+          labelColor: Colors.white,
+          unselectedLabelColor: Colors.white60,
+          isScrollable: _tabController!.length > 3,
+          labelStyle:
+              const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+          unselectedLabelStyle: const TextStyle(fontSize: 13),
+          tabs: _tabs(role),
+        ),
+      ),
+      body: TabBarView(
+        controller: _tabController!,
+        children: _tabViews(group, role, _myRequest),
+      ),
     );
   }
 }

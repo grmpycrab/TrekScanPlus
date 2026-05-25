@@ -33,6 +33,10 @@ class AppStartupController {
   bool _servicesInitialized = false;
   bool _permissionsRequested = false;
 
+  // Completed once NotificationService + PresenceService are ready so that
+  // the deep-link handler does not route before those services exist.
+  final Completer<void> _criticalServicesReady = Completer<void>();
+
   AppStartupController({required this.isMounted});
 
   // ---------------------------------------------------------------------------
@@ -95,7 +99,9 @@ class AppStartupController {
       Future.microtask(() => NotificationService().listenToBookingUpdates()),
     );
     unawaited(
-      Future.microtask(() => NotificationService().listenToPostModerationNotifications()),
+      Future.microtask(
+        () => NotificationService().listenToPostModerationNotifications(),
+      ),
     );
 
     // Achievement init — no context needed, silent fail on error
@@ -151,6 +157,7 @@ class AppStartupController {
     // Stop Firestore listeners before auth is revoked to prevent
     // permission-denied errors from streams that are still open.
     NotificationService().stopListeners();
+    BookingService.instance.cancelBookingStatusListener();
     // Clear visited state so a different user logging in does not briefly see
     // the previous user's scanned stations before their own sync completes.
     StationService.instance.clearUserData();
@@ -208,6 +215,10 @@ class AppStartupController {
           PresenceService.instance.initialize();
         } catch (e) {
           AppLogger.w('Non-critical service initialization: $e (offline mode)');
+        } finally {
+          if (!_criticalServicesReady.isCompleted) {
+            _criticalServicesReady.complete();
+          }
         }
       }),
     );
@@ -229,8 +240,12 @@ class AppStartupController {
   }
 
   void _deferredHandleDeepLinks() {
-    unawaited(DeepLinkHandler.handleInitialLink());
-    DeepLinkHandler.startListening();
+    unawaited(
+      _criticalServicesReady.future.then((_) {
+        DeepLinkHandler.handleInitialLink();
+        DeepLinkHandler.startListening();
+      }),
+    );
   }
 
   Future<void> _requestPermissions() async {

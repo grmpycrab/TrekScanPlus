@@ -24,6 +24,8 @@ class TrekDatePicker extends StatefulWidget {
 }
 
 class _TrekDatePickerState extends State<TrekDatePicker> {
+  static final _dateFmt = DateFormat('MMMM dd, yyyy');
+
   late DateValidationService _dateValidationService;
   DateTime? _selectedDate;
   Map<String, dynamic>? _availabilityInfo;
@@ -321,7 +323,7 @@ class _TrekDatePickerState extends State<TrekDatePicker> {
   @override
   Widget build(BuildContext context) {
     final colors = context.colors;
-    final dateFormatter = DateFormat('MMMM dd, yyyy');
+    final dateFormatter = _dateFmt;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,

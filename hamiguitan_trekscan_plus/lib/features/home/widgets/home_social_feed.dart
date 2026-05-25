@@ -25,13 +25,26 @@ class HomeSocialFeed extends StatefulWidget {
 }
 
 class _HomeSocialFeedState extends State<HomeSocialFeed> {
+  static const _greyAnim = AlwaysStoppedAnimation<Color>(Colors.grey);
+
   late final ScrollController _scrollController;
+
+  List<SocialPost> _filteredPosts = const [];
+  List<SocialPost>? _lastLoadedPosts;
+  String? _lastQuery;
 
   @override
   void initState() {
     super.initState();
     _scrollController = ScrollController();
     _scrollController.addListener(_onScroll);
+    _recomputeFilteredPosts();
+  }
+
+  @override
+  void didUpdateWidget(HomeSocialFeed oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    _recomputeFilteredPosts();
   }
 
   @override
@@ -43,13 +56,21 @@ class _HomeSocialFeedState extends State<HomeSocialFeed> {
 
   void _onScroll() => widget.viewModel.onFeedScroll(_scrollController);
 
-  List<SocialPost> get _filteredPosts {
+  void _recomputeFilteredPosts() {
+    final posts = widget.viewModel.loadedPosts;
     final q = widget.searchQuery;
-    if (q.isEmpty) return widget.viewModel.loadedPosts;
-    return widget.viewModel.loadedPosts.where((p) {
-      return p.caption.toLowerCase().contains(q) ||
-          p.userName.toLowerCase().contains(q);
-    }).toList();
+    if (identical(posts, _lastLoadedPosts) && q == _lastQuery) return;
+    _lastLoadedPosts = posts;
+    _lastQuery = q;
+    _filteredPosts = q.isEmpty
+        ? posts
+        : posts
+              .where(
+                (p) =>
+                    p.caption.toLowerCase().contains(q) ||
+                    p.userName.toLowerCase().contains(q),
+              )
+              .toList();
   }
 
   @override
@@ -118,7 +139,7 @@ class _HomeSocialFeedState extends State<HomeSocialFeed> {
                       height: 16,
                       child: CircularProgressIndicator(
                         strokeWidth: 2,
-                        valueColor: AlwaysStoppedAnimation<Color>(Colors.grey),
+                        valueColor: _greyAnim,
                       ),
                     ),
                   ),

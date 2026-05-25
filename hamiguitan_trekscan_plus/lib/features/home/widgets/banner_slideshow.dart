@@ -31,10 +31,46 @@ class _BannerSlideshowState extends State<BannerSlideshow> {
     'assets/station_images/Lantawan 2/20241030_154550.jpg',
   ];
 
+  late BoxDecoration _containerDecoration;
+  late BoxDecoration _gradientDecoration;
+
   @override
   void initState() {
     super.initState();
     _startAutoplay();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final colors = context.colors;
+    _containerDecoration = BoxDecoration(
+      borderRadius: BorderRadius.circular(16),
+      border: Border.all(
+        color: colors.border.withValues(alpha: 0.45),
+        width: 0.8,
+      ),
+      boxShadow: [
+        BoxShadow(
+          color: Colors.black.withValues(alpha: 0.12),
+          blurRadius: 14,
+          offset: const Offset(0, 4),
+        ),
+      ],
+    );
+    _gradientDecoration = BoxDecoration(
+      gradient: LinearGradient(
+        begin: Alignment.bottomCenter,
+        end: Alignment.topCenter,
+        colors: [
+          colors.primary.withValues(alpha: 0.92),
+          colors.primary.withValues(alpha: 0.6),
+          Colors.black.withValues(alpha: 0.3),
+          Colors.transparent,
+        ],
+        stops: const [0.0, 0.3, 0.6, 1.0],
+      ),
+    );
   }
 
   void _startAutoplay() {
@@ -62,20 +98,7 @@ class _BannerSlideshowState extends State<BannerSlideshow> {
       child: Container(
         margin: const EdgeInsets.fromLTRB(16, 8, 16, 8),
         clipBehavior: Clip.hardEdge,
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(
-            color: colors.border.withValues(alpha: 0.45),
-            width: 0.8,
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.12),
-              blurRadius: 14,
-              offset: const Offset(0, 4),
-            ),
-          ],
-        ),
+        decoration: _containerDecoration,
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 380),
           curve: Curves.easeInOutCubic,
@@ -105,21 +128,7 @@ class _BannerSlideshowState extends State<BannerSlideshow> {
               ),
 
               // ── Dark gradient overlay (always visible) ───────────────────
-              DecoratedBox(
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.bottomCenter,
-                    end: Alignment.topCenter,
-                    colors: [
-                      colors.primary.withValues(alpha: 0.92),
-                      colors.primary.withValues(alpha: 0.6),
-                      Colors.black.withValues(alpha: 0.3),
-                      Colors.transparent,
-                    ],
-                    stops: const [0.0, 0.3, 0.6, 1.0],
-                  ),
-                ),
-              ),
+              DecoratedBox(decoration: _gradientDecoration),
 
               // ── Expanded content (crossfades out when collapsing) ────────
               IgnorePointer(

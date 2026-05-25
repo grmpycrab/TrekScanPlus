@@ -1,5 +1,7 @@
 // ignore_for_file: use_build_context_synchronously
 
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
@@ -110,11 +112,21 @@ class _MyBookingsScreenState extends State<MyBookingsScreen>
 // TAB 1 — My Groups
 // ══════════════════════════════════════════════════════════════════════════════
 
-class _MyGroupsTab extends StatelessWidget {
+class _MyGroupsTab extends StatefulWidget {
   const _MyGroupsTab();
 
   @override
+  State<_MyGroupsTab> createState() => _MyGroupsTabState();
+}
+
+class _MyGroupsTabState extends State<_MyGroupsTab>
+    with AutomaticKeepAliveClientMixin {
+  @override
+  bool get wantKeepAlive => true;
+
+  @override
   Widget build(BuildContext context) {
+    super.build(context);
     final uid = FirebaseAuth.instance.currentUser?.uid;
     if (uid == null) {
       return const _EmptyState(
@@ -213,6 +225,7 @@ class _OrganizerGroupsSection extends StatefulWidget {
 
 class _OrganizerGroupsSectionState extends State<_OrganizerGroupsSection> {
   late final Stream<List<GroupBooking>> _stream;
+  bool _isExpanded = true;
 
   @override
   void initState() {
@@ -236,22 +249,36 @@ class _OrganizerGroupsSectionState extends State<_OrganizerGroupsSection> {
               icon: Icons.manage_accounts_rounded,
               title: 'Groups I Organize',
               count: groups.length,
+              isExpanded: _isExpanded,
+              onTap: () => setState(() => _isExpanded = !_isExpanded),
             ),
-            if (groups.isEmpty)
-              _EmptySection(
-                message: "You haven't created any groups yet.",
-              )
-            else
-              ...groups.map(
-                (g) => Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 10),
-                  child: GroupSummaryCard(
-                    group: g,
-                    isOrganizer: true,
-                    onTap: () => _openDetail(context, g.id),
-                  ),
-                ),
-              ),
+            AnimatedSize(
+              duration: const Duration(milliseconds: 250),
+              curve: Curves.easeInOut,
+              alignment: Alignment.topCenter,
+              child: _isExpanded
+                  ? Column(
+                      children: [
+                        if (groups.isEmpty)
+                          _EmptySection(
+                            message: "You haven't created any groups yet.",
+                          )
+                        else
+                          ...groups.map(
+                            (g) => Padding(
+                              padding:
+                                  const EdgeInsets.fromLTRB(16, 0, 16, 10),
+                              child: GroupSummaryCard(
+                                group: g,
+                                isOrganizer: true,
+                                onTap: () => _openDetail(context, g.id),
+                              ),
+                            ),
+                          ),
+                      ],
+                    )
+                  : const SizedBox.shrink(),
+            ),
           ],
         );
       },
@@ -271,6 +298,7 @@ class _JoinedGroupsSection extends StatefulWidget {
 
 class _JoinedGroupsSectionState extends State<_JoinedGroupsSection> {
   late final Stream<List<GroupBooking>> _stream;
+  bool _isExpanded = true;
 
   @override
   void initState() {
@@ -294,21 +322,35 @@ class _JoinedGroupsSectionState extends State<_JoinedGroupsSection> {
               icon: Icons.group_rounded,
               title: 'Groups I Joined',
               count: groups.length,
+              isExpanded: _isExpanded,
+              onTap: () => setState(() => _isExpanded = !_isExpanded),
             ),
-            if (groups.isEmpty)
-              _EmptySection(
-                message: "You haven't joined any groups yet.",
-              )
-            else
-              ...groups.map(
-                (g) => Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 10),
-                  child: GroupSummaryCard(
-                    group: g,
-                    onTap: () => _openDetail(context, g.id),
-                  ),
-                ),
-              ),
+            AnimatedSize(
+              duration: const Duration(milliseconds: 250),
+              curve: Curves.easeInOut,
+              alignment: Alignment.topCenter,
+              child: _isExpanded
+                  ? Column(
+                      children: [
+                        if (groups.isEmpty)
+                          _EmptySection(
+                            message: "You haven't joined any groups yet.",
+                          )
+                        else
+                          ...groups.map(
+                            (g) => Padding(
+                              padding:
+                                  const EdgeInsets.fromLTRB(16, 0, 16, 10),
+                              child: GroupSummaryCard(
+                                group: g,
+                                onTap: () => _openDetail(context, g.id),
+                              ),
+                            ),
+                          ),
+                      ],
+                    )
+                  : const SizedBox.shrink(),
+            ),
           ],
         );
       },
@@ -327,34 +369,60 @@ class _DiscoverTab extends StatefulWidget {
   State<_DiscoverTab> createState() => _DiscoverTabState();
 }
 
-class _DiscoverTabState extends State<_DiscoverTab> {
+class _DiscoverTabState extends State<_DiscoverTab>
+    with AutomaticKeepAliveClientMixin {
+  @override
+  bool get wantKeepAlive => true;
   final _searchCtrl = TextEditingController();
   String _searchQuery = '';
   String _typeFilter = 'all';
 
-  late final Stream<Map<String, JoinRequest>> _myRequestsStream;
-  late final Stream<List<GroupBooking>> _openGroupsStream;
+  // Stream state — single setState per emit instead of nested rebuilds.
+  List<GroupBooking> _openGroups = [];
+  Map<String, JoinRequest> _myRequests = {};
+  bool _groupsLoading = true;
+  bool _groupsError = false;
+  late final StreamSubscription<List<GroupBooking>> _groupsSub;
+  late final StreamSubscription<Map<String, JoinRequest>> _requestsSub;
 
   @override
   void initState() {
     super.initState();
     final uid = FirebaseAuth.instance.currentUser?.uid ?? '';
-    _myRequestsStream = uid.isEmpty
+
+    _groupsSub = GroupBookingService.instance.streamOpenGroups().listen(
+          (groups) => setState(() {
+            _openGroups = groups;
+            _groupsLoading = false;
+            _groupsError = false;
+          }),
+          onError: (_) => setState(() {
+            _groupsLoading = false;
+            _groupsError = true;
+          }),
+        );
+
+    final requestsStream = uid.isEmpty
         ? Stream.value(<String, JoinRequest>{})
         : GroupBookingService.instance
             .streamUserJoinRequests(uid)
             .map((list) => {for (final r in list) r.groupId: r});
-    _openGroupsStream = GroupBookingService.instance.streamOpenGroups();
+
+    _requestsSub = requestsStream
+        .listen((reqs) => setState(() => _myRequests = reqs));
   }
 
   @override
   void dispose() {
+    _groupsSub.cancel();
+    _requestsSub.cancel();
     _searchCtrl.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
+    super.build(context);
     final colors = context.colors;
     final uid = FirebaseAuth.instance.currentUser?.uid ?? '';
 
@@ -414,64 +482,54 @@ class _DiscoverTabState extends State<_DiscoverTab> {
         ),
 
         // ── Group list ───────────────────────────────────────────────────────
-        Expanded(
-          child: StreamBuilder<Map<String, JoinRequest>>(
-            stream: _myRequestsStream,
-            builder: (context, myReqSnap) {
-              final myRequests = myReqSnap.data ?? {};
-              return StreamBuilder<List<GroupBooking>>(
-                stream: _openGroupsStream,
-                builder: (context, snap) {
-                  if (snap.connectionState == ConnectionState.waiting) {
-                    return const Center(child: CircularProgressIndicator());
-                  }
-                  if (snap.hasError) {
-                    return const _ErrorState(message: 'Failed to load groups.');
-                  }
-                  final groups = (snap.data ?? []).where((g) {
-                    final matchSearch = _searchQuery.isEmpty ||
-                        g.groupName.toLowerCase().contains(_searchQuery) ||
-                        g.affiliation.toLowerCase().contains(_searchQuery) ||
-                        g.organizerName.toLowerCase().contains(_searchQuery);
-                    final matchType =
-                        _typeFilter == 'all' || g.trekType == _typeFilter;
-                    return matchSearch && matchType;
-                  }).toList();
-
-                  if (groups.isEmpty) {
-                    return _EmptyState(
-                      icon: Icons.explore_off_rounded,
-                      message: _searchQuery.isNotEmpty
-                          ? 'No groups match your search.'
-                          : 'No open groups at the moment.\nCheck back later!',
-                    );
-                  }
-
-                  return ListView.separated(
-                    padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
-                    itemCount: groups.length,
-                    separatorBuilder: (_, __) => const SizedBox(height: 10),
-                    itemBuilder: (ctx, i) {
-                      final g = groups[i];
-                      final myReq = myRequests[g.id];
-                      return GroupSummaryCard(
-                        group: g,
-                        isOrganizer: g.organizerId == uid,
-                        onTap: () => _openDetail(context, g.id),
-                        trailing: _DiscoverCardAction(
-                          group: g,
-                          myRequest: myReq,
-                          currentUid: uid,
-                        ),
-                      );
-                    },
-                  );
-                },
-              );
-            },
-          ),
-        ),
+        Expanded(child: _buildGroupList(uid, colors)),
       ],
+    );
+  }
+
+  Widget _buildGroupList(String uid, AppTheme colors) {
+    if (_groupsLoading) {
+      return const Center(child: CircularProgressIndicator());
+    }
+    if (_groupsError) {
+      return const _ErrorState(message: 'Failed to load groups.');
+    }
+
+    final groups = _openGroups.where((g) {
+      final matchSearch = _searchQuery.isEmpty ||
+          g.groupName.toLowerCase().contains(_searchQuery) ||
+          g.affiliation.toLowerCase().contains(_searchQuery) ||
+          g.organizerName.toLowerCase().contains(_searchQuery);
+      final matchType = _typeFilter == 'all' || g.trekType == _typeFilter;
+      return matchSearch && matchType;
+    }).toList();
+
+    if (groups.isEmpty) {
+      return _EmptyState(
+        icon: Icons.explore_off_rounded,
+        message: _searchQuery.isNotEmpty
+            ? 'No groups match your search.'
+            : 'No open groups at the moment.\nCheck back later!',
+      );
+    }
+
+    return ListView.separated(
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
+      itemCount: groups.length,
+      separatorBuilder: (_, __) => const SizedBox(height: 10),
+      itemBuilder: (ctx, i) {
+        final g = groups[i];
+        return GroupSummaryCard(
+          group: g,
+          isOrganizer: g.organizerId == uid,
+          onTap: () => _openDetail(context, g.id),
+          trailing: _DiscoverCardAction(
+            group: g,
+            myRequest: _myRequests[g.id],
+            currentUid: uid,
+          ),
+        );
+      },
     );
   }
 
@@ -603,11 +661,53 @@ class _DiscoverCardAction extends StatelessWidget {
 // TAB 3 — Requests
 // ══════════════════════════════════════════════════════════════════════════════
 
-class _RequestsTab extends StatelessWidget {
+class _RequestsTab extends StatefulWidget {
   const _RequestsTab();
 
   @override
+  State<_RequestsTab> createState() => _RequestsTabState();
+}
+
+class _RequestsTabState extends State<_RequestsTab>
+    with AutomaticKeepAliveClientMixin {
+  @override
+  bool get wantKeepAlive => true;
+
+  List<JoinRequest> _requests = [];
+  bool _loading = true;
+  bool _error = false;
+  StreamSubscription<List<JoinRequest>>? _sub;
+
+  @override
+  void initState() {
+    super.initState();
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    if (uid == null) {
+      setState(() => _loading = false);
+      return;
+    }
+    _sub = GroupBookingService.instance.streamUserJoinRequests(uid).listen(
+      (list) => setState(() {
+        _requests = list;
+        _loading = false;
+        _error = false;
+      }),
+      onError: (_) => setState(() {
+        _loading = false;
+        _error = true;
+      }),
+    );
+  }
+
+  @override
+  void dispose() {
+    _sub?.cancel();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
+    super.build(context);
     final uid = FirebaseAuth.instance.currentUser?.uid;
     if (uid == null) {
       return const _EmptyState(
@@ -616,78 +716,64 @@ class _RequestsTab extends StatelessWidget {
       );
     }
 
-    return StreamBuilder<List<JoinRequest>>(
-      stream: GroupBookingService.instance.streamUserJoinRequests(uid),
-      builder: (context, snap) {
-        if (snap.connectionState == ConnectionState.waiting) {
-          return const Center(child: CircularProgressIndicator());
-        }
-        if (snap.hasError) {
-          return const _ErrorState(message: 'Failed to load requests.');
-        }
+    if (_loading) return const Center(child: CircularProgressIndicator());
+    if (_error) return const _ErrorState(message: 'Failed to load requests.');
 
-        final all = snap.data ?? [];
-        if (all.isEmpty) {
-          return const _EmptyState(
-            icon: Icons.inbox_outlined,
-            message:
-                "You haven't submitted any join requests yet.\nHead to Discover to find a group!",
-          );
-        }
+    if (_requests.isEmpty) {
+      return const _EmptyState(
+        icon: Icons.inbox_outlined,
+        message:
+            "You haven't submitted any join requests yet.\nHead to Discover to find a group!",
+      );
+    }
 
-        final pending =
-            all.where((r) => r.status == 'pending').toList();
-        final approved =
-            all.where((r) => r.status == 'approved').toList();
-        final declined =
-            all.where((r) => r.status == 'declined').toList();
-        final withdrawn =
-            all.where((r) => r.status == 'withdrawn').toList();
+    final pending = _requests.where((r) => r.status == 'pending').toList();
+    final approved = _requests.where((r) => r.status == 'approved').toList();
+    final declined = _requests.where((r) => r.status == 'declined').toList();
+    final withdrawn = _requests.where((r) => r.status == 'withdrawn').toList();
 
-        return ListView(
-          padding: const EdgeInsets.fromLTRB(16, 12, 16, 32),
-          children: [
-            if (pending.isNotEmpty) ...[
-              _SectionHeader(
-                icon: Icons.schedule_rounded,
-                title: 'Pending',
-                count: pending.length,
-                color: const Color(0xFFE65100),
-              ),
-              ...pending.map((r) => _RequestStatusCard(request: r)),
-              const SizedBox(height: 8),
-            ],
-            if (approved.isNotEmpty) ...[
-              _SectionHeader(
-                icon: Icons.check_circle_rounded,
-                title: 'Approved',
-                count: approved.length,
-                color: const Color(0xFF2E7D32),
-              ),
-              ...approved.map((r) => _RequestStatusCard(request: r)),
-              const SizedBox(height: 8),
-            ],
-            if (declined.isNotEmpty) ...[
-              _SectionHeader(
-                icon: Icons.cancel_rounded,
-                title: 'Declined',
-                count: declined.length,
-                color: const Color(0xFFC62828),
-              ),
-              ...declined.map((r) => _RequestStatusCard(request: r)),
-              const SizedBox(height: 8),
-            ],
-            if (withdrawn.isNotEmpty) ...[
-              _SectionHeader(
-                icon: Icons.undo_rounded,
-                title: 'Withdrawn',
-                count: withdrawn.length,
-              ),
-              ...withdrawn.map((r) => _RequestStatusCard(request: r)),
-            ],
-          ],
-        );
-      },
+    return ListView(
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 32),
+      children: [
+        if (pending.isNotEmpty) ...[
+          _SectionHeader(
+            icon: Icons.schedule_rounded,
+            title: 'Pending',
+            count: pending.length,
+            color: const Color(0xFFE65100),
+          ),
+          ...pending.map((r) => _RequestStatusCard(request: r)),
+          const SizedBox(height: 8),
+        ],
+        if (approved.isNotEmpty) ...[
+          _SectionHeader(
+            icon: Icons.check_circle_rounded,
+            title: 'Approved',
+            count: approved.length,
+            color: const Color(0xFF2E7D32),
+          ),
+          ...approved.map((r) => _RequestStatusCard(request: r)),
+          const SizedBox(height: 8),
+        ],
+        if (declined.isNotEmpty) ...[
+          _SectionHeader(
+            icon: Icons.cancel_rounded,
+            title: 'Declined',
+            count: declined.length,
+            color: const Color(0xFFC62828),
+          ),
+          ...declined.map((r) => _RequestStatusCard(request: r)),
+          const SizedBox(height: 8),
+        ],
+        if (withdrawn.isNotEmpty) ...[
+          _SectionHeader(
+            icon: Icons.undo_rounded,
+            title: 'Withdrawn',
+            count: withdrawn.length,
+          ),
+          ...withdrawn.map((r) => _RequestStatusCard(request: r)),
+        ],
+      ],
     );
   }
 }
@@ -802,19 +888,23 @@ class _SectionHeader extends StatelessWidget {
   final String title;
   final int count;
   final Color? color;
+  final bool? isExpanded;
+  final VoidCallback? onTap;
 
   const _SectionHeader({
     required this.icon,
     required this.title,
     required this.count,
     this.color,
+    this.isExpanded,
+    this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
     final colors = context.colors;
     final c = color ?? colors.textSecondary;
-    return Padding(
+    final content = Padding(
       padding: const EdgeInsets.fromLTRB(16, 14, 16, 8),
       child: Row(
         children: [
@@ -831,8 +921,7 @@ class _SectionHeader extends StatelessWidget {
           ),
           const SizedBox(width: 6),
           Container(
-            padding:
-                const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
             decoration: BoxDecoration(
               color: c.withOpacity(0.12),
               borderRadius: BorderRadius.circular(10),
@@ -840,13 +929,27 @@ class _SectionHeader extends StatelessWidget {
             child: Text(
               '$count',
               style: TextStyle(
-                  fontSize: 10,
-                  fontWeight: FontWeight.bold,
-                  color: c),
+                  fontSize: 10, fontWeight: FontWeight.bold, color: c),
             ),
           ),
+          if (onTap != null) ...[
+            const Spacer(),
+            AnimatedRotation(
+              turns: (isExpanded ?? true) ? 0.0 : -0.5,
+              duration: const Duration(milliseconds: 250),
+              child: Icon(Icons.keyboard_arrow_down_rounded, size: 18, color: c),
+            ),
+          ],
         ],
       ),
+    );
+
+    if (onTap == null) return content;
+
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(8),
+      child: content,
     );
   }
 }

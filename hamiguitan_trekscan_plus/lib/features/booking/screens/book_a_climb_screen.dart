@@ -429,15 +429,17 @@ class _BookAClimbScreenState
             final climb = item['climb'] as Climb;
             final booking = item['booking'] as BookingModel;
             final isDraft = (item['isDraft'] as bool?) ?? false;
-            return ClimbCard(
-              climb: climb,
-              booking: booking,
-              onCancel: isDraft ? _confirmCancelDraft : _confirmCancelBooking,
-              onEditBooking: _showEditBookingSheet,
-              onSubmitBooking: _submitDraftBooking,
-              onArchive: isDraft
-                  ? _confirmArchiveDraft
-                  : _confirmArchiveBooking,
+            return RepaintBoundary(
+              child: ClimbCard(
+                climb: climb,
+                booking: booking,
+                onCancel: isDraft ? _confirmCancelDraft : _confirmCancelBooking,
+                onEditBooking: _showEditBookingSheet,
+                onSubmitBooking: _submitDraftBooking,
+                onArchive: isDraft
+                    ? _confirmArchiveDraft
+                    : _confirmArchiveBooking,
+              ),
             );
           }
           return const SizedBox.shrink();
@@ -995,22 +997,9 @@ class _BuildBookingFormModalState extends State<_BuildBookingFormModal> {
                 key: _formKey,
                 child: ListView(
                   children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          widget.isEditMode ? 'Edit Booking' : 'New Booking',
-                          style: TextStyle(
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold,
-                            color: colors.text,
-                          ),
-                        ),
-                        IconButton(
-                          icon: Icon(Icons.close, color: colors.textSecondary),
-                          onPressed: () => Navigator.pop(context),
-                        ),
-                      ],
+                    _BookingModalHeader(
+                      isEditMode: widget.isEditMode,
+                      colors: colors,
                     ),
                     const SizedBox(height: 12),
                     // Trek Type Selector
@@ -1460,6 +1449,34 @@ class _BuildBookingFormModalState extends State<_BuildBookingFormModal> {
           ],
         ),
       ),
+    );
+  }
+}
+
+class _BookingModalHeader extends StatelessWidget {
+  const _BookingModalHeader({required this.isEditMode, required this.colors});
+
+  final bool isEditMode;
+  final AppTheme colors;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(
+          isEditMode ? 'Edit Booking' : 'New Booking',
+          style: TextStyle(
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+            color: colors.text,
+          ),
+        ),
+        IconButton(
+          icon: Icon(Icons.close, color: colors.textSecondary),
+          onPressed: () => Navigator.pop(context),
+        ),
+      ],
     );
   }
 }

@@ -24,16 +24,19 @@ class BookingDetailsModal extends StatelessWidget {
     this.onSubmit,
   });
 
+  static final _dateFmt = DateFormat('MMMM dd, yyyy');
+
   String _formatDate(DateTime? date) {
-    if (date == null) {
-      return 'Not available';
-    }
-    return DateFormat('MMMM dd, yyyy').format(date);
+    if (date == null) return 'Not available';
+    return _dateFmt.format(date);
   }
 
   @override
   Widget build(BuildContext context) {
     final colors = context.colors;
+    // Computed once here so _buildStatusSection and inline guards all read the
+    // same value without re-running DateTime.now() + string parsing each time.
+    final status = climb.computedStatus();
     return GestureDetector(
       onTap: onClose,
       child: Container(
@@ -113,7 +116,7 @@ class BookingDetailsModal extends StatelessWidget {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             // Status section
-                            _buildStatusSection(colors),
+                            _buildStatusSection(colors, status),
                             const SizedBox(height: 20),
                             // Booking dates section
                             _buildSectionTitle('Booking Dates', colors),
@@ -129,9 +132,9 @@ class BookingDetailsModal extends StatelessWidget {
                               _formatDate(climb.targetDate),
                               colors,
                             ),
-                            if (climb.computedStatus() != 'Pending')
+                            if (status != 'Pending')
                               const SizedBox(height: 8),
-                            if (climb.computedStatus() != 'Pending')
+                            if (status != 'Pending')
                               _buildDetailRow(
                                 'Date Approved',
                                 _formatDate(climb.dateApproved),
@@ -207,8 +210,8 @@ class BookingDetailsModal extends StatelessWidget {
                               height: 36,
                               child: OutlinedButton(
                                 onPressed:
-                                    (climb.computedStatus() == 'Cancelled' ||
-                                        climb.computedStatus() == 'Approved')
+                                    (status == 'Cancelled' ||
+                                        status == 'Approved')
                                     ? null
                                     : onEdit,
                                 style: OutlinedButton.styleFrom(
@@ -277,8 +280,7 @@ class BookingDetailsModal extends StatelessWidget {
     );
   }
 
-  Widget _buildStatusSection(AppTheme colors) {
-    final status = climb.computedStatus();
+  Widget _buildStatusSection(AppTheme colors, String status) {
     final statusColor = BookingStatusHelper.color(status);
 
     return Container(

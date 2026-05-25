@@ -21,6 +21,13 @@ class _ActiveGroupsScreenState extends State<ActiveGroupsScreen> {
   final _searchCtrl = TextEditingController();
   String _searchQuery = '';
   String _typeFilter = 'all';
+  late final Stream<List<GroupBooking>> _openGroupsStream;
+
+  @override
+  void initState() {
+    super.initState();
+    _openGroupsStream = GroupBookingService.instance.streamOpenGroups();
+  }
 
   @override
   void dispose() {
@@ -97,7 +104,7 @@ class _ActiveGroupsScreenState extends State<ActiveGroupsScreen> {
           // ── Group list ──────────────────────────────────────────────────
           Expanded(
             child: StreamBuilder<List<GroupBooking>>(
-              stream: GroupBookingService.instance.streamOpenGroups(),
+              stream: _openGroupsStream,
               builder: (context, snapshot) {
                 if (snapshot.connectionState == ConnectionState.waiting) {
                   return const Center(child: CircularProgressIndicator());

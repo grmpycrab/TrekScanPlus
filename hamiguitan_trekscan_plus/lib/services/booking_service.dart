@@ -50,6 +50,8 @@ class BookingService {
   final _storage = FirebaseStorage.instance;
   final _notificationService = InAppNotificationService();
 
+  StreamSubscription<QuerySnapshot>? _statusListenerSub;
+
   /// Check if user already has an active booking on the same date
   /// Returns true if an active (non-cancelled) booking exists for that date, false otherwise
   Future<bool> hasExistingBookingOnDate(
@@ -422,12 +424,21 @@ class BookingService {
     });
   }
 
-  /// Start listening to booking status changes for notifications
-  /// Call this when user logs in to monitor booking updates from admin
+  /// Cancels the active booking-status listener, if any.
+  /// Called by [AppStartupController.resetForLogout] on sign-out.
+  void cancelBookingStatusListener() {
+    _statusListenerSub?.cancel();
+    _statusListenerSub = null;
+  }
+
+  /// Start listening to booking status changes for notifications.
+  /// Cancels any previous listener before creating a new one so re-login
+  /// does not stack duplicate subscriptions.
   void startBookingStatusListener(String userId) {
+    cancelBookingStatusListener();
     final Map<String, String> _lastKnownStatus = {};
 
-    _firestore
+    _statusListenerSub = _firestore
         .collection('bookings')
         .where('userId', isEqualTo: userId)
         .snapshots()

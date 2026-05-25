@@ -9,6 +9,7 @@ import '../../../utils/status_helpers.dart';
 typedef ClimbCallback = void Function(Climb);
 
 class ClimbCard extends StatelessWidget {
+  static final _dateFmt = DateFormat('MMMM dd, yyyy');
   final Climb climb;
   final VoidCallback? onTap;
   final ClimbCallback? onCancel;
@@ -32,7 +33,7 @@ class ClimbCard extends StatelessWidget {
     if (date == null) {
       return '--- --, ----';
     }
-    return DateFormat('MMMM dd, yyyy').format(date);
+    return _dateFmt.format(date);
   }
 
   @override
