@@ -125,9 +125,8 @@ class AppStartupController {
           final hasSeenOnboarding = await OnboardingService.hasSeenOnboarding(
             userId,
           );
-          // ignore: use_build_context_synchronously — navigatorKey context is global, not widget-scoped
           if (!hasSeenOnboarding && isMounted() && ctx != null) {
-            unawaited(OnboardingService.showOnboarding(ctx, userId));
+            unawaited(OnboardingService.showOnboarding(ctx, userId)); // ignore: use_build_context_synchronously
           }
         } catch (e) {
           AppLogger.e('Onboarding check error: $e');

@@ -6,6 +6,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/services.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import '../models/achievement.dart';
+import '../models/badge.dart';
 import 'local_achievement_service.dart';
 import '../utils/app_logger.dart';
 
@@ -275,10 +276,15 @@ class AchievementService {
           if (stationCount == null) return false;
           return stationsVisited >= stationCount;
         case 'reach_location':
-          // Location-based achievements - match current location
-          if (currentStationId != null && value is String) {
-            return currentStationId.toLowerCase() ==
-                value.toString().toLowerCase();
+          // Match the scanned station ID against the badge's triggerStationId.
+          // Falls back to the legacy requirement value string for older records.
+          if (currentStationId != null) {
+            if (achievement.triggerStationId != null) {
+              return currentStationId == achievement.triggerStationId;
+            }
+            if (value is String) {
+              return currentStationId.toLowerCase() == value.toLowerCase();
+            }
           }
           return false;
         case 'trail_completed':
@@ -338,24 +344,43 @@ class AchievementService {
   /// Unlock achievement locally
   Future<void> _unlockAchievementLocally(Achievement achievement) async {
     try {
-      await _localService.unlockAchievement(achievement);
+      final unlocked = achievement.copyWith(
+        isUnlocked: true,
+        unlockedAt: DateTime.now(),
+        syncStatus: 'PENDING_SYNC',
+      );
+      await _localService.unlockAchievement(unlocked);
 
       // Update in-memory list
       final index = _allAchievements.indexWhere((a) => a.id == achievement.id);
       if (index != -1) {
-        _allAchievements[index] = achievement.copyWith(
-          isUnlocked: true,
-          unlockedAt: DateTime.now(),
-        );
+        _allAchievements[index] = unlocked;
       }
 
       // Immediately try to sync to Firebase
       final userId = _auth.currentUser?.uid;
       if (userId != null) {
-        await _syncSingleAchievementToFirebase(achievement, userId);
+        await _syncSingleAchievementToFirebase(unlocked, userId);
       }
     } catch (e) {
       AppLogger.i('Error unlocking achievement locally: $e');
+    }
+  }
+
+  /// Backfill achievements for stations the user has already visited but whose
+  /// badge was never awarded (e.g. because the feature was added after the trek).
+  Future<void> retroactivelyUnlockFromVisitedStations(
+    List<String> visitedStationIds,
+  ) async {
+    if (!_isInitialized) return;
+    final visitedSet = visitedStationIds.toSet();
+    for (final achievement in List.of(_allAchievements)) {
+      if (achievement.isUnlocked) continue;
+      if (achievement.verificationType != VerificationType.scan) continue;
+      if (achievement.triggerStationId == null) continue;
+      if (visitedSet.contains(achievement.triggerStationId)) {
+        await _unlockAchievementLocally(achievement);
+      }
     }
   }
 
@@ -386,14 +411,23 @@ class AchievementService {
             'rarity': achievement.rarity,
             'difficulty': achievement.difficulty,
             'requirement': achievement.requirement,
+            'triggerStationId': achievement.triggerStationId,
             'unlockedAt': achievement.unlockedAt?.toIso8601String(),
             'syncedAt': FieldValue.serverTimestamp(),
+            'syncStatus': 'SYNCED',
           });
 
       // Also update user's badges array
       await _firestore.collection('users').doc(userId).update({
         'badges': FieldValue.arrayUnion([achievement.id]),
       });
+
+      // Mark as synced in local storage and in-memory list
+      await _localService.removeFromSyncQueue(achievement.id);
+      final synced = achievement.copyWith(syncStatus: 'SYNCED');
+      await _localService.saveAchievement(synced);
+      final idx = _allAchievements.indexWhere((a) => a.id == achievement.id);
+      if (idx != -1) _allAchievements[idx] = synced;
     } catch (e) {
       AppLogger.i('Error syncing achievement to Firebase: $e');
       await _localService.addToSyncQueue(achievement.id);

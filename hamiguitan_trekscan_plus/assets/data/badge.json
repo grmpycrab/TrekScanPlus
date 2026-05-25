@@ -1,264 +1,274 @@
 {
     "badges": [
         {
-            "id": "station1_gate",
-            "name": "Limestone Gate Passer",
-            "description": "Every journey begins with a single brave step. By reaching Station 1, you've taken the first stride into the heart of Hamiguitan.",
+            "id": "unesco_pass",
+            "name": "UNESCO Marker Passer",
+            "description": "You've reached the gateway of Mt. Hamiguitan. The UNESCO marker stands as a reminder that you now walk on world heritage ground — a feat reserved for those who dare to begin.",
+            "tier": "bronze",
             "category": "trail_completion",
             "icon": "footprints",
-            "requirement": {
-                "type": "reach_station",
-                "value": 1
-            },
-            "rarity": "common",
-            "difficulty": "easy"
-        },
-        {
-            "id": "station2_mossy",
-            "name": "Mossy Trail Tracker",
-            "description": "Through the cool shade of the mossy forest, you've proven that persistence always carries you farther than you expect.",
-            "category": "trail_completion",
-            "icon": "compass",
-            "requirement": {
-                "type": "reach_station",
-                "value": 2
-            },
-            "rarity": "common",
-            "difficulty": "easy"
-        },
-        {
-            "id": "station3_explorer",
-            "name": "Wildlife Path Explorer",
-            "description": "Reaching Station 3 shows your growing harmony with the forest. The deeper you go, the more the mountain reveals who you truly are.",
-            "category": "trail_completion",
-            "icon": "explore",
-            "requirement": {
-                "type": "reach_station",
-                "value": 3
-            },
-            "rarity": "uncommon",
-            "difficulty": "medium"
-        },
-        {
-            "id": "station4_ridge",
-            "name": "Mountain Ridge Climber",
-            "description": "Standing at Station 4, you rise above doubts and limits. High places reward not only strength, but courage.",
-            "category": "trail_completion",
-            "icon": "landscape",
-            "requirement": {
-                "type": "reach_station",
-                "value": 4
-            },
-            "rarity": "uncommon",
-            "difficulty": "medium"
-        },
-        {
-            "id": "station5_cloudforest",
-            "name": "Cloud Forest Adventurer",
-            "description": "You've entered the cloud forest—where the air thins and your resolve strengthens. Few climb this far. You are becoming one of them.",
-            "category": "trail_completion",
-            "icon": "forest",
-            "requirement": {
-                "type": "reach_station",
-                "value": 5
-            },
-            "rarity": "uncommon",
-            "difficulty": "medium"
-        },
-        {
-            "id": "station6_pygmy",
-            "name": "Pygmy Forest Visitor",
-            "description": "In the ancient bonsai forest, time slows down. By reaching Station 6, you've stepped into a world shaped by resilience and patience—much like your journey.",
-            "category": "trail_completion",
-            "icon": "flower",
-            "requirement": {
-                "type": "reach_station",
-                "value": 6
-            },
-            "rarity": "rare",
-            "difficulty": "hard"
-        },
-        {
-            "id": "station7_hidden_sea",
-            "name": "Hidden Sea Trekker",
-            "description": "Tinagong Dagat rewards only those who dare to go beyond the ordinary path. You've reached a place hidden to most—proof of your determination.",
-            "category": "trail_completion",
-            "icon": "public",
+            "verificationType": "SCAN",
+            "triggerStationId": "56okrkt0pb",
+            "points": 50,
             "requirement": {
                 "type": "reach_location",
-                "value": "tinagong_dagat"
-            },
-            "rarity": "rare",
-            "difficulty": "hard"
-        },
-        {
-            "id": "station8_ascent",
-            "name": "Final Ascent Pioneer",
-            "description": "The final ascent tests both strength and spirit. But you stood firm—because reaching Station 8 means believing that you can always rise again.",
-            "category": "trail_completion",
-            "icon": "trending_up",
-            "requirement": {
-                "type": "reach_station",
-                "value": 8
-            },
-            "rarity": "rare",
-            "difficulty": "hard"
-        },
-        {
-            "id": "summit_conqueror",
-            "name": "Hamiguitan Peak Conqueror",
-            "description": "At the summit, the world appears smaller, and your courage feels greater. You've reached the peak—not just of the mountain, but of your own limits.",
-            "category": "trail_completion",
-            "icon": "mountain",
-            "requirement": {
-                "type": "reach_station",
-                "value": "summit"
-            },
-            "rarity": "epic",
-            "difficulty": "hard"
-        },
-        {
-            "id": "trail_finisher",
-            "name": "Hamiguitan Trail Finisher",
-            "description": "Completing the Hamiguitan trail is more than finishing a journey—it is proving to yourself that perseverance transforms challenges into triumphs.",
-            "category": "trail_completion",
-            "icon": "trophy",
-            "requirement": {
-                "type": "trail_completed",
-                "value": true
-            },
-            "rarity": "epic",
-            "difficulty": "hard"
-        },
-        {
-            "id": "first_trek",
-            "name": "First Trek Completed",
-            "description": "Starting something new is never easy. But you're here—you took the first step, finished your first trek, and opened the door to endless adventures.",
-            "category": "trail_completion",
-            "icon": "footprints",
-            "requirement": {
-                "type": "trails_completed",
-                "value": 1
+                "value": "unesco_marker",
+                "displayStation": "UNESCO Marker"
             },
             "rarity": "common",
             "difficulty": "easy"
         },
         {
-            "id": "two_day_survivor",
-            "name": "Two-Day Trek Survivor",
-            "description": "Enduring over a full day on the trail shows more than strength—it shows patience, grit, and a spirit that refuses to quit.",
+            "id": "river_crossing",
+            "name": "River Crossing",
+            "description": "Across cool rushing waters and polished white stones, you've crossed the first true test of the trail. Not all trekkers make it this far.",
+            "tier": "bronze",
+            "category": "trail_completion",
+            "icon": "route",
+            "verificationType": "SCAN",
+            "triggerStationId": "um6j8dnii4",
+            "points": 75,
+            "requirement": {
+                "type": "reach_location",
+                "value": "puting_bato",
+                "displayStation": "Puting Bato"
+            },
+            "rarity": "common",
+            "difficulty": "easy"
+        },
+        {
+            "id": "first_horizon",
+            "name": "First Horizon",
+            "description": "From Lantawan 1, the horizon expands and the valley spreads wide below. The mountain has finally given you your first full view — and it's just the beginning.",
+            "tier": "bronze",
+            "category": "trail_completion",
+            "icon": "landscape",
+            "verificationType": "SCAN",
+            "triggerStationId": "3ko938o2gb",
+            "points": 100,
+            "requirement": {
+                "type": "reach_location",
+                "value": "lantawan_1",
+                "displayStation": "Lantawan 1"
+            },
+            "rarity": "common",
+            "difficulty": "easy"
+        },
+        {
+            "id": "root_climber",
+            "name": "The Root Climber",
+            "description": "This ancient trail weaves through gnarled roots and narrow ridges. Only those who learned to read the mountain's floor can pass through the Uwang-Uwang path.",
+            "tier": "silver",
+            "category": "trail_completion",
+            "icon": "forest",
+            "verificationType": "SCAN",
+            "triggerStationId": "vaatj8uomu",
+            "points": 200,
+            "requirement": {
+                "type": "reach_location",
+                "value": "uwang_uwang",
+                "displayStation": "Uwang-Uwang Trail"
+            },
+            "rarity": "rare",
+            "difficulty": "medium"
+        },
+        {
+            "id": "pygmy_settler",
+            "name": "Pygmy Settler",
+            "description": "Camp 3 is where the mountain offers rest before the ascent grows steeper. You've settled here for a moment — a small victory that fuels the climb ahead.",
+            "tier": "silver",
             "category": "trail_completion",
             "icon": "event",
+            "verificationType": "SCAN",
+            "triggerStationId": "utvrrkfkh9",
+            "points": 150,
             "requirement": {
-                "type": "trail_duration_hours",
-                "value": 24
+                "type": "reach_location",
+                "value": "camp_3",
+                "displayStation": "Camp 3"
+            },
+            "rarity": "uncommon",
+            "difficulty": "medium"
+        },
+        {
+            "id": "dwarf_guardian",
+            "name": "Dwarf Guardian",
+            "description": "In the pygmy forest, ancient bonsai trees stand no taller than your knee — yet they've weathered centuries. To earn this badge is to understand that true strength needs no height.",
+            "tier": "silver",
+            "category": "trail_completion",
+            "icon": "flower",
+            "verificationType": "SCAN",
+            "triggerStationId": "6mm4kle34g",
+            "points": 250,
+            "requirement": {
+                "type": "reach_location",
+                "value": "pygmy_field",
+                "displayStation": "Pygmy Field"
             },
             "rarity": "rare",
+            "difficulty": "medium"
+        },
+        {
+            "id": "serpentinite_soul",
+            "name": "Serpentinite Soul",
+            "description": "Black Mountain's serpentinite soil filters out the ordinary and fosters only the extraordinary. By reaching this point, you've proven you belong here.",
+            "tier": "silver",
+            "category": "trail_completion",
+            "icon": "mountain",
+            "verificationType": "SCAN",
+            "triggerStationId": "44r5tebjrc",
+            "points": 200,
+            "requirement": {
+                "type": "reach_location",
+                "value": "black_mountain",
+                "displayStation": "Black Mountain"
+            },
+            "rarity": "rare",
+            "difficulty": "medium"
+        },
+        {
+            "id": "hydrological_finale",
+            "name": "Hydrological Finale",
+            "description": "Twin Falls marks where two streams reunite in a final flourish before silence reclaims the valley. You've witnessed one of Hamiguitan's most serene hidden rewards.",
+            "tier": "silver",
+            "category": "trail_completion",
+            "icon": "public",
+            "verificationType": "SCAN",
+            "triggerStationId": "r5kntj3sae",
+            "points": 150,
+            "requirement": {
+                "type": "reach_location",
+                "value": "twin_falls",
+                "displayStation": "Twin Falls"
+            },
+            "rarity": "uncommon",
+            "difficulty": "medium"
+        },
+        {
+            "id": "apex_overlook",
+            "name": "Apex Overlook",
+            "description": "Standing at the peak of Mt. Hamiguitan, you've earned a view that very few humans have ever witnessed. This is what legends are made of.",
+            "tier": "gold",
+            "category": "trail_completion",
+            "icon": "trophy",
+            "verificationType": "SCAN",
+            "triggerStationId": "mr2l529okj",
+            "points": 400,
+            "requirement": {
+                "type": "reach_location",
+                "value": "the_peak",
+                "displayStation": "Mt. Hamiguitan Summit"
+            },
+            "rarity": "epic",
             "difficulty": "hard"
         },
         {
-            "id": "heritage_info1",
-            "name": "Heritage Info Explorer",
-            "description": "Curiosity is the spark of discovery. By scanning your first QR sign, you opened your mind to Hamiguitan's stories and secrets.",
-            "category": "biodiversity",
-            "icon": "camera",
+            "id": "lost_ocean",
+            "name": "The Lost Ocean",
+            "description": "Tinagong Dagat — the hidden sea — reveals itself only to those who push beyond the ordinary path. You've found the unfindable. The mountain kept this secret just for you.",
+            "tier": "gold",
+            "category": "trail_completion",
+            "icon": "explore",
+            "verificationType": "SCAN",
+            "triggerStationId": "79t42cmo77",
+            "points": 350,
             "requirement": {
-                "type": "qr_scanned",
-                "value": 1
+                "type": "reach_location",
+                "value": "tinagong_dagat",
+                "displayStation": "Tinagong Dagat"
             },
-            "rarity": "common",
-            "difficulty": "easy"
+            "rarity": "epic",
+            "difficulty": "hard"
         },
         {
-            "id": "bonsai_info",
-            "name": "Bonsai Forest Learner",
-            "description": "Knowledge deepens experience. You've learned about the ancient bonsai forest—one of nature's quiet wonders.",
+            "id": "mist_walker",
+            "name": "Mist Walker",
+            "description": "Where the clouds settle between the treetops and every stone wears a coat of velvet moss, you walked through Hamiguitan's most mystical corridor.",
+            "tier": "gold",
+            "category": "trail_completion",
+            "icon": "forest",
+            "verificationType": "SCAN",
+            "triggerStationId": "g5uabiveqd",
+            "points": 300,
+            "requirement": {
+                "type": "reach_location",
+                "value": "lantawan_3",
+                "displayStation": "Lantawan 3 / Mossy Forest"
+            },
+            "rarity": "epic",
+            "difficulty": "hard"
+        },
+        {
+            "id": "botanists_veil",
+            "name": "Botanist's Veil",
+            "description": "The endemic pitcher plants, carnivorous mosses, and rare orchids of Hamiguitan exist nowhere else on Earth. Photograph and document three unique endemic species to earn this badge.",
+            "tier": "gold",
             "category": "biodiversity",
             "icon": "eco",
+            "verificationType": "MANUAL_IMAGE_REVIEW",
+            "triggerStationId": "i73hl7b7g3",
+            "points": 350,
             "requirement": {
-                "type": "qr_scanned",
-                "value": "bonsai_forest"
+                "type": "manual_image_review",
+                "value": "Photograph and document 3 unique endemic plant species found on the trail.",
+                "displayStation": "Hidden Garden"
             },
-            "rarity": "uncommon",
-            "difficulty": "easy"
+            "rarity": "epic",
+            "difficulty": "hard"
         },
         {
-            "id": "wildlife_qr3",
-            "name": "Wildlife Facts Collector",
-            "description": "Every species has a story, and you've begun to uncover them—one QR scan at a time. Curiosity is your compass.",
+            "id": "lnt_master",
+            "name": "Leave No Trace Master",
+            "description": "A true guardian of the mountain. Complete a full trek demonstrating Leave No Trace principles — submit photographic evidence of your clean campsite, proper waste disposal, and trail etiquette.",
+            "tier": "platinum",
+            "category": "conservation",
+            "icon": "eco",
+            "verificationType": "MANUAL_IMAGE_REVIEW",
+            "triggerStationId": null,
+            "points": 500,
+            "requirement": {
+                "type": "manual_image_review",
+                "value": "Submit evidence of LNT compliance: clean campsite, proper waste disposal, and trail etiquette across a full trek.",
+                "displayStation": null
+            },
+            "rarity": "legendary",
+            "difficulty": "hard"
+        },
+        {
+            "id": "pitcher_perfection",
+            "name": "Pitcher Perfection",
+            "description": "Mt. Hamiguitan is home to three endemic Nepenthes pitcher plant species found nowhere else in the world. Photograph and correctly identify all three to earn this elite badge.",
+            "tier": "platinum",
+            "category": "biodiversity",
+            "icon": "flower",
+            "verificationType": "MANUAL_IMAGE_REVIEW",
+            "triggerStationId": null,
+            "points": 500,
+            "requirement": {
+                "type": "manual_image_review",
+                "value": "Photograph all 3 endemic Nepenthes pitcher plant species (N. micromphora, N. hamiguitanensis, N. peltata) with clear identification.",
+                "displayStation": null
+            },
+            "rarity": "legendary",
+            "difficulty": "hard"
+        },
+        {
+            "id": "shadow_king",
+            "name": "Shadow of the King",
+            "description": "The Philippine Eagle soars above Hamiguitan's canopy as the undisputed king of the skies. Capture a verifiable photograph of this critically endangered raptor to earn the mountain's most prestigious badge.",
+            "tier": "platinum",
             "category": "biodiversity",
             "icon": "star",
+            "verificationType": "MANUAL_IMAGE_REVIEW",
+            "triggerStationId": null,
+            "points": 600,
             "requirement": {
-                "type": "qr_scanned_count",
-                "value": 3
+                "type": "manual_image_review",
+                "value": "Capture a verifiable in-habitat photograph of the Philippine Eagle (Pithecophaga jefferyi) during your trek.",
+                "displayStation": null
             },
-            "rarity": "uncommon",
-            "difficulty": "medium"
-        },
-        {
-            "id": "zero_waste",
-            "name": "Zero-Waste Trekker",
-            "description": "True adventurers protect the trails they love. Your zero-waste journey reflects a heart that respects both nature and future trekkers.",
-            "category": "conservation",
-            "icon": "delete",
-            "requirement": {
-                "type": "no_violation",
-                "value": true
-            },
-            "rarity": "rare",
-            "difficulty": "medium"
-        },
-        {
-            "id": "lnt_advocate",
-            "name": "Leave No Trace Advocate",
-            "description": "You walked the trail with intention, respect, and discipline—leaving nothing behind but footprints and taking nothing but memories.",
-            "category": "conservation",
-            "icon": "report",
-            "requirement": {
-                "type": "gps_track_compliant",
-                "value": true
-            },
-            "rarity": "rare",
+            "rarity": "legendary",
             "difficulty": "hard"
-        },
-        {
-            "id": "stations_reached_5",
-            "name": "Five Stations Completed",
-            "description": "Reaching five stations is no accident—it's the result of steady steps, quiet strength, and an unshaken spirit.",
-            "category": "distance_elevation",
-            "icon": "route",
-            "requirement": {
-                "type": "stations_reached",
-                "value": 5
-            },
-            "rarity": "uncommon",
-            "difficulty": "medium"
-        },
-        {
-            "id": "distance10k",
-            "name": "10km Milestone",
-            "description": "Ten kilometers is not just distance—it's persistence measured in footsteps, sweat, and determination.",
-            "category": "distance_elevation",
-            "icon": "public",
-            "requirement": {
-                "type": "total_distance_km",
-                "value": 10
-            },
-            "rarity": "rare",
-            "difficulty": "hard"
-        },
-        {
-            "id": "elevation500",
-            "name": "Elevation Gain 500m",
-            "description": "Climbing 500 meters means you've risen above challenges—literally and figuratively. Higher steps lead to greater views.",
-            "category": "distance_elevation",
-            "icon": "trending_up",
-            "requirement": {
-                "type": "total_elevation_m",
-                "value": 500
-            },
-            "rarity": "uncommon",
-            "difficulty": "medium"
         }
     ],
     "categories": [
@@ -266,11 +276,6 @@
             "id": "trail_completion",
             "name": "Trail Completion",
             "description": "Badges earned through courage, exploration, and progression along the Hamiguitan trail."
-        },
-        {
-            "id": "distance_elevation",
-            "name": "Distance & Elevation",
-            "description": "Milestones that celebrate commitment, endurance, and the steady rise toward your goals."
         },
         {
             "id": "biodiversity",
@@ -281,38 +286,19 @@
             "id": "conservation",
             "name": "Conservation & Stewardship",
             "description": "Badges honoring those who trek thoughtfully and protect the trails they explore."
-        },
-        {
-            "id": "social",
-            "name": "Social & Community",
-            "description": "Marks of shared experiences, camaraderie, and uplifting fellow trekkers."
-        },
-        {
-            "id": "challenge",
-            "name": "Challenge",
-            "description": "Prestigious badges for trekkers who push beyond limits and embrace adventure."
         }
     ],
+    "tiers": {
+        "bronze":   { "label": "Bronze",   "color": "#CD7F32" },
+        "silver":   { "label": "Silver",   "color": "#8E9AAF" },
+        "gold":     { "label": "Gold",     "color": "#FFB800" },
+        "platinum": { "label": "Platinum", "color": "#7C3AED" }
+    },
     "rarity_levels": {
-        "common": {
-            "color": "#9E9E9E",
-            "name": "Common"
-        },
-        "uncommon": {
-            "color": "#4CAF50",
-            "name": "Uncommon"
-        },
-        "rare": {
-            "color": "#2196F3",
-            "name": "Rare"
-        },
-        "epic": {
-            "color": "#9C27B0",
-            "name": "Epic"
-        },
-        "legendary": {
-            "color": "#FF9800",
-            "name": "Legendary"
-        }
+        "common":    { "color": "#9E9E9E", "name": "Common" },
+        "uncommon":  { "color": "#4CAF50", "name": "Uncommon" },
+        "rare":      { "color": "#2196F3", "name": "Rare" },
+        "epic":      { "color": "#9C27B0", "name": "Epic" },
+        "legendary": { "color": "#FF9800", "name": "Legendary" }
     }
 }

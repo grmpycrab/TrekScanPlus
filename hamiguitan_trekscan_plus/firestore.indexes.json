@@ -112,6 +112,38 @@
           "mode": "ASCENDING"
         }
       ]
+    },
+    {
+      "collectionGroup": "badge_claims",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "userId",
+          "mode": "ASCENDING"
+        },
+        {
+          "fieldPath": "badgeId",
+          "mode": "ASCENDING"
+        },
+        {
+          "fieldPath": "submittedAt",
+          "mode": "DESCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "badge_claims",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "status",
+          "mode": "ASCENDING"
+        },
+        {
+          "fieldPath": "submittedAt",
+          "mode": "DESCENDING"
+        }
+      ]
     }
   ],
   "fieldOverrides": []

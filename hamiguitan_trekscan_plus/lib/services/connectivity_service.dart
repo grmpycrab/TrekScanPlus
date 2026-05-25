@@ -67,6 +67,19 @@ class ConnectivityService {
     _controller.add(status);
   }
 
+  // Cycles between simulated offline and the last real connectivity state.
+  // Restricted to debug builds only; no-ops in release.
+  bool _debugOfflineActive = false;
+  bool get isDebugOfflineActive => _debugOfflineActive;
+
+  void debugToggleOffline() {
+    if (!kDebugMode) return;
+    _debugOfflineActive = !_debugOfflineActive;
+    _updateStatus(
+      _debugOfflineActive ? ConnectionStatus.offline : ConnectionStatus.online,
+    );
+  }
+
   void dispose() {
     _connectivitySub?.cancel();
     _connectivitySub = null;

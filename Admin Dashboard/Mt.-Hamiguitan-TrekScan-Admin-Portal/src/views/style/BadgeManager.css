@@ -1,0 +1,596 @@
+/* ─── BadgeManager page ────────────────────────────────────────────────────── */
+
+.bm-container {
+  padding: 24px;
+  min-height: 100%;
+  background: #f9fafb;
+}
+
+/* ── Tabs ────────────────────────────────────────────────────────────────── */
+.bm-tabs {
+  display: flex;
+  gap: 4px;
+  border-bottom: 2px solid #e5e7eb;
+  margin-bottom: 24px;
+}
+
+.bm-tab {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 20px;
+  font-size: 14px;
+  font-weight: 500;
+  color: #6b7280;
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -2px;
+  cursor: pointer;
+  transition: color 0.15s, border-color 0.15s;
+}
+
+.bm-tab:hover { color: #111827; }
+
+.bm-tab-active {
+  color: #7c3aed;
+  border-bottom-color: #7c3aed;
+  font-weight: 600;
+}
+
+.bm-tab-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 6px;
+  border-radius: 10px;
+  background: #e5e7eb;
+  color: #374151;
+  font-size: 11px;
+  font-weight: 700;
+  transition: background 0.15s, color 0.15s;
+}
+
+.bm-tab-active .bm-tab-badge {
+  background: #7c3aed;
+  color: #fff;
+}
+
+/* ── Section header ──────────────────────────────────────────────────────── */
+.bm-section-title {
+  font-size: 17px;
+  font-weight: 700;
+  color: #111827;
+  margin: 0 0 4px;
+}
+
+.bm-section-sub {
+  font-size: 13px;
+  color: #6b7280;
+  margin: 0 0 20px;
+}
+
+/* ── Creator form ────────────────────────────────────────────────────────── */
+.bm-creator-card {
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 14px;
+  padding: 24px;
+  max-width: 560px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.bm-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.bm-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: #374151;
+}
+
+.bm-input,
+.bm-select,
+.bm-textarea {
+  padding: 10px 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  font-size: 14px;
+  font-family: inherit;
+  color: #111827;
+  background: #fff;
+  outline: none;
+  transition: border-color 0.15s;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.bm-input:focus,
+.bm-select:focus,
+.bm-textarea:focus { border-color: #7c3aed; }
+
+.bm-textarea { resize: vertical; min-height: 80px; }
+
+.bm-field-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.bm-btn-create {
+  align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 22px;
+  border-radius: 8px;
+  border: none;
+  background: #7c3aed;
+  color: #fff;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s, opacity 0.15s;
+}
+
+.bm-btn-create:hover:not(:disabled) { background: #6d28d9; }
+.bm-btn-create:disabled { opacity: 0.5; cursor: not-allowed; }
+
+/* Badge definition list */
+.bm-def-list {
+  margin-top: 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.bm-def-list-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 4px;
+}
+
+.bm-def-item {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  padding: 12px 16px;
+}
+
+.bm-def-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  background: #f3e8ff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  font-size: 16px;
+}
+
+.bm-def-info { flex: 1; min-width: 0; }
+
+.bm-def-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: #111827;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.bm-def-meta {
+  display: flex;
+  gap: 8px;
+  margin-top: 2px;
+  flex-wrap: wrap;
+}
+
+.bm-def-pill {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 20px;
+}
+
+.bm-def-pill-scan     { background: #dbeafe; color: #1d4ed8; }
+.bm-def-pill-manual   { background: #fce7f3; color: #9d174d; }
+.bm-def-pill-pts      { background: #f3e8ff; color: #6d28d9; }
+.bm-def-pill-inactive { background: #f3f4f6; color: #9ca3af; }
+
+.bm-def-toggle {
+  padding: 5px 12px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  border: 1px solid #e5e7eb;
+  background: #f9fafb;
+  color: #6b7280;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background 0.15s;
+}
+
+.bm-def-toggle:hover { background: #f3f4f6; }
+
+/* ── Claims queue ────────────────────────────────────────────────────────── */
+.bm-filter-row {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+
+.bm-filter-btn {
+  padding: 6px 16px;
+  border-radius: 20px;
+  border: 1px solid #e5e7eb;
+  background: #fff;
+  font-size: 13px;
+  font-weight: 500;
+  color: #6b7280;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.bm-filter-btn:hover { border-color: #7c3aed; color: #7c3aed; }
+
+.bm-filter-btn-active {
+  background: #7c3aed;
+  border-color: #7c3aed;
+  color: #fff;
+  font-weight: 600;
+}
+
+/* Loading / empty */
+.bm-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 80px 0;
+  color: #6b7280;
+}
+
+.bm-spinner {
+  width: 36px;
+  height: 36px;
+  border: 3px solid #e5e7eb;
+  border-top-color: #7c3aed;
+  border-radius: 50%;
+  animation: bm-spin 0.7s linear infinite;
+}
+
+@keyframes bm-spin { to { transform: rotate(360deg); } }
+
+.bm-empty {
+  text-align: center;
+  padding: 80px 0;
+  color: #9ca3af;
+}
+
+.bm-empty-icon { font-size: 40px; margin-bottom: 12px; }
+.bm-empty-title { font-size: 18px; font-weight: 600; color: #374151; margin-bottom: 4px; }
+.bm-empty-sub   { font-size: 14px; }
+
+/* Claims grid */
+.bm-claims-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+  gap: 16px;
+}
+
+/* Claim card */
+.bm-claim-card {
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 14px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  transition: box-shadow 0.15s;
+}
+
+.bm-claim-card:hover { box-shadow: 0 4px 16px rgba(0,0,0,0.08); }
+.bm-claim-card-busy  { opacity: 0.55; pointer-events: none; }
+
+.bm-claim-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 16px 10px;
+}
+
+.bm-claim-avatar {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  overflow: hidden;
+  background: #f3e8ff;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.bm-claim-avatar img { width: 100%; height: 100%; object-fit: cover; }
+
+.bm-claim-avatar-initials {
+  font-size: 15px;
+  font-weight: 700;
+  color: #7c3aed;
+}
+
+.bm-claim-meta { flex: 1; min-width: 0; }
+
+.bm-claim-user {
+  font-size: 14px;
+  font-weight: 600;
+  color: #111827;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.bm-claim-date { font-size: 12px; color: #9ca3af; }
+
+.bm-status-badge {
+  padding: 3px 10px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.bm-status-pending  { background: #fef3c7; color: #92400e; }
+.bm-status-approved { background: #dcfce7; color: #166534; }
+.bm-status-rejected { background: #fee2e2; color: #991b1b; }
+
+.bm-claim-badge-name {
+  padding: 0 16px 10px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #7c3aed;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* Proof image */
+.bm-claim-image {
+  width: 100%;
+  height: 200px;
+  object-fit: cover;
+  display: block;
+  background: #f3f4f6;
+  cursor: zoom-in;
+  transition: opacity 0.15s;
+}
+
+.bm-claim-image:hover { opacity: 0.92; }
+
+/* Rejection note on card */
+.bm-claim-rejection {
+  margin: 10px 16px 0;
+  padding: 10px 12px;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 8px;
+  font-size: 13px;
+  color: #7f1d1d;
+}
+
+.bm-claim-rejection-label {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+  margin-bottom: 3px;
+}
+
+/* Card actions */
+.bm-claim-actions {
+  display: flex;
+  gap: 8px;
+  padding: 12px 16px 14px;
+}
+
+.bm-btn-approve,
+.bm-btn-reject {
+  flex: 1;
+  padding: 9px 0;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  transition: background 0.15s, opacity 0.15s;
+}
+
+.bm-btn-approve {
+  background: #22c55e;
+  color: #fff;
+}
+
+.bm-btn-approve:hover:not(:disabled) { background: #16a34a; }
+
+.bm-btn-reject {
+  background: #fee2e2;
+  color: #dc2626;
+  border: 1px solid #fecaca;
+}
+
+.bm-btn-reject:hover:not(:disabled) { background: #fecaca; }
+
+.bm-btn-approve:disabled,
+.bm-btn-reject:disabled { opacity: 0.4; cursor: not-allowed; }
+
+/* ── Reject modal ────────────────────────────────────────────────────────── */
+.bm-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.45);
+  z-index: 1200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+}
+
+.bm-modal {
+  background: #fff;
+  border-radius: 14px;
+  padding: 28px 24px;
+  width: 100%;
+  max-width: 460px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.bm-modal-title {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 700;
+  color: #111827;
+}
+
+.bm-modal-sub {
+  margin: 0;
+  font-size: 13px;
+  color: #6b7280;
+}
+
+.bm-preset-reasons {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.bm-preset-btn {
+  text-align: left;
+  padding: 9px 12px;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+  background: #f9fafb;
+  font-size: 13px;
+  color: #374151;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+}
+
+.bm-preset-btn:hover { border-color: #d1d5db; background: #f3f4f6; }
+
+.bm-preset-btn-active {
+  border-color: #dc2626;
+  background: #fef2f2;
+  color: #dc2626;
+  font-weight: 500;
+}
+
+.bm-modal-textarea {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  font-size: 14px;
+  font-family: inherit;
+  color: #111827;
+  resize: vertical;
+  outline: none;
+  box-sizing: border-box;
+}
+
+.bm-modal-textarea:focus { border-color: #7c3aed; }
+
+.bm-modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.bm-btn-cancel {
+  padding: 9px 18px;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+  background: #fff;
+  font-size: 14px;
+  font-weight: 500;
+  color: #374151;
+  cursor: pointer;
+}
+
+.bm-btn-cancel:hover { background: #f3f4f6; }
+
+.bm-btn-confirm-reject {
+  padding: 9px 18px;
+  border-radius: 8px;
+  border: none;
+  background: #dc2626;
+  font-size: 14px;
+  font-weight: 600;
+  color: #fff;
+  cursor: pointer;
+  transition: background 0.15s, opacity 0.15s;
+}
+
+.bm-btn-confirm-reject:hover:not(:disabled) { background: #b91c1c; }
+.bm-btn-confirm-reject:disabled { opacity: 0.4; cursor: not-allowed; }
+
+/* ── Lightbox ────────────────────────────────────────────────────────────── */
+.bm-lightbox {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.9);
+  z-index: 1400;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: zoom-out;
+}
+
+.bm-lightbox-img {
+  max-width: 90vw;
+  max-height: 88vh;
+  border-radius: 8px;
+  object-fit: contain;
+}
+
+.bm-lightbox-close {
+  position: absolute;
+  top: 16px;
+  right: 20px;
+  background: rgba(255,255,255,0.15);
+  border: none;
+  color: #fff;
+  font-size: 20px;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.bm-lightbox-close:hover { background: rgba(255,255,255,0.3); }
+
+/* ── Responsive ──────────────────────────────────────────────────────────── */
+@media (max-width: 640px) {
+  .bm-container { padding: 16px; }
+  .bm-claims-grid { grid-template-columns: 1fr; }
+  .bm-tab { padding: 8px 14px; font-size: 13px; }
+  .bm-field-row { grid-template-columns: 1fr; }
+}

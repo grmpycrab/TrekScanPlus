@@ -264,13 +264,13 @@ service cloud.firestore {
 
     // Group bookings collection
     match /groupBookings/{groupId} {
-      // Authenticated users can read open/approved groups (for discovery)
-      allow read: if request.auth != null && (
-        resource.data.status == 'open' ||
-        resource.data.status == 'approved' ||
-        resource.data.organizerId == request.auth.uid ||
-        isAdmin()
-      );
+      // Any authenticated user may read group bookings.
+      // This covers: individual document reads, the Discover feed query
+      // (filtered by status == 'open'), and the calendar/availability queries
+      // that range-filter by trekDate across all active statuses.
+      // Sensitive member data lives in the joinRequests subcollection, which
+      // has its own access controls below.
+      allow read: if request.auth != null;
 
       // Authenticated users can create a group booking as the organizer
       allow create: if request.auth != null &&
@@ -336,6 +336,23 @@ service cloud.firestore {
         resource.data.userId == request.auth.uid || isAdmin()
       );
       allow delete: if request.auth != null && isAdmin();
+    }
+
+    // Badge claims — submitted by users, reviewed by admins
+    match /badge_claims/{claimId} {
+      allow create: if request.auth != null
+        && request.resource.data.userId == request.auth.uid;
+      allow read: if request.auth != null && (
+        resource.data.userId == request.auth.uid || isAdmin()
+      );
+      allow update: if request.auth != null && isAdmin();
+      allow delete: if request.auth != null && isAdmin();
+    }
+
+    // Badge definitions — custom event/admin-created badges
+    match /badge_definitions/{badgeId} {
+      allow read: if request.auth != null;
+      allow write: if request.auth != null && isAdmin();
     }
 
     // Station reviews: top-level list + per-review subcollection

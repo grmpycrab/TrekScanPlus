@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
-import { Calendar, Shield, Award, MapPin, DollarSign, ChevronRight, ArrowLeft, PhilippinePeso } from 'lucide-react';
+import { Calendar, Shield, Award, MapPin, ChevronRight, ArrowLeft, PhilippinePeso, Medal } from 'lucide-react';
 import Utility from './Utility';
 import PostModeration from './PostModeration';
 import Certificates from './Certificates';
 import StationActivity from './StationActivity';
 import PricingUtility from './PricingUtility';
+import BadgeManager from './BadgeManager';
 import '../style/UtilityCenter.css';
 
 const MODULES = [
@@ -58,6 +59,16 @@ const MODULES = [
     iconBg: '#fdf4ff',
     iconColor: '#9333ea',
   },
+  {
+    id: 'badges',
+    title: 'Badge Manager',
+    category: 'Gamification',
+    description:
+      'Create event and challenge badges on the fly, then review and approve trekker-submitted proof images for manual-review achievement claims.',
+    Icon: Medal,
+    iconBg: '#f5f3ff',
+    iconColor: '#7c3aed',
+  },
 ];
 
 function UtilityCenter({ adminName }) {
@@ -83,6 +94,7 @@ function UtilityCenter({ adminName }) {
         {activeModule === 'moderation'   && <PostModeration adminName={adminName} />}
         {activeModule === 'certificates' && <Certificates adminName={adminName} />}
         {activeModule === 'stations'     && <StationActivity />}
+        {activeModule === 'badges'       && <BadgeManager adminName={adminName} />}
       </div>
     );
   }

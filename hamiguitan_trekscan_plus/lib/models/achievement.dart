@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'badge.dart';
 
 class Achievement {
   final String id;
@@ -9,9 +10,15 @@ class Achievement {
   final Map<String, dynamic> requirement;
   final String rarity;
   final String difficulty;
+  final String tier;
+  final VerificationType verificationType;
+  final String? triggerStationId; // QR station ID that awards this badge
+  final int points;
   final bool isUnlocked;
   final DateTime? unlockedAt;
-  final bool isNotificationShown; // Track if notification was shown to user
+  final bool isNotificationShown;
+  final String? claimStatus; // null | PENDING | APPROVED | REJECTED
+  final String syncStatus; // SYNCED | PENDING_SYNC
 
   const Achievement({
     required this.id,
@@ -22,12 +29,19 @@ class Achievement {
     required this.requirement,
     required this.rarity,
     required this.difficulty,
+    this.tier = 'bronze',
+    this.verificationType = VerificationType.scan,
+    this.triggerStationId,
+    this.points = 0,
     this.isUnlocked = false,
     this.unlockedAt,
     this.isNotificationShown = false,
+    this.claimStatus,
+    this.syncStatus = 'SYNCED',
   });
 
   factory Achievement.fromJson(Map<String, dynamic> json) {
+    final vtRaw = json['verificationType'] as String? ?? 'SCAN';
     return Achievement(
       id: json['id'] as String,
       name: json['name'] as String,
@@ -37,11 +51,19 @@ class Achievement {
       requirement: json['requirement'] as Map<String, dynamic>,
       rarity: json['rarity'] as String,
       difficulty: json['difficulty'] as String? ?? 'medium',
+      tier: json['tier'] as String? ?? 'bronze',
+      verificationType: vtRaw == 'MANUAL_IMAGE_REVIEW'
+          ? VerificationType.manualImageReview
+          : VerificationType.scan,
+      triggerStationId: json['triggerStationId'] as String?,
+      points: json['points'] as int? ?? 0,
       isUnlocked: json['isUnlocked'] as bool? ?? false,
       unlockedAt: json['unlockedAt'] != null
           ? DateTime.parse(json['unlockedAt'] as String)
           : null,
       isNotificationShown: json['isNotificationShown'] as bool? ?? false,
+      claimStatus: json['claimStatus'] as String?,
+      syncStatus: json['syncStatus'] as String? ?? 'SYNCED',
     );
   }
 
@@ -55,9 +77,17 @@ class Achievement {
       'requirement': requirement,
       'rarity': rarity,
       'difficulty': difficulty,
+      'tier': tier,
+      'verificationType': verificationType == VerificationType.manualImageReview
+          ? 'MANUAL_IMAGE_REVIEW'
+          : 'SCAN',
+      'triggerStationId': triggerStationId,
+      'points': points,
       'isUnlocked': isUnlocked,
       'unlockedAt': unlockedAt?.toIso8601String(),
       'isNotificationShown': isNotificationShown,
+      'claimStatus': claimStatus,
+      'syncStatus': syncStatus,
     };
   }
 
@@ -70,9 +100,15 @@ class Achievement {
     Map<String, dynamic>? requirement,
     String? rarity,
     String? difficulty,
+    String? tier,
+    VerificationType? verificationType,
+    String? triggerStationId,
+    int? points,
     bool? isUnlocked,
     DateTime? unlockedAt,
     bool? isNotificationShown,
+    String? claimStatus,
+    String? syncStatus,
   }) {
     return Achievement(
       id: id ?? this.id,
@@ -83,81 +119,56 @@ class Achievement {
       requirement: requirement ?? this.requirement,
       rarity: rarity ?? this.rarity,
       difficulty: difficulty ?? this.difficulty,
+      tier: tier ?? this.tier,
+      verificationType: verificationType ?? this.verificationType,
+      triggerStationId: triggerStationId ?? this.triggerStationId,
+      points: points ?? this.points,
       isUnlocked: isUnlocked ?? this.isUnlocked,
       unlockedAt: unlockedAt ?? this.unlockedAt,
       isNotificationShown: isNotificationShown ?? this.isNotificationShown,
+      claimStatus: claimStatus ?? this.claimStatus,
+      syncStatus: syncStatus ?? this.syncStatus,
     );
   }
 
   Color getColor() {
     switch (rarity) {
-      case 'common':
-        return const Color(0xFF9E9E9E);
-      case 'uncommon':
-        return const Color(0xFF4CAF50);
-      case 'rare':
-        return const Color(0xFF2196F3);
-      case 'epic':
-        return const Color(0xFF9C27B0);
-      case 'legendary':
-        return const Color(0xFFFF9800);
-      default:
-        return Colors.grey;
+      case 'common':    return const Color(0xFF9E9E9E);
+      case 'uncommon':  return const Color(0xFF4CAF50);
+      case 'rare':      return const Color(0xFF2196F3);
+      case 'epic':      return const Color(0xFF9C27B0);
+      case 'legendary': return const Color(0xFFFF9800);
+      default: return Colors.grey;
     }
   }
 
   IconData getIconData() {
     switch (icon) {
-      case 'footprints':
-        return Icons.directions_walk;
-      case 'mountain':
-        return Icons.landscape;
-      case 'compass':
-        return Icons.explore;
-      case 'timer':
-        return Icons.timer;
-      case 'sunrise':
-        return Icons.wb_sunny;
-      case 'route':
-        return Icons.route;
-      case 'medal':
-        return Icons.military_tech;
-      case 'trending_up':
-        return Icons.trending_up;
-      case 'camera':
-        return Icons.camera_alt;
-      case 'star':
-        return Icons.star;
-      case 'forest':
-        return Icons.forest;
-      case 'flower':
-        return Icons.local_florist;
-      case 'eco':
-        return Icons.eco;
-      case 'report':
-        return Icons.report_problem;
-      case 'delete':
-        return Icons.delete_outline;
-      case 'group':
-        return Icons.group;
-      case 'person':
-        return Icons.person;
-      case 'photo_camera':
-        return Icons.photo_camera;
-      case 'calendar':
-        return Icons.calendar_today;
-      case 'trophy':
-        return Icons.emoji_events;
-      case 'event':
-        return Icons.event;
-      case 'public':
-        return Icons.public;
-      case 'explore':
-        return Icons.explore;
-      case 'landscape':
-        return Icons.landscape;
-      default:
-        return Icons.emoji_events;
+      case 'footprints':    return Icons.directions_walk;
+      case 'mountain':      return Icons.landscape;
+      case 'compass':       return Icons.explore;
+      case 'timer':         return Icons.timer;
+      case 'sunrise':       return Icons.wb_sunny;
+      case 'route':         return Icons.route;
+      case 'medal':         return Icons.military_tech;
+      case 'trending_up':   return Icons.trending_up;
+      case 'camera':        return Icons.camera_alt;
+      case 'star':          return Icons.star;
+      case 'forest':        return Icons.forest;
+      case 'flower':        return Icons.local_florist;
+      case 'eco':           return Icons.eco;
+      case 'report':        return Icons.report_problem;
+      case 'delete':        return Icons.delete_outline;
+      case 'group':         return Icons.group;
+      case 'person':        return Icons.person;
+      case 'photo_camera':  return Icons.photo_camera;
+      case 'calendar':      return Icons.calendar_today;
+      case 'trophy':        return Icons.emoji_events;
+      case 'event':         return Icons.event;
+      case 'public':        return Icons.public;
+      case 'explore':       return Icons.explore;
+      case 'landscape':     return Icons.landscape;
+      default: return Icons.emoji_events;
     }
   }
 }
