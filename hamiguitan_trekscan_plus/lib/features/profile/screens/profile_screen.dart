@@ -362,9 +362,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             children: [
                               Text(
                                 achievement.name,
-                                style: const TextStyle(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.bold,
+                                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                  fontWeight: FontWeight.w600,
+                                  color: colors.text,
                                 ),
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
@@ -407,7 +407,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               if (unlockedAchievements.length > 3)
                 GestureDetector(
                   onTap: () {
-                    _showAllAchievementsDialog();
+                    _showAllAchievementsSheet();
                   },
                   child: Padding(
                     padding: const EdgeInsets.only(top: 8.0),
@@ -416,7 +416,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       style: TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.w500,
-                        color: Colors.blue[600],
+                        color: context.colors.primary,
                       ),
                     ),
                   ),
@@ -444,158 +444,211 @@ class _ProfileScreenState extends State<ProfileScreen> {
     }
   }
 
-  void _showAllAchievementsDialog() {
+  void _showAllAchievementsSheet() {
     final allAchievements = _vm.achievementService.getAllAchievements();
     final unlockedIds = _vm.achievementService
         .getUnlockedAchievements()
         .map((a) => a.id)
         .toSet();
+    final total    = allAchievements.length;
+    final unlocked = unlockedIds.length;
+    final progress = total > 0 ? unlocked / total : 0.0;
 
-    showDialog(
+    showModalBottomSheet(
       context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
       builder: (context) {
         final colors = context.colors;
-        return Dialog(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Padding(
-                padding: const EdgeInsets.all(16),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    const Text(
-                      'All Achievements',
-                      style: TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                      ),
+        final tt = Theme.of(context).textTheme;
+        return DraggableScrollableSheet(
+          initialChildSize: 0.72,
+          minChildSize: 0.45,
+          maxChildSize: 0.95,
+          builder: (_, scrollCtrl) => Container(
+            decoration: BoxDecoration(
+              color: colors.surface,
+              borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+            ),
+            child: Column(
+              children: [
+                // Drag handle
+                Padding(
+                  padding: const EdgeInsets.only(top: 10, bottom: 4),
+                  child: Container(
+                    width: 36, height: 4,
+                    decoration: BoxDecoration(
+                      color: colors.borderLight,
+                      borderRadius: BorderRadius.circular(2),
                     ),
-                    IconButton(
-                      icon: const Icon(Icons.close),
-                      onPressed: () => Navigator.pop(context),
-                    ),
-                  ],
+                  ),
                 ),
-              ),
-              Expanded(
-                child: ListView.builder(
-                  itemCount: allAchievements.length,
-                  itemBuilder: (context, index) {
-                    final achievement = allAchievements[index];
-                    final isUnlocked = unlockedIds.contains(achievement.id);
-
-                    return Padding(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 8,
+                // ── Stats header ───────────────────────────────────────────
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 8, 20, 16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            'All Achievements',
+                            style: tt.titleLarge?.copyWith(
+                              fontWeight: FontWeight.w700,
+                              color: colors.text,
+                            ),
+                          ),
+                          IconButton(
+                            icon: Icon(Icons.close_rounded, color: colors.iconMuted),
+                            onPressed: () => Navigator.pop(context),
+                            visualDensity: VisualDensity.compact,
+                          ),
+                        ],
                       ),
-                      child: Container(
-                        padding: const EdgeInsets.all(12),
-                        decoration: BoxDecoration(
-                          color: isUnlocked
-                              ? achievement.getColor().withValues(alpha: 0.1)
-                              : colors.background,
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(
-                            color: isUnlocked
-                                ? achievement.getColor().withValues(alpha: 0.3)
-                                : colors.border,
+                      const SizedBox(height: 10),
+                      Row(
+                        children: [
+                          Text(
+                            '$unlocked / $total unlocked',
+                            style: tt.bodySmall?.copyWith(
+                              fontWeight: FontWeight.w600,
+                              color: colors.textSecondary,
+                            ),
+                          ),
+                          const Spacer(),
+                          Text(
+                            '${(progress * 100).round()}%',
+                            style: tt.bodySmall?.copyWith(
+                              fontWeight: FontWeight.w700,
+                              color: colors.primary,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 6),
+                      TweenAnimationBuilder<double>(
+                        tween: Tween(begin: 0, end: progress),
+                        duration: const Duration(milliseconds: 700),
+                        curve: Curves.easeOutCubic,
+                        builder: (_, value, __) => ClipRRect(
+                          borderRadius: BorderRadius.circular(4),
+                          child: LinearProgressIndicator(
+                            value: value,
+                            minHeight: 6,
+                            backgroundColor: colors.borderLight,
+                            valueColor: AlwaysStoppedAnimation<Color>(colors.primary),
                           ),
                         ),
-                        child: Row(
-                          children: [
-                            Container(
-                              width: 48,
-                              height: 48,
-                              decoration: BoxDecoration(
-                                shape: BoxShape.circle,
-                                color: isUnlocked
-                                    ? achievement.getColor().withValues(
-                                        alpha: 0.2,
-                                      )
-                                    : colors.border,
-                              ),
-                              child: isUnlocked
-                                  ? Icon(
-                                      achievement.getIconData(),
-                                      color: achievement.getColor(),
-                                      size: 24,
-                                    )
-                                  : Icon(
-                                      Icons.lock,
-                                      color: colors.textSecondary,
-                                      size: 24,
-                                    ),
+                      ),
+                    ],
+                  ),
+                ),
+                Divider(height: 1, thickness: 0.6, color: colors.borderLight),
+                // ── Achievement list ───────────────────────────────────────
+                Expanded(
+                  child: ListView.builder(
+                    controller: scrollCtrl,
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    itemCount: allAchievements.length,
+                    itemBuilder: (context, index) {
+                      final achievement = allAchievements[index];
+                      final isUnlocked = unlockedIds.contains(achievement.id);
+                      return Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 5),
+                        child: Container(
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: isUnlocked
+                                ? achievement.getColor().withValues(alpha: 0.08)
+                                : colors.background,
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(
+                              color: isUnlocked
+                                  ? achievement.getColor().withValues(alpha: 0.28)
+                                  : colors.border,
                             ),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    achievement.name,
-                                    style: TextStyle(
-                                      fontSize: 14,
-                                      fontWeight: FontWeight.bold,
-                                      color: isUnlocked
-                                          ? Colors.black
-                                          : colors.textSecondary,
-                                    ),
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                  const SizedBox(height: 2),
-                                  if (isUnlocked &&
-                                      achievement.unlockedAt != null)
+                          ),
+                          child: Row(
+                            children: [
+                              Container(
+                                width: 46,
+                                height: 46,
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  color: isUnlocked
+                                      ? achievement.getColor().withValues(alpha: 0.18)
+                                      : colors.borderLight,
+                                ),
+                                child: Icon(
+                                  isUnlocked
+                                      ? achievement.getIconData()
+                                      : Icons.lock_outline_rounded,
+                                  color: isUnlocked
+                                      ? achievement.getColor()
+                                      : colors.textSecondary,
+                                  size: 22,
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
                                     Text(
-                                      'Unlocked ${_formatDate(achievement.unlockedAt!)}',
-                                      style: TextStyle(
-                                        fontSize: 12,
-                                        color: colors.textSecondary,
+                                      achievement.name,
+                                      style: tt.bodyMedium?.copyWith(
+                                        fontWeight: FontWeight.w600,
+                                        color: isUnlocked
+                                            ? colors.text
+                                            : colors.textSecondary,
                                       ),
-                                    )
-                                  else if (!isUnlocked)
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                    const SizedBox(height: 2),
                                     Text(
-                                      achievement.description,
-                                      style: TextStyle(
-                                        fontSize: 12,
+                                      isUnlocked && achievement.unlockedAt != null
+                                          ? 'Unlocked ${_formatDate(achievement.unlockedAt!)}'
+                                          : achievement.description,
+                                      style: tt.bodySmall?.copyWith(
                                         color: colors.textSecondary,
                                       ),
                                       maxLines: 1,
                                       overflow: TextOverflow.ellipsis,
                                     ),
-                                ],
-                              ),
-                            ),
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 10,
-                                vertical: 4,
-                              ),
-                              decoration: BoxDecoration(
-                                color: isUnlocked
-                                    ? achievement.getColor()
-                                    : Colors.grey[400],
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              child: Text(
-                                achievement.rarity.toUpperCase(),
-                                style: const TextStyle(
-                                  fontSize: 10,
-                                  fontWeight: FontWeight.w600,
-                                  color: Colors.white,
+                                  ],
                                 ),
                               ),
-                            ),
-                          ],
+                              const SizedBox(width: 8),
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 8, vertical: 3),
+                                decoration: BoxDecoration(
+                                  color: isUnlocked
+                                      ? achievement.getColor()
+                                      : colors.borderLight,
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                                child: Text(
+                                  achievement.rarity.toUpperCase(),
+                                  style: tt.labelSmall?.copyWith(
+                                    fontWeight: FontWeight.w700,
+                                    color: isUnlocked
+                                        ? Colors.white
+                                        : colors.textTertiary,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
-                      ),
-                    );
-                  },
+                      );
+                    },
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         );
       },

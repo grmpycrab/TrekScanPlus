@@ -86,6 +86,11 @@ class BadgeClaimService {
   static final _auth = FirebaseAuth.instance;
   static const _stagedClaimsKey = 'staged_badge_claims';
 
+  // Opened once — never re-instantiated per operation.
+  static SharedPreferences? _prefsInstance;
+  static Future<SharedPreferences> _getPrefs() async =>
+      _prefsInstance ??= await SharedPreferences.getInstance();
+
   // ── Online query ──────────────────────────────────────────────────────────
 
   // Requires a composite Firestore index on badge_claims: (userId ASC, badgeId ASC, submittedAt DESC)
@@ -168,7 +173,7 @@ class BadgeClaimService {
   }
 
   static Future<List<StagedBadgeClaim>> getStagedClaims() async {
-    final prefs = await SharedPreferences.getInstance();
+    final prefs = await _getPrefs();
     final raw = prefs.getString(_stagedClaimsKey);
     if (raw == null) return [];
     try {
@@ -218,7 +223,7 @@ class BadgeClaimService {
       stagedAt: DateTime.now(),
     ));
 
-    final prefs = await SharedPreferences.getInstance();
+    final prefs = await _getPrefs();
     await prefs.setString(
       _stagedClaimsKey,
       jsonEncode(filtered.map((c) => c.toJson()).toList()),
@@ -238,7 +243,7 @@ class BadgeClaimService {
     AppLogger.i('[BadgeClaimService] uploadStagedClaims: ${claims.length} staged claim(s) found');
     if (claims.isEmpty) return;
 
-    final prefs = await SharedPreferences.getInstance();
+    final prefs = await _getPrefs();
     final remaining = <StagedBadgeClaim>[];
 
     for (final claim in claims) {

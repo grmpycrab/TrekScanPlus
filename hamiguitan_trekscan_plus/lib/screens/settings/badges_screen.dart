@@ -368,12 +368,15 @@ class _GridView extends StatelessWidget {
         final badge = badges[index];
         final isAcquired = acquiredBadges.containsKey(badge.id);
         final acquiredDate = acquiredBadges[badge.id];
-        return BadgeCard(
-          badge: badge,
-          isAcquired: isAcquired,
-          acquiredDate: acquiredDate,
-          isListView: false,
-          onTap: () => onTap(badge),
+        return RepaintBoundary(
+          child: BadgeCard(
+            key: ValueKey(badge.id),
+            badge: badge,
+            isAcquired: isAcquired,
+            acquiredDate: acquiredDate,
+            isListView: false,
+            onTap: () => onTap(badge),
+          ),
         );
       },
     );
@@ -404,12 +407,15 @@ class _ListView extends StatelessWidget {
         final badge = badges[index];
         final isAcquired = acquiredBadges.containsKey(badge.id);
         final acquiredDate = acquiredBadges[badge.id];
-        return BadgeCard(
-          badge: badge,
-          isAcquired: isAcquired,
-          acquiredDate: acquiredDate,
-          isListView: true,
-          onTap: () => onTap(badge),
+        return RepaintBoundary(
+          child: BadgeCard(
+            key: ValueKey(badge.id),
+            badge: badge,
+            isAcquired: isAcquired,
+            acquiredDate: acquiredDate,
+            isListView: true,
+            onTap: () => onTap(badge),
+          ),
         );
       },
     );

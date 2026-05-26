@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:io';
+import 'dart:ui' show ImageFilter;
 import 'package:flutter/foundation.dart';
 import 'package:image/image.dart' as img;
 import 'package:flutter/material.dart';
@@ -13,6 +14,30 @@ import '../../services/badge_sync_engine.dart';
 import '../../services/connectivity_service.dart';
 import '../../services/station_service.dart';
 import '../../theme/app_theme.dart';
+
+// ── Semantic color constants ─────────────────────────────────────────────────
+const _kSuccess     = Color(0xFF22C55E);
+const _kSuccessDark = Color(0xFF15803D);
+const _kAmber       = Color(0xFFF59E0B);
+const _kAmberDark   = Color(0xFFB45309);
+const _kRed         = Color(0xFFEF4444);
+const _kBlue        = Color(0xFF3B82F6);
+const _kBlueDark    = Color(0xFF1D4ED8);
+
+// ── Tier accent gradients ─────────────────────────────────────────────────────
+LinearGradient _tierGradient(String tier) {
+  switch (tier) {
+    case 'silver':
+      return const LinearGradient(colors: [Color(0xFFD0D5DE), Color(0xFF8E9AAF), Color(0xFF5A6478)]);
+    case 'gold':
+      return const LinearGradient(colors: [Color(0xFFFFE066), Color(0xFFFFB800), Color(0xFFB87333)]);
+    case 'platinum':
+      return const LinearGradient(colors: [Color(0xFFBB8FFF), Color(0xFF7C3AED), Color(0xFF4C1D95)]);
+    case 'bronze':
+    default:
+      return const LinearGradient(colors: [Color(0xFFE8A060), Color(0xFFCD7F32), Color(0xFF9A5C1A)]);
+  }
+}
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // BADGE CARD — supports both Grid and List layouts
@@ -77,82 +102,103 @@ class _GridCard extends StatelessWidget {
           ),
           child: Stack(
             children: [
-              Positioned(
-                top: 0, left: 0, right: 0,
-                child: Container(
-                  height: 3,
-                  decoration: BoxDecoration(
-                    color: isAcquired ? tierColor : colors.borderLight,
-                    borderRadius: const BorderRadius.vertical(top: Radius.circular(14)),
+              // Card body — ClipRRect ensures accent bar respects rounded corners
+              Positioned.fill(
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(14),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      // Tier accent bar: always visible, muted at 30% when locked
+                      Opacity(
+                        opacity: isAcquired ? 1.0 : 0.3,
+                        child: Container(
+                          height: 3,
+                          decoration: BoxDecoration(
+                            gradient: _tierGradient(badge.tier),
+                          ),
+                        ),
+                      ),
+                      // Expanded so mainAxisAlignment.center is relative to this area only
+                      Expanded(
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Container(
+                                width: 46,
+                                height: 46,
+                                decoration: BoxDecoration(
+                                  color: isAcquired
+                                      ? rarityColor.withValues(alpha: 0.15)
+                                      : colors.surfaceVariant,
+                                  shape: BoxShape.circle,
+                                ),
+                                child: Icon(
+                                  badge.getIconData(),
+                                  color: isAcquired ? rarityColor : colors.iconMuted,
+                                  size: 22,
+                                ),
+                              ),
+                              const SizedBox(height: 6),
+                              Text(
+                                badge.name,
+                                textAlign: TextAlign.center,
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w600,
+                                  color: isAcquired ? colors.text : colors.textSecondary,
+                                  height: 1.25,
+                                ),
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                              const SizedBox(height: 4),
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                                decoration: BoxDecoration(
+                                  color: isAcquired
+                                      ? tierColor.withValues(alpha: 0.12)
+                                      : colors.surfaceVariant,
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: Text(
+                                  badge.tierLabel.toUpperCase(),
+                                  style: TextStyle(
+                                    fontSize: 9,
+                                    fontWeight: FontWeight.w700,
+                                    color: isAcquired ? tierColor : colors.textTertiary,
+                                    letterSpacing: 0.3,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ),
-              Padding(
-                padding: const EdgeInsets.fromLTRB(8, 12, 8, 8),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Container(
-                      width: 46,
-                      height: 46,
-                      decoration: BoxDecoration(
-                        color: isAcquired
-                            ? rarityColor.withValues(alpha: 0.15)
-                            : colors.surfaceVariant,
-                        shape: BoxShape.circle,
-                      ),
-                      child: Icon(
-                        badge.getIconData(),
-                        color: isAcquired ? rarityColor : colors.iconMuted,
-                        size: 22,
-                      ),
-                    ),
-                    const SizedBox(height: 6),
-                    Text(
-                      badge.name,
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w600,
-                        color: isAcquired ? colors.text : colors.textSecondary,
-                        height: 1.25,
-                      ),
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    const SizedBox(height: 4),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
-                      decoration: BoxDecoration(
-                        color: isAcquired
-                            ? tierColor.withValues(alpha: 0.12)
-                            : colors.surfaceVariant,
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Text(
-                        badge.tierLabel.toUpperCase(),
-                        style: TextStyle(
-                          fontSize: 9,
-                          fontWeight: FontWeight.w700,
-                          color: isAcquired ? tierColor : colors.textTertiary,
-                          letterSpacing: 0.3,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
+              // Frosted glass overlay for locked badges
               if (!isAcquired)
                 Positioned.fill(
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: isDark
-                          ? Colors.black.withValues(alpha: 0.45)
-                          : Colors.white.withValues(alpha: 0.6),
-                      borderRadius: BorderRadius.circular(14),
-                    ),
-                    child: Center(
-                      child: Icon(Icons.lock_rounded, color: colors.iconMuted, size: 22),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(14),
+                    child: BackdropFilter(
+                      filter: ImageFilter.blur(sigmaX: 3.5, sigmaY: 3.5),
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: isDark
+                              ? Colors.black.withValues(alpha: 0.35)
+                              : Colors.white.withValues(alpha: 0.45),
+                          borderRadius: BorderRadius.circular(14),
+                        ),
+                        child: Center(
+                          child: Icon(Icons.lock_rounded, color: colors.iconMuted, size: 22),
+                        ),
+                      ),
                     ),
                   ),
                 ),
@@ -203,7 +249,23 @@ class _ListCard extends StatelessWidget {
               ),
             ],
           ),
-          child: Padding(
+          child: Stack(
+            children: [
+              // Tier gradient left accent bar — muted at 30% opacity when locked
+              Positioned(
+                top: 0, bottom: 0, left: 0,
+                child: Opacity(
+                  opacity: isAcquired ? 1.0 : 0.3,
+                  child: Container(
+                    width: 3,
+                    decoration: BoxDecoration(
+                      gradient: _tierGradient(badge.tier),
+                      borderRadius: const BorderRadius.horizontal(left: Radius.circular(12)),
+                    ),
+                  ),
+                ),
+              ),
+              Padding(
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
             child: Row(
               children: [
@@ -274,7 +336,7 @@ class _ListCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
                     if (isAcquired)
-                      Icon(Icons.check_circle_rounded, color: Colors.green.shade400, size: 18)
+                      const Icon(Icons.check_circle_rounded, color: _kSuccess, size: 18)
                     else
                       Icon(Icons.lock_rounded, color: colors.iconMuted, size: 16),
                     if (isAcquired && acquiredDate != null) ...[
@@ -291,9 +353,11 @@ class _ListCard extends StatelessWidget {
               ],
             ),
           ),
-        ),
-      ),
-    );
+        ],         // Stack.children
+      ),           // Stack
+    ),             // Ink
+  ),               // InkWell
+);
   }
 }
 
@@ -640,7 +704,7 @@ class _BadgeDetailScreenState extends State<BadgeDetailScreen> {
                       title: 'Achievement Unlocked',
                       colors: colors,
                       isDark: isDark,
-                      accentColor: Colors.green.shade400,
+                      accentColor: _kSuccess,
                       child: _AcquiredContent(
                         acquiredDate: widget.acquiredDate!,
                         colors: colors,
@@ -952,7 +1016,7 @@ class _StatusRow extends StatelessWidget {
         children: [
           Icon(
             isAcquired ? Icons.check_circle_rounded : Icons.lock_outline_rounded,
-            color: isAcquired ? Colors.green.shade500 : colors.iconMuted,
+            color: isAcquired ? _kSuccess : colors.iconMuted,
             size: 22,
           ),
           const SizedBox(width: 10),
@@ -965,14 +1029,14 @@ class _StatusRow extends StatelessWidget {
                   style: TextStyle(
                     fontSize: 13,
                     fontWeight: FontWeight.w600,
-                    color: isAcquired ? Colors.green.shade600 : colors.textSecondary,
+                    color: isAcquired ? _kSuccessDark : colors.textSecondary,
                   ),
                 ),
                 if (isAcquired && acquiredDate != null) ...[
                   const SizedBox(height: 2),
                   Text(
                     'Earned on ${DateFormat('MMMM d, yyyy').format(acquiredDate!)}',
-                    style: TextStyle(fontSize: 11, color: Colors.green.shade500),
+                    style: TextStyle(fontSize: 11, color: _kSuccess),
                   ),
                 ] else if (!isAcquired) ...[
                   const SizedBox(height: 2),
@@ -1071,7 +1135,7 @@ class _PendingBanner extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const amber = Color(0xFFF59E0B);
+    const amber = _kAmber;
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -1102,7 +1166,7 @@ class _PendingBanner extends StatelessWidget {
                   style: TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.w700,
-                    color: Color(0xFFB45309),
+                    color: _kAmberDark,
                   ),
                 ),
                 const SizedBox(height: 3),
@@ -1129,13 +1193,12 @@ class _ApprovedBanner extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const green = Color(0xFF22C55E);
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: green.withValues(alpha: isDark ? 0.12 : 0.08),
+        color: _kSuccess.withValues(alpha: isDark ? 0.12 : 0.08),
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: green.withValues(alpha: 0.4), width: 0.8),
+        border: Border.all(color: _kSuccess.withValues(alpha: 0.4), width: 0.8),
       ),
       child: Row(
         children: [
@@ -1143,10 +1206,10 @@ class _ApprovedBanner extends StatelessWidget {
             width: 44,
             height: 44,
             decoration: BoxDecoration(
-              color: green.withValues(alpha: 0.15),
+              color: _kSuccess.withValues(alpha: 0.15),
               shape: BoxShape.circle,
             ),
-            child: const Icon(Icons.verified_rounded, color: green, size: 24),
+            child: const Icon(Icons.verified_rounded, color: _kSuccess, size: 24),
           ),
           const SizedBox(width: 13),
           Expanded(
@@ -1158,7 +1221,7 @@ class _ApprovedBanner extends StatelessWidget {
                   style: TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.w700,
-                    color: Color(0xFF15803D),
+                    color: _kSuccessDark,
                   ),
                 ),
                 const SizedBox(height: 3),
@@ -1190,7 +1253,7 @@ class _RejectionBanner extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const red = Color(0xFFEF4444);
+    const red = _kRed;
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
@@ -1438,7 +1501,7 @@ class _RequirementContent extends StatelessWidget {
               Icon(
                 isAcquired ? Icons.check_rounded : Icons.qr_code_scanner_rounded,
                 size: 14,
-                color: isAcquired ? Colors.green.shade500 : colors.iconMuted,
+                color: isAcquired ? _kSuccess : colors.iconMuted,
               ),
               const SizedBox(width: 4),
               Text(
@@ -1446,7 +1509,7 @@ class _RequirementContent extends StatelessWidget {
                 style: TextStyle(
                   fontSize: 11,
                   fontWeight: FontWeight.w600,
-                  color: isAcquired ? Colors.green.shade500 : colors.textSecondary,
+                  color: isAcquired ? _kSuccess : colors.textSecondary,
                 ),
               ),
             ],
@@ -1508,7 +1571,7 @@ class _DateBlock extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(
       children: [
-        Icon(icon, size: 15, color: Colors.green.shade400),
+        Icon(icon, size: 15, color: _kSuccess),
         const SizedBox(width: 8),
         Expanded(
           child: Column(
@@ -1550,7 +1613,7 @@ class _OfflineSyncBanner extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const blue = Color(0xFF3B82F6);
+    const blue = _kBlue;
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -1581,7 +1644,7 @@ class _OfflineSyncBanner extends StatelessWidget {
                   style: TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.w700,
-                    color: Color(0xFF1D4ED8),
+                    color: _kBlueDark,
                   ),
                 ),
                 const SizedBox(height: 3),
