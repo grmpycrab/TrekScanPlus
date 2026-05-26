@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'dart:io';
-import 'dart:ui' show ImageFilter;
 import 'package:flutter/foundation.dart';
 import 'package:image/image.dart' as img;
 import 'package:flutter/material.dart';
@@ -14,6 +13,7 @@ import '../../services/badge_sync_engine.dart';
 import '../../services/connectivity_service.dart';
 import '../../services/station_service.dart';
 import '../../theme/app_theme.dart';
+import '../../components/medal_achievement_tile.dart';
 
 // ── Semantic color constants ─────────────────────────────────────────────────
 const _kSuccess     = Color(0xFF22C55E);
@@ -80,7 +80,6 @@ class _GridCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = context.colors;
     final isDark = context.isDarkMode;
-    final rarityColor = badge.getColor();
     final tierColor = badge.getTierColor();
 
     return Material(
@@ -126,20 +125,13 @@ class _GridCard extends StatelessWidget {
                           child: Column(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              Container(
-                                width: 46,
-                                height: 46,
-                                decoration: BoxDecoration(
-                                  color: isAcquired
-                                      ? rarityColor.withValues(alpha: 0.15)
-                                      : colors.surfaceVariant,
-                                  shape: BoxShape.circle,
-                                ),
-                                child: Icon(
-                                  badge.getIconData(),
-                                  color: isAcquired ? rarityColor : colors.iconMuted,
-                                  size: 22,
-                                ),
+                              MedalAchievementTile(
+                                tier: medalTierFromString(badge.tier),
+                                icon: badge.getIconData(),
+                                label: badge.name,
+                                isLocked: !isAcquired,
+                                diskSize: 36,
+                                showRibbon: true,
                               ),
                               const SizedBox(height: 6),
                               Text(
@@ -181,23 +173,17 @@ class _GridCard extends StatelessWidget {
                   ),
                 ),
               ),
-              // Frosted glass overlay for locked badges
+              // Lock overlay — static alpha-blended Container; no off-screen GPU pass
               if (!isAcquired)
                 Positioned.fill(
                   child: ClipRRect(
                     borderRadius: BorderRadius.circular(14),
-                    child: BackdropFilter(
-                      filter: ImageFilter.blur(sigmaX: 3.5, sigmaY: 3.5),
-                      child: Container(
-                        decoration: BoxDecoration(
-                          color: isDark
-                              ? Colors.black.withValues(alpha: 0.35)
-                              : Colors.white.withValues(alpha: 0.45),
-                          borderRadius: BorderRadius.circular(14),
-                        ),
-                        child: Center(
-                          child: Icon(Icons.lock_rounded, color: colors.iconMuted, size: 22),
-                        ),
+                    child: Container(
+                      color: isDark
+                          ? Colors.black.withValues(alpha: 0.42)
+                          : Colors.white.withValues(alpha: 0.58),
+                      child: Center(
+                        child: Icon(Icons.lock_rounded, color: colors.iconMuted, size: 22),
                       ),
                     ),
                   ),
@@ -229,7 +215,6 @@ class _ListCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = context.colors;
     final isDark = context.isDarkMode;
-    final rarityColor = badge.getColor();
     final tierColor = badge.getTierColor();
 
     return Material(
@@ -269,20 +254,13 @@ class _ListCard extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
             child: Row(
               children: [
-                Container(
-                  width: 44,
-                  height: 44,
-                  decoration: BoxDecoration(
-                    color: isAcquired
-                        ? rarityColor.withValues(alpha: 0.15)
-                        : colors.surfaceVariant,
-                    borderRadius: BorderRadius.circular(11),
-                  ),
-                  child: Icon(
-                    badge.getIconData(),
-                    color: isAcquired ? rarityColor : colors.iconMuted,
-                    size: 22,
-                  ),
+                MedalAchievementTile(
+                  tier: medalTierFromString(badge.tier),
+                  icon: badge.getIconData(),
+                  label: badge.name,
+                  isLocked: !isAcquired,
+                  diskSize: 44,
+                  showRibbon: false,
                 ),
                 const SizedBox(width: 13),
                 Expanded(

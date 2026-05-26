@@ -11,6 +11,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../../core/services/user_service.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../../../components/e_certificate_badge.dart';
+import '../../../components/medal_achievement_tile.dart';
 import '../../../core/widgets/app_dialogue_handler.dart';
 import '../../../theme/app_theme.dart';
 import '../../../utils/app_logger.dart';
@@ -340,20 +341,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     ),
                     child: Row(
                       children: [
-                        Container(
-                          width: 48,
-                          height: 48,
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            color: achievement.getColor().withValues(
-                              alpha: 0.2,
-                            ),
-                          ),
-                          child: Icon(
-                            achievement.getIconData(),
-                            color: achievement.getColor(),
-                            size: 24,
-                          ),
+                        MedalAchievementTile(
+                          tier: medalTierFromString(achievement.rarity),
+                          icon: achievement.getIconData(),
+                          label: achievement.name,
+                          isLocked: false,
+                          diskSize: 40,
+                          showRibbon: false,
                         ),
                         const SizedBox(width: 12),
                         Expanded(
@@ -571,24 +565,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           ),
                           child: Row(
                             children: [
-                              Container(
-                                width: 46,
-                                height: 46,
-                                decoration: BoxDecoration(
-                                  shape: BoxShape.circle,
-                                  color: isUnlocked
-                                      ? achievement.getColor().withValues(alpha: 0.18)
-                                      : colors.borderLight,
-                                ),
-                                child: Icon(
-                                  isUnlocked
-                                      ? achievement.getIconData()
-                                      : Icons.lock_outline_rounded,
-                                  color: isUnlocked
-                                      ? achievement.getColor()
-                                      : colors.textSecondary,
-                                  size: 22,
-                                ),
+                              MedalAchievementTile(
+                                tier: medalTierFromString(achievement.rarity),
+                                icon: achievement.getIconData(),
+                                label: achievement.name,
+                                isLocked: !isUnlocked,
+                                diskSize: 40,
+                                showRibbon: false,
                               ),
                               const SizedBox(width: 12),
                               Expanded(
