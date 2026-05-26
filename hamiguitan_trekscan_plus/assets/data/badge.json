@@ -20,12 +20,7 @@
             "isLimitedEdition": false,
             "startDate": null,
             "endDate": null,
-            "visibilityRule": "ALWAYS_VISIBLE",
-            "tracking": {
-                "total_completed_sessions": 0,
-                "unique_trek_dates": [],
-                "summit_visit_count": 0
-            }
+            "visibilityRule": "ALWAYS_VISIBLE"
         },
         {
             "id": "river_crossing",
@@ -47,12 +42,7 @@
             "isLimitedEdition": false,
             "startDate": null,
             "endDate": null,
-            "visibilityRule": "ALWAYS_VISIBLE",
-            "tracking": {
-                "total_completed_sessions": 0,
-                "unique_trek_dates": [],
-                "summit_visit_count": 0
-            }
+            "visibilityRule": "ALWAYS_VISIBLE"
         },
         {
             "id": "first_horizon",
@@ -74,12 +64,7 @@
             "isLimitedEdition": false,
             "startDate": null,
             "endDate": null,
-            "visibilityRule": "ALWAYS_VISIBLE",
-            "tracking": {
-                "total_completed_sessions": 0,
-                "unique_trek_dates": [],
-                "summit_visit_count": 0
-            }
+            "visibilityRule": "ALWAYS_VISIBLE"
         },
         {
             "id": "root_climber",
@@ -101,12 +86,7 @@
             "isLimitedEdition": false,
             "startDate": null,
             "endDate": null,
-            "visibilityRule": "ALWAYS_VISIBLE",
-            "tracking": {
-                "total_completed_sessions": 0,
-                "unique_trek_dates": [],
-                "summit_visit_count": 0
-            }
+            "visibilityRule": "ALWAYS_VISIBLE"
         },
         {
             "id": "pygmy_settler",
@@ -128,12 +108,7 @@
             "isLimitedEdition": false,
             "startDate": null,
             "endDate": null,
-            "visibilityRule": "ALWAYS_VISIBLE",
-            "tracking": {
-                "total_completed_sessions": 0,
-                "unique_trek_dates": [],
-                "summit_visit_count": 0
-            }
+            "visibilityRule": "ALWAYS_VISIBLE"
         },
         {
             "id": "dwarf_guardian",
@@ -155,12 +130,7 @@
             "isLimitedEdition": false,
             "startDate": null,
             "endDate": null,
-            "visibilityRule": "ALWAYS_VISIBLE",
-            "tracking": {
-                "total_completed_sessions": 0,
-                "unique_trek_dates": [],
-                "summit_visit_count": 0
-            }
+            "visibilityRule": "ALWAYS_VISIBLE"
         },
         {
             "id": "serpentinite_soul",
@@ -182,12 +152,7 @@
             "isLimitedEdition": false,
             "startDate": null,
             "endDate": null,
-            "visibilityRule": "ALWAYS_VISIBLE",
-            "tracking": {
-                "total_completed_sessions": 0,
-                "unique_trek_dates": [],
-                "summit_visit_count": 0
-            }
+            "visibilityRule": "ALWAYS_VISIBLE"
         },
         {
             "id": "hydrological_finale",
@@ -209,12 +174,7 @@
             "isLimitedEdition": false,
             "startDate": null,
             "endDate": null,
-            "visibilityRule": "ALWAYS_VISIBLE",
-            "tracking": {
-                "total_completed_sessions": 0,
-                "unique_trek_dates": [],
-                "summit_visit_count": 0
-            }
+            "visibilityRule": "ALWAYS_VISIBLE"
         },
         {
             "id": "apex_overlook",
@@ -236,12 +196,7 @@
             "isLimitedEdition": false,
             "startDate": null,
             "endDate": null,
-            "visibilityRule": "ALWAYS_VISIBLE",
-            "tracking": {
-                "total_completed_sessions": 0,
-                "unique_trek_dates": [],
-                "summit_visit_count": 0
-            }
+            "visibilityRule": "ALWAYS_VISIBLE"
         },
         {
             "id": "lost_ocean",
@@ -263,12 +218,7 @@
             "isLimitedEdition": false,
             "startDate": null,
             "endDate": null,
-            "visibilityRule": "ALWAYS_VISIBLE",
-            "tracking": {
-                "total_completed_sessions": 0,
-                "unique_trek_dates": [],
-                "summit_visit_count": 0
-            }
+            "visibilityRule": "ALWAYS_VISIBLE"
         },
         {
             "id": "mist_walker",
@@ -290,12 +240,7 @@
             "isLimitedEdition": false,
             "startDate": null,
             "endDate": null,
-            "visibilityRule": "ALWAYS_VISIBLE",
-            "tracking": {
-                "total_completed_sessions": 0,
-                "unique_trek_dates": [],
-                "summit_visit_count": 0
-            }
+            "visibilityRule": "ALWAYS_VISIBLE"
         },
         {
             "id": "botanists_veil",
@@ -317,12 +262,7 @@
             "isLimitedEdition": false,
             "startDate": null,
             "endDate": null,
-            "visibilityRule": "ALWAYS_VISIBLE",
-            "tracking": {
-                "total_completed_sessions": 0,
-                "unique_trek_dates": [],
-                "summit_visit_count": 0
-            }
+            "visibilityRule": "ALWAYS_VISIBLE"
         },
         {
             "id": "lnt_master",
@@ -344,12 +284,7 @@
             "isLimitedEdition": false,
             "startDate": null,
             "endDate": null,
-            "visibilityRule": "ALWAYS_VISIBLE",
-            "tracking": {
-                "total_completed_sessions": 0,
-                "unique_trek_dates": [],
-                "summit_visit_count": 0
-            }
+            "visibilityRule": "ALWAYS_VISIBLE"
         },
         {
             "id": "pitcher_perfection",
@@ -371,12 +306,7 @@
             "isLimitedEdition": false,
             "startDate": null,
             "endDate": null,
-            "visibilityRule": "ALWAYS_VISIBLE",
-            "tracking": {
-                "total_completed_sessions": 0,
-                "unique_trek_dates": [],
-                "summit_visit_count": 0
-            }
+            "visibilityRule": "ALWAYS_VISIBLE"
         },
         {
             "id": "shadow_king",
@@ -398,12 +328,7 @@
             "isLimitedEdition": false,
             "startDate": null,
             "endDate": null,
-            "visibilityRule": "ALWAYS_VISIBLE",
-            "tracking": {
-                "total_completed_sessions": 0,
-                "unique_trek_dates": [],
-                "summit_visit_count": 0
-            }
+            "visibilityRule": "ALWAYS_VISIBLE"
         },
         {
             "id": "the_returnee",
@@ -425,12 +350,7 @@
             "isLimitedEdition": false,
             "startDate": null,
             "endDate": null,
-            "visibilityRule": "ALWAYS_VISIBLE",
-            "tracking": {
-                "total_completed_sessions": 0,
-                "unique_trek_dates": [],
-                "summit_visit_count": 0
-            }
+            "visibilityRule": "ALWAYS_VISIBLE"
         },
         {
             "id": "sanctuary_regular",
@@ -452,12 +372,7 @@
             "isLimitedEdition": false,
             "startDate": null,
             "endDate": null,
-            "visibilityRule": "ALWAYS_VISIBLE",
-            "tracking": {
-                "total_completed_sessions": 0,
-                "unique_trek_dates": [],
-                "summit_visit_count": 0
-            }
+            "visibilityRule": "ALWAYS_VISIBLE"
         },
         {
             "id": "high_altitude_habit",
@@ -479,12 +394,7 @@
             "isLimitedEdition": false,
             "startDate": null,
             "endDate": null,
-            "visibilityRule": "ALWAYS_VISIBLE",
-            "tracking": {
-                "total_completed_sessions": 0,
-                "unique_trek_dates": [],
-                "summit_visit_count": 0
-            }
+            "visibilityRule": "ALWAYS_VISIBLE"
         },
         {
             "id": "familiar_footsteps",
@@ -506,12 +416,7 @@
             "isLimitedEdition": false,
             "startDate": null,
             "endDate": null,
-            "visibilityRule": "ALWAYS_VISIBLE",
-            "tracking": {
-                "total_completed_sessions": 0,
-                "unique_trek_dates": [],
-                "summit_visit_count": 0
-            }
+            "visibilityRule": "ALWAYS_VISIBLE"
         },
         {
             "id": "deca_trek_titan",
@@ -533,12 +438,7 @@
             "isLimitedEdition": false,
             "startDate": null,
             "endDate": null,
-            "visibilityRule": "ALWAYS_VISIBLE",
-            "tracking": {
-                "total_completed_sessions": 0,
-                "unique_trek_dates": [],
-                "summit_visit_count": 0
-            }
+            "visibilityRule": "ALWAYS_VISIBLE"
         },
         {
             "id": "four_seasons",
@@ -560,12 +460,7 @@
             "isLimitedEdition": false,
             "startDate": null,
             "endDate": null,
-            "visibilityRule": "ALWAYS_VISIBLE",
-            "tracking": {
-                "total_completed_sessions": 0,
-                "unique_trek_dates": [],
-                "summit_visit_count": 0
-            }
+            "visibilityRule": "ALWAYS_VISIBLE"
         },
         {
             "id": "summit_sovereign",
@@ -587,12 +482,7 @@
             "isLimitedEdition": false,
             "startDate": null,
             "endDate": null,
-            "visibilityRule": "ALWAYS_VISIBLE",
-            "tracking": {
-                "total_completed_sessions": 0,
-                "unique_trek_dates": [],
-                "summit_visit_count": 0
-            }
+            "visibilityRule": "ALWAYS_VISIBLE"
         }
     ],
     "categories": [

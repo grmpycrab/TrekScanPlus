@@ -147,7 +147,7 @@ class BadgeRepository {
             : 'reach_location',
         'value': '',
       },
-      rarity: 'rare',
+      rarity: d['rarity'] as String? ?? 'common',
       difficulty: 'medium',
       tier: d['tier'] as String? ?? 'bronze',
       verificationType: vt,

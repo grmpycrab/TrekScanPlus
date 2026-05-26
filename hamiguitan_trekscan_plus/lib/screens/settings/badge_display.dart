@@ -16,26 +16,34 @@ import '../../theme/app_theme.dart';
 import '../../components/medal_achievement_tile.dart';
 
 // ── Semantic color constants ─────────────────────────────────────────────────
-const _kSuccess     = Color(0xFF22C55E);
+const _kSuccess = Color(0xFF22C55E);
 const _kSuccessDark = Color(0xFF15803D);
-const _kAmber       = Color(0xFFF59E0B);
-const _kAmberDark   = Color(0xFFB45309);
-const _kRed         = Color(0xFFEF4444);
-const _kBlue        = Color(0xFF3B82F6);
-const _kBlueDark    = Color(0xFF1D4ED8);
+const _kAmber = Color(0xFFF59E0B);
+const _kAmberDark = Color(0xFFB45309);
+const _kRed = Color(0xFFEF4444);
+const _kBlue = Color(0xFF3B82F6);
+const _kBlueDark = Color(0xFF1D4ED8);
 
 // ── Tier accent gradients ─────────────────────────────────────────────────────
 LinearGradient _tierGradient(String tier) {
   switch (tier) {
     case 'silver':
-      return const LinearGradient(colors: [Color(0xFFD0D5DE), Color(0xFF8E9AAF), Color(0xFF5A6478)]);
+      return const LinearGradient(
+        colors: [Color(0xFFD0D5DE), Color(0xFF8E9AAF), Color(0xFF5A6478)],
+      );
     case 'gold':
-      return const LinearGradient(colors: [Color(0xFFFFE066), Color(0xFFFFB800), Color(0xFFB87333)]);
+      return const LinearGradient(
+        colors: [Color(0xFFFFE066), Color(0xFFFFB800), Color(0xFFB87333)],
+      );
     case 'platinum':
-      return const LinearGradient(colors: [Color(0xFFBB8FFF), Color(0xFF7C3AED), Color(0xFF4C1D95)]);
+      return const LinearGradient(
+        colors: [Color(0xFFBB8FFF), Color(0xFF7C3AED), Color(0xFF4C1D95)],
+      );
     case 'bronze':
     default:
-      return const LinearGradient(colors: [Color(0xFFE8A060), Color(0xFFCD7F32), Color(0xFF9A5C1A)]);
+      return const LinearGradient(
+        colors: [Color(0xFFE8A060), Color(0xFFCD7F32), Color(0xFF9A5C1A)],
+      );
   }
 }
 
@@ -62,7 +70,12 @@ class BadgeCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return isListView
-        ? _ListCard(badge: badge, isAcquired: isAcquired, acquiredDate: acquiredDate, onTap: onTap)
+        ? _ListCard(
+            badge: badge,
+            isAcquired: isAcquired,
+            acquiredDate: acquiredDate,
+            onTap: onTap,
+          )
         : _GridCard(badge: badge, isAcquired: isAcquired, onTap: onTap);
   }
 }
@@ -121,7 +134,10 @@ class _GridCard extends StatelessWidget {
                       // Expanded so mainAxisAlignment.center is relative to this area only
                       Expanded(
                         child: Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 8,
+                          ),
                           child: Column(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
@@ -140,7 +156,9 @@ class _GridCard extends StatelessWidget {
                                 style: TextStyle(
                                   fontSize: 11,
                                   fontWeight: FontWeight.w600,
-                                  color: isAcquired ? colors.text : colors.textSecondary,
+                                  color: isAcquired
+                                      ? colors.text
+                                      : colors.textSecondary,
                                   height: 1.25,
                                 ),
                                 maxLines: 2,
@@ -148,7 +166,10 @@ class _GridCard extends StatelessWidget {
                               ),
                               const SizedBox(height: 4),
                               Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 7,
+                                  vertical: 2,
+                                ),
                                 decoration: BoxDecoration(
                                   color: isAcquired
                                       ? tierColor.withValues(alpha: 0.12)
@@ -160,7 +181,9 @@ class _GridCard extends StatelessWidget {
                                   style: TextStyle(
                                     fontSize: 9,
                                     fontWeight: FontWeight.w700,
-                                    color: isAcquired ? tierColor : colors.textTertiary,
+                                    color: isAcquired
+                                        ? tierColor
+                                        : colors.textTertiary,
                                     letterSpacing: 0.3,
                                   ),
                                 ),
@@ -183,7 +206,11 @@ class _GridCard extends StatelessWidget {
                           ? Colors.black.withValues(alpha: 0.42)
                           : Colors.white.withValues(alpha: 0.58),
                       child: Center(
-                        child: Icon(Icons.lock_rounded, color: colors.iconMuted, size: 22),
+                        child: Icon(
+                          Icons.lock_rounded,
+                          color: colors.iconMuted,
+                          size: 22,
+                        ),
                       ),
                     ),
                   ),
@@ -238,104 +265,136 @@ class _ListCard extends StatelessWidget {
             children: [
               // Tier gradient left accent bar — muted at 30% opacity when locked
               Positioned(
-                top: 0, bottom: 0, left: 0,
+                top: 0,
+                bottom: 0,
+                left: 0,
                 child: Opacity(
                   opacity: isAcquired ? 1.0 : 0.3,
                   child: Container(
                     width: 3,
                     decoration: BoxDecoration(
                       gradient: _tierGradient(badge.tier),
-                      borderRadius: const BorderRadius.horizontal(left: Radius.circular(12)),
+                      borderRadius: const BorderRadius.horizontal(
+                        left: Radius.circular(12),
+                      ),
                     ),
                   ),
                 ),
               ),
               Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-            child: Row(
-              children: [
-                MedalAchievementTile(
-                  tier: medalTierFromString(badge.tier),
-                  icon: badge.getIconData(),
-                  label: badge.name,
-                  isLocked: !isAcquired,
-                  diskSize: 44,
-                  showRibbon: false,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 14,
+                  vertical: 12,
                 ),
-                const SizedBox(width: 13),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        badge.name,
-                        style: TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600,
-                          color: isAcquired ? colors.text : colors.textSecondary,
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      const SizedBox(height: 3),
-                      Row(
+                child: Row(
+                  children: [
+                    MedalAchievementTile(
+                      tier: medalTierFromString(badge.tier),
+                      icon: badge.getIconData(),
+                      label: badge.name,
+                      isLocked: !isAcquired,
+                      diskSize: 44,
+                      showRibbon: false,
+                    ),
+                    const SizedBox(width: 13),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
-                            decoration: BoxDecoration(
-                              color: isAcquired
-                                  ? tierColor.withValues(alpha: 0.12)
-                                  : colors.surfaceVariant,
-                              borderRadius: BorderRadius.circular(6),
-                            ),
-                            child: Text(
-                              badge.tierLabel,
-                              style: TextStyle(
-                                fontSize: 10,
-                                fontWeight: FontWeight.w700,
-                                color: isAcquired ? tierColor : colors.textTertiary,
-                              ),
-                            ),
-                          ),
-                          const SizedBox(width: 6),
                           Text(
-                            badge.category.replaceAll('_', ' '),
-                            style: TextStyle(fontSize: 11, color: colors.textSecondary),
+                            badge.name,
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                              color: isAcquired
+                                  ? colors.text
+                                  : colors.textSecondary,
+                            ),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                           ),
+                          const SizedBox(height: 3),
+                          Row(
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 7,
+                                  vertical: 2,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: isAcquired
+                                      ? tierColor.withValues(alpha: 0.12)
+                                      : colors.surfaceVariant,
+                                  borderRadius: BorderRadius.circular(6),
+                                ),
+                                child: Text(
+                                  badge.tierLabel,
+                                  style: TextStyle(
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.w700,
+                                    color: isAcquired
+                                        ? tierColor
+                                        : colors.textTertiary,
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 6),
+                              Text(
+                                badge.category.replaceAll('_', ' '),
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  color: colors.textSecondary,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ],
+                          ),
                         ],
                       ),
-                    ],
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [
-                    if (isAcquired)
-                      const Icon(Icons.check_circle_rounded, color: _kSuccess, size: 18)
-                    else
-                      Icon(Icons.lock_rounded, color: colors.iconMuted, size: 16),
-                    if (isAcquired && acquiredDate != null) ...[
-                      const SizedBox(height: 2),
-                      Text(
-                        DateFormat('MMM d').format(acquiredDate!),
-                        style: TextStyle(fontSize: 10, color: colors.textTertiary),
-                      ),
-                    ],
+                    ),
+                    const SizedBox(width: 8),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        if (isAcquired)
+                          const Icon(
+                            Icons.check_circle_rounded,
+                            color: _kSuccess,
+                            size: 18,
+                          )
+                        else
+                          Icon(
+                            Icons.lock_rounded,
+                            color: colors.iconMuted,
+                            size: 16,
+                          ),
+                        if (isAcquired && acquiredDate != null) ...[
+                          const SizedBox(height: 2),
+                          Text(
+                            DateFormat('MMM d').format(acquiredDate!),
+                            style: TextStyle(
+                              fontSize: 10,
+                              color: colors.textTertiary,
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
+                    const SizedBox(width: 4),
+                    Icon(
+                      Icons.chevron_right_rounded,
+                      size: 18,
+                      color: colors.iconMuted,
+                    ),
                   ],
                 ),
-                const SizedBox(width: 4),
-                Icon(Icons.chevron_right_rounded, size: 18, color: colors.iconMuted),
-              ],
-            ),
-          ),
-        ],         // Stack.children
-      ),           // Stack
-    ),             // Ink
-  ),               // InkWell
-);
+              ),
+            ], // Stack.children
+          ), // Stack
+        ), // Ink
+      ), // InkWell
+    );
   }
 }
 
@@ -474,9 +533,9 @@ class _BadgeDetailScreenState extends State<BadgeDetailScreen> {
     } catch (e) {
       if (mounted) {
         setState(() => _submitting = false);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Submission failed: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Submission failed: $e')));
       }
     }
   }
@@ -586,7 +645,11 @@ class _BadgeDetailScreenState extends State<BadgeDetailScreen> {
             pinned: true,
             backgroundColor: rarityColor,
             leading: IconButton(
-              icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.white, size: 20),
+              icon: const Icon(
+                Icons.arrow_back_ios_new_rounded,
+                color: Colors.white,
+                size: 20,
+              ),
               onPressed: () => Navigator.pop(context),
             ),
             title: kDebugMode
@@ -595,12 +658,20 @@ class _BadgeDetailScreenState extends State<BadgeDetailScreen> {
                     onLongPressEnd: _onDebugLongPressEnd,
                     child: const Text(
                       'Badge Detail',
-                      style: TextStyle(color: Colors.white, fontSize: 17, fontWeight: FontWeight.w600),
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 17,
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                   )
                 : const Text(
                     'Badge Detail',
-                    style: TextStyle(color: Colors.white, fontSize: 17, fontWeight: FontWeight.w600),
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 17,
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
             centerTitle: true,
             flexibleSpace: FlexibleSpaceBar(
@@ -629,7 +700,11 @@ class _BadgeDetailScreenState extends State<BadgeDetailScreen> {
                   ),
                   const SizedBox(height: 12),
 
-                  _PointsCard(badge: widget.badge, colors: colors, isDark: isDark),
+                  _PointsCard(
+                    badge: widget.badge,
+                    colors: colors,
+                    isDark: isDark,
+                  ),
                   const SizedBox(height: 12),
 
                   _DetailCard(
@@ -751,7 +826,11 @@ class _BadgeDetailScreenState extends State<BadgeDetailScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         if (_claimStatus == 'REJECTED') ...[
-          _RejectionBanner(note: _rejectionNote, colors: colors, isDark: isDark),
+          _RejectionBanner(
+            note: _rejectionNote,
+            colors: colors,
+            isDark: isDark,
+          ),
           const SizedBox(height: 12),
         ],
         _DetailCard(
@@ -823,7 +902,10 @@ class _BadgeDetailScreenState extends State<BadgeDetailScreen> {
                       const SizedBox(height: 8),
                       Text(
                         'Tap to pick an image',
-                        style: TextStyle(fontSize: 12, color: colors.textTertiary),
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: colors.textTertiary,
+                        ),
                       ),
                     ],
                   ),
@@ -834,12 +916,17 @@ class _BadgeDetailScreenState extends State<BadgeDetailScreen> {
         SizedBox(
           width: double.infinity,
           child: ElevatedButton.icon(
-            onPressed: (_pickedFile == null || _submitting) ? null : _submitClaim,
+            onPressed: (_pickedFile == null || _submitting)
+                ? null
+                : _submitClaim,
             icon: _submitting
                 ? const SizedBox(
                     width: 16,
                     height: 16,
-                    child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: Colors.white,
+                    ),
                   )
                 : const Icon(Icons.send_rounded, size: 16),
             label: Text(_submitting ? 'Saving…' : 'Submit Proof'),
@@ -848,7 +935,9 @@ class _BadgeDetailScreenState extends State<BadgeDetailScreen> {
               foregroundColor: Colors.white,
               disabledBackgroundColor: colors.borderLight,
               padding: const EdgeInsets.symmetric(vertical: 13),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
+              ),
             ),
           ),
         ),
@@ -887,35 +976,13 @@ class _HeroHeader extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             const SizedBox(height: 48),
-            Container(
-              width: 100,
-              height: 100,
-              decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.18),
-                shape: BoxShape.circle,
-                border: Border.all(
-                  color: Colors.white.withValues(alpha: 0.35),
-                  width: 2,
-                ),
-              ),
-              child: Stack(
-                alignment: Alignment.center,
-                children: [
-                  Icon(badge.getIconData(), color: Colors.white, size: 46),
-                  if (!isAcquired)
-                    Container(
-                      decoration: BoxDecoration(
-                        color: Colors.black.withValues(alpha: 0.4),
-                        shape: BoxShape.circle,
-                      ),
-                      child: const Icon(
-                        Icons.lock_rounded,
-                        color: Colors.white70,
-                        size: 36,
-                      ),
-                    ),
-                ],
-              ),
+            MedalAchievementTile(
+              tier: medalTierFromString(badge.tier),
+              icon: badge.getIconData(),
+              label: badge.name,
+              isLocked: !isAcquired,
+              diskSize: 80,
+              showRibbon: true,
             ),
             const SizedBox(height: 14),
             Padding(
@@ -928,7 +995,13 @@ class _HeroHeader extends StatelessWidget {
                   fontSize: 20,
                   fontWeight: FontWeight.w700,
                   height: 1.25,
-                  shadows: [Shadow(color: Colors.black26, offset: Offset(0, 1), blurRadius: 4)],
+                  shadows: [
+                    Shadow(
+                      color: Colors.black26,
+                      offset: Offset(0, 1),
+                      blurRadius: 4,
+                    ),
+                  ],
                 ),
                 maxLines: 2,
               ),
@@ -993,7 +1066,9 @@ class _StatusRow extends StatelessWidget {
       child: Row(
         children: [
           Icon(
-            isAcquired ? Icons.check_circle_rounded : Icons.lock_outline_rounded,
+            isAcquired
+                ? Icons.check_circle_rounded
+                : Icons.lock_outline_rounded,
             color: isAcquired ? _kSuccess : colors.iconMuted,
             size: 22,
           ),
@@ -1187,7 +1262,11 @@ class _ApprovedBanner extends StatelessWidget {
               color: _kSuccess.withValues(alpha: 0.15),
               shape: BoxShape.circle,
             ),
-            child: const Icon(Icons.verified_rounded, color: _kSuccess, size: 24),
+            child: const Icon(
+              Icons.verified_rounded,
+              color: _kSuccess,
+              size: 24,
+            ),
           ),
           const SizedBox(width: 13),
           Expanded(
@@ -1293,12 +1372,13 @@ class _DetailCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final iconColor = accentColor ?? (isDark ? colors.iconSubtle : colors.primary);
+    final iconColor =
+        accentColor ?? (isDark ? colors.iconSubtle : colors.primary);
     final iconBg = accentColor != null
         ? accentColor!.withValues(alpha: 0.1)
         : (isDark
-            ? Colors.white.withValues(alpha: 0.07)
-            : colors.primary.withValues(alpha: 0.08));
+              ? Colors.white.withValues(alpha: 0.07)
+              : colors.primary.withValues(alpha: 0.08));
 
     return Container(
       decoration: BoxDecoration(
@@ -1323,7 +1403,10 @@ class _DetailCard extends StatelessWidget {
                   width: 30,
                   height: 30,
                   alignment: Alignment.center,
-                  decoration: BoxDecoration(color: iconBg, borderRadius: BorderRadius.circular(8)),
+                  decoration: BoxDecoration(
+                    color: iconBg,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
                   child: Icon(icon, size: 15, color: iconColor),
                 ),
                 const SizedBox(width: 10),
@@ -1383,7 +1466,11 @@ class _MetaChip extends StatelessWidget {
       ),
       child: Row(
         children: [
-          Icon(icon, size: 16, color: isDark ? colors.iconSubtle : colors.primary),
+          Icon(
+            icon,
+            size: 16,
+            color: isDark ? colors.iconSubtle : colors.primary,
+          ),
           const SizedBox(width: 8),
           Expanded(
             child: Column(
@@ -1458,7 +1545,7 @@ class _RequirementContent extends StatelessWidget {
                 label,
                 style: TextStyle(
                   fontSize: 15,
-                  fontWeight: FontWeight.w700,
+                  fontWeight: FontWeight.w600,
                   color: colors.text,
                 ),
               ),
@@ -1477,7 +1564,9 @@ class _RequirementContent extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             children: [
               Icon(
-                isAcquired ? Icons.check_rounded : Icons.qr_code_scanner_rounded,
+                isAcquired
+                    ? Icons.check_rounded
+                    : Icons.qr_code_scanner_rounded,
                 size: 14,
                 color: isAcquired ? _kSuccess : colors.iconMuted,
               ),
@@ -1681,9 +1770,16 @@ class _SmokeTestSheetState extends State<_SmokeTestSheet> {
   Future<void> _doInjectScan() async {
     final id = _stationIdCtrl.text.trim();
     if (id.isEmpty) return;
-    setState(() { _injecting = true; _scanLog = ''; });
+    setState(() {
+      _injecting = true;
+      _scanLog = '';
+    });
     final result = await widget.onInjectScan(id);
-    if (mounted) setState(() { _injecting = false; _scanLog = result; });
+    if (mounted)
+      setState(() {
+        _injecting = false;
+        _scanLog = result;
+      });
   }
 
   void _doToggleNetwork() {
@@ -1692,9 +1788,16 @@ class _SmokeTestSheetState extends State<_SmokeTestSheet> {
   }
 
   Future<void> _doTriggerSync() async {
-    setState(() { _syncing = true; _syncLog = ''; });
+    setState(() {
+      _syncing = true;
+      _syncLog = '';
+    });
     await widget.onTriggerSync();
-    if (mounted) setState(() { _syncing = false; _syncLog = 'Sync run completed.'; });
+    if (mounted)
+      setState(() {
+        _syncing = false;
+        _syncLog = 'Sync run completed.';
+      });
   }
 
   @override
@@ -1729,11 +1832,16 @@ class _SmokeTestSheetState extends State<_SmokeTestSheet> {
               Row(
                 children: [
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 4,
+                    ),
                     decoration: BoxDecoration(
                       color: Colors.orange.withValues(alpha: 0.2),
                       borderRadius: BorderRadius.circular(6),
-                      border: Border.all(color: Colors.orange.withValues(alpha: 0.5)),
+                      border: Border.all(
+                        color: Colors.orange.withValues(alpha: 0.5),
+                      ),
                     ),
                     child: const Text(
                       'DEBUG',
@@ -1772,7 +1880,11 @@ class _SmokeTestSheetState extends State<_SmokeTestSheet> {
                   children: [
                     const Text(
                       'Enter a station ID to inject a mock scan event directly into the local evaluation runtime.',
-                      style: TextStyle(color: Colors.white60, fontSize: 12, height: 1.5),
+                      style: TextStyle(
+                        color: Colors.white60,
+                        fontSize: 12,
+                        height: 1.5,
+                      ),
                     ),
                     const SizedBox(height: 12),
                     TextField(
@@ -1780,17 +1892,26 @@ class _SmokeTestSheetState extends State<_SmokeTestSheet> {
                       style: const TextStyle(color: Colors.white, fontSize: 13),
                       decoration: InputDecoration(
                         hintText: 'e.g. 56okrkt0pb or r5kntj3sae',
-                        hintStyle: const TextStyle(color: Colors.white30, fontSize: 12),
+                        hintStyle: const TextStyle(
+                          color: Colors.white30,
+                          fontSize: 12,
+                        ),
                         filled: true,
                         fillColor: Colors.white10,
-                        contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 14,
+                          vertical: 12,
+                        ),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(10),
                           borderSide: BorderSide.none,
                         ),
                         focusedBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(10),
-                          borderSide: const BorderSide(color: Colors.blueAccent, width: 1.5),
+                          borderSide: const BorderSide(
+                            color: Colors.blueAccent,
+                            width: 1.5,
+                          ),
                         ),
                       ),
                     ),
@@ -1803,10 +1924,19 @@ class _SmokeTestSheetState extends State<_SmokeTestSheet> {
                           backgroundColor: Colors.blueAccent,
                           foregroundColor: Colors.white,
                           padding: const EdgeInsets.symmetric(vertical: 12),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10),
+                          ),
                         ),
                         icon: _injecting
-                            ? const SizedBox(width: 14, height: 14, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                            ? const SizedBox(
+                                width: 14,
+                                height: 14,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  color: Colors.white,
+                                ),
+                              )
                             : const Icon(Icons.play_arrow_rounded, size: 16),
                         label: Text(_injecting ? 'Injecting…' : 'Inject Scan'),
                       ),
@@ -1829,13 +1959,20 @@ class _SmokeTestSheetState extends State<_SmokeTestSheet> {
                   children: [
                     const Text(
                       'Force-toggle the global network state to simulate an offline trail environment.',
-                      style: TextStyle(color: Colors.white60, fontSize: 12, height: 1.5),
+                      style: TextStyle(
+                        color: Colors.white60,
+                        fontSize: 12,
+                        height: 1.5,
+                      ),
                     ),
                     const SizedBox(height: 12),
                     GestureDetector(
                       onTap: _doToggleNetwork,
                       child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 14,
+                          vertical: 12,
+                        ),
                         decoration: BoxDecoration(
                           color: _networkOverridden
                               ? Colors.red.withValues(alpha: 0.15)
@@ -1850,8 +1987,12 @@ class _SmokeTestSheetState extends State<_SmokeTestSheet> {
                         child: Row(
                           children: [
                             Icon(
-                              _networkOverridden ? Icons.wifi_off_rounded : Icons.wifi_rounded,
-                              color: _networkOverridden ? Colors.redAccent : Colors.greenAccent,
+                              _networkOverridden
+                                  ? Icons.wifi_off_rounded
+                                  : Icons.wifi_rounded,
+                              color: _networkOverridden
+                                  ? Colors.redAccent
+                                  : Colors.greenAccent,
                               size: 20,
                             ),
                             const SizedBox(width: 10),
@@ -1861,7 +2002,9 @@ class _SmokeTestSheetState extends State<_SmokeTestSheet> {
                                     ? 'SIMULATED OFFLINE — tap to restore'
                                     : 'ONLINE — tap to simulate offline',
                                 style: TextStyle(
-                                  color: _networkOverridden ? Colors.redAccent : Colors.greenAccent,
+                                  color: _networkOverridden
+                                      ? Colors.redAccent
+                                      : Colors.greenAccent,
                                   fontSize: 13,
                                   fontWeight: FontWeight.w600,
                                 ),
@@ -1885,7 +2028,11 @@ class _SmokeTestSheetState extends State<_SmokeTestSheet> {
                   children: [
                     const Text(
                       'Manually trigger the sync loop to push queued achievement records and staged badge-claim photos.',
-                      style: TextStyle(color: Colors.white60, fontSize: 12, height: 1.5),
+                      style: TextStyle(
+                        color: Colors.white60,
+                        fontSize: 12,
+                        height: 1.5,
+                      ),
                     ),
                     const SizedBox(height: 12),
                     SizedBox(
@@ -1896,10 +2043,19 @@ class _SmokeTestSheetState extends State<_SmokeTestSheet> {
                           backgroundColor: const Color(0xFF7C3AED),
                           foregroundColor: Colors.white,
                           padding: const EdgeInsets.symmetric(vertical: 12),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10),
+                          ),
                         ),
                         icon: _syncing
-                            ? const SizedBox(width: 14, height: 14, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                            ? const SizedBox(
+                                width: 14,
+                                height: 14,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  color: Colors.white,
+                                ),
+                              )
                             : const Icon(Icons.cloud_upload_rounded, size: 16),
                         label: Text(_syncing ? 'Syncing…' : 'Trigger Sync'),
                       ),

@@ -27,8 +27,12 @@ class BadgeSyncEngine {
   Future<void> triggerSync() => _runSync();
 
   Future<void> _runSync() async {
+    final svc = AchievementService();
+    if (!svc.isInitialized) {
+      await _guard(svc.init());
+    }
     await Future.wait([
-      _guard(AchievementService().syncToFirebase()),
+      _guard(svc.syncToFirebase()),
       _guard(BadgeClaimService.uploadStagedClaims()),
     ]);
   }

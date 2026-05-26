@@ -342,7 +342,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     child: Row(
                       children: [
                         MedalAchievementTile(
-                          tier: medalTierFromString(achievement.rarity),
+                          tier: medalTierFromString(achievement.tier),
                           icon: achievement.getIconData(),
                           label: achievement.name,
                           isLocked: false,
@@ -566,7 +566,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           child: Row(
                             children: [
                               MedalAchievementTile(
-                                tier: medalTierFromString(achievement.rarity),
+                                tier: medalTierFromString(achievement.tier),
                                 icon: achievement.getIconData(),
                                 label: achievement.name,
                                 isLocked: !isUnlocked,

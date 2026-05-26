@@ -1,5 +1,3 @@
-// ignore_for_file: unrelated_type_equality_checks
-
 import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -24,6 +22,8 @@ class AchievementService {
   List<Achievement> _allAchievements = [];
   bool _isInitialized = false;
   String? _currentUserId;
+
+  bool get isInitialized => _isInitialized;
 
   /// Completes when the background Firestore badge hydration finishes.
   /// Callers (e.g. BadgesScreen) can chain .then() on this to refresh the UI.
@@ -106,7 +106,7 @@ class AchievementService {
 
       _isInitialized = true;
     } catch (e) {
-      e.toString();
+      AppLogger.e('AchievementService init error: $e');
       rethrow;
     }
   }
@@ -127,7 +127,7 @@ class AchievementService {
 
       await _mergeWithFirebaseAchievements(userId);
     } catch (e) {
-      e.toString();
+      AppLogger.e('Error refreshing from Firebase: $e');
     }
   }
 
@@ -221,7 +221,7 @@ class AchievementService {
       // Save merged list locally
       await _localService.saveAchievements(_allAchievements);
     } catch (e) {
-      e.toString();
+      AppLogger.e('Error merging local achievements: $e');
     }
   }
 
@@ -498,6 +498,7 @@ class AchievementService {
             'icon': achievement.icon,
             'rarity': achievement.rarity,
             'difficulty': achievement.difficulty,
+            'tier': achievement.tier,
             'requirement': achievement.requirement,
             'triggerStationId': achievement.triggerStationId,
             'unlockedAt': achievement.unlockedAt?.toIso8601String(),
@@ -554,6 +555,7 @@ class AchievementService {
             'icon': achievement.icon,
             'rarity': achievement.rarity,
             'difficulty': achievement.difficulty,
+            'tier': achievement.tier,
             'requirement': achievement.requirement,
             'unlockedAt': achievement.unlockedAt?.toIso8601String(),
             'syncedAt': FieldValue.serverTimestamp(),
@@ -587,8 +589,8 @@ class AchievementService {
   /// Check if device is online
   Future<bool> _isOnline() async {
     try {
-      final result = await Connectivity().checkConnectivity();
-      return result != ConnectivityResult.none;
+      final results = await Connectivity().checkConnectivity();
+      return results.any((r) => r != ConnectivityResult.none);
     } catch (e) {
       return false;
     }
@@ -679,6 +681,7 @@ class AchievementService {
               'icon': data['icon'] ?? '🏆',
               'rarity': data['rarity'] ?? 'common',
               'difficulty': data['difficulty'] ?? 'easy',
+              'tier': data['tier'] as String? ?? 'bronze',
               'requirement': data['requirement'] ?? <String, dynamic>{},
               'isUnlocked': true,
               'unlockedAt': unlockedAt?.toIso8601String(),

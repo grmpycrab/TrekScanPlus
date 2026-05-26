@@ -125,20 +125,23 @@ class MedalAchievementTile extends StatelessWidget {
     final primary = Theme.of(context).colorScheme.primary;
     final p = _paletteFor(tier);
 
-    return RepaintBoundary(
-      child: ColorFiltered(
-        colorFilter: isLocked
-            ? const ColorFilter.matrix(_kGreyscaleMatrix)
-            : const ColorFilter.mode(Colors.transparent, BlendMode.dst),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            if (showRibbon) ...[
-              _Ribbon(palette: p, themeColor: primary, diskSize: diskSize),
-              _Loop(palette: p, diskSize: diskSize),
+    return Semantics(
+      label: label,
+      child: RepaintBoundary(
+        child: ColorFiltered(
+          colorFilter: isLocked
+              ? const ColorFilter.matrix(_kGreyscaleMatrix)
+              : const ColorFilter.mode(Colors.transparent, BlendMode.dst),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (showRibbon) ...[
+                _Ribbon(palette: p, themeColor: primary, diskSize: diskSize),
+                _Loop(palette: p, diskSize: diskSize),
+              ],
+              _Disk(palette: p, icon: icon, diskSize: diskSize),
             ],
-            _Disk(palette: p, icon: icon, diskSize: diskSize),
-          ],
+          ),
         ),
       ),
     );
