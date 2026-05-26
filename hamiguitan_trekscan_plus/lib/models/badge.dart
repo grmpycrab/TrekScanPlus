@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-enum VerificationType { scan, manualImageReview }
+enum VerificationType { scan, manualImageReview, session }
 
 class UserBadge {
   final String id;
@@ -13,10 +13,15 @@ class UserBadge {
   final String difficulty;
   final String tier;
   final VerificationType verificationType;
-  final String? triggerStationId; // QR station ID that awards this badge
+  final String? triggerStationId;
   final int points;
   final bool earned;
-  final String? claimStatus; // null | PENDING | APPROVED | REJECTED
+  final String? claimStatus;
+  final bool isLimitedEdition;
+  final DateTime? startDate;
+  final DateTime? endDate;
+  final String visibilityRule;
+  final Map<String, dynamic>? tracking;
 
   const UserBadge({
     required this.id,
@@ -33,10 +38,15 @@ class UserBadge {
     this.points = 0,
     this.earned = false,
     this.claimStatus,
+    this.isLimitedEdition = false,
+    this.startDate,
+    this.endDate,
+    this.visibilityRule = 'ALWAYS_VISIBLE',
+    this.tracking,
   });
 
   factory UserBadge.fromJson(Map<String, dynamic> json) {
-    final vtRaw = json['verificationType'] as String? ?? 'SCAN';
+    final vtRaw = (json['verificationType'] as String? ?? 'SCAN').toUpperCase();
     return UserBadge(
       id: json['id'] as String,
       name: json['name'] as String,
@@ -49,12 +59,57 @@ class UserBadge {
       tier: json['tier'] as String? ?? 'bronze',
       verificationType: vtRaw == 'MANUAL_IMAGE_REVIEW'
           ? VerificationType.manualImageReview
-          : VerificationType.scan,
+          : vtRaw == 'SESSION'
+              ? VerificationType.session
+              : VerificationType.scan,
       triggerStationId: json['triggerStationId'] as String?,
       points: json['points'] as int? ?? 0,
       earned: false,
       claimStatus: json['claimStatus'] as String?,
+      isLimitedEdition: json['isLimitedEdition'] as bool? ?? false,
+      startDate: json['startDate'] != null
+          ? DateTime.tryParse(json['startDate'] as String)
+          : null,
+      endDate: json['endDate'] != null
+          ? DateTime.tryParse(json['endDate'] as String)
+          : null,
+      visibilityRule: json['visibilityRule'] as String? ?? 'ALWAYS_VISIBLE',
+      tracking: json['tracking'] as Map<String, dynamic>?,
     );
+  }
+
+  Map<String, dynamic> toJson() {
+    String vtString;
+    switch (verificationType) {
+      case VerificationType.manualImageReview:
+        vtString = 'MANUAL_IMAGE_REVIEW';
+        break;
+      case VerificationType.session:
+        vtString = 'SESSION';
+        break;
+      case VerificationType.scan:
+        vtString = 'SCAN';
+        break;
+    }
+    return {
+      'id': id,
+      'name': name,
+      'description': description,
+      'category': category,
+      'icon': icon,
+      'requirement': requirement,
+      'rarity': rarity,
+      'difficulty': difficulty,
+      'tier': tier,
+      'verificationType': vtString,
+      'triggerStationId': triggerStationId,
+      'points': points,
+      'isLimitedEdition': isLimitedEdition,
+      'startDate': startDate?.toIso8601String(),
+      'endDate': endDate?.toIso8601String(),
+      'visibilityRule': visibilityRule,
+      'tracking': tracking,
+    };
   }
 
   UserBadge copyWith({
@@ -72,6 +127,11 @@ class UserBadge {
     int? points,
     bool? earned,
     String? claimStatus,
+    bool? isLimitedEdition,
+    DateTime? startDate,
+    DateTime? endDate,
+    String? visibilityRule,
+    Map<String, dynamic>? tracking,
   }) {
     return UserBadge(
       id: id ?? this.id,
@@ -88,6 +148,11 @@ class UserBadge {
       points: points ?? this.points,
       earned: earned ?? this.earned,
       claimStatus: claimStatus ?? this.claimStatus,
+      isLimitedEdition: isLimitedEdition ?? this.isLimitedEdition,
+      startDate: startDate ?? this.startDate,
+      endDate: endDate ?? this.endDate,
+      visibilityRule: visibilityRule ?? this.visibilityRule,
+      tracking: tracking ?? this.tracking,
     );
   }
 
@@ -124,30 +189,36 @@ class UserBadge {
 
   IconData getIconData() {
     switch (icon) {
-      case 'footprints':    return Icons.directions_walk;
-      case 'mountain':      return Icons.landscape;
-      case 'compass':       return Icons.explore;
-      case 'timer':         return Icons.timer;
-      case 'sunrise':       return Icons.wb_sunny;
-      case 'route':         return Icons.route;
-      case 'medal':         return Icons.military_tech;
-      case 'trending_up':   return Icons.trending_up;
-      case 'camera':        return Icons.camera_alt;
-      case 'star':          return Icons.star;
-      case 'forest':        return Icons.forest;
-      case 'flower':        return Icons.local_florist;
-      case 'eco':           return Icons.eco;
-      case 'report':        return Icons.report_problem;
-      case 'delete':        return Icons.delete_outline;
-      case 'group':         return Icons.group;
-      case 'person':        return Icons.person;
-      case 'photo_camera':  return Icons.photo_camera;
-      case 'calendar':      return Icons.calendar_today;
-      case 'trophy':        return Icons.emoji_events;
-      case 'event':         return Icons.event;
-      case 'public':        return Icons.public;
-      case 'explore':       return Icons.explore;
-      case 'landscape':     return Icons.landscape;
+      case 'footprints':       return Icons.directions_walk;
+      case 'mountain':         return Icons.landscape;
+      case 'compass':          return Icons.explore;
+      case 'timer':            return Icons.timer;
+      case 'sunrise':          return Icons.wb_sunny;
+      case 'route':            return Icons.route;
+      case 'medal':            return Icons.military_tech;
+      case 'trending_up':      return Icons.trending_up;
+      case 'camera':           return Icons.camera_alt;
+      case 'star':             return Icons.star;
+      case 'forest':           return Icons.forest;
+      case 'flower':           return Icons.local_florist;
+      case 'eco':              return Icons.eco;
+      case 'report':           return Icons.report_problem;
+      case 'delete':           return Icons.delete_outline;
+      case 'group':            return Icons.group;
+      case 'person':           return Icons.person;
+      case 'photo_camera':     return Icons.photo_camera;
+      case 'calendar':         return Icons.calendar_today;
+      case 'trophy':           return Icons.emoji_events;
+      case 'event':            return Icons.event;
+      case 'public':           return Icons.public;
+      case 'explore':          return Icons.explore;
+      case 'landscape':        return Icons.landscape;
+      case 'replay':           return Icons.replay;
+      case 'home':             return Icons.home;
+      case 'directions_walk':  return Icons.directions_walk;
+      case 'military_tech':    return Icons.military_tech;
+      case 'wb_sunny':         return Icons.wb_sunny;
+      case 'crown':            return Icons.workspace_premium;
       default: return Icons.emoji_events;
     }
   }

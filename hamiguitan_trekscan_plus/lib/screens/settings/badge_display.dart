@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:io';
 import 'package:flutter/foundation.dart';
+import 'package:image/image.dart' as img;
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:file_picker/file_picker.dart';
@@ -392,12 +393,15 @@ class _BadgeDetailScreenState extends State<BadgeDetailScreen> {
     if (_pickedFile == null) return;
     setState(() => _submitting = true);
     try {
+      final compressed = await _compressImage(_pickedFile!);
       final online = await _isOnline();
+
       if (online) {
+        // Direct upload path — skip local staging entirely when online.
         await BadgeClaimService.submitClaim(
           badgeId: widget.badge.id,
           badgeName: widget.badge.name,
-          file: _pickedFile!,
+          file: compressed,
         );
         if (mounted) {
           setState(() {
@@ -407,10 +411,11 @@ class _BadgeDetailScreenState extends State<BadgeDetailScreen> {
           });
         }
       } else {
+        // Offline path — stage locally, sync when connection returns.
         await BadgeClaimService.submitClaimOffline(
           badgeId: widget.badge.id,
           badgeName: widget.badge.name,
-          file: _pickedFile!,
+          file: compressed,
         );
         if (mounted) {
           setState(() {
@@ -419,6 +424,10 @@ class _BadgeDetailScreenState extends State<BadgeDetailScreen> {
             _submitting = false;
           });
         }
+        // When connectivity returns, re-check so the banner updates.
+        BadgeSyncEngine.instance.triggerSync().then((_) {
+          if (mounted) _loadClaimStatus();
+        });
       }
     } catch (e) {
       if (mounted) {
@@ -428,6 +437,40 @@ class _BadgeDetailScreenState extends State<BadgeDetailScreen> {
         );
       }
     }
+  }
+
+  /// Resize the image so neither dimension exceeds 1080 px, then re-encode
+  /// as JPEG at quality 70.  Returns the original file unchanged if decoding
+  /// fails (e.g. unsupported format), so the upload path never hard-fails.
+  Future<PlatformFile> _compressImage(PlatformFile source) async {
+    Uint8List sourceBytes;
+    if (source.bytes != null) {
+      sourceBytes = source.bytes!;
+    } else if (source.path != null) {
+      sourceBytes = await File(source.path!).readAsBytes();
+    } else {
+      return source;
+    }
+
+    final decoded = img.decodeImage(sourceBytes);
+    if (decoded == null) return source;
+
+    const maxDim = 1080;
+    final img.Image resized;
+    if (decoded.width >= decoded.height && decoded.width > maxDim) {
+      resized = img.copyResize(decoded, width: maxDim);
+    } else if (decoded.height > decoded.width && decoded.height > maxDim) {
+      resized = img.copyResize(decoded, height: maxDim);
+    } else {
+      resized = decoded;
+    }
+
+    final compressed = Uint8List.fromList(img.encodeJpg(resized, quality: 70));
+    return PlatformFile(
+      name: source.name.replaceAll(RegExp(r'\.\w+$'), '.jpg'),
+      size: compressed.length,
+      bytes: compressed,
+    );
   }
 
   // ── Debug smoke-test methods (kDebugMode only) ─────────────────────────────
@@ -658,6 +701,10 @@ class _BadgeDetailScreenState extends State<BadgeDetailScreen> {
       return _PendingBanner(colors: colors, isDark: isDark);
     }
 
+    if (_claimStatus == 'APPROVED') {
+      return _ApprovedBanner(colors: colors, isDark: isDark);
+    }
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -753,7 +800,7 @@ class _BadgeDetailScreenState extends State<BadgeDetailScreen> {
                     child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
                   )
                 : const Icon(Icons.send_rounded, size: 16),
-            label: Text(_submitting ? 'Submitting…' : 'Submit Proof'),
+            label: Text(_submitting ? 'Saving…' : 'Submit Proof'),
             style: ElevatedButton.styleFrom(
               backgroundColor: colors.primary,
               foregroundColor: Colors.white,
@@ -1061,6 +1108,62 @@ class _PendingBanner extends StatelessWidget {
                 const SizedBox(height: 3),
                 Text(
                   'Your proof has been submitted. An admin will review it shortly.',
+                  style: TextStyle(fontSize: 12, color: colors.textSecondary),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ── Approved banner ──────────────────────────────────────────────────────────
+
+class _ApprovedBanner extends StatelessWidget {
+  const _ApprovedBanner({required this.colors, required this.isDark});
+
+  final AppTheme colors;
+  final bool isDark;
+
+  @override
+  Widget build(BuildContext context) {
+    const green = Color(0xFF22C55E);
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: green.withValues(alpha: isDark ? 0.12 : 0.08),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: green.withValues(alpha: 0.4), width: 0.8),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 44,
+            height: 44,
+            decoration: BoxDecoration(
+              color: green.withValues(alpha: 0.15),
+              shape: BoxShape.circle,
+            ),
+            child: const Icon(Icons.verified_rounded, color: green, size: 24),
+          ),
+          const SizedBox(width: 13),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Badge Approved!',
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w700,
+                    color: Color(0xFF15803D),
+                  ),
+                ),
+                const SizedBox(height: 3),
+                Text(
+                  'Your proof was accepted. Return to the badge gallery to see your unlocked badge.',
                   style: TextStyle(fontSize: 12, color: colors.textSecondary),
                 ),
               ],

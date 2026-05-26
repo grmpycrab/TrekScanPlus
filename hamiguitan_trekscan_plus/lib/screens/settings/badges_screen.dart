@@ -1,11 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
-import 'dart:convert';
 import '../../models/badge.dart';
 import '../../theme/app_theme.dart';
 import 'badge_display.dart';
 import '../../components/badge_filter.dart';
 import '../../services/achievement_service.dart';
+import '../../services/badge_repository.dart';
 
 class BadgesScreen extends StatefulWidget {
   const BadgesScreen({super.key});
@@ -36,7 +35,16 @@ class _BadgesScreenState extends State<BadgesScreen>
   Future<List<UserBadge>> _loadBadgesAndAchievements() async {
     await _achievementService.init();
     _updateAcquiredBadges();
-    return _loadAllBadges();
+    // When the background Firestore hydration finishes, refresh the grid so
+    // admin-created badges materialise without requiring a screen re-open.
+    _achievementService.hydrationFuture.then((_) {
+      if (!mounted) return;
+      setState(() {
+        _badgesFuture = Future.value(BadgeRepository.instance.all);
+        _updateAcquiredBadges();
+      });
+    });
+    return BadgeRepository.instance.all;
   }
 
   void _updateAcquiredBadges() {
@@ -45,19 +53,6 @@ class _BadgesScreenState extends State<BadgesScreen>
     for (final achievement in unlockedAchievements) {
       _acquiredBadges[achievement.id] =
           achievement.unlockedAt ?? DateTime.now();
-    }
-  }
-
-  Future<List<UserBadge>> _loadAllBadges() async {
-    try {
-      final jsonString = await rootBundle.loadString('assets/data/badge.json');
-      final jsonData = jsonDecode(jsonString) as Map<String, dynamic>;
-      final badgesData = jsonData['badges'] as List<dynamic>? ?? [];
-      return badgesData
-          .map((badge) => UserBadge.fromJson(badge as Map<String, dynamic>))
-          .toList();
-    } catch (e) {
-      return [];
     }
   }
 
@@ -125,7 +120,15 @@ class _BadgesScreenState extends State<BadgesScreen>
         },
         transitionDuration: const Duration(milliseconds: 300),
       ),
-    );
+    ).then((_) {
+      // Re-check Firebase when returning so admin approvals are reflected
+      // immediately without requiring an app restart.
+      if (!mounted) return;
+      _achievementService.refreshFromFirebase().then((_) {
+        if (!mounted) return;
+        setState(() => _updateAcquiredBadges());
+      });
+    });
   }
 
   @override

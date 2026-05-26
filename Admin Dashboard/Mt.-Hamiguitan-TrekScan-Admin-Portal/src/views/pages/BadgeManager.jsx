@@ -6,7 +6,7 @@ import React, {
   useMemo,
   memo,
 } from 'react';
-import { Medal, PlusCircle, Inbox, CheckCircle, XCircle, ToggleLeft, ToggleRight } from 'lucide-react';
+import { Medal, PlusCircle, Inbox, CheckCircle, XCircle } from 'lucide-react';
 import {
   getAllClaims,
   approveClaim,
@@ -40,6 +40,10 @@ const EMPTY_FORM = {
   points: '',
   verificationType: 'SCAN',
   tier: 'bronze',
+  isLimitedEdition: false,
+  startDate: '',
+  endDate: '',
+  visibilityRule: 'ALWAYS_VISIBLE',
 };
 
 const STATUS_CLASS = {
@@ -120,8 +124,10 @@ function ClaimsQueue({ adminName, success, showError }) {
   useEffect(() => { toastRef.current = { success, showError }; });
 
   // Mount guard: blocks state updates after the component unmounts.
-  const mountedRef = useRef(true);
-  useEffect(() => () => { mountedRef.current = false; }, []);
+  // Initialized to false and set to true inside the effect so that React 18
+  // StrictMode's double-invoke (mount → cleanup → mount) correctly resets the
+  // flag to true before the second fetch runs, preventing infinite "Loading".
+  const mountedRef = useRef(false);
 
   // Stable fetch — empty dep array means this is created exactly once.
   // Uses getDocs() (single HTTP round-trip), not onSnapshot().
@@ -130,14 +136,21 @@ function ClaimsQueue({ adminName, success, showError }) {
     try {
       const data = await getAllClaims();
       if (mountedRef.current) setClaims(data);
-    } catch (_) {
+    } catch (err) {
+      console.error('[ClaimsQueue] getAllClaims failed:', err);
       if (mountedRef.current) toastRef.current.showError('Failed to load claims.');
     } finally {
       if (mountedRef.current) setLoading(false);
     }
   }, []); // intentionally empty — stability guaranteed by toastRef + mountedRef
 
-  useEffect(() => { loadClaims(); }, [loadClaims]);
+  // Merging the mount-guard and the initial fetch into one effect ensures
+  // mountedRef is true before loadClaims runs, regardless of StrictMode timing.
+  useEffect(() => {
+    mountedRef.current = true;
+    loadClaims();
+    return () => { mountedRef.current = false; };
+  }, [loadClaims]);
 
   // Stable reject-state ref: lets handleRejectConfirm read current modal/note
   // values without carrying them as useCallback dependencies.
@@ -421,22 +434,27 @@ function BadgeCreator({ success, showError }) {
   const toastRef  = useRef({ success, showError });
   useEffect(() => { toastRef.current = { success, showError }; });
 
-  const mountedRef = useRef(true);
-  useEffect(() => () => { mountedRef.current = false; }, []);
+  // Initialized to false — set to true inside the effect to survive React 18
+  // StrictMode's double-invoke without leaving the loading state stuck.
+  const mountedRef = useRef(false);
 
   const loadDefinitions = useCallback(async () => {
     setLoadingDefs(true);
     try {
       const defs = await getBadgeDefinitions();
       if (mountedRef.current) setDefinitions(defs);
-    } catch (_) {
-      // non-critical; list stays stale rather than showing an error
+    } catch (err) {
+      console.error('[BadgeCreator] getBadgeDefinitions failed:', err);
     } finally {
       if (mountedRef.current) setLoadingDefs(false);
     }
   }, []); // intentionally empty
 
-  useEffect(() => { loadDefinitions(); }, [loadDefinitions]);
+  useEffect(() => {
+    mountedRef.current = true;
+    loadDefinitions();
+    return () => { mountedRef.current = false; };
+  }, [loadDefinitions]);
 
   // Single stable onChange handler — reads field name from the DOM element.
   // Using a name-based approach avoids creating a new closure per field per render.
@@ -445,28 +463,53 @@ function BadgeCreator({ success, showError }) {
     setForm((f) => ({ ...f, [name]: value }));
   }, []);
 
+  const handleCheckboxChange = useCallback((e) => {
+    const { name, checked } = e.target;
+    setForm((f) => ({ ...f, [name]: checked }));
+  }, []);
+
   const handleCreate = useCallback(async (e) => {
     e.preventDefault();
-    const { title, description, points, verificationType, tier } = form;
+    const { title, description, points, verificationType, tier, isLimitedEdition, startDate, endDate, visibilityRule } = form;
     if (!title.trim() || !description.trim() || !Number(points)) return;
     setSaving(true);
     try {
-      await createBadgeDefinition({
+      const newId = await createBadgeDefinition({
         title:            title.trim(),
         description:      description.trim(),
         points:           Number(points),
         verificationType,
         tier,
+        isLimitedEdition,
+        startDate:        isLimitedEdition ? startDate : null,
+        endDate:          isLimitedEdition ? endDate   : null,
+        visibilityRule,
       });
       toastRef.current.success(`Badge "${title}" created successfully.`);
       setForm(EMPTY_FORM);
-      await loadDefinitions();
+      // Optimistically prepend the new badge — no re-fetch needed.
+      setDefinitions((prev) => [
+        {
+          id: newId,
+          title: title.trim(),
+          description: description.trim(),
+          points: Number(points),
+          verificationType,
+          tier,
+          isActive: true,
+          isLimitedEdition,
+          startDate: isLimitedEdition ? startDate : null,
+          endDate:   isLimitedEdition ? endDate   : null,
+          visibilityRule,
+        },
+        ...prev,
+      ]);
     } catch (_) {
       toastRef.current.showError('Failed to create badge. Try again.');
     } finally {
       if (mountedRef.current) setSaving(false);
     }
-  }, [form, loadDefinitions]);
+  }, [form]); // loadDefinitions removed — creation no longer triggers a re-fetch
 
   const handleToggle = useCallback(async (def) => {
     setTogglingId(def.id);
@@ -480,7 +523,8 @@ function BadgeCreator({ success, showError }) {
     }
   }, [loadDefinitions]);
 
-  const isValid = form.title.trim() && form.description.trim() && Number(form.points) > 0;
+  const isValid = form.title.trim() && form.description.trim() && Number(form.points) > 0 &&
+    (!form.isLimitedEdition || (form.startDate && form.endDate));
 
   return (
     <>
@@ -566,6 +610,63 @@ function BadgeCreator({ success, showError }) {
           </select>
         </div>
 
+        <div className="bm-field">
+          <label className="bm-label">Visibility Rule</label>
+          <select
+            className="bm-select"
+            name="visibilityRule"
+            value={form.visibilityRule}
+            onChange={handleFieldChange}
+          >
+            <option value="ALWAYS_VISIBLE">Always Visible</option>
+            <option value="HIDDEN_UNTIL_ACTIVE">Hidden Until Active</option>
+            <option value="ARCHIVED_AFTER_EXPIRATION">Archived After Expiration</option>
+          </select>
+        </div>
+
+        <div className="bm-field bm-checkbox-field">
+          <label className="bm-checkbox-label">
+            <input
+              type="checkbox"
+              name="isLimitedEdition"
+              checked={form.isLimitedEdition}
+              onChange={handleCheckboxChange}
+              className="bm-checkbox"
+            />
+            Limited Edition
+          </label>
+          <span className="bm-checkbox-hint">
+            Show a Limited Edition badge pill and optionally set active date range.
+          </span>
+        </div>
+
+        {form.isLimitedEdition && (
+          <div className="bm-field-row">
+            <div className="bm-field">
+              <label className="bm-label">Start Date</label>
+              <input
+                className="bm-input"
+                name="startDate"
+                type="date"
+                value={form.startDate}
+                onChange={handleFieldChange}
+                required
+              />
+            </div>
+            <div className="bm-field">
+              <label className="bm-label">End Date</label>
+              <input
+                className="bm-input"
+                name="endDate"
+                type="date"
+                value={form.endDate}
+                onChange={handleFieldChange}
+                required
+              />
+            </div>
+          </div>
+        )}
+
         <button className="bm-btn-create" type="submit" disabled={saving || !isValid}>
           <PlusCircle size={16} />
           {saving ? 'Creating…' : 'Create Badge'}
@@ -625,22 +726,17 @@ const DefinitionsList = memo(function DefinitionsList({
                   {def.verificationType === 'MANUAL_IMAGE_REVIEW' ? 'Manual' : 'Scan'}
                 </span>
                 <span className="bm-def-pill bm-def-pill-pts">✦ {def.points} pts</span>
-                {!def.isActive && (
-                  <span className="bm-def-pill bm-def-pill-inactive">Inactive</span>
+                {def.isLimitedEdition && (
+                  <span className="bm-def-pill bm-def-pill-limited">Limited Edition</span>
                 )}
               </div>
             </div>
             <button
-              className="bm-def-toggle"
+              className={`bm-def-toggle-btn ${def.isActive ? 'bm-def-toggle-on' : 'bm-def-toggle-off'}`}
               disabled={togglingId === def.id}
               onClick={() => onToggle(def)}
-              title={def.isActive ? 'Deactivate' : 'Activate'}
             >
-              {def.isActive ? (
-                <ToggleRight size={16} style={{ verticalAlign: 'middle', color: '#7c3aed' }} />
-              ) : (
-                <ToggleLeft size={16} style={{ verticalAlign: 'middle' }} />
-              )}
+              {togglingId === def.id ? '…' : def.isActive ? 'Active' : 'Inactive'}
             </button>
           </div>
         ))

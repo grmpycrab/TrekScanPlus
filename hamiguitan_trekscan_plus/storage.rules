@@ -76,6 +76,14 @@ service firebase.storage {
       allow delete: if request.auth != null;
     }
 
+    // Badge claim proof photos: users upload to their own folder; admins can read all
+    match /badge_claims/{userId}/{allPaths=**} {
+      allow create, write: if request.auth != null && request.auth.uid == userId;
+      allow read: if request.auth != null &&
+        (request.auth.uid == userId || request.auth.token.admin == true);
+      allow delete: if request.auth != null && request.auth.token.admin == true;
+    }
+
     // Deny all other access
     match /{allPaths=**} {
       allow read, write, delete: if false;

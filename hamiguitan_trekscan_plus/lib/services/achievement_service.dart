@@ -1,13 +1,16 @@
 // ignore_for_file: unrelated_type_equality_checks
 
-import 'dart:convert';
+import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter/services.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import '../models/achievement.dart';
 import '../models/badge.dart';
+import 'badge_repository.dart';
+import 'legacy_scan_backfill_manager.dart';
 import 'local_achievement_service.dart';
+import 'trek_session_tracker.dart';
+import '../core/achievement_overlay_manager.dart';
 import '../utils/app_logger.dart';
 
 /// Achievement service that handles logic, Firebase sync, and offline support
@@ -20,7 +23,12 @@ class AchievementService {
 
   List<Achievement> _allAchievements = [];
   bool _isInitialized = false;
-  String? _currentUserId; // Track which user this instance is for
+  String? _currentUserId;
+
+  /// Completes when the background Firestore badge hydration finishes.
+  /// Callers (e.g. BadgesScreen) can chain .then() on this to refresh the UI.
+  Future<void> get hydrationFuture => _hydrationFuture ?? Future.value();
+  Future<void>? _hydrationFuture;
 
   AchievementService._internal()
     : _firestore = FirebaseFirestore.instance,
@@ -58,8 +66,9 @@ class AchievementService {
       // Initialize local service with user ID
       _localService = await LocalAchievementService.init(userId: currentUserId);
 
-      // Load achievements from JSON file
-      await _loadAchievementsFromJson();
+      // Load badge catalog from the local repository (SharedPreferences cache,
+      // seeded from bundled JSON on first launch).
+      await _loadFromRepository();
 
       // Only merge with local achievements if viewing own profile
       if (isOwnProfile) {
@@ -77,6 +86,22 @@ class AchievementService {
       // Only sync to Firebase if viewing own profile
       if (isOwnProfile) {
         await _syncPendingToFirebase();
+      }
+
+      // Fire background Firestore hydration for the badge catalog.
+      // Callers can await hydrationFuture to react when it completes.
+      _hydrationFuture = BadgeRepository.instance
+          .hydrateFromFirestore()
+          .then((_) => _mergeNewBadgesFromRepository());
+
+      // Run legacy scan backfill exactly once per user install (fire-and-forget).
+      // Unlocks badges for pre-existing visited stations using their original
+      // check-in timestamps so historical records remain accurate.
+      if (targetUserId != null && isOwnProfile) {
+        unawaited(LegacyScanBackfillManager.instance.run(
+          userId: targetUserId,
+          achievementService: this,
+        ));
       }
 
       _isInitialized = true;
@@ -106,21 +131,67 @@ class AchievementService {
     }
   }
 
-  /// Load achievements from badge.json file
-  Future<void> _loadAchievementsFromJson() async {
+  /// Load the badge catalog from [BadgeRepository] (SharedPreferences cache,
+  /// seeded from the bundled asset on first launch).
+  Future<void> _loadFromRepository() async {
     try {
-      String jsonString = await rootBundle.loadString('assets/data/badge.json');
-      Map<String, dynamic> jsonData = json.decode(jsonString);
-      List<dynamic> badgesList = jsonData['badges'] ?? [];
-
-      _allAchievements = badgesList
-          .map((badge) => Achievement.fromJson(badge as Map<String, dynamic>))
+      await BadgeRepository.instance.init();
+      _allAchievements = BadgeRepository.instance.all
+          .map(_achievementFromBadge)
           .toList();
     } catch (e) {
-      AppLogger.i('Error loading achievements from JSON: $e');
+      AppLogger.i('Error loading achievements from repository: $e');
       _allAchievements = [];
     }
   }
+
+  /// Append any badges the background hydration added to the repository that
+  /// are not yet in the in-memory achievement list. Also refreshes fields on
+  /// admin-created badges (points, name, etc.) in case they were updated.
+  void _mergeNewBadgesFromRepository() {
+    final repoBadges = BadgeRepository.instance.all;
+    for (final badge in repoBadges) {
+      final idx = _allAchievements.indexWhere((a) => a.id == badge.id);
+      if (idx == -1) {
+        // Newly hydrated badge — add with default unlock state.
+        _allAchievements.add(_achievementFromBadge(badge));
+      } else if (_allAchievements[idx].category == 'admin_created') {
+        // Preserve unlock state but refresh mutable admin fields.
+        final existing = _allAchievements[idx];
+        _allAchievements[idx] = existing.copyWith(
+          name: badge.name,
+          description: badge.description,
+          points: badge.points,
+          tier: badge.tier,
+          isLimitedEdition: badge.isLimitedEdition,
+          startDate: badge.startDate,
+          endDate: badge.endDate,
+          visibilityRule: badge.visibilityRule,
+        );
+      }
+    }
+  }
+
+  /// Convert a catalog [UserBadge] to an [Achievement] with default unlock state.
+  Achievement _achievementFromBadge(UserBadge b) => Achievement(
+        id: b.id,
+        name: b.name,
+        description: b.description,
+        category: b.category,
+        icon: b.icon,
+        requirement: b.requirement,
+        rarity: b.rarity,
+        difficulty: b.difficulty,
+        tier: b.tier,
+        verificationType: b.verificationType,
+        triggerStationId: b.triggerStationId,
+        points: b.points,
+        isLimitedEdition: b.isLimitedEdition,
+        startDate: b.startDate,
+        endDate: b.endDate,
+        visibilityRule: b.visibilityRule,
+        tracking: b.tracking,
+      );
 
   /// Merge achievements with local stored data to preserve unlock status
   Future<void> _mergeWithLocalAchievements() async {
@@ -221,6 +292,9 @@ class AchievementService {
     for (final achievement in _allAchievements) {
       // Skip if already unlocked
       if (achievement.isUnlocked) continue;
+
+      // SESSION badges are evaluated by checkSessionMilestones, not QR scans
+      if (achievement.verificationType == VerificationType.session) continue;
 
       // Check if achievement criteria is met
       if (_checkAchievementCriteria(
@@ -341,12 +415,21 @@ class AchievementService {
     }
   }
 
-  /// Unlock achievement locally
-  Future<void> _unlockAchievementLocally(Achievement achievement) async {
+  /// Unlock achievement locally.
+  ///
+  /// [silent] = true suppresses the overlay banner (used for retroactive
+  /// backfill so the user isn't spammed on login).
+  /// [unlockedAt] preserves the original check-in timestamp for legacy
+  /// backfill; falls back to [DateTime.now] when null.
+  Future<void> _unlockAchievementLocally(
+    Achievement achievement, {
+    bool silent = false,
+    DateTime? unlockedAt,
+  }) async {
     try {
       final unlocked = achievement.copyWith(
         isUnlocked: true,
-        unlockedAt: DateTime.now(),
+        unlockedAt: unlockedAt ?? DateTime.now(),
         syncStatus: 'PENDING_SYNC',
       );
       await _localService.unlockAchievement(unlocked);
@@ -355,6 +438,11 @@ class AchievementService {
       final index = _allAchievements.indexWhere((a) => a.id == achievement.id);
       if (index != -1) {
         _allAchievements[index] = unlocked;
+      }
+
+      // Show the animated top-banner immediately — fires even when offline
+      if (!silent) {
+        AchievementOverlayManager.instance.show(unlocked);
       }
 
       // Immediately try to sync to Firebase
@@ -379,7 +467,7 @@ class AchievementService {
       if (achievement.verificationType != VerificationType.scan) continue;
       if (achievement.triggerStationId == null) continue;
       if (visitedSet.contains(achievement.triggerStationId)) {
-        await _unlockAchievementLocally(achievement);
+        await _unlockAchievementLocally(achievement, silent: true);
       }
     }
   }
@@ -437,49 +525,53 @@ class AchievementService {
   /// Sync pending achievements to Firebase
   Future<void> _syncPendingToFirebase() async {
     try {
-      final isConnected = await _isOnline();
-      if (!isConnected) return;
-
       final userId = _auth.currentUser?.uid;
       if (userId == null) return;
 
       final syncQueue = await _localService.getSyncQueue();
       if (syncQueue.isEmpty) return;
 
-      for (final achievementId in syncQueue) {
-        try {
-          final achievement = await _localService.getAchievementById(
-            achievementId,
-          );
-          if (achievement != null) {
-            await _firestore
-                .collection('users')
-                .doc(userId)
-                .collection('achievements')
-                .doc(achievement.id)
-                .set({
-                  'id': achievement.id,
-                  'name': achievement.name,
-                  'description': achievement.description,
-                  'category': achievement.category,
-                  'icon': achievement.icon,
-                  'rarity': achievement.rarity,
-                  'difficulty': achievement.difficulty,
-                  'requirement': achievement.requirement,
-                  'unlockedAt': achievement.unlockedAt?.toIso8601String(),
-                  'syncedAt': FieldValue.serverTimestamp(),
-                });
+      // Resolve all achievement objects locally (SharedPreferences, no network).
+      final toSync = <Achievement>[];
+      for (final id in syncQueue) {
+        final a = await _localService.getAchievementById(id);
+        if (a != null) toSync.add(a);
+      }
+      if (toSync.isEmpty) return;
 
-            await _firestore.collection('users').doc(userId).update({
-              'badges': FieldValue.arrayUnion([achievement.id]),
-            });
+      // One batched Firestore round-trip instead of N×2 serial awaits.
+      final batch = _firestore.batch();
+      final userRef = _firestore.collection('users').doc(userId);
 
-            await _localService.removeFromSyncQueue(achievementId);
-          }
-        } catch (e) {
-          AppLogger.i('Failed to sync achievement $achievementId: $e');
-          continue;
-        }
+      for (final achievement in toSync) {
+        batch.set(
+          userRef.collection('achievements').doc(achievement.id),
+          {
+            'id': achievement.id,
+            'name': achievement.name,
+            'description': achievement.description,
+            'category': achievement.category,
+            'icon': achievement.icon,
+            'rarity': achievement.rarity,
+            'difficulty': achievement.difficulty,
+            'requirement': achievement.requirement,
+            'unlockedAt': achievement.unlockedAt?.toIso8601String(),
+            'syncedAt': FieldValue.serverTimestamp(),
+          },
+        );
+      }
+
+      // Merge so the user doc is created if it doesn't exist yet.
+      batch.set(
+        userRef,
+        {'badges': FieldValue.arrayUnion(toSync.map((a) => a.id).toList())},
+        SetOptions(merge: true),
+      );
+
+      await batch.commit();
+
+      for (final a in toSync) {
+        await _localService.removeFromSyncQueue(a.id);
       }
     } catch (e) {
       AppLogger.i('Error syncing achievements to Firebase: $e');
@@ -488,6 +580,7 @@ class AchievementService {
 
   /// Public method to manually trigger Firebase sync (can be called periodically)
   Future<void> syncToFirebase() async {
+    if (!_isInitialized) return;
     await _syncPendingToFirebase();
   }
 
@@ -635,6 +728,79 @@ class AchievementService {
     } catch (e) {
       AppLogger.i('Error fetching achievements from Firebase: $e');
       return [];
+    }
+  }
+
+  /// Unlock SCAN-type badges for stations the user already visited before the
+  /// badge system was introduced.  Called once per user install by
+  /// [LegacyScanBackfillManager]; never call this from the QR scan path.
+  ///
+  /// [stationTimestamps] maps each visited station ID to its original check-in
+  /// timestamp (null falls back to [DateTime.now] inside the unlock helper).
+  Future<void> backfillAchievementsFromStations(
+    Map<String, DateTime?> stationTimestamps,
+  ) async {
+    if (!_isInitialized) return;
+
+    for (final achievement in List.of(_allAchievements)) {
+      if (achievement.isUnlocked) continue;
+      if (achievement.verificationType != VerificationType.scan) continue;
+      final stationId = achievement.triggerStationId;
+      if (stationId == null) continue;
+      if (!stationTimestamps.containsKey(stationId)) continue;
+
+      await _unlockAchievementLocally(
+        achievement,
+        silent: true,
+        unlockedAt: stationTimestamps[stationId],
+      );
+    }
+  }
+
+  /// Evaluate all SESSION-type badges against the current [TrekSessionTracker]
+  /// state and unlock any whose criteria are now satisfied.
+  /// Call this at the end of each completed trek session after recording it.
+  Future<void> checkSessionMilestones(TrekSessionTracker tracker) async {
+    if (!_isInitialized) return;
+
+    for (final achievement in List.of(_allAchievements)) {
+      if (achievement.isUnlocked) continue;
+      if (achievement.verificationType != VerificationType.session) continue;
+
+      if (_checkSessionCriteria(achievement, tracker)) {
+        await _unlockAchievementLocally(achievement);
+      }
+    }
+  }
+
+  /// Returns true when [achievement]'s session-based requirement is satisfied.
+  bool _checkSessionCriteria(
+    Achievement achievement,
+    TrekSessionTracker tracker,
+  ) {
+    final type = achievement.requirement['type'] as String?;
+    final value = achievement.requirement['value'];
+    if (type == null || value == null) return false;
+
+    final threshold = value is int ? value : int.tryParse(value.toString());
+    if (threshold == null) return false;
+
+    try {
+      switch (type) {
+        case 'total_completed_sessions':
+          return tracker.totalCompletedSessions >= threshold;
+        case 'rolling_30_day_sessions':
+          return tracker.getSessionsInLast30Days().length >= threshold;
+        case 'climatic_quarters':
+          return tracker.getDistinctClimaticQuarters() >= threshold;
+        case 'summit_across_sessions':
+          return tracker.summitVisitCount >= threshold;
+        default:
+          return false;
+      }
+    } catch (e) {
+      AppLogger.i('Error checking session criteria for ${achievement.id}: $e');
+      return false;
     }
   }
 

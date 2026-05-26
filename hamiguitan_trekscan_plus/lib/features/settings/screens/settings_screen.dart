@@ -16,6 +16,8 @@ import '../../../screens/settings/about_screen.dart';
 import '../../../screens/settings/archived_bookings_screen.dart';
 import '../../../screens/settings/badges_screen.dart';
 import '../../../screens/settings/help_and_support_screen.dart';
+import '../../../services/badge_claim_service.dart';
+import '../../../services/badge_sync_engine.dart';
 import '../../../screens/settings/account_settings.dart';
 import '../viewmodels/settings_view_model.dart';
 
@@ -155,6 +157,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           ),
                         ),
                       ),
+                      const _SyncItem(),
                     ],
                   ),
                   const SizedBox(height: 28),
@@ -235,6 +238,163 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ),
           const SizedBox(width: 40),
         ],
+      ),
+    );
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// SYNC ITEM
+// ═══════════════════════════════════════════════════════════════════════════════
+
+class _SyncItem extends StatefulWidget {
+  const _SyncItem();
+
+  @override
+  State<_SyncItem> createState() => _SyncItemState();
+}
+
+class _SyncItemState extends State<_SyncItem> {
+  bool _syncing = false;
+  int _pendingCount = 0;
+  bool _justSynced = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _refreshPendingCount();
+  }
+
+  Future<void> _refreshPendingCount() async {
+    final staged = await BadgeClaimService.getStagedClaims();
+    if (mounted) setState(() => _pendingCount = staged.length);
+  }
+
+  Future<void> _sync() async {
+    if (_syncing) return;
+    setState(() {
+      _syncing = true;
+      _justSynced = false;
+    });
+    // triggerSync() is best-effort and never throws.
+    await BadgeSyncEngine.instance.triggerSync();
+    await _refreshPendingCount();
+    if (!mounted) return;
+    setState(() => _justSynced = true);
+    final msg = _pendingCount == 0
+        ? 'All items synced'
+        : '$_pendingCount item${_pendingCount == 1 ? '' : 's'} still pending — will retry automatically';
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(msg), duration: const Duration(seconds: 3)),
+    );
+    await Future.delayed(const Duration(seconds: 2));
+    if (mounted) {
+      setState(() {
+        _justSynced = false;
+        _syncing = false;
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.colors;
+    final isDark = context.isDarkMode;
+    final iconColor = isDark ? colors.iconSubtle : colors.primary;
+    final iconBg = isDark
+        ? Colors.white.withValues(alpha: 0.07)
+        : colors.primary.withValues(alpha: 0.08);
+
+    final String subtitle = _syncing
+        ? 'Syncing…'
+        : _justSynced
+            ? 'All synced'
+            : _pendingCount > 0
+                ? '$_pendingCount item${_pendingCount == 1 ? '' : 's'} pending'
+                : 'Everything is up to date';
+
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: _syncing ? null : _sync,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 13),
+          child: Row(
+            children: [
+              Container(
+                width: 36,
+                height: 36,
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  color: iconBg,
+                  borderRadius: BorderRadius.circular(9),
+                ),
+                child: _syncing
+                    ? SizedBox(
+                        width: 18,
+                        height: 18,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          valueColor: AlwaysStoppedAnimation<Color>(iconColor),
+                        ),
+                      )
+                    : Icon(
+                        _justSynced
+                            ? Icons.check_circle_outline_rounded
+                            : Icons.sync_rounded,
+                        color: _justSynced ? Colors.green : iconColor,
+                        size: 18,
+                      ),
+              ),
+              const SizedBox(width: 13),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Sync Data',
+                      style: TextStyle(
+                        color: colors.text,
+                        fontSize: 15,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      subtitle,
+                      style: TextStyle(
+                        color: _pendingCount > 0 && !_syncing && !_justSynced
+                            ? colors.primary
+                            : colors.textSecondary,
+                        fontSize: 12,
+                        height: 1.3,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
+                ),
+              ),
+              if (_pendingCount > 0 && !_syncing && !_justSynced)
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 7, vertical: 3),
+                  decoration: BoxDecoration(
+                    color: colors.primary.withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Text(
+                    '$_pendingCount',
+                    style: TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w700,
+                      color: colors.primary,
+                    ),
+                  ),
+                ),
+            ],
+          ),
+        ),
       ),
     );
   }

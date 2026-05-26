@@ -208,22 +208,68 @@
 .bm-def-pill-scan     { background: #dbeafe; color: #1d4ed8; }
 .bm-def-pill-manual   { background: #fce7f3; color: #9d174d; }
 .bm-def-pill-pts      { background: #f3e8ff; color: #6d28d9; }
-.bm-def-pill-inactive { background: #f3f4f6; color: #9ca3af; }
+.bm-def-pill-limited  { background: #fef9c3; color: #854d0e; }
 
-.bm-def-toggle {
-  padding: 5px 12px;
+.bm-def-toggle-btn {
+  padding: 5px 14px;
   border-radius: 6px;
   font-size: 12px;
-  font-weight: 600;
-  border: 1px solid #e5e7eb;
-  background: #f9fafb;
-  color: #6b7280;
+  font-weight: 700;
+  border: none;
   cursor: pointer;
   flex-shrink: 0;
-  transition: background 0.15s;
+  transition: background 0.15s, opacity 0.15s;
+  letter-spacing: 0.2px;
 }
 
-.bm-def-toggle:hover { background: #f3f4f6; }
+.bm-def-toggle-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.bm-def-toggle-on {
+  background: #dcfce7;
+  color: #15803d;
+}
+
+.bm-def-toggle-on:hover:not(:disabled) { background: #bbf7d0; }
+
+.bm-def-toggle-off {
+  background: #fee2e2;
+  color: #dc2626;
+}
+
+.bm-def-toggle-off:hover:not(:disabled) { background: #fecaca; }
+
+/* ── Checkbox field (Limited Edition) ──────────────────────────────────── */
+.bm-checkbox-field {
+  flex-direction: row;
+  align-items: flex-start;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.bm-checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #374151;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.bm-checkbox {
+  width: 16px;
+  height: 16px;
+  accent-color: #7c3aed;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.bm-checkbox-hint {
+  font-size: 12px;
+  color: #9ca3af;
+  line-height: 1.4;
+}
 
 /* ── Claims queue ────────────────────────────────────────────────────────── */
 .bm-filter-row {

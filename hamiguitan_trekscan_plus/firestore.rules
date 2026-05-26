@@ -23,12 +23,12 @@ service cloud.firestore {
         request.writeFields.hasAny(['followers', 'followersCount', 'following', 'followingCount', 'postsCount', 'pendingFollowRequests', 'sentFollowRequests']);
 
 
-      // Achievements subcollection: any authenticated user can read (for profile viewing), users can write their own
+      // Achievements subcollection: any authenticated user can read (for profile viewing), users can write their own, admins can write any (for badge claim approval)
       match /achievements/{achievementId} {
-        allow create: if request.auth != null && request.auth.uid == userId;
-        allow read: if request.auth != null; // Any authenticated user can read achievements (public badges)
-        allow write: if request.auth != null && request.auth.uid == userId;
-        allow delete: if request.auth != null && request.auth.uid == userId;
+        allow create: if request.auth != null && (request.auth.uid == userId || isAdmin());
+        allow read: if request.auth != null;
+        allow write: if request.auth != null && (request.auth.uid == userId || isAdmin());
+        allow delete: if request.auth != null && (request.auth.uid == userId || isAdmin());
       }
 
       // Notifications subcollection: users can read/delete their own, ANY authenticated user can CREATE notifications for them

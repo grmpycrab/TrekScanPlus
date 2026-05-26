@@ -2,6 +2,7 @@ import 'dart:async';
 import 'achievement_service.dart';
 import 'badge_claim_service.dart';
 import 'connectivity_service.dart';
+import '../utils/app_logger.dart';
 
 /// Listens to network state changes and pushes offline-queued achievements
 /// and staged badge-claim photos to Firestore / Storage when the device
@@ -27,9 +28,18 @@ class BadgeSyncEngine {
 
   Future<void> _runSync() async {
     await Future.wait([
-      AchievementService().syncToFirebase(),
-      BadgeClaimService.uploadStagedClaims(),
+      _guard(AchievementService().syncToFirebase()),
+      _guard(BadgeClaimService.uploadStagedClaims()),
     ]);
+  }
+
+  // Absorbs any exception so _runSync never propagates — sync is best-effort.
+  Future<void> _guard(Future<void> op) async {
+    try {
+      await op.timeout(const Duration(seconds: 45));
+    } catch (e) {
+      AppLogger.i('[BadgeSyncEngine] sync operation failed: $e');
+    }
   }
 
   void dispose() {

@@ -16,7 +16,16 @@
                 "displayStation": "UNESCO Marker"
             },
             "rarity": "common",
-            "difficulty": "easy"
+            "difficulty": "easy",
+            "isLimitedEdition": false,
+            "startDate": null,
+            "endDate": null,
+            "visibilityRule": "ALWAYS_VISIBLE",
+            "tracking": {
+                "total_completed_sessions": 0,
+                "unique_trek_dates": [],
+                "summit_visit_count": 0
+            }
         },
         {
             "id": "river_crossing",
@@ -34,7 +43,16 @@
                 "displayStation": "Puting Bato"
             },
             "rarity": "common",
-            "difficulty": "easy"
+            "difficulty": "easy",
+            "isLimitedEdition": false,
+            "startDate": null,
+            "endDate": null,
+            "visibilityRule": "ALWAYS_VISIBLE",
+            "tracking": {
+                "total_completed_sessions": 0,
+                "unique_trek_dates": [],
+                "summit_visit_count": 0
+            }
         },
         {
             "id": "first_horizon",
@@ -52,7 +70,16 @@
                 "displayStation": "Lantawan 1"
             },
             "rarity": "common",
-            "difficulty": "easy"
+            "difficulty": "easy",
+            "isLimitedEdition": false,
+            "startDate": null,
+            "endDate": null,
+            "visibilityRule": "ALWAYS_VISIBLE",
+            "tracking": {
+                "total_completed_sessions": 0,
+                "unique_trek_dates": [],
+                "summit_visit_count": 0
+            }
         },
         {
             "id": "root_climber",
@@ -70,7 +97,16 @@
                 "displayStation": "Uwang-Uwang Trail"
             },
             "rarity": "rare",
-            "difficulty": "medium"
+            "difficulty": "medium",
+            "isLimitedEdition": false,
+            "startDate": null,
+            "endDate": null,
+            "visibilityRule": "ALWAYS_VISIBLE",
+            "tracking": {
+                "total_completed_sessions": 0,
+                "unique_trek_dates": [],
+                "summit_visit_count": 0
+            }
         },
         {
             "id": "pygmy_settler",
@@ -88,7 +124,16 @@
                 "displayStation": "Camp 3"
             },
             "rarity": "uncommon",
-            "difficulty": "medium"
+            "difficulty": "medium",
+            "isLimitedEdition": false,
+            "startDate": null,
+            "endDate": null,
+            "visibilityRule": "ALWAYS_VISIBLE",
+            "tracking": {
+                "total_completed_sessions": 0,
+                "unique_trek_dates": [],
+                "summit_visit_count": 0
+            }
         },
         {
             "id": "dwarf_guardian",
@@ -106,7 +151,16 @@
                 "displayStation": "Pygmy Field"
             },
             "rarity": "rare",
-            "difficulty": "medium"
+            "difficulty": "medium",
+            "isLimitedEdition": false,
+            "startDate": null,
+            "endDate": null,
+            "visibilityRule": "ALWAYS_VISIBLE",
+            "tracking": {
+                "total_completed_sessions": 0,
+                "unique_trek_dates": [],
+                "summit_visit_count": 0
+            }
         },
         {
             "id": "serpentinite_soul",
@@ -124,7 +178,16 @@
                 "displayStation": "Black Mountain"
             },
             "rarity": "rare",
-            "difficulty": "medium"
+            "difficulty": "medium",
+            "isLimitedEdition": false,
+            "startDate": null,
+            "endDate": null,
+            "visibilityRule": "ALWAYS_VISIBLE",
+            "tracking": {
+                "total_completed_sessions": 0,
+                "unique_trek_dates": [],
+                "summit_visit_count": 0
+            }
         },
         {
             "id": "hydrological_finale",
@@ -142,7 +205,16 @@
                 "displayStation": "Twin Falls"
             },
             "rarity": "uncommon",
-            "difficulty": "medium"
+            "difficulty": "medium",
+            "isLimitedEdition": false,
+            "startDate": null,
+            "endDate": null,
+            "visibilityRule": "ALWAYS_VISIBLE",
+            "tracking": {
+                "total_completed_sessions": 0,
+                "unique_trek_dates": [],
+                "summit_visit_count": 0
+            }
         },
         {
             "id": "apex_overlook",
@@ -160,7 +232,16 @@
                 "displayStation": "Mt. Hamiguitan Summit"
             },
             "rarity": "epic",
-            "difficulty": "hard"
+            "difficulty": "hard",
+            "isLimitedEdition": false,
+            "startDate": null,
+            "endDate": null,
+            "visibilityRule": "ALWAYS_VISIBLE",
+            "tracking": {
+                "total_completed_sessions": 0,
+                "unique_trek_dates": [],
+                "summit_visit_count": 0
+            }
         },
         {
             "id": "lost_ocean",
@@ -178,7 +259,16 @@
                 "displayStation": "Tinagong Dagat"
             },
             "rarity": "epic",
-            "difficulty": "hard"
+            "difficulty": "hard",
+            "isLimitedEdition": false,
+            "startDate": null,
+            "endDate": null,
+            "visibilityRule": "ALWAYS_VISIBLE",
+            "tracking": {
+                "total_completed_sessions": 0,
+                "unique_trek_dates": [],
+                "summit_visit_count": 0
+            }
         },
         {
             "id": "mist_walker",
@@ -196,7 +286,16 @@
                 "displayStation": "Lantawan 3 / Mossy Forest"
             },
             "rarity": "epic",
-            "difficulty": "hard"
+            "difficulty": "hard",
+            "isLimitedEdition": false,
+            "startDate": null,
+            "endDate": null,
+            "visibilityRule": "ALWAYS_VISIBLE",
+            "tracking": {
+                "total_completed_sessions": 0,
+                "unique_trek_dates": [],
+                "summit_visit_count": 0
+            }
         },
         {
             "id": "botanists_veil",
@@ -214,7 +313,16 @@
                 "displayStation": "Hidden Garden"
             },
             "rarity": "epic",
-            "difficulty": "hard"
+            "difficulty": "hard",
+            "isLimitedEdition": false,
+            "startDate": null,
+            "endDate": null,
+            "visibilityRule": "ALWAYS_VISIBLE",
+            "tracking": {
+                "total_completed_sessions": 0,
+                "unique_trek_dates": [],
+                "summit_visit_count": 0
+            }
         },
         {
             "id": "lnt_master",
@@ -232,7 +340,16 @@
                 "displayStation": null
             },
             "rarity": "legendary",
-            "difficulty": "hard"
+            "difficulty": "hard",
+            "isLimitedEdition": false,
+            "startDate": null,
+            "endDate": null,
+            "visibilityRule": "ALWAYS_VISIBLE",
+            "tracking": {
+                "total_completed_sessions": 0,
+                "unique_trek_dates": [],
+                "summit_visit_count": 0
+            }
         },
         {
             "id": "pitcher_perfection",
@@ -250,7 +367,16 @@
                 "displayStation": null
             },
             "rarity": "legendary",
-            "difficulty": "hard"
+            "difficulty": "hard",
+            "isLimitedEdition": false,
+            "startDate": null,
+            "endDate": null,
+            "visibilityRule": "ALWAYS_VISIBLE",
+            "tracking": {
+                "total_completed_sessions": 0,
+                "unique_trek_dates": [],
+                "summit_visit_count": 0
+            }
         },
         {
             "id": "shadow_king",
@@ -268,7 +394,205 @@
                 "displayStation": null
             },
             "rarity": "legendary",
-            "difficulty": "hard"
+            "difficulty": "hard",
+            "isLimitedEdition": false,
+            "startDate": null,
+            "endDate": null,
+            "visibilityRule": "ALWAYS_VISIBLE",
+            "tracking": {
+                "total_completed_sessions": 0,
+                "unique_trek_dates": [],
+                "summit_visit_count": 0
+            }
+        },
+        {
+            "id": "the_returnee",
+            "name": "The Returnee",
+            "description": "Once was not enough. You've returned to the slopes of Mt. Hamiguitan for a second time, proving that the mountain's call is not something you can ignore.",
+            "tier": "bronze",
+            "category": "volume_milestone",
+            "icon": "replay",
+            "verificationType": "SESSION",
+            "triggerStationId": null,
+            "points": 150,
+            "requirement": {
+                "type": "total_completed_sessions",
+                "value": 2,
+                "displayStation": null
+            },
+            "rarity": "uncommon",
+            "difficulty": "easy",
+            "isLimitedEdition": false,
+            "startDate": null,
+            "endDate": null,
+            "visibilityRule": "ALWAYS_VISIBLE",
+            "tracking": {
+                "total_completed_sessions": 0,
+                "unique_trek_dates": [],
+                "summit_visit_count": 0
+            }
+        },
+        {
+            "id": "sanctuary_regular",
+            "name": "Sanctuary Regular",
+            "description": "Three ascents. The mountain knows your name now. You've become a familiar presence among the boulders and bonsais — a regular in one of the world's most elite sanctuaries.",
+            "tier": "bronze",
+            "category": "volume_milestone",
+            "icon": "home",
+            "verificationType": "SESSION",
+            "triggerStationId": null,
+            "points": 300,
+            "requirement": {
+                "type": "total_completed_sessions",
+                "value": 3,
+                "displayStation": null
+            },
+            "rarity": "rare",
+            "difficulty": "medium",
+            "isLimitedEdition": false,
+            "startDate": null,
+            "endDate": null,
+            "visibilityRule": "ALWAYS_VISIBLE",
+            "tracking": {
+                "total_completed_sessions": 0,
+                "unique_trek_dates": [],
+                "summit_visit_count": 0
+            }
+        },
+        {
+            "id": "high_altitude_habit",
+            "name": "High Altitude Habit",
+            "description": "Five complete treks. What started as adventure has become a way of life. The altitude no longer steals your breath — it fuels it.",
+            "tier": "silver",
+            "category": "volume_milestone",
+            "icon": "trending_up",
+            "verificationType": "SESSION",
+            "triggerStationId": null,
+            "points": 500,
+            "requirement": {
+                "type": "total_completed_sessions",
+                "value": 5,
+                "displayStation": null
+            },
+            "rarity": "rare",
+            "difficulty": "medium",
+            "isLimitedEdition": false,
+            "startDate": null,
+            "endDate": null,
+            "visibilityRule": "ALWAYS_VISIBLE",
+            "tracking": {
+                "total_completed_sessions": 0,
+                "unique_trek_dates": [],
+                "summit_visit_count": 0
+            }
+        },
+        {
+            "id": "familiar_footsteps",
+            "name": "Familiar Footsteps",
+            "description": "Two complete treks within a single month. The trail remembers your footsteps because you never let them fade. Consistency is its own kind of devotion.",
+            "tier": "silver",
+            "category": "meta_session",
+            "icon": "directions_walk",
+            "verificationType": "SESSION",
+            "triggerStationId": null,
+            "points": 250,
+            "requirement": {
+                "type": "rolling_30_day_sessions",
+                "value": 2,
+                "displayStation": null
+            },
+            "rarity": "rare",
+            "difficulty": "medium",
+            "isLimitedEdition": false,
+            "startDate": null,
+            "endDate": null,
+            "visibilityRule": "ALWAYS_VISIBLE",
+            "tracking": {
+                "total_completed_sessions": 0,
+                "unique_trek_dates": [],
+                "summit_visit_count": 0
+            }
+        },
+        {
+            "id": "deca_trek_titan",
+            "name": "Deca Trek Titan",
+            "description": "Ten complete ascents of Mt. Hamiguitan. You have walked this UNESCO heritage site more times than most people will in a lifetime. The mountain is yours.",
+            "tier": "gold",
+            "category": "volume_milestone",
+            "icon": "military_tech",
+            "verificationType": "SESSION",
+            "triggerStationId": null,
+            "points": 1000,
+            "requirement": {
+                "type": "total_completed_sessions",
+                "value": 10,
+                "displayStation": null
+            },
+            "rarity": "epic",
+            "difficulty": "hard",
+            "isLimitedEdition": false,
+            "startDate": null,
+            "endDate": null,
+            "visibilityRule": "ALWAYS_VISIBLE",
+            "tracking": {
+                "total_completed_sessions": 0,
+                "unique_trek_dates": [],
+                "summit_visit_count": 0
+            }
+        },
+        {
+            "id": "four_seasons",
+            "name": "Four Seasons",
+            "description": "You've walked Hamiguitan in every climatic quarter of the year — through dry heat, monsoon rains, cool winds, and misty transitions. The mountain has no secrets left to keep from you.",
+            "tier": "gold",
+            "category": "meta_session",
+            "icon": "wb_sunny",
+            "verificationType": "SESSION",
+            "triggerStationId": null,
+            "points": 800,
+            "requirement": {
+                "type": "climatic_quarters",
+                "value": 4,
+                "displayStation": null
+            },
+            "rarity": "epic",
+            "difficulty": "hard",
+            "isLimitedEdition": false,
+            "startDate": null,
+            "endDate": null,
+            "visibilityRule": "ALWAYS_VISIBLE",
+            "tracking": {
+                "total_completed_sessions": 0,
+                "unique_trek_dates": [],
+                "summit_visit_count": 0
+            }
+        },
+        {
+            "id": "summit_sovereign",
+            "name": "Summit Sovereign",
+            "description": "Three verified summit scans across three distinct trek sessions. You have claimed the peak of Mt. Hamiguitan not once, not twice, but three times. The summit bows to no one — except you.",
+            "tier": "platinum",
+            "category": "meta_session",
+            "icon": "crown",
+            "verificationType": "SESSION",
+            "triggerStationId": "mr2l529okj",
+            "points": 1200,
+            "requirement": {
+                "type": "summit_across_sessions",
+                "value": 3,
+                "displayStation": "Mt. Hamiguitan Summit"
+            },
+            "rarity": "legendary",
+            "difficulty": "hard",
+            "isLimitedEdition": false,
+            "startDate": null,
+            "endDate": null,
+            "visibilityRule": "ALWAYS_VISIBLE",
+            "tracking": {
+                "total_completed_sessions": 0,
+                "unique_trek_dates": [],
+                "summit_visit_count": 0
+            }
         }
     ],
     "categories": [
@@ -286,6 +610,16 @@
             "id": "conservation",
             "name": "Conservation & Stewardship",
             "description": "Badges honoring those who trek thoughtfully and protect the trails they explore."
+        },
+        {
+            "id": "volume_milestone",
+            "name": "Volume Milestones",
+            "description": "Achievements unlocked by completing multiple full trek sessions over time."
+        },
+        {
+            "id": "meta_session",
+            "name": "Meta-Session Mastery",
+            "description": "Elite badges for trekkers who demonstrate consistency, seasonal range, and summit mastery across sessions."
         }
     ],
     "tiers": {

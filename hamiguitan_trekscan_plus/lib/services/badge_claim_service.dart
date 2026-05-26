@@ -1,6 +1,8 @@
 import 'dart:convert';
 import 'dart:io';
+import 'dart:typed_data';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import '../utils/app_logger.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:file_picker/file_picker.dart';
@@ -130,17 +132,19 @@ class BadgeClaimService {
         .ref()
         .child('badge_claims/${user.uid}/$badgeId/$timestamp.jpg');
 
-    UploadTask task;
-    if (file.path != null) {
-      task = storageRef.putFile(File(file.path!));
-    } else if (file.bytes != null) {
-      task = storageRef.putData(file.bytes!);
+    final Uint8List bytes;
+    if (file.bytes != null) {
+      bytes = file.bytes!;
+    } else if (file.path != null) {
+      bytes = await File(file.path!).readAsBytes();
     } else {
       throw Exception('No file data available');
     }
 
-    final snapshot = await task;
-    final imageUrl = await snapshot.ref.getDownloadURL();
+    final snapshot = await storageRef.putData(bytes).timeout(const Duration(seconds: 30));
+    final imageUrl = await snapshot.ref
+        .getDownloadURL()
+        .timeout(const Duration(seconds: 10));
 
     await _firestore.collection('badge_claims').add({
       'userId': user.uid,
@@ -225,26 +229,48 @@ class BadgeClaimService {
 
   static Future<void> uploadStagedClaims() async {
     final user = _auth.currentUser;
-    if (user == null) return;
+    if (user == null) {
+      AppLogger.i('[BadgeClaimService] uploadStagedClaims: no authenticated user, skipping');
+      return;
+    }
 
     final claims = await getStagedClaims();
+    AppLogger.i('[BadgeClaimService] uploadStagedClaims: ${claims.length} staged claim(s) found');
     if (claims.isEmpty) return;
 
     final prefs = await SharedPreferences.getInstance();
     final remaining = <StagedBadgeClaim>[];
 
     for (final claim in claims) {
+      AppLogger.i('[BadgeClaimService] uploading claim: badgeId=${claim.badgeId}');
       try {
         final file = File(claim.localImagePath);
-        if (!await file.exists()) continue;
+        if (!await file.exists()) {
+          AppLogger.i('[BadgeClaimService] local file missing for ${claim.badgeId}, skipping: ${claim.localImagePath}');
+          continue;
+        }
 
+        AppLogger.i('[BadgeClaimService] starting Storage upload for ${claim.badgeId}');
         final storageRef = _storage
             .ref()
             .child('badge_claims/${claim.userId}/${claim.badgeId}/${claim.stagedAt.millisecondsSinceEpoch}.jpg');
 
-        final snapshot = await storageRef.putFile(file);
-        final imageUrl = await snapshot.ref.getDownloadURL();
+        // Read bytes first — putData() bypasses the file-handle path that
+        // can hang indefinitely when App Check token negotiation stalls.
+        final bytes = await file.readAsBytes();
+        AppLogger.i('[BadgeClaimService] file read: ${bytes.length} bytes, starting putData');
+        final task = storageRef.putData(bytes);
+        task.snapshotEvents.listen(
+          (e) => AppLogger.i('[BadgeClaimService] upload progress ${claim.badgeId}: ${e.bytesTransferred}/${e.totalBytes}'),
+          onError: (e) => AppLogger.i('[BadgeClaimService] upload stream error ${claim.badgeId}: $e'),
+        );
+        final snapshot = await task.timeout(const Duration(seconds: 30));
+        AppLogger.i('[BadgeClaimService] Storage upload done for ${claim.badgeId}, getting URL');
+        final imageUrl = await snapshot.ref
+            .getDownloadURL()
+            .timeout(const Duration(seconds: 10));
 
+        AppLogger.i('[BadgeClaimService] writing Firestore doc for ${claim.badgeId}');
         await _firestore.collection('badge_claims').add({
           'userId': claim.userId,
           'badgeId': claim.badgeId,
@@ -259,7 +285,9 @@ class BadgeClaimService {
         });
 
         await file.delete();
-      } catch (_) {
+        AppLogger.i('[BadgeClaimService] claim ${claim.badgeId} uploaded successfully');
+      } catch (e) {
+        AppLogger.i('[BadgeClaimService] FAILED uploading ${claim.badgeId}: $e');
         remaining.add(claim);
       }
     }

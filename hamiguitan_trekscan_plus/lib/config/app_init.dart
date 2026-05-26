@@ -5,6 +5,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import '../firebase_options.dart';
 import '../utils/app_logger.dart';
+import '../services/badge_sync_engine.dart';
 import '../services/connectivity_service.dart';
 import '../services/theme_service.dart';
 
@@ -36,6 +37,10 @@ class AppInit {
 
     // Firebase must complete before runApp — it is critical for auth
     await _initializeFirebase();
+
+    // Start AFTER Firebase is ready — the sync engine touches Firestore on
+    // the first connectivity event, which would crash if Firebase isn't up.
+    BadgeSyncEngine.instance.start();
   }
 
   // ---------------------------------------------------------------------------
