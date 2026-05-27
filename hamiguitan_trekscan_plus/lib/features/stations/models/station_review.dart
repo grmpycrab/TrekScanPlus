@@ -2,8 +2,12 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 
 /// A user review for a trail station, stored in Firestore under
 /// `station_reviews/{stationId}/reviews/{userId}`.
+///
+/// [syncAction] and [syncStatus] are local-only tracking fields; they are
+/// never written to Firestore. They reflect the pending state of a review
+/// that has been mutated on-device but not yet confirmed by the server.
 class StationReview {
-  StationReview({
+  const StationReview({
     required this.id,
     required this.userId,
     required this.userDisplayName,
@@ -11,6 +15,8 @@ class StationReview {
     required this.comment,
     required this.createdAt,
     required this.updatedAt,
+    this.syncAction = 'CREATE',
+    this.syncStatus = 'SYNCED',
   });
 
   final String id;
@@ -19,7 +25,38 @@ class StationReview {
   final int rating;
   final String comment;
   final DateTime createdAt;
+
+  /// Device-local timestamp of the last edit. Set to [DateTime.now()] when
+  /// a mutation is applied locally before the server confirms.
   final DateTime updatedAt;
+
+  /// Strict set: `"CREATE"` | `"UPDATE"` | `"DELETE"`. Defaults to `"CREATE"`.
+  final String syncAction;
+
+  /// `"SYNCED"` when the server has confirmed the write; `"PENDING_SYNC"`
+  /// while the operation is queued (offline or in-flight).
+  final String syncStatus;
+
+  /// Returns a copy with only the supplied fields replaced.
+  StationReview copyWith({
+    int? rating,
+    String? comment,
+    DateTime? updatedAt,
+    String? syncAction,
+    String? syncStatus,
+  }) {
+    return StationReview(
+      id: id,
+      userId: userId,
+      userDisplayName: userDisplayName,
+      rating: rating ?? this.rating,
+      comment: comment ?? this.comment,
+      createdAt: createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+      syncAction: syncAction ?? this.syncAction,
+      syncStatus: syncStatus ?? this.syncStatus,
+    );
+  }
 
   static double averageRating(List<StationReview> reviews) {
     if (reviews.isEmpty) return 0;

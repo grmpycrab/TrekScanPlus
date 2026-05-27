@@ -147,14 +147,18 @@ service cloud.firestore {
       // Create: authenticated users can create posts
       allow create: if request.auth != null && request.resource.data.userId == request.auth.uid;
 
-      // Update: owner can update, OR any authenticated user can update comment/like counts
+      // Update: owner can update, admins can update (for moderation), OR any authenticated user can update comment/like counts
       allow update: if request.auth != null && (
         request.auth.uid == resource.data.userId ||
-        request.writeFields.hasOnly(['likesCount', 'commentsCount', 'sharesCount', 'updatedAt'])
+        request.writeFields.hasOnly(['likesCount', 'commentsCount', 'sharesCount', 'updatedAt']) ||
+        isAdmin()
       );
 
-      // Delete: only owner can delete
-      allow delete: if request.auth != null && request.auth.uid == resource.data.userId;
+      // Delete: owner or admin can delete
+      allow delete: if request.auth != null && (
+        request.auth.uid == resource.data.userId ||
+        isAdmin()
+      );
 
       // Likes subcollection
       match /likes/{likeId} {
@@ -359,6 +363,15 @@ service cloud.firestore {
     match /station_reviews/{stationId} {
       allow read: if true;
       allow write: if request.auth != null && isAdmin();
+    }
+
+    // Wildcard path rule required for collectionGroup('reviews') queries.
+    // Without this, Firestore rejects collectionGroup reads even though the
+    // per-document rule below would allow them — the SDK cannot resolve the
+    // full path at query-planning time without a wildcard anchor.
+    // Used by the admin Station Activity panel to aggregate all station reviews.
+    match /{path=**}/reviews/{reviewId} {
+      allow read: if true;
     }
 
     match /station_reviews/{stationId}/reviews/{reviewId} {

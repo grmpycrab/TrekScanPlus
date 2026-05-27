@@ -42,6 +42,9 @@ class StationReviewService {
   }
 
   /// Create or update the signed-in user's review for this station.
+  ///
+  /// Internally distinguishes CREATE vs UPDATE so that [updatedAt] is always
+  /// written with a server timestamp while [createdAt] is set only once.
   Future<void> upsertReview({
     required String stationId,
     required int rating,
@@ -70,10 +73,19 @@ class StationReviewService {
     }, SetOptions(merge: true));
 
     if (kDebugMode) {
-      AppLogger.i('Review saved for station $stationId');
+      AppLogger.i(
+        existing.exists
+            ? 'Review updated (UPDATE) for station $stationId'
+            : 'Review created (CREATE) for station $stationId',
+      );
     }
   }
 
+  /// Hard-delete the current user's review from Firestore.
+  ///
+  /// Callers should apply a local soft-delete (hiding the row in UI with
+  /// `syncAction = "DELETE"`, `syncStatus = "PENDING_SYNC"`) before awaiting
+  /// this future so the item disappears instantly regardless of connectivity.
   Future<void> deleteMyReview(String stationId) async {
     final user = _auth.currentUser;
     if (user == null) return;

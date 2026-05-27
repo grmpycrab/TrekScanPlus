@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { collection, collectionGroup, getDocs, orderBy, query } from 'firebase/firestore';
+import { collectionGroup, getDocs } from 'firebase/firestore';
 import { db } from '../../config/firebase.js';
 import { useToast, ToastContainer } from '../../components/Toast.jsx';
 import '../style/StationActivity.css';
@@ -18,54 +18,75 @@ function StationActivity() {
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      // Fetch all reviews via collectionGroup (requires a Firestore index on
-      // station_reviews/{stationId}/reviews). Falls back to per-station fetch
-      // if the index is missing.
-      let reviewDocs = [];
-      try {
-        const snap = await getDocs(
-          query(collectionGroup(db, 'reviews'), orderBy('createdAt', 'desc')),
-        );
-        reviewDocs = snap.docs.map((d) => ({
-          id: d.id,
-          stationId: d.ref.parent.parent?.id ?? 'unknown',
-          ...d.data(),
-        }));
-      } catch (_) {
-        // Fallback: iterate known station_reviews sub-collections
-        const stationsSnap = await getDocs(collection(db, 'station_reviews'));
-        for (const stationDoc of stationsSnap.docs) {
-          const revSnap = await getDocs(
-            query(collection(db, 'station_reviews', stationDoc.id, 'reviews'), orderBy('createdAt', 'desc')),
-          );
-          revSnap.docs.forEach((d) => {
-            reviewDocs.push({ id: d.id, stationId: stationDoc.id, ...d.data() });
-          });
-        }
-      }
+      // collectionGroup('reviews') fetches every review document across all
+      // station_reviews/{stationId}/reviews subcollections in a single round
+      // trip. No orderBy here — Firestore composite indexes are not required
+      // for unordered collectionGroup queries, and sorting is done client-side
+      // below. Security rules must include a wildcard path rule:
+      //   match /{path=**}/reviews/{reviewId} { allow read: if true; }
+      const snap = await getDocs(collectionGroup(db, 'reviews'));
+      const reviewDocs = snap.docs.map((d) => ({
+        id: d.id,
+        stationId: d.ref.parent.parent?.id ?? 'unknown',
+        ...d.data(),
+      }));
+
+      // Normalise field names: the mobile app writes camelCase (`userDisplayName`,
+      // `updatedAt`, etc.). Guard against any legacy snake_case variants that may
+      // have been written by older builds.
+      const normalise = (rev) => ({
+        ...rev,
+        userDisplayName: rev.userDisplayName ?? rev.user_display_name ?? 'Trekker',
+        rating: typeof rev.rating === 'number' ? rev.rating : 0,
+        updatedAt: rev.updatedAt ?? rev.updated_at ?? rev.createdAt ?? rev.created_at ?? null,
+        createdAt: rev.createdAt ?? rev.created_at ?? null,
+      });
 
       // Group by stationId
       const byStation = {};
-      for (const rev of reviewDocs) {
+      for (const raw of reviewDocs) {
+        const rev = normalise(raw);
         const sid = rev.stationId;
         if (!byStation[sid]) {
           byStation[sid] = { stationId: sid, reviews: [], totalRating: 0 };
         }
         byStation[sid].reviews.push(rev);
-        byStation[sid].totalRating += typeof rev.rating === 'number' ? rev.rating : 0;
+        byStation[sid].totalRating += rev.rating;
       }
 
-      const aggregated = Object.values(byStation).map((s) => ({
-        ...s,
-        reviewCount: s.reviews.length,
-        avgRating: s.reviews.length > 0 ? s.totalRating / s.reviews.length : 0,
-        label: stationLabel(s.stationId),
-      }));
+      const toMs = (ts) => {
+        if (!ts) return 0;
+        if (ts.toDate) return ts.toDate().getTime();
+        if (ts.seconds) return ts.seconds * 1000;
+        return new Date(ts).getTime();
+      };
+
+      const aggregated = Object.values(byStation).map((s) => {
+        // Sort reviews newest-first client-side (no Firestore composite index needed).
+        const sorted = [...s.reviews].sort(
+          (a, b) => toMs(b.updatedAt ?? b.createdAt) - toMs(a.updatedAt ?? a.createdAt),
+        );
+        return {
+          ...s,
+          reviews: sorted,
+          reviewCount: sorted.length,
+          avgRating: sorted.length > 0 ? s.totalRating / sorted.length : 0,
+          label: stationLabel(s.stationId),
+        };
+      });
 
       setStations(aggregated);
     } catch (err) {
       console.error('StationActivity load error:', err);
-      showError('Failed to load station data. Check Firestore permissions.');
+      const msg = String(err?.message ?? err ?? '');
+      const isPermissionDenied = msg.includes('permission') || msg.includes('Missing or insufficient permissions');
+      const isBlocked = msg.includes('ERR_BLOCKED_BY_CLIENT') || msg.includes('net::ERR');
+      const hint = isPermissionDenied
+        ? 'Firestore permission denied — ensure the wildcard collectionGroup rule for "reviews" is deployed.'
+        : isBlocked
+        ? 'Network request blocked by a browser extension (e.g. ad-blocker). Disable it for this portal and refresh.'
+        : 'Failed to load station reviews. Check the browser console for details.';
+      showError(hint);
     } finally {
       setLoading(false);
     }
@@ -180,9 +201,11 @@ function StationActivity() {
                     station.reviews.map((rev) => (
                       <div key={rev.id} className="sa-review-item">
                         <div className="sa-review-header">
-                          <span className="sa-reviewer-name">{rev.userDisplayName || 'Trekker'}</span>
+                          <span className="sa-reviewer-name">{rev.userDisplayName}</span>
                           <Stars rating={rev.rating} small />
-                          <span className="sa-review-date">{formatReviewDate(rev.createdAt)}</span>
+                          {/* Use updatedAt so edits surface the latest timestamp,
+                              matching what the mobile app displays. */}
+                          <span className="sa-review-date">{formatReviewDate(rev.updatedAt ?? rev.createdAt)}</span>
                         </div>
                         {rev.comment && <p className="sa-review-comment">{rev.comment}</p>}
                       </div>
@@ -217,12 +240,28 @@ function Stars({ rating, small = false }) {
   );
 }
 
-/** Convert a station document ID to a human-readable label. */
+const STATION_NAMES = {
+  '56okrkt0pb': 'UNESCO Marker',
+  'hu2c5c0kfn': 'Crossing Stampa',
+  'um6j8dnii4': 'Puting Bato',
+  '3ko938o2gb': 'Lantawan 1',
+  '33ii1jrc5s': 'Camp 4',
+  'vaatj8uomu': 'Uwang-Uwang Trail',
+  'cbensi5juq': 'Lantawan 2',
+  'utvrrkfkh9': 'Camp 3',
+  '6mm4kle34g': 'Pygmy Field',
+  'g5uabiveqd': 'Lantawan 3 / Mossy Forest',
+  '79t42cmo77': 'Tinagong Dagat',
+  'i73hl7b7g3': 'Hidden Garden',
+  'mr2l529okj': 'Mt. Hamiguitan Summit',
+  '44r5tebjrc': 'Black Mountain',
+  'r5kntj3sae': 'Twin Falls',
+};
+
+/** Resolve a station document ID to its human-readable trail name. */
 function stationLabel(id) {
   if (!id || id === 'unknown') return 'Unknown Station';
-  // IDs may be "station_1", "station_8", "14", "camp3", etc.
-  const clean = id.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
-  return clean;
+  return STATION_NAMES[id] ?? `Unknown Station (${id})`;
 }
 
 function formatReviewDate(ts) {

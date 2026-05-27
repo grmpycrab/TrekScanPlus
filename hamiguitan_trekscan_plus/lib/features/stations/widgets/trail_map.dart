@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
+import 'cached_tile_provider.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import '../../../utils/app_logger.dart';
 import '../../../theme/app_theme.dart';
@@ -492,14 +493,14 @@ class _TrailMapState extends State<TrailMap>
               children: [
                 TileLayer(
                   urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-                  userAgentPackageName: 'hamiguitan_trekscan_plus',
+                  // Reverse-DNS package identifier satisfies OSM ToS and
+                  // prevents tile requests from being throttled or blocked.
+                  userAgentPackageName: 'org.trekscanplus.mt_hamiguitan_app',
                   tileSize: 256,
                   backgroundColor: Colors.transparent,
-                  // Add proper headers to comply with OSM tile policy
-                  additionalOptions: const {
-                    'User-Agent':
-                        'HamiguitanTrekScanPlus/1.0 (https://trekscanplus.app)',
-                  },
+                  // CachedTileProvider reads tiles from disk on repeat visits,
+                  // eliminating the grey-grid loading delay during pan/zoom.
+                  tileProvider: CachedTileProvider(),
                 ),
                 PolylineLayer(polylines: _buildTrailPolylines()),
                 MarkerLayer(markers: _buildStationMarkers()),

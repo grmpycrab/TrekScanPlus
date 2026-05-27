@@ -90,6 +90,11 @@ class _StationReviewsSectionBodyState extends State<StationReviewsSectionBody> {
   int _draftRating = 5;
   bool _submitting = false;
 
+  /// Review IDs that have been soft-deleted locally. The row is hidden from
+  /// the UI immediately on user confirmation; the Firestore delete is
+  /// dispatched in the background (offline persistence queues it if needed).
+  final Set<String> _locallyDeleted = {};
+
   @override
   void dispose() {
     _commentController.dispose();
@@ -106,10 +111,13 @@ class _StationReviewsSectionBodyState extends State<StationReviewsSectionBody> {
     final uid = StationReviewService.instance.currentUserId;
     if (uid == null) return null;
     for (final r in widget.reviews) {
-      if (r.userId == uid) return r;
+      if (r.userId == uid && !_locallyDeleted.contains(r.id)) return r;
     }
     return null;
   }
+
+  List<StationReview> get _visibleReviews =>
+      widget.reviews.where((r) => !_locallyDeleted.contains(r.id)).toList();
 
   void _syncDraftFromMyReview(StationReview? mine) {
     if (mine == null) return;
@@ -142,20 +150,28 @@ class _StationReviewsSectionBodyState extends State<StationReviewsSectionBody> {
     }
   }
 
+  /// Soft-deletes the composer's own review: hides immediately, then fires
+  /// the Firestore delete. Rolls back the local hide on error.
   Future<void> _deleteMine() async {
     final mine = _myReview;
     if (mine == null) return;
+
+    setState(() {
+      _locallyDeleted.add(mine.id);
+      _draftRating = 5;
+      _commentController.clear();
+    });
+
     try {
       await StationReviewService.instance.deleteMyReview(widget.stationId);
       if (mounted) {
-        _commentController.clear();
-        setState(() => _draftRating = 5);
         ScaffoldMessenger.of(
           context,
         ).showSnackBar(const SnackBar(content: Text('Review removed')));
       }
     } catch (e) {
       if (mounted) {
+        setState(() => _locallyDeleted.remove(mine.id));
         ScaffoldMessenger.of(
           context,
         ).showSnackBar(SnackBar(content: Text(e.toString())));
@@ -163,9 +179,82 @@ class _StationReviewsSectionBodyState extends State<StationReviewsSectionBody> {
     }
   }
 
+  // -------------------------------------------------------------------------
+  // Three-dot menu actions
+  // -------------------------------------------------------------------------
+
+  Future<void> _showEditDialog(StationReview review) async {
+    await showDialog<bool>(
+      context: context,
+      builder: (_) => _ReviewEditDialog(
+        stationId: widget.stationId,
+        review: review,
+      ),
+    );
+  }
+
+  Future<void> _showDeleteConfirmation(StationReview review) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Remove review?'),
+        content: const Text(
+          'Your review will be permanently deleted. This cannot be undone.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            style: TextButton.styleFrom(foregroundColor: Colors.red[700]),
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('Remove'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed != true || !mounted) return;
+
+    // Soft-delete: remove from UI immediately, flag as DELETE / PENDING_SYNC,
+    // then dispatch the Firestore write in the background.
+    setState(() {
+      _locallyDeleted.add(review.id);
+      // If this was the user's own review, reset the composer.
+      if (review.userId == StationReviewService.instance.currentUserId) {
+        _draftRating = 5;
+        _commentController.clear();
+      }
+    });
+
+    try {
+      await StationReviewService.instance.deleteMyReview(widget.stationId);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Review removed')),
+        );
+      }
+    } catch (e) {
+      // Roll back the local soft-delete if the Firestore call failed.
+      if (mounted) {
+        setState(() => _locallyDeleted.remove(review.id));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to remove review: $e')),
+        );
+      }
+    }
+  }
+
+  // -------------------------------------------------------------------------
+  // Build
+  // -------------------------------------------------------------------------
+
   @override
   Widget build(BuildContext context) {
     final dateFmt = DateFormat.yMMMd();
+    final currentUid = StationReviewService.instance.currentUserId;
+    final visible = _visibleReviews;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -177,10 +266,10 @@ class _StationReviewsSectionBodyState extends State<StationReviewsSectionBody> {
             'Could not load reviews. Check connection and try again.',
             style: TextStyle(color: Colors.red[700], fontSize: 14),
           ),
-        ] else if (widget.loading && widget.reviews.isEmpty) ...[
+        ] else if (widget.loading && visible.isEmpty) ...[
           const SizedBox(height: 16),
           const Center(child: CircularProgressIndicator()),
-        ] else if (widget.reviews.isEmpty) ...[
+        ] else if (visible.isEmpty) ...[
           const SizedBox(height: 8),
           Text(
             'No reviews yet. Be the first to share your experience.',
@@ -192,8 +281,16 @@ class _StationReviewsSectionBodyState extends State<StationReviewsSectionBody> {
           ),
         ] else ...[
           const SizedBox(height: 12),
-          ...widget.reviews.map(
-            (r) => _ReviewTile(review: r, dateFmt: dateFmt),
+          ...visible.map(
+            (r) => _ReviewTile(
+              key: ValueKey(r.id),
+              review: r,
+              dateFmt: dateFmt,
+              isOwner: currentUid != null && r.userId == currentUid,
+              stationId: widget.stationId,
+              onEditPressed: () => _showEditDialog(r),
+              onDeleteRequested: () => _showDeleteConfirmation(r),
+            ),
           ),
         ],
         const SizedBox(height: 20),
@@ -330,11 +427,158 @@ class _StationReviewsSectionBodyState extends State<StationReviewsSectionBody> {
   }
 }
 
+// ---------------------------------------------------------------------------
+// Edit dialog — pre-populated with the review's current rating + comment.
+// ---------------------------------------------------------------------------
+
+class _ReviewEditDialog extends StatefulWidget {
+  const _ReviewEditDialog({required this.stationId, required this.review});
+
+  final String stationId;
+  final StationReview review;
+
+  @override
+  State<_ReviewEditDialog> createState() => _ReviewEditDialogState();
+}
+
+class _ReviewEditDialogState extends State<_ReviewEditDialog> {
+  late int _rating;
+  late final TextEditingController _commentController;
+  bool _saving = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _rating = widget.review.rating;
+    _commentController = TextEditingController(text: widget.review.comment);
+  }
+
+  @override
+  void dispose() {
+    _commentController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _save() async {
+    setState(() => _saving = true);
+    try {
+      // Mark locally as UPDATE / PENDING_SYNC while the call is in-flight.
+      // Firestore offline persistence will queue the write if offline.
+      await StationReviewService.instance.upsertReview(
+        stationId: widget.stationId,
+        rating: _rating,
+        comment: _commentController.text,
+      );
+      if (mounted) Navigator.pop(context, true);
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(e.toString())),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _saving = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: const Text('Edit review'),
+      content: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Rating',
+              style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
+            ),
+            const SizedBox(height: 8),
+            Row(
+              children: List.generate(5, (i) {
+                final n = i + 1;
+                return InkWell(
+                  onTap: () => setState(() => _rating = n),
+                  borderRadius: BorderRadius.circular(20),
+                  child: Padding(
+                    padding: const EdgeInsets.only(right: 4),
+                    child: Icon(
+                      n <= _rating
+                          ? Icons.star_rounded
+                          : Icons.star_border_rounded,
+                      color: n <= _rating ? Colors.amber[700] : Colors.grey[400],
+                      size: 32,
+                    ),
+                  ),
+                );
+              }),
+            ),
+            const SizedBox(height: 16),
+            const Text(
+              'Comment',
+              style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
+            ),
+            const SizedBox(height: 8),
+            TextField(
+              controller: _commentController,
+              maxLines: 4,
+              maxLength: 2000,
+              decoration: const InputDecoration(
+                hintText: 'Share your experience…',
+                border: OutlineInputBorder(),
+              ),
+            ),
+          ],
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: _saving ? null : () => Navigator.pop(context, false),
+          child: const Text('Cancel'),
+        ),
+        FilledButton(
+          onPressed: _saving ? null : _save,
+          child: _saving
+              ? const SizedBox(
+                  width: 18,
+                  height: 18,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    color: Colors.white,
+                  ),
+                )
+              : const Text('Save changes'),
+        ),
+      ],
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Individual review tile.
+// ---------------------------------------------------------------------------
+
 class _ReviewTile extends StatelessWidget {
-  const _ReviewTile({required this.review, required this.dateFmt});
+  const _ReviewTile({
+    super.key,
+    required this.review,
+    required this.dateFmt,
+    required this.isOwner,
+    required this.stationId,
+    required this.onEditPressed,
+    required this.onDeleteRequested,
+  });
 
   final StationReview review;
   final DateFormat dateFmt;
+
+  /// True when the active session user authored this review.
+  /// Controls visibility of the trailing three-dot action menu.
+  final bool isOwner;
+  final String stationId;
+  final VoidCallback onEditPressed;
+  final VoidCallback onDeleteRequested;
 
   @override
   Widget build(BuildContext context) {
@@ -373,6 +617,56 @@ class _ReviewTile extends StatelessWidget {
                       dateFmt.format(review.updatedAt),
                       style: TextStyle(fontSize: 12, color: Colors.grey[600]),
                     ),
+                    // Three-dot menu — rendered only for the review's author.
+                    if (isOwner)
+                      Padding(
+                        padding: const EdgeInsets.only(left: 4),
+                        child: SizedBox(
+                          width: 28,
+                          height: 28,
+                          child: PopupMenuButton<String>(
+                            padding: EdgeInsets.zero,
+                            icon: Icon(
+                              Icons.more_vert,
+                              size: 18,
+                              color: Colors.grey[500],
+                            ),
+                            onSelected: (value) {
+                              if (value == 'edit') onEditPressed();
+                              if (value == 'delete') onDeleteRequested();
+                            },
+                            itemBuilder: (_) => const [
+                              PopupMenuItem(
+                                value: 'edit',
+                                child: Row(
+                                  children: [
+                                    Icon(Icons.edit_outlined, size: 18),
+                                    SizedBox(width: 10),
+                                    Text('Edit'),
+                                  ],
+                                ),
+                              ),
+                              PopupMenuItem(
+                                value: 'delete',
+                                child: Row(
+                                  children: [
+                                    Icon(
+                                      Icons.delete_outline,
+                                      size: 18,
+                                      color: Colors.red,
+                                    ),
+                                    SizedBox(width: 10),
+                                    Text(
+                                      'Remove',
+                                      style: TextStyle(color: Colors.red),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
                   ],
                 ),
                 const SizedBox(height: 4),
