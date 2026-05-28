@@ -267,6 +267,7 @@ class SocialRepository {
     yield* _firestore
         .collection('posts')
         .where('userId', isEqualTo: userId)
+        .where('privacy', whereIn: [PostPrivacy.public.name, PostPrivacy.followers.name])
         .orderBy('createdAt', descending: true)
         .snapshots()
         .asyncMap((snap) async {

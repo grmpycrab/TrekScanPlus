@@ -43,17 +43,16 @@ export const ensureAdminClaim = async (targetUid = null) => {
  */
 export const ensureAdminSeedDocument = async (user) => {
   if (user.email !== ADMIN_SEED_EMAIL) return;
-  await setDoc(
-    doc(db, 'users', user.uid),
-    {
-      role: 'admin',
-      email: user.email,
-      displayName: user.displayName ?? 'Administrator',
-      firstName: 'Administrator',
-      lastName: '',
-    },
-    { merge: true },
-  );
+  const snap = await getDoc(doc(db, 'users', user.uid));
+  const existing = snap.exists() ? snap.data() : {};
+  const updates = {
+    role: 'admin',
+    email: user.email,
+  };
+  if (!existing.displayName) updates.displayName = user.displayName ?? 'Administrator';
+  if (!existing.firstName)   updates.firstName   = user.displayName?.split(' ')[0] ?? 'Administrator';
+  if (!existing.lastName)    updates.lastName     = user.displayName?.split(' ').slice(1).join(' ') ?? '';
+  await setDoc(doc(db, 'users', user.uid), updates, { merge: true });
 };
 
 /**

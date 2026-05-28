@@ -131,6 +131,9 @@ service cloud.firestore {
 
     // Social posts collection
     match /posts/{postId} {
+      // Admins can read ALL posts regardless of privacy or status (required for Post Moderation).
+      allow read: if isAdmin();
+
       // Anyone authenticated can read public posts
       allow read: if request.auth != null && resource.data.privacy == 'public';
 

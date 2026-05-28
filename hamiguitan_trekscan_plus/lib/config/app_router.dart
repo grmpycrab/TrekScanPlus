@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:hamiguitan_trekscan_plus/features/social/screens/post_detail_screen.dart';
+import '../features/social/screens/single_post_viewer.dart';
+import '../features/social/models/social_model.dart';
 import '../features/auth/screens/login_screen.dart';
 import '../features/auth/screens/signup_screen.dart';
 import '../features/auth/screens/email_verification_screen.dart';
@@ -37,10 +38,24 @@ class AppRouter {
   /// Generates routes that require arguments passed via [RouteSettings.arguments].
   static Route<dynamic>? onGenerateRoute(RouteSettings settings) {
     if (settings.name == '/post-detail') {
-      final postId = settings.arguments as String?;
+      // Accepts either a bare String postId (deep links / notifications)
+      // or a Map { 'postId': String, 'initialPostData': SocialPost? }
+      // (in-feed navigation with instant hydration).
+      String? postId;
+      SocialPost? initialPostData;
+      final args = settings.arguments;
+      if (args is String) {
+        postId = args;
+      } else if (args is Map<String, dynamic>) {
+        postId = args['postId'] as String?;
+        initialPostData = args['initialPostData'] as SocialPost?;
+      }
       if (postId != null) {
         return MaterialPageRoute(
-          builder: (context) => PostDetailScreen(postId: postId),
+          builder: (_) => SinglePostViewer(
+            postId: postId!,
+            initialPostData: initialPostData,
+          ),
         );
       }
     }

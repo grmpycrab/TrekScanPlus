@@ -27,6 +27,13 @@ class StationViewModel extends ChangeNotifier {
   // -------------------------------------------------------------------------
 
   Future<void> initialize() async {
+    // Subscribe to StationService so Firebase sync completions (which are
+    // fire-and-forget in AppStartupController) propagate to this VM after
+    // the UI has already rendered with stale local data.
+    if (StationService.isInitialized) {
+      StationService.instance.addListener(_onStationServiceChanged);
+    }
+
     if (!StationService.instance.isLoaded) {
       await StationService.instance.loadStations();
     }
@@ -57,6 +64,9 @@ class StationViewModel extends ChangeNotifier {
 
   @override
   void dispose() {
+    if (StationService.isInitialized) {
+      StationService.instance.removeListener(_onStationServiceChanged);
+    }
     if (ClimbSessionService.isInitialized) {
       ClimbSessionService.instance.removeListener(_onClimbSessionsChanged);
     }
@@ -117,6 +127,11 @@ class StationViewModel extends ChangeNotifier {
   // -------------------------------------------------------------------------
   // Private helpers
   // -------------------------------------------------------------------------
+
+  void _onStationServiceChanged() {
+    _refreshStations();
+    notifyListeners();
+  }
 
   void _onClimbSessionsChanged() {
     _updateActiveSession();

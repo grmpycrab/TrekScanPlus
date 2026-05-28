@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../models/notification_model.dart';
 import '../services/firestore_notification_service.dart';
+import '../../../core/services/user_service.dart';
 import '../../../screens/main/main_screen.dart';
 import '../../../theme/app_theme.dart';
 import '../../../core/widgets/app_dialogue_handler.dart';
@@ -150,11 +151,24 @@ class _NotificationsSheetState extends State<NotificationsSheet> {
         notification: notification,
         isSelectionMode: _isSelectionMode,
         isSelected: isSelected,
+        onAccept: notification.showActionButtons &&
+                notification.actionType == 'follow_request' &&
+                notification.followRequestId != null
+            ? () => _handleAcceptFollowRequest(notification)
+            : null,
+        onDecline: notification.showActionButtons &&
+                notification.actionType == 'follow_request' &&
+                notification.followRequestId != null
+            ? () => _handleDeclineFollowRequest(notification)
+            : null,
         onTap: () async {
           if (_isSelectionMode) {
             _toggleSelection(notification.id);
             return;
           }
+          // Follow-request tiles are not tappable — use buttons instead.
+          if (notification.showActionButtons &&
+              notification.actionType == 'follow_request') { return; }
 
           AppLogger.i('🔔 Notification tapped: ${notification.title}');
           AppLogger.i('🔔 ActionType: ${notification.actionType}');
@@ -284,6 +298,62 @@ class _NotificationsSheetState extends State<NotificationsSheet> {
     return false;
   }
 
+  Future<void> _handleAcceptFollowRequest(NotificationModel notification) async {
+    if (notification.followRequestId == null) return;
+    try {
+      await UserService.instance.acceptFollowRequest(
+        widget.userId,
+        notification.followRequestId!,
+      );
+      await _notificationService.deleteNotification(
+        widget.userId,
+        notification.id,
+      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Follow request approved — you are now following each other'),
+            backgroundColor: Colors.green,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
+        );
+      }
+    }
+  }
+
+  Future<void> _handleDeclineFollowRequest(NotificationModel notification) async {
+    if (notification.followRequestId == null) return;
+    try {
+      await UserService.instance.rejectFollowRequest(
+        widget.userId,
+        notification.followRequestId!,
+      );
+      await _notificationService.deleteNotification(
+        widget.userId,
+        notification.id,
+      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Follow request declined'),
+            backgroundColor: Colors.orange,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
+        );
+      }
+    }
+  }
+
   Future<void> _deleteSelectedNotifications() async {
     if (_selectedNotifications.isEmpty) return;
 
@@ -330,6 +400,8 @@ class _NotificationTile extends StatelessWidget {
   final void Function(bool?)? onSelectionChanged;
   final bool isSelectionMode;
   final bool isSelected;
+  final VoidCallback? onAccept;
+  final VoidCallback? onDecline;
 
   const _NotificationTile({
     required this.notification,
@@ -338,6 +410,8 @@ class _NotificationTile extends StatelessWidget {
     this.onSelectionChanged,
     this.isSelectionMode = false,
     this.isSelected = false,
+    this.onAccept,
+    this.onDecline,
   });
 
   Color _getBackgroundColor(AppTheme colors) {
@@ -395,55 +469,99 @@ class _NotificationTile extends StatelessWidget {
             width: isSelected ? 2 : (notification.isRead ? 0.5 : 1.5),
           ),
         ),
-        child: ListTile(
-          onTap: () {
-            AppLogger.i('ListTile tapped!');
-            onTap();
-          },
-          leading: isSelectionMode
-              ? Checkbox(
-                  value: isSelected,
-                  onChanged: onSelectionChanged,
-                  activeColor: colors.primary,
-                )
-              : Icon(_getIcon(), color: _getIconColor(colors)),
-          title: Text(
-            notification.title,
-            style: TextStyle(
-              fontWeight: notification.isRead
-                  ? FontWeight.normal
-                  : FontWeight.bold,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            ListTile(
+              onTap: onAccept != null ? null : () {
+                AppLogger.i('ListTile tapped!');
+                onTap();
+              },
+              leading: isSelectionMode
+                  ? Checkbox(
+                      value: isSelected,
+                      onChanged: onSelectionChanged,
+                      activeColor: colors.primary,
+                    )
+                  : Icon(_getIcon(), color: _getIconColor(colors)),
+              title: Text(
+                notification.title,
+                style: TextStyle(
+                  fontWeight: notification.isRead
+                      ? FontWeight.normal
+                      : FontWeight.bold,
+                ),
+              ),
+              subtitle: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const SizedBox(height: 4),
+                  Text(
+                    notification.message,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    timeAgo,
+                    style: TextStyle(fontSize: 11, color: colors.textSecondary),
+                  ),
+                ],
+              ),
+              isThreeLine: true,
+              trailing: !isSelectionMode && notification.isRead
+                  ? null
+                  : (!isSelectionMode
+                        ? Container(
+                            width: 8,
+                            height: 8,
+                            decoration: BoxDecoration(
+                              color: colors.primary,
+                              shape: BoxShape.circle,
+                            ),
+                          )
+                        : null),
             ),
-          ),
-          subtitle: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const SizedBox(height: 4),
-              Text(
-                notification.message,
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-              ),
-              const SizedBox(height: 4),
-              Text(
-                timeAgo,
-                style: TextStyle(fontSize: 11, color: colors.textSecondary),
-              ),
-            ],
-          ),
-          isThreeLine: true,
-          trailing: !isSelectionMode && notification.isRead
-              ? null
-              : (!isSelectionMode
-                    ? Container(
-                        width: 8,
-                        height: 8,
-                        decoration: BoxDecoration(
-                          color: colors.primary,
-                          shape: BoxShape.circle,
+            // ── Follow-request action buttons ──────────────────────────────
+            if (onAccept != null && onDecline != null)
+              Padding(
+                padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton(
+                        onPressed: onDecline,
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: Colors.red,
+                          side: const BorderSide(color: Colors.red),
+                          padding: const EdgeInsets.symmetric(vertical: 8),
+                          textStyle: const TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
-                      )
-                    : null),
+                        child: const Text('Decline'),
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: FilledButton(
+                        onPressed: onAccept,
+                        style: FilledButton.styleFrom(
+                          backgroundColor: colors.primary,
+                          padding: const EdgeInsets.symmetric(vertical: 8),
+                          textStyle: const TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        child: const Text('Approve'),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+          ],
         ),
       ),
     );

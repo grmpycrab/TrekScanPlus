@@ -8,7 +8,6 @@ import '../viewmodels/post_view_model.dart';
 import '../../../core/services/user_service.dart';
 import '../../../theme/app_theme.dart';
 import '../../profile/screens/profile_screen.dart';
-import 'comments_sheet.dart';
 import 'post_options_sheet.dart';
 import 'image_viewer.dart';
 import '../../../core/widgets/app_dialogue_handler.dart';
@@ -170,11 +169,20 @@ class _SocialCardState extends State<SocialCard> {
 
   void _handleComment() {
     if (widget.post.id == null) return;
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      builder: (context) =>
-          CommentsSheet(postId: widget.post.id!, post: widget.post),
+    // If an explicit onCommentTap callback is provided (e.g. from PostDetailScreen),
+    // honour it. Otherwise open the full SinglePostViewer with post data pre-loaded
+    // so it renders instantly without a loading spinner.
+    if (widget.onCommentTap != null) {
+      widget.onCommentTap!();
+      return;
+    }
+    Navigator.pushNamed(
+      context,
+      '/post-detail',
+      arguments: {
+        'postId': widget.post.id!,
+        'initialPostData': widget.post,
+      },
     );
   }
 

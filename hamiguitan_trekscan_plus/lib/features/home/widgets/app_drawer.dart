@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import '../../../theme/app_theme.dart';
+import '../../../core/services/user_service.dart';
 import '../../notification/viewmodels/notification_view_model.dart';
 import '../../notification/models/notification_model.dart';
 import 'trek_tips.dart';
@@ -570,6 +571,10 @@ class _AppDrawerState extends State<AppDrawer> {
         iconColor = Colors.blue;
     }
 
+    final isFollowRequest = notification.showActionButtons &&
+        notification.actionType == 'follow_request' &&
+        notification.followRequestId != null;
+
     return Dismissible(
       key: Key(notification.id),
       direction: DismissDirection.endToStart,
@@ -581,13 +586,15 @@ class _AppDrawerState extends State<AppDrawer> {
       ),
       onDismissed: (_) => _notifVm.deleteNotification(userId, notification.id),
       child: InkWell(
-        onTap: () async {
-          final nav = Navigator.of(context);
-          await _notifVm.markAsRead(userId, notification.id);
-          if (mounted) setState(() => notification.isRead = true);
-          nav.pop();
-          _navigateForNotification(nav, notification);
-        },
+        onTap: isFollowRequest
+            ? null
+            : () async {
+                final nav = Navigator.of(context);
+                await _notifVm.markAsRead(userId, notification.id);
+                if (mounted) setState(() => notification.isRead = true);
+                nav.pop();
+                _navigateForNotification(nav, notification);
+              },
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
           color: notification.isRead
@@ -625,7 +632,7 @@ class _AppDrawerState extends State<AppDrawer> {
                             overflow: TextOverflow.ellipsis,
                           ),
                         ),
-                        if (!notification.isRead)
+                        if (!notification.isRead && !isFollowRequest)
                           Container(
                             width: 6,
                             height: 6,
@@ -652,6 +659,48 @@ class _AppDrawerState extends State<AppDrawer> {
                       _notifVm.formatTimestamp(notification.timestamp),
                       style: TextStyle(fontSize: 11, color: Colors.grey[500]),
                     ),
+                    // ── Follow request action buttons ──────────────────────
+                    if (isFollowRequest) ...[
+                      const SizedBox(height: 10),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: OutlinedButton(
+                              onPressed: () => _handleDeclineFollowRequest(
+                                userId,
+                                notification,
+                              ),
+                              style: OutlinedButton.styleFrom(
+                                foregroundColor: Colors.red,
+                                side: const BorderSide(color: Colors.red),
+                                padding: const EdgeInsets.symmetric(vertical: 6),
+                                minimumSize: Size.zero,
+                                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                                textStyle: const TextStyle(fontSize: 12),
+                              ),
+                              child: const Text('Decline'),
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: FilledButton(
+                              onPressed: () => _handleAcceptFollowRequest(
+                                userId,
+                                notification,
+                              ),
+                              style: FilledButton.styleFrom(
+                                backgroundColor: colors.primary,
+                                padding: const EdgeInsets.symmetric(vertical: 6),
+                                minimumSize: Size.zero,
+                                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                                textStyle: const TextStyle(fontSize: 12),
+                              ),
+                              child: const Text('Approve'),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
                   ],
                 ),
               ),
@@ -660,6 +709,62 @@ class _AppDrawerState extends State<AppDrawer> {
         ),
       ),
     );
+  }
+
+  Future<void> _handleAcceptFollowRequest(
+    String userId,
+    NotificationModel notification,
+  ) async {
+    if (notification.followRequestId == null) return;
+    try {
+      await UserService.instance.acceptFollowRequest(
+        userId,
+        notification.followRequestId!,
+      );
+      await _notifVm.deleteNotification(userId, notification.id);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Follow request approved — you are now following each other'),
+            backgroundColor: Colors.green,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
+        );
+      }
+    }
+  }
+
+  Future<void> _handleDeclineFollowRequest(
+    String userId,
+    NotificationModel notification,
+  ) async {
+    if (notification.followRequestId == null) return;
+    try {
+      await UserService.instance.rejectFollowRequest(
+        userId,
+        notification.followRequestId!,
+      );
+      await _notifVm.deleteNotification(userId, notification.id);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Follow request declined'),
+            backgroundColor: Colors.orange,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
+        );
+      }
+    }
   }
 
   void _navigateForNotification(
