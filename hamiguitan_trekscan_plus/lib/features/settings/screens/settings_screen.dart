@@ -16,6 +16,7 @@ import '../../../screens/settings/about_screen.dart';
 import '../../../screens/settings/archived_bookings_screen.dart';
 import '../../../screens/settings/badges_screen.dart';
 import '../../../screens/settings/help_and_support_screen.dart';
+import '../../../screens/settings/privacy_settings_screen.dart';
 import '../../../services/badge_claim_service.dart';
 import '../../../services/badge_sync_engine.dart';
 import '../../../screens/settings/account_settings.dart';
@@ -166,6 +167,17 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   const _SectionLabel('Information'),
                   _SettingGroup(
                     children: [
+                      _SettingItem(
+                        icon: Icons.privacy_tip_outlined,
+                        label: 'Privacy & Data',
+                        subtitle: 'Export data, legal & account deletion',
+                        onTap: () => Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => const PrivacySettingsScreen(),
+                          ),
+                        ),
+                      ),
                       _SettingItem(
                         icon: Icons.help_outline_rounded,
                         label: 'Help & Support',

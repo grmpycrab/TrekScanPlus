@@ -1775,11 +1775,12 @@ class _SmokeTestSheetState extends State<_SmokeTestSheet> {
       _scanLog = '';
     });
     final result = await widget.onInjectScan(id);
-    if (mounted)
+    if (mounted) {
       setState(() {
         _injecting = false;
         _scanLog = result;
       });
+    }
   }
 
   void _doToggleNetwork() {
@@ -1793,11 +1794,12 @@ class _SmokeTestSheetState extends State<_SmokeTestSheet> {
       _syncLog = '';
     });
     await widget.onTriggerSync();
-    if (mounted)
+    if (mounted) {
       setState(() {
         _syncing = false;
         _syncLog = 'Sync run completed.';
       });
+    }
   }
 
   @override

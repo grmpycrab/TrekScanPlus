@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/gestures.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'login_screen.dart';
 import 'email_verification_screen.dart';
 import 'additional_information.dart';
@@ -31,6 +33,17 @@ class _SignUpScreenState extends State<SignUpScreen> {
     _passwordController.dispose();
     _confirmPasswordController.dispose();
     super.dispose();
+  }
+
+  Future<void> _launchUrl(String url) async {
+    final uri = Uri.parse(url);
+    if (!await launchUrl(uri, mode: LaunchMode.externalApplication)) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Could not open $url')),
+        );
+      }
+    }
   }
 
   Future<void> _handleSignUp() async {
@@ -313,11 +326,40 @@ class _SignUpScreenState extends State<SignUpScreen> {
                             ),
                             const SizedBox(width: 12),
                             Expanded(
-                              child: Text(
-                                'I agree to the Terms & Conditions',
-                                style: TextStyle(
-                                  color: colors.textSecondary,
-                                  fontSize: 14,
+                              child: Text.rich(
+                                TextSpan(
+                                  style: TextStyle(
+                                    color: colors.textSecondary,
+                                    fontSize: 14,
+                                  ),
+                                  children: [
+                                    const TextSpan(text: 'I agree to the '),
+                                    TextSpan(
+                                      text: 'Terms of Service',
+                                      style: TextStyle(
+                                        color: colors.primary,
+                                        fontWeight: FontWeight.w600,
+                                        decoration: TextDecoration.underline,
+                                        decorationColor: colors.primary,
+                                      ),
+                                      recognizer: TapGestureRecognizer()
+                                        ..onTap = () => _launchUrl(
+                                            'https://hamiguitan-trekscan.app/terms'),
+                                    ),
+                                    const TextSpan(text: ' and '),
+                                    TextSpan(
+                                      text: 'Privacy Policy',
+                                      style: TextStyle(
+                                        color: colors.primary,
+                                        fontWeight: FontWeight.w600,
+                                        decoration: TextDecoration.underline,
+                                        decorationColor: colors.primary,
+                                      ),
+                                      recognizer: TapGestureRecognizer()
+                                        ..onTap = () => _launchUrl(
+                                            'https://hamiguitan-trekscan.app/privacy'),
+                                    ),
+                                  ],
                                 ),
                               ),
                             ),
@@ -492,6 +534,54 @@ class _SignUpScreenState extends State<SignUpScreen> {
                       ),
                     ],
                   ),
+                  const SizedBox(height: 16),
+
+                  // Legal footer
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 8),
+                    child: Text.rich(
+                      TextSpan(
+                        style: TextStyle(
+                          color: colors.textTertiary,
+                          fontSize: 11,
+                          height: 1.5,
+                        ),
+                        children: [
+                          const TextSpan(
+                            text:
+                                'By creating an account you agree to our ',
+                          ),
+                          TextSpan(
+                            text: 'Terms of Service',
+                            style: TextStyle(
+                              color: colors.textSecondary,
+                              decoration: TextDecoration.underline,
+                            ),
+                            recognizer: TapGestureRecognizer()
+                              ..onTap = () => _launchUrl(
+                                  'https://hamiguitan-trekscan.app/terms'),
+                          ),
+                          const TextSpan(text: ' and '),
+                          TextSpan(
+                            text: 'Privacy Policy',
+                            style: TextStyle(
+                              color: colors.textSecondary,
+                              decoration: TextDecoration.underline,
+                            ),
+                            recognizer: TapGestureRecognizer()
+                              ..onTap = () => _launchUrl(
+                                  'https://hamiguitan-trekscan.app/privacy'),
+                          ),
+                          const TextSpan(
+                            text:
+                                '. Your personal data is stored securely and never sold to third parties.',
+                          ),
+                        ],
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
                 ],
               ),
             ),
