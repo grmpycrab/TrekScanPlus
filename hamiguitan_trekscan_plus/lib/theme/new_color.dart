@@ -137,7 +137,7 @@ class OriginalColorsDark {
 }
 
 // ═════════════════════════════════════════════════════════════════════════════
-// NEW SIMPLIFIED COLOR THEME (LIGHT MODE)
+// NEW COLOR THEME (LIGHT MODE) - SIMPLIFIED
 // ═════════════════════════════════════════════════════════════════════════════
 class AppColors {
   // Core Colors
@@ -235,7 +235,7 @@ class AppColors {
 }
 
 // ═════════════════════════════════════════════════════════════════════════════
-// NEW SIMPLIFIED COLOR THEME (DARK MODE)
+// NEW COLOR THEME (DARK MODE) - SIMPLFIED
 // ═════════════════════════════════════════════════════════════════════════════
 class AppColorsDark {
   // Core Colors
@@ -288,8 +288,12 @@ class AppColorsDark {
   static const Color textGrey700 = Color(0xFFAAAAAA);
 
   // Icon Colors — must be LIGHT on dark backgrounds
-  static const Color iconGrey400 = Color(0xFF757575); // muted but visible on dark bg
-  static const Color iconGrey600 = Color(0xFFBDBDBD); // subtle but clearly readable
+  static const Color iconGrey400 = Color(
+    0xFF757575,
+  ); // muted but visible on dark bg
+  static const Color iconGrey600 = Color(
+    0xFFBDBDBD,
+  ); // subtle but clearly readable
 
   // Border Colors (aliases)
   static const Color borderColor = Color(0xFF333333);

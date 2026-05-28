@@ -5,27 +5,32 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import '../firebase_options.dart';
 import '../utils/app_logger.dart';
-import '../services/badge_sync_engine.dart';
 import '../services/connectivity_service.dart';
 import '../services/theme_service.dart';
 
-/// Handles all pre-runApp initialisation in the correct, deterministic order.
+/// Handles app pre-initialisation in two distinct phases.
 ///
-/// Call exactly once at the top of [main] before [runApp].
+/// ## Phase 1 — [preRunAppInit] (before [runApp])
+/// Fast, synchronous-equivalent tasks that produce no observable latency:
+/// theme prefs, env vars, logging config, connectivity monitor.
+/// Firebase is deliberately excluded so [runApp] returns as early as possible
+/// and the [StartupView] can render its first frame before Firebase completes.
 ///
-/// Extraction reason: `main()` had 40+ lines of initialisation mixed with
-/// error handling, logging, and Firebase config. This class owns that
-/// responsibility so `main()` remains a thin entry point.
+/// ## Phase 2 — [initializeFirebase] (inside the startup screen)
+/// Firebase, App Check, and Firestore persistence settings.
+/// Called from [_MyAppState._runStartupSequence] so the loading UI can reflect
+/// Stage 1 progress text while these heavier operations resolve.
 class AppInit {
-  /// Runs the full initialisation sequence.
+  // ---------------------------------------------------------------------------
+  // Phase 1 — pre-runApp (fast, no Firebase)
+  // ---------------------------------------------------------------------------
+
+  /// Performs the minimal setup that must complete before [runApp] is called.
   ///
-  /// Order is preserved from the original main():
-  /// 1. Parallel: ThemeService + dotenv
-  /// 2. Logger configuration
-  /// 3. Connectivity monitor
-  /// 4. Firebase + App Check + Firestore settings
-  static Future<void> initialize() async {
-    // Parallel: neither depends on the other
+  /// Neither Firebase nor any Firestore/Auth call is made here, so this
+  /// completes in < 50 ms on most devices.
+  static Future<void> preRunAppInit() async {
+    // ThemeService and dotenv are independent — run in parallel.
     await Future.wait([
       ThemeService().initialize(),
       dotenv.load(fileName: '.env'),
@@ -33,28 +38,23 @@ class AppInit {
 
     _configureLogging();
 
+    // ConnectivityService.start() is non-blocking; it launches a stream
+    // internally and returns immediately.
     ConnectivityService.instance.start();
-
-    // Firebase must complete before runApp — it is critical for auth
-    await _initializeFirebase();
-
-    // Start AFTER Firebase is ready — the sync engine touches Firestore on
-    // the first connectivity event, which would crash if Firebase isn't up.
-    BadgeSyncEngine.instance.start();
   }
 
   // ---------------------------------------------------------------------------
-  // Private helpers
+  // Phase 2 — inside the startup screen (Firebase)
   // ---------------------------------------------------------------------------
 
-  static void _configureLogging() {
-    AppLogger.setLogLevel(LogLevel.info); // suppress DEBUG/VERBOSE
-    AppLogger.suppressTag('GoogleApiManager');
-    AppLogger.suppressTag('FlagStore');
-    AppLogger.suppressTag('FlagRegistrar');
-  }
-
-  static Future<void> _initializeFirebase() async {
+  /// Initialises Firebase, activates App Check, and configures Firestore
+  /// offline persistence.
+  ///
+  /// Called once from [_MyAppState._runStartupSequence] after the first frame
+  /// of [StartupView] has been committed to screen.  This ensures the loading
+  /// bar is already visible before the heavier Firebase SDK initialisation
+  /// blocks the isolate.
+  static Future<void> initializeFirebase() async {
     await Firebase.initializeApp(
       options: DefaultFirebaseOptions.currentPlatform,
     );
@@ -68,6 +68,17 @@ class AppInit {
     AppLogger.i('  App Check activated');
 
     _configureFirestore();
+  }
+
+  // ---------------------------------------------------------------------------
+  // Private helpers
+  // ---------------------------------------------------------------------------
+
+  static void _configureLogging() {
+    AppLogger.setLogLevel(LogLevel.info);
+    AppLogger.suppressTag('GoogleApiManager');
+    AppLogger.suppressTag('FlagStore');
+    AppLogger.suppressTag('FlagRegistrar');
   }
 
   static void _configureFirestore() {

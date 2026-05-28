@@ -1,5 +1,3 @@
-// ignore_for_file: deprecated_member_use
-
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../theme/app_theme.dart';
@@ -9,40 +7,27 @@ class OnboardingService {
   static const String _hasSeenOnboardingKey = 'has_seen_onboarding';
   static const String _currentUserOnboardingKey = 'current_user_onboarding';
 
-  /// Check if the current user has seen the onboarding
   static Future<bool> hasSeenOnboarding(String userId) async {
     final prefs = await SharedPreferences.getInstance();
     final currentUserOnboarding = prefs.getString(_currentUserOnboardingKey);
-
-    // If the stored user ID doesn't match current user, they haven't seen it
-    if (currentUserOnboarding != userId) {
-      return false;
-    }
-
+    if (currentUserOnboarding != userId) return false;
     return prefs.getBool(_hasSeenOnboardingKey) ?? false;
   }
 
-  /// Mark onboarding as completed for current user
   static Future<void> markOnboardingCompleted(String userId) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool(_hasSeenOnboardingKey, true);
     await prefs.setString(_currentUserOnboardingKey, userId);
   }
 
-  /// Reset onboarding (for testing purposes)
   static Future<void> resetOnboarding() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove(_hasSeenOnboardingKey);
     await prefs.remove(_currentUserOnboardingKey);
   }
 
-  /// Show the onboarding flow
-  static Future<void> showOnboarding(
-    BuildContext context,
-    String userId,
-  ) async {
+  static Future<void> showOnboarding(BuildContext context, String userId) async {
     if (!context.mounted) return;
-
     await Navigator.of(context).push(
       MaterialPageRoute(
         builder: (context) => OnboardingScreen(userId: userId),
@@ -54,7 +39,6 @@ class OnboardingService {
 
 class OnboardingScreen extends StatefulWidget {
   final String userId;
-
   const OnboardingScreen({super.key, required this.userId});
 
   @override
@@ -75,7 +59,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   void _nextPage() {
     if (_currentPage < _totalPages - 1) {
       _pageController.nextPage(
-        duration: const Duration(milliseconds: 300),
+        duration: const Duration(milliseconds: 350),
         curve: Curves.easeInOut,
       );
     } else {
@@ -84,12 +68,10 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   }
 
   void _previousPage() {
-    if (_currentPage > 0) {
-      _pageController.previousPage(
-        duration: const Duration(milliseconds: 300),
-        curve: Curves.easeInOut,
-      );
-    }
+    _pageController.previousPage(
+      duration: const Duration(milliseconds: 350),
+      curve: Curves.easeInOut,
+    );
   }
 
   void _skipOnboarding() async {
@@ -101,17 +83,12 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       confirmText: 'Skip',
       cancelText: 'Continue Tutorial',
     );
-
-    if (skip == true) {
-      _finishOnboarding();
-    }
+    if (skip == true) _finishOnboarding();
   }
 
   void _finishOnboarding() async {
     await OnboardingService.markOnboardingCompleted(widget.userId);
-    if (mounted) {
-      Navigator.of(context).pop();
-    }
+    if (mounted) Navigator.of(context).pop();
   }
 
   @override
@@ -122,9 +99,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       body: SafeArea(
         child: Column(
           children: [
-            // Header with skip button
+            // ── Header ──────────────────────────────────────────────────────
             Padding(
-              padding: const EdgeInsets.all(16.0),
+              padding: const EdgeInsets.fromLTRB(8, 12, 16, 0),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -133,33 +110,37 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                     child: Text(
                       'Skip',
                       style: TextStyle(
-                        color: colors.primary,
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
+                        color: colors.textSecondary,
+                        fontSize: 15,
                       ),
                     ),
                   ),
-                  Text(
-                    '${_currentPage + 1} of $_totalPages',
-                    style: TextStyle(
-                      color: colors.primary,
-                      fontSize: 14,
-                      fontWeight: FontWeight.w500,
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 12, vertical: 5),
+                    decoration: BoxDecoration(
+                      color: colors.primary.withOpacity(0.10),
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Text(
+                      '${_currentPage + 1} / $_totalPages',
+                      style: TextStyle(
+                        color: colors.primary,
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                   ),
                 ],
               ),
             ),
 
-            // Page content
+            // ── Pages ────────────────────────────────────────────────────────
             Expanded(
               child: PageView(
                 controller: _pageController,
-                onPageChanged: (index) {
-                  setState(() {
-                    _currentPage = index;
-                  });
-                },
+                onPageChanged: (index) =>
+                    setState(() => _currentPage = index),
                 children: [
                   _buildWelcomePage(),
                   _buildHomePage(),
@@ -170,69 +151,82 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
               ),
             ),
 
-            // Navigation buttons
+            // ── Footer navigation ────────────────────────────────────────────
             Padding(
-              padding: const EdgeInsets.all(24.0),
+              padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  // Back button
+                  // Back
                   _currentPage > 0
                       ? TextButton.icon(
                           onPressed: _previousPage,
-                          icon: Icon(
-                            Icons.arrow_back,
-                            color: colors.primary,
-                          ),
+                          icon: Icon(Icons.arrow_back_ios_new,
+                              color: colors.primary, size: 14),
                           label: Text(
                             'Back',
                             style: TextStyle(
                               color: colors.primary,
                               fontWeight: FontWeight.w600,
+                              fontSize: 15,
                             ),
                           ),
                         )
-                      : const SizedBox(width: 80),
+                      : const SizedBox(width: 72),
 
-                  // Page indicators
-                  Row(
-                    children: List.generate(_totalPages, (index) {
-                      return Container(
-                        margin: const EdgeInsets.symmetric(horizontal: 4),
-                        width: _currentPage == index ? 24 : 8,
-                        height: 8,
-                        decoration: BoxDecoration(
-                          color: _currentPage == index
-                              ? colors.primary
-                              : colors.primary.withValues(alpha: 0.3),
-                          borderRadius: BorderRadius.circular(4),
-                        ),
-                      );
-                    }),
+                  // Animated dots
+                  Expanded(
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: List.generate(_totalPages, (index) {
+                        return AnimatedContainer(
+                          duration: const Duration(milliseconds: 300),
+                          curve: Curves.easeInOut,
+                          margin:
+                              const EdgeInsets.symmetric(horizontal: 3),
+                          width: _currentPage == index ? 20 : 6,
+                          height: 6,
+                          decoration: BoxDecoration(
+                            color: _currentPage == index
+                                ? colors.primary
+                                : colors.primary.withOpacity(0.22),
+                            borderRadius: BorderRadius.circular(3),
+                          ),
+                        );
+                      }),
+                    ),
                   ),
 
-                  // Next/Done button
-                  ElevatedButton.icon(
+                  // Next / Start
+                  ElevatedButton(
                     onPressed: _nextPage,
                     style: ElevatedButton.styleFrom(
                       backgroundColor: colors.primary,
-                      foregroundColor: SharedColors.white,
+                      foregroundColor: Colors.white,
+                      elevation: 0,
                       padding: const EdgeInsets.symmetric(
-                        horizontal: 20,
-                        vertical: 12,
-                      ),
+                          horizontal: 20, vertical: 12),
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(25),
-                      ),
+                          borderRadius: BorderRadius.circular(25)),
                     ),
-                    icon: Icon(
-                      _currentPage == _totalPages - 1
-                          ? Icons.check_circle
-                          : Icons.arrow_forward_ios,
-                    ),
-                    label: Text(
-                      _currentPage == _totalPages - 1 ? 'Get Started' : 'Next',
-                      style: TextStyle(fontWeight: FontWeight.bold),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          _currentPage == _totalPages - 1
+                              ? 'Start'
+                              : 'Next',
+                          style: const TextStyle(
+                              fontWeight: FontWeight.bold, fontSize: 15),
+                        ),
+                        const SizedBox(width: 4),
+                        Icon(
+                          _currentPage == _totalPages - 1
+                              ? Icons.done
+                              : Icons.arrow_forward_ios,
+                          size: 14,
+                        ),
+                      ],
                     ),
                   ),
                 ],
@@ -244,195 +238,176 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     );
   }
 
-  Widget _buildWelcomePage() {
-    return _buildOnboardingPage(
-      icon: Icons.landscape,
-      title: 'Welcome to\nTrekScan+!',
-      description:
-          'Your ultimate companion for exploring Mt. Hamiguitan. Track your journey, discover stations, and connect with fellow trekkers.',
-      image: 'assets/images/app_logo.png',
-    );
-  }
+  // ── Page builders ────────────────────────────────────────────────────────
 
-  Widget _buildHomePage() {
-    return _buildOnboardingPage(
-      icon: Icons.dashboard_outlined,
-      title: 'Your Trek Hub',
-      description:
-          'The Home screen shows your trek calendar, recent posts from the community, and quick access to important information and tips.',
-      features: [
-        'View available trek dates',
-        'See community posts and photos',
-        'Access trek tips and guidelines',
-        'Track your achievements',
-      ],
-    );
-  }
+  Widget _buildWelcomePage() => _buildPage(
+        assetPath: 'assets/images/app_logo.png',
+        title: 'Welcome to\nTrekScan+',
+        description:
+            'Your ultimate companion for exploring Mt. Hamiguitan Range Wildlife Sanctuary.',
+        isLogoPage: true,
+      );
 
-  Widget _buildStationsPage() {
-    return _buildOnboardingPage(
-      icon: Icons.explore_outlined,
-      title: 'Discover Stations',
-      description:
-          'Explore the various checkpoints and points of interest throughout Mt. Hamiguitan. Track your visits and unlock achievements.',
-      features: [
-        'View all trek stations on the map',
-        'Mark stations as visited when you arrive',
-        'Unlock badges for visiting stations',
-        'Track your exploration progress',
-      ],
-    );
-  }
+  Widget _buildHomePage() => _buildPage(
+        assetPath: 'assets/icons/home_icon.png',
+        title: 'Your Trek Hub',
+        description:
+            'See your trek calendar, community posts, and quick access to all the information you need.',
+        features: [
+          'View available trek dates',
+          'Browse community posts and photos',
+          'Access trek tips and guidelines',
+          'Track your achievements',
+        ],
+      );
 
-  Widget _buildBookingPage() {
-    return _buildOnboardingPage(
-      icon: Icons.event_available_outlined,
-      title: 'Book Your Trek',
-      description:
-          'Plan your mountain adventure by booking trek dates, managing your reservations, and tracking approval status.',
-      features: [
-        'Submit trek booking requests',
-        'Upload required documents',
-        'Add porter requirements',
-        'Track booking status and approvals',
-      ],
-    );
-  }
+  Widget _buildStationsPage() => _buildPage(
+        assetPath: 'assets/icons/station.png',
+        title: 'Discover Stations',
+        description:
+            'Explore checkpoints throughout Mt. Hamiguitan, track your visits, and unlock achievements.',
+        features: [
+          'View all trek stations on the map',
+          'Mark stations as visited on arrival',
+          'Unlock badges for visiting stations',
+          'Track your exploration progress',
+        ],
+      );
 
-  Widget _buildScannerPage() {
-    return _buildOnboardingPage(
-      icon: Icons.qr_code_scanner_outlined,
-      title: 'QR Code Scanner',
-      description:
-          'Use the built-in scanner to check into stations, verify your trek progress, and access station-specific information.',
-      features: [
-        'Scan QR codes at trek stations',
-        'Automatically mark stations as visited',
-        'Unlock station-specific achievements',
-        'Access detailed station information',
-      ],
-    );
-  }
+  Widget _buildBookingPage() => _buildPage(
+        assetPath: 'assets/icons/appointment.png',
+        title: 'Book Your Trek',
+        description:
+            'Plan your mountain adventure by booking dates and managing your reservations with ease.',
+        features: [
+          'Submit trek booking requests',
+          'Upload required documents',
+          'Add porter requirements',
+          'Track booking status and approvals',
+        ],
+      );
 
-  Widget _buildOnboardingPage({
-    required IconData icon,
+  Widget _buildScannerPage() => _buildPage(
+        assetPath: 'assets/icons/qr-code.png',
+        title: 'QR Code Scanner',
+        description:
+            'Scan station QR codes to check in, verify your progress, and access station details.',
+        features: [
+          'Scan QR codes at trek stations',
+          'Automatically mark stations as visited',
+          'Unlock station-specific achievements',
+          'Access detailed station information',
+        ],
+      );
+
+  // ── Shared page layout ───────────────────────────────────────────────────
+
+  Widget _buildPage({
+    required String assetPath,
     required String title,
     required String description,
-    String? image,
     List<String>? features,
+    bool isLogoPage = false,
   }) {
     final colors = context.colors;
-    return Padding(
-      padding: const EdgeInsets.all(24.0),
+    return SingleChildScrollView(
+      padding: const EdgeInsets.fromLTRB(28, 20, 28, 8),
       child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          // Icon or Image
-          if (image != null)
-            Container(
-              width: 150,
-              height: 150,
-              decoration: BoxDecoration(
-                color: colors.primary.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(75),
-                border: Border.all(
-                  color: colors.primary.withValues(alpha: 0.2),
-                  width: 2,
-                ),
+          // Hero card
+          Container(
+            width: double.infinity,
+            height: isLogoPage ? 210 : 190,
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [
+                  colors.primary.withOpacity(0.13),
+                  colors.accent.withOpacity(0.06),
+                ],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
               ),
-              child: Center(
-                child: Image.asset(
-                  image,
-                  width: 100,
-                  height: 100,
-                  fit: BoxFit.contain,
-                  errorBuilder: (context, error, stackTrace) =>
-                      Icon(icon, size: 80, color: colors.primary),
-                ),
+              border: Border.all(
+                color: colors.primary.withOpacity(0.12),
+                width: 1.5,
               ),
-            )
-          else
-            Container(
-              width: 120,
-              height: 120,
-              decoration: BoxDecoration(
-                color: colors.primary.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(60),
-                border: Border.all(
-                  color: colors.primary.withValues(alpha: 0.2),
-                  width: 2,
+              borderRadius: BorderRadius.circular(24),
+              boxShadow: [
+                BoxShadow(
+                  color: colors.primary.withOpacity(0.08),
+                  blurRadius: 20,
+                  offset: const Offset(0, 6),
                 ),
-              ),
-              child: Icon(icon, size: 60, color: colors.primary),
+              ],
             ),
+            padding: const EdgeInsets.all(28),
+            child: Image.asset(
+              assetPath,
+              fit: BoxFit.contain,
+              errorBuilder: (_, __, ___) =>
+                  Icon(Icons.terrain, size: 80, color: colors.primary),
+            ),
+          ),
 
-          const SizedBox(height: 40),
+          const SizedBox(height: 32),
 
           // Title
           Text(
             title,
             style: TextStyle(
-              color: colors.primary,
-              fontSize: 28,
+              color: colors.text,
+              fontSize: 26,
               fontWeight: FontWeight.bold,
               height: 1.2,
             ),
             textAlign: TextAlign.center,
           ),
 
-          const SizedBox(height: 24),
+          const SizedBox(height: 12),
 
           // Description
           Text(
             description,
             style: TextStyle(
-              color: colors.primary,
-              fontSize: 16,
-              height: 1.5,
+              color: colors.textSecondary,
+              fontSize: 15,
+              height: 1.6,
             ),
             textAlign: TextAlign.center,
           ),
 
-          // Features list
+          // Feature list
           if (features != null) ...[
-            const SizedBox(height: 32),
-            Container(
-              padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                color: colors.primary.withValues(alpha: 0.05),
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(
-                  color: colors.primary.withValues(alpha: 0.1),
-                  width: 1,
-                ),
-              ),
-              child: Column(
-                children: features
-                    .map(
-                      (feature) => Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 8.0),
-                        child: Row(
-                          children: [
-                            Text(
-                              feature.split(' ')[0], // The emoji
-                              style: TextStyle(fontSize: 18),
-                            ),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: Text(
-                                feature.substring(feature.indexOf(' ') + 1),
-                                style: TextStyle(
-                                  color: colors.primary,
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w500,
-                                ),
-                              ),
-                            ),
-                          ],
+            const SizedBox(height: 28),
+            ...features.map(
+              (feature) => Padding(
+                padding: const EdgeInsets.symmetric(vertical: 6),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.only(top: 1),
+                      child: Icon(
+                        Icons.check_circle_rounded,
+                        color: colors.accent,
+                        size: 18,
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Text(
+                        feature,
+                        style: TextStyle(
+                          color: colors.text,
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500,
+                          height: 1.4,
                         ),
                       ),
-                    )
-                    .toList(),
+                    ),
+                  ],
+                ),
               ),
             ),
           ],

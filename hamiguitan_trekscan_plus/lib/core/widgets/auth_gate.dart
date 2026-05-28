@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../config/app_router.dart';
+import '../../theme/app_theme.dart';
 import '../viewmodels/auth_view_model.dart';
 import '../../features/auth/screens/login_screen.dart';
 import '../../features/auth/screens/email_verification_screen.dart';
@@ -110,9 +111,7 @@ class _AuthGateState extends State<AuthGate> {
         // are handled imperatively in _handleStatusTransition.
         return switch (vm.status) {
           AuthStatus.loading => AppShell(
-            home: const Scaffold(
-              body: Center(child: CircularProgressIndicator()),
-            ),
+            home: Scaffold(backgroundColor: context.colors.background),
           ),
           AuthStatus.unauthenticated => const AppShell(home: LoginScreen()),
           AuthStatus.unverified => const AppShell(
