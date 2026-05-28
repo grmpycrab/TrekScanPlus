@@ -2,7 +2,7 @@
     "name": "trekscanplus-functions",
     "description": "Cloud Functions for TrekScan Plus",
     "engines": {
-        "node": "20"
+        "node": "22"
     },
     "main": "index.js",
     "dependencies": {

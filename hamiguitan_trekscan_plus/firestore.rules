@@ -2,12 +2,9 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // Admin check: supports both custom-claim and Firestore-role approaches
+    // Admin check: server-side custom claim only — no Firestore reads
     function isAdmin() {
-      return request.auth != null && (
-        request.auth.token.admin == true ||
-        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin'
-      );
+      return request.auth != null && request.auth.token.admin == true;
     }
 
     // Users collection: users can read/write their own doc, admins can read all
@@ -18,9 +15,12 @@ service cloud.firestore {
       // Users can only write to their own document
       allow write: if request.auth != null && request.auth.uid == userId;
       
-      // Allow ANY authenticated user to update followers/following/postsCount/pendingFollowRequests/sentFollowRequests (for follow/unfollow functionality)
-      allow update: if request.auth != null && 
-        request.writeFields.hasAny(['followers', 'followersCount', 'following', 'followingCount', 'postsCount', 'pendingFollowRequests', 'sentFollowRequests']);
+      // Cross-user social-graph updates: ONLY these exact fields may change, preventing
+      // role/email injection alongside a legitimate follow payload.
+      allow update: if request.auth != null &&
+        request.resource.data.diff(resource.data).affectedKeys()
+          .hasOnly(['followers', 'followersCount', 'following', 'followingCount',
+                    'postsCount', 'pendingFollowRequests', 'sentFollowRequests']);
 
 
       // Achievements subcollection: any authenticated user can read (for profile viewing), users can write their own, admins can write any (for badge claim approval)
@@ -140,18 +140,15 @@ service cloud.firestore {
       // Owners can read/write their own posts (including private)
       allow read, write: if request.auth != null && request.auth.uid == resource.data.userId;
       
-      // Anyone authenticated can read posts when querying by userId (for profile viewing)
-      // This allows viewing someone's public/followers posts on their profile
-      allow read: if request.auth != null;
-
       // Create: authenticated users can create posts
       allow create: if request.auth != null && request.resource.data.userId == request.auth.uid;
 
-      // Update: owner can update, admins can update (for moderation), OR any authenticated user can update comment/like counts
+      // Update: owner or admin can update; anyone may increment aggregation counters only
       allow update: if request.auth != null && (
         request.auth.uid == resource.data.userId ||
-        request.writeFields.hasOnly(['likesCount', 'commentsCount', 'sharesCount', 'updatedAt']) ||
-        isAdmin()
+        isAdmin() ||
+        request.resource.data.diff(resource.data).affectedKeys()
+          .hasOnly(['likesCount', 'commentsCount', 'sharesCount', 'updatedAt'])
       );
 
       // Delete: owner or admin can delete
@@ -160,45 +157,46 @@ service cloud.firestore {
         isAdmin()
       );
 
-      // Likes subcollection
+      // Likes subcollection — likeId is the acting user's uid (enforces ownership)
       match /likes/{likeId} {
         allow read: if request.auth != null;
-        allow write: if request.auth != null;
-        allow delete: if request.auth != null;
+        allow create: if request.auth != null && likeId == request.auth.uid;
+        allow delete: if request.auth != null && likeId == request.auth.uid;
       }
 
       // Comments subcollection
       match /comments/{commentId} {
         allow read: if request.auth != null;
-        allow write: if request.auth != null;
-        allow delete: if request.auth != null && request.auth.uid == resource.data.userId;
-        
-        // Allow updating like and reply counts from any authenticated user
-        allow update: if request.auth != null && 
-          request.writeFields.hasOnly(['likesCount', 'repliesCount']);
+        allow create: if request.auth != null && request.resource.data.userId == request.auth.uid;
+        allow update: if request.auth != null && (
+          resource.data.userId == request.auth.uid ||
+          request.resource.data.diff(resource.data).affectedKeys()
+            .hasOnly(['likesCount', 'repliesCount'])
+        );
+        allow delete: if request.auth != null && (resource.data.userId == request.auth.uid || isAdmin());
 
-        // Likes on comments
+        // Likes on comments — likeId is the acting user's uid
         match /likes/{likeId} {
           allow read: if request.auth != null;
-          allow write: if request.auth != null;
-          allow delete: if request.auth != null;
+          allow create: if request.auth != null && likeId == request.auth.uid;
+          allow delete: if request.auth != null && likeId == request.auth.uid;
         }
 
         // Replies to comments
         match /replies/{replyId} {
           allow read: if request.auth != null;
-          allow write: if request.auth != null;
-          allow delete: if request.auth != null && request.auth.uid == resource.data.userId;
-          
-          // Allow updating like counts from any authenticated user
-          allow update: if request.auth != null && 
-            request.writeFields.hasOnly(['likesCount']);
+          allow create: if request.auth != null && request.resource.data.userId == request.auth.uid;
+          allow update: if request.auth != null && (
+            resource.data.userId == request.auth.uid ||
+            request.resource.data.diff(resource.data).affectedKeys().hasOnly(['likesCount'])
+          );
+          allow delete: if request.auth != null && (resource.data.userId == request.auth.uid || isAdmin());
 
-          // Likes on replies
+          // Likes on replies — likeId is the acting user's uid
           match /likes/{likeId} {
             allow read: if request.auth != null;
-            allow write: if request.auth != null;
-            allow delete: if request.auth != null;
+            allow create: if request.auth != null && likeId == request.auth.uid;
+            allow delete: if request.auth != null && likeId == request.auth.uid;
           }
         }
       }
@@ -206,17 +204,13 @@ service cloud.firestore {
 
     // System settings collection (calendar configuration)
     match /system_settings/{settingId} {
-      // Anyone can read system settings
-      allow read: if true;
-      
-      // Only admins can write system settings
-      allow write: if request.auth != null && isAdmin();
+      allow read: if request.auth != null;
+      allow write: if isAdmin();
     }
 
     // Calendar configuration collection (date-specific settings)
     match /calendar_config/{dateKey} {
-      // Anyone can read calendar configuration (for checking availability)
-      allow read: if true;
+      allow read: if request.auth != null;
       
       // Only admins can write calendar configuration
       allow create, update: if request.auth != null && isAdmin();
@@ -232,13 +226,10 @@ service cloud.firestore {
         request.resource.data.maxSlots <= 45; // Max 30 normally, can increase up to 45 for special events
     }
 
-    // Top-level notifications collection (for FCM push notifications)
+    // Top-level notifications collection — Cloud Functions use Admin SDK (bypasses rules).
+    // No client-side access required.
     match /notifications/{notificationId} {
-      // Any authenticated user can create notifications (system will use this for push notifications)
-      allow create: if request.auth != null;
-      
-      // No read/write access to top-level notifications (they're managed by backend)
-      allow read, write, delete: if false;
+      allow read, write: if false;
     }
 
     // Email verification codes collection
@@ -361,8 +352,8 @@ service cloud.firestore {
 
     // Station reviews: top-level list + per-review subcollection
     match /station_reviews/{stationId} {
-      allow read: if true;
-      allow write: if request.auth != null && isAdmin();
+      allow read: if request.auth != null;
+      allow write: if isAdmin();
     }
 
     // Wildcard path rule required for collectionGroup('reviews') queries.
@@ -371,12 +362,11 @@ service cloud.firestore {
     // full path at query-planning time without a wildcard anchor.
     // Used by the admin Station Activity panel to aggregate all station reviews.
     match /{path=**}/reviews/{reviewId} {
-      allow read: if true;
+      allow read: if request.auth != null;
     }
 
     match /station_reviews/{stationId}/reviews/{reviewId} {
-      // Anyone can read (station detail is useful without signing in)
-      allow read: if true;
+      allow read: if request.auth != null;
 
       allow create: if request.auth != null
         && reviewId == request.auth.uid

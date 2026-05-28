@@ -2,6 +2,10 @@
 serviceAccountKey.json
 *-firebase-adminsdk-*.json
 
+# Environment variables (contain API keys — deploy via Firebase CLI, not git)
+.env
+.env.local
+
 # Node modules
 node_modules/
 

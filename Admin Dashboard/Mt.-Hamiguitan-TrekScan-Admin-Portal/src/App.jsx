@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { onAuthStateChange, signOutUser } from './services/firebaseAuthService'
-import { checkIsAdmin, ensureAdminSeedDocument, getAdminProfile } from './services/adminService'
+import { checkIsAdmin, ensureAdminClaim, ensureAdminSeedDocument, getAdminProfile } from './services/adminService'
 import Login from './views/pages/Login.jsx'
 import AppLayout from './layouts/AppLayout.jsx'
 import { useToast, ToastContainer } from './components/Toast'
@@ -24,7 +24,13 @@ function App() {
 
       try {
         await ensureAdminSeedDocument(user)
-        const isAdmin = await checkIsAdmin(user.uid)
+        // Bootstrap: if this is the seed admin, ensure the custom claim is set.
+        // ensureAdminClaim is a no-op for non-seed, non-admin callers (the Cloud
+        // Function rejects them), so it's safe to call speculatively here.
+        if (user.email === import.meta.env.VITE_ADMIN_SEED_EMAIL) {
+          try { await ensureAdminClaim() } catch (e) { console.warn('ensureAdminClaim:', e?.message) }
+        }
+        const isAdmin = await checkIsAdmin(user)
         if (isAdmin) {
           const profile = await getAdminProfile(user.uid)
           setAdminProfile(profile)

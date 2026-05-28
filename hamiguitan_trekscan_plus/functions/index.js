@@ -19,8 +19,15 @@ const db = admin.firestore();
 // Set region to match Firestore location
 const region = 'asia-southeast1';
 
+// Global resource limits applied to every callable function.
+// Prevents runaway billing (DoS amplification) and unbounded execution.
+const runtimeOpts = {
+  timeoutSeconds: 15,
+  maxInstances: 10,
+};
+
 // Initialize SendGrid
-const sendgridKey = functions.config().sendgrid?.key;
+const sendgridKey = process.env.SENDGRID_KEY;
 if (sendgridKey) {
     sgMail.setApiKey(sendgridKey);
 }
@@ -50,7 +57,7 @@ function formatDateKey(date) {
  * Check if user already has a booking on the same date
  * Prevents duplicate bookings on the same date
  */
-exports.validateNoDuplicateBooking = functions.region(region).firestore
+exports.validateNoDuplicateBooking = functions.runWith(runtimeOpts).region(region).firestore
     .document('bookings/{bookingId}')
     .onCreate(async (snap, context) => {
         const booking = snap.data();
@@ -98,7 +105,10 @@ exports.validateNoDuplicateBooking = functions.region(region).firestore
  * Update server timestamp metadata for client synchronization
  * This ensures all clients use the same server time
  */
-exports.updateServerTimestamp = functions.region(region).https.onCall(async (data, context) => {
+exports.updateServerTimestamp = functions.runWith(runtimeOpts).region(region).https.onCall(async (data, context) => {
+    if (!context.auth) {
+        throw new functions.https.HttpsError('unauthenticated', 'Authentication required.');
+    }
     try {
         const timestamp = admin.firestore.FieldValue.serverTimestamp();
         await db.collection('_metadata').doc('timestamp').set({ timestamp }, { merge: true });
@@ -117,7 +127,7 @@ exports.updateServerTimestamp = functions.region(region).https.onCall(async (dat
  * Trigger when a booking document is created or updated
  * Automatically manages buffer days based on booking status
  */
-exports.onBookingStatusChange = functions.region(region).firestore
+exports.onBookingStatusChange = functions.runWith(runtimeOpts).region(region).firestore
     .document('bookings/{bookingId}')
     .onWrite(async (change, context) => {
         const bookingId = context.params.bookingId;
@@ -228,8 +238,13 @@ exports.onBookingStatusChange = functions.region(region).firestore
  * Manual trigger to sync all buffer days
  * Call this via Firebase Console or HTTP function
  */
-exports.syncAllBufferDays = functions.region(region).https.onCall(async (data, context) => {
-    // Verify admin access (optional - add your admin check here)
+exports.syncAllBufferDays = functions.runWith(runtimeOpts).region(region).https.onCall(async (data, context) => {
+    if (!context.auth) {
+        throw new functions.https.HttpsError('unauthenticated', 'Authentication required.');
+    }
+    if (!context.auth.token.admin) {
+        throw new functions.https.HttpsError('permission-denied', 'Admin access required.');
+    }
     console.log('Starting manual buffer day sync...');
 
     try {
@@ -314,7 +329,7 @@ exports.syncAllBufferDays = functions.region(region).https.onCall(async (data, c
  * Send FCM notification when booking status changes
  * This triggers whenever a booking is updated
  */
-exports.sendBookingStatusNotification = functions.region(region).firestore
+exports.sendBookingStatusNotification = functions.runWith(runtimeOpts).region(region).firestore
     .document('bookings/{bookingId}')
     .onUpdate(async (change, context) => {
         const newData = change.after.data();
@@ -418,17 +433,45 @@ exports.sendBookingStatusNotification = functions.region(region).firestore
     });
 
 /**
+ * Grant the admin custom claim to a user.
+ *
+ * Bootstrap flow: if the caller IS the seed admin email (set via
+ *   firebase functions:config:set admin.seed_email="you@example.com")
+ * they can self-grant admin on first login. After that, existing admins
+ * can promote other users by passing { uid: '<target-uid>' }.
+ */
+exports.grantAdminClaim = functions.runWith(runtimeOpts).region(region).https.onCall(async (data, context) => {
+    if (!context.auth) {
+        throw new functions.https.HttpsError('unauthenticated', 'Authentication required.');
+    }
+
+    const seedEmail = process.env.ADMIN_SEED_EMAIL;
+    const callerRecord = await admin.auth().getUser(context.auth.uid);
+    const isSeedAdmin = seedEmail && callerRecord.email === seedEmail;
+    const isAlreadyAdmin = context.auth.token.admin === true;
+
+    if (!isSeedAdmin && !isAlreadyAdmin) {
+        throw new functions.https.HttpsError('permission-denied', 'Not authorized to grant admin claims.');
+    }
+
+    const targetUid = (data && data.uid) ? data.uid : context.auth.uid;
+    await admin.auth().setCustomUserClaims(targetUid, { admin: true });
+
+    console.log(`Admin claim granted to uid: ${targetUid} by uid: ${context.auth.uid}`);
+    return { success: true, uid: targetUid };
+});
+
+/**
  * Send verification code emails
  * Listens to the /mail collection and sends emails with verification codes
  */
-exports.sendVerificationEmail = functions.region(region).firestore
+exports.sendVerificationEmail = functions.runWith(runtimeOpts).region(region).firestore
     .document('mail/{mailId}')
     .onCreate(async (snap, context) => {
         const mailData = snap.data();
         const mailId = context.params.mailId;
 
-        console.log(`📧 Processing email ${mailId}`);
-        console.log(`📦 Mail data:`, JSON.stringify(mailData, null, 2));
+        console.log(`📧 Processing email ${mailId} to: ${mailData.to}`);
 
         try {
             if (!sendgridKey) {

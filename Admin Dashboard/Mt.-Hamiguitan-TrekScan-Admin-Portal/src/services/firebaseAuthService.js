@@ -1,6 +1,8 @@
 // Firebase Auth Service - handles Firebase Authentication
-import { 
+import {
   signInWithEmailAndPassword,
+  signInWithPopup,
+  GoogleAuthProvider,
   signOut,
   onAuthStateChanged,
   createUserWithEmailAndPassword,
@@ -8,11 +10,10 @@ import {
 } from 'firebase/auth';
 import { auth } from '../config/firebase';
 
+const googleProvider = new GoogleAuthProvider();
+
 /**
  * Sign in with email and password
- * @param {string} email - User email
- * @param {string} password - User password
- * @returns {Promise<User>} Firebase user object
  */
 export const signIn = async (email, password) => {
   try {
@@ -25,8 +26,17 @@ export const signIn = async (email, password) => {
 };
 
 /**
+ * Sign in with a Google popup.
+ * Requires Cross-Origin-Opener-Policy: same-origin-allow-popups on the host
+ * page (set in vite.config.js) so the popup can postMessage the result back.
+ */
+export const signInWithGoogle = async () => {
+  const result = await signInWithPopup(auth, googleProvider);
+  return result.user;
+};
+
+/**
  * Sign out current user
- * @returns {Promise<void>}
  */
 export const signOutUser = async () => {
   try {
@@ -39,7 +49,6 @@ export const signOutUser = async () => {
 
 /**
  * Get current authenticated user
- * @returns {User|null} Current user or null if not authenticated
  */
 export const getCurrentUser = () => {
   return auth.currentUser;
@@ -47,28 +56,17 @@ export const getCurrentUser = () => {
 
 /**
  * Listen to authentication state changes
- * @param {Function} callback - Callback function called when auth state changes
- * @returns {Function} Unsubscribe function
  */
 export const onAuthStateChange = (callback) => {
   return onAuthStateChanged(auth, callback);
 };
 
-/**
- * Create a new user account
- * @param {string} email - User email
- * @param {string} password - User password
- * @param {string} displayName - User display name
- * @returns {Promise<User>} Firebase user object
- */
 export const createUser = async (email, password, displayName = null) => {
   try {
     const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-    
     if (displayName && userCredential.user) {
       await updateProfile(userCredential.user, { displayName });
     }
-    
     return userCredential.user;
   } catch (error) {
     console.error('Create user error:', error);
@@ -76,19 +74,5 @@ export const createUser = async (email, password, displayName = null) => {
   }
 };
 
-/**
- * Check if user is authenticated
- * @returns {boolean} True if user is authenticated
- */
-export const isAuthenticated = () => {
-  return auth.currentUser !== null;
-};
-
-/**
- * Get user ID
- * @returns {string|null} User ID or null if not authenticated
- */
-export const getUserId = () => {
-  return auth.currentUser?.uid || null;
-};
-
+export const isAuthenticated = () => auth.currentUser !== null;
+export const getUserId = () => auth.currentUser?.uid || null;
