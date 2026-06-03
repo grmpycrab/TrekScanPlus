@@ -125,7 +125,7 @@ class FirebaseAuthService {
       // Check if we have a current user before throwing
       if (kDebugMode) {
         AppLogger.i('Sign up Pigeon cast error: $e');
-        print(st);
+        AppLogger.d('$st');
       }
 
       final fallbackUser = _auth.currentUser;
@@ -203,7 +203,7 @@ class FirebaseAuthService {
       // Check if we have a current user before throwing
       if (kDebugMode) {
         AppLogger.i('Login Pigeon cast error: $e');
-        print(st);
+        AppLogger.d('$st');
       }
 
       final fallbackUser = _auth.currentUser;
@@ -412,7 +412,7 @@ class FirebaseAuthService {
         // can continue without interruption.
         if (kDebugMode) {
           AppLogger.i('Error while converting UserCredential: $e');
-          print(st);
+          AppLogger.d('$st');
         }
 
         final fallbackUser = _auth.currentUser;

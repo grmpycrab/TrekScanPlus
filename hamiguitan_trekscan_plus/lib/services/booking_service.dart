@@ -507,6 +507,17 @@ class BookingService {
     });
   }
 
+  /// Called after the user has fixed their documents.
+  /// Resets status back to 'pending' and clears admin notes so the admin
+  /// sees a fresh submission without the old rejection note.
+  Future<void> resubmitDocuments(String bookingId) async {
+    await _firestore.collection('bookings').doc(bookingId).update({
+      'status': 'pending',
+      'adminNotes': null,
+      'updatedAt': FieldValue.serverTimestamp(),
+    });
+  }
+
   /// Update booking status (for admin approval/decline) with notification
   Future<void> updateBookingStatus(
     String bookingId, {
@@ -582,6 +593,13 @@ class BookingService {
       case 'cancelled':
         title = 'Booking Cancelled';
         message = 'Your trek booking has been cancelled.';
+        type = NotificationType.warning;
+        break;
+      case 'changes_required':
+        title = 'Action Required: Update Your Documents';
+        message =
+            adminNotes ??
+            'The admin has requested changes to your booking documents. Please review and re-upload.';
         type = NotificationType.warning;
         break;
       default:

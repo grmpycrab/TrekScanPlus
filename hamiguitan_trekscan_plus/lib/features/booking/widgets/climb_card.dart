@@ -3,6 +3,7 @@ import 'package:intl/intl.dart';
 import '../../../models/climb.dart';
 import '../../../models/booking_model.dart';
 import 'booking_details_modal.dart';
+import 'document_reupload_sheet.dart';
 import '../../../theme/app_theme.dart';
 import '../../../utils/status_helpers.dart';
 
@@ -192,6 +193,48 @@ class ClimbCard extends StatelessWidget {
                 ],
               ),
               const SizedBox(height: 12),
+              // Admin note banner — only shown when documents need updating
+              if (status == 'Changes Required' &&
+                  climb.adminNotes != null &&
+                  climb.adminNotes!.isNotEmpty)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 10),
+                  child: Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 8,
+                    ),
+                    decoration: BoxDecoration(
+                      color: Colors.amber.shade50,
+                      border: Border.all(color: Colors.amber.shade400),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Icon(
+                          Icons.warning_amber_rounded,
+                          size: 16,
+                          color: Colors.amber.shade700,
+                        ),
+                        const SizedBox(width: 6),
+                        Expanded(
+                          child: Text(
+                            climb.adminNotes!,
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: Colors.amber.shade900,
+                              height: 1.3,
+                            ),
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
               // Draft status and action buttons
               Row(
                 children: [
@@ -254,6 +297,29 @@ class ClimbCard extends StatelessWidget {
                           style: TextStyle(
                             fontSize: 13,
                             fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                    ),
+                  const SizedBox(width: 8),
+                  if (status == 'Changes Required' && booking != null)
+                    SizedBox(
+                      height: 36,
+                      child: FilledButton.icon(
+                        onPressed: () => _showReuploadSheet(context),
+                        icon: const Icon(Icons.upload_file, size: 16),
+                        label: const Text(
+                          'Update Docs',
+                          style: TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        style: FilledButton.styleFrom(
+                          backgroundColor: Colors.amber.shade700,
+                          padding: const EdgeInsets.symmetric(horizontal: 12),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
                           ),
                         ),
                       ),
@@ -347,6 +413,26 @@ class ClimbCard extends StatelessWidget {
             const SizedBox(height: 8),
           ],
         ),
+      ),
+    );
+  }
+
+  void _showReuploadSheet(BuildContext context) {
+    if (booking == null) return;
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => DocumentReuploadSheet(
+        booking: booking!,
+        onResubmitted: () {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Booking resubmitted for review!'),
+              backgroundColor: Colors.green,
+            ),
+          );
+        },
       ),
     );
   }

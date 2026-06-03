@@ -23,11 +23,14 @@ class JoinRequest {
   /// Starts as 'pending_group'; updated to the group's affiliation on approval
   String affiliation;
 
-  /// 'pending' | 'approved' | 'declined'
+  /// 'pending' | 'approved' | 'declined' | 'changes_required'
   String status;
 
   final String? notes;
   final String? declineReason;
+
+  /// Set by the organizer when requesting the member to fix/replace documents.
+  final String? changesNote;
 
   final List<Attachment> attachments;
 
@@ -47,6 +50,7 @@ class JoinRequest {
     this.status = 'pending',
     this.notes,
     this.declineReason,
+    this.changesNote,
     this.attachments = const [],
     Timestamp? createdAt,
     this.updatedAt,
@@ -57,6 +61,7 @@ class JoinRequest {
   bool get isPending => status == 'pending';
   bool get isApproved => status == 'approved';
   bool get isDeclined => status == 'declined';
+  bool get isChangesRequired => status == 'changes_required';
 
   Map<String, dynamic> toMap() => {
     'groupId': groupId,
@@ -68,6 +73,7 @@ class JoinRequest {
     'status': status,
     'notes': notes,
     'declineReason': declineReason,
+    'changesNote': changesNote,
     'attachments': attachments.map((a) => a.toMap()).toList(),
     'createdAt': createdAt,
     'updatedAt': updatedAt,
@@ -90,6 +96,7 @@ class JoinRequest {
       status: d['status'] as String? ?? 'pending',
       notes: d['notes'] as String?,
       declineReason: d['declineReason'] as String?,
+      changesNote: d['changesNote'] as String?,
       attachments: (d['attachments'] as List<dynamic>?)
               ?.map((e) => Attachment.fromMap(Map<String, dynamic>.from(e)))
               .toList() ??
@@ -112,6 +119,7 @@ class JoinRequest {
     String? status,
     String? notes,
     String? declineReason,
+    String? changesNote,
     List<Attachment>? attachments,
     Timestamp? createdAt,
     Timestamp? updatedAt,
@@ -128,6 +136,7 @@ class JoinRequest {
     status: status ?? this.status,
     notes: notes ?? this.notes,
     declineReason: declineReason ?? this.declineReason,
+    changesNote: changesNote ?? this.changesNote,
     attachments: attachments ?? this.attachments,
     createdAt: createdAt ?? this.createdAt,
     updatedAt: updatedAt ?? this.updatedAt,

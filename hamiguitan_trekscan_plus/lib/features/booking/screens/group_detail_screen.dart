@@ -2,6 +2,7 @@
 
 import 'dart:async';
 
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -13,7 +14,10 @@ import '../../../models/member.dart';
 import '../../../services/group_booking_service.dart';
 import '../../../theme/app_theme.dart';
 import '../../../utils/app_logger.dart';
+import '../widgets/edit_group_sheet.dart';
+import '../widgets/edit_join_request_sheet.dart';
 import '../widgets/group_status_chip.dart';
+import '../widgets/join_request_reupload_sheet.dart';
 import 'join_request_screen.dart';
 
 // ══════════════════════════════════════════════════════════════════════════════
@@ -45,7 +49,9 @@ GroupRole _deriveRole(
   if (uid.isEmpty) return GroupRole.visitor;
   if (group.organizerId == uid) return GroupRole.organizer;
   if (myRequest?.isApproved == true) return GroupRole.approvedMember;
-  if (myRequest?.isPending == true) return GroupRole.pendingRequester;
+  if (myRequest?.isPending == true || myRequest?.isChangesRequired == true) {
+    return GroupRole.pendingRequester;
+  }
   return GroupRole.visitor;
 }
 
@@ -234,9 +240,12 @@ class _OverviewTab extends StatelessWidget {
         if (group.adminNotes != null && group.adminNotes!.isNotEmpty) ...[
           const SizedBox(height: 8),
           _NotesCard(
-            title: 'Admin Notes',
+            title: group.status == 'changes_required'
+                ? 'Action Required — Admin Note'
+                : 'Admin Notes',
             body: group.adminNotes!,
             isAdmin: true,
+            isChangesRequired: group.status == 'changes_required',
           ),
         ],
         const SizedBox(height: 20),
@@ -394,43 +403,58 @@ class _NotesCard extends StatelessWidget {
   final String title;
   final String body;
   final bool isAdmin;
-  const _NotesCard(
-      {required this.title, required this.body, this.isAdmin = false});
+  final bool isChangesRequired;
+  const _NotesCard({
+    required this.title,
+    required this.body,
+    this.isAdmin = false,
+    this.isChangesRequired = false,
+  });
 
   @override
   Widget build(BuildContext context) {
     final colors = context.colors;
+    final Color accent = isChangesRequired
+        ? Colors.amber.shade700
+        : isAdmin
+            ? colors.info
+            : colors.textSecondary;
+    final Color bg = isChangesRequired
+        ? Colors.amber.shade50
+        : isAdmin
+            ? colors.info.withOpacity(0.07)
+            : colors.surfaceVariant;
+    final Color border = isChangesRequired
+        ? Colors.amber.shade300
+        : isAdmin
+            ? colors.info.withOpacity(0.3)
+            : colors.border;
+    final IconData icon = isChangesRequired
+        ? Icons.warning_amber_rounded
+        : isAdmin
+            ? Icons.admin_panel_settings_rounded
+            : Icons.notes_rounded;
+
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: isAdmin
-            ? colors.info.withOpacity(0.07)
-            : colors.surfaceVariant,
+        color: bg,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: isAdmin
-              ? colors.info.withOpacity(0.3)
-              : colors.border,
-          width: 0.8,
-        ),
+        border: Border.all(color: border, width: 0.8),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              Icon(
-                isAdmin ? Icons.admin_panel_settings_rounded : Icons.notes_rounded,
-                size: 14,
-                color: isAdmin ? colors.info : colors.textSecondary,
-              ),
+              Icon(icon, size: 14, color: accent),
               const SizedBox(width: 6),
               Text(
                 title,
                 style: TextStyle(
                   fontSize: 12,
                   fontWeight: FontWeight.w700,
-                  color: isAdmin ? colors.info : colors.textSecondary,
+                  color: accent,
                 ),
               ),
             ],
@@ -438,11 +462,7 @@ class _NotesCard extends StatelessWidget {
           const SizedBox(height: 8),
           Text(
             body,
-            style: TextStyle(
-              fontSize: 13,
-              color: colors.text,
-              height: 1.5,
-            ),
+            style: TextStyle(fontSize: 13, color: colors.text, height: 1.5),
           ),
         ],
       ),
@@ -470,7 +490,7 @@ class _RoleCTA extends StatelessWidget {
       GroupRole.pendingRequester =>
         _PendingCTA(request: myRequest!, group: group),
       GroupRole.approvedMember => _ApprovedCTA(group: group),
-      GroupRole.organizer => const SizedBox.shrink(),
+      GroupRole.organizer => _OrganizerCTA(group: group),
     };
   }
 }
@@ -597,6 +617,11 @@ class _PendingCTAState extends State<_PendingCTA> {
   @override
   Widget build(BuildContext context) {
     final colors = context.colors;
+
+    if (widget.request.isChangesRequired) {
+      return _buildChangesRequired(context, colors);
+    }
+
     return Column(
       children: [
         Container(
@@ -634,7 +659,160 @@ class _PendingCTAState extends State<_PendingCTA> {
             ],
           ),
         ),
+        const SizedBox(height: 8),
+        // Edit my request details
+        SizedBox(
+          width: double.infinity,
+          child: OutlinedButton.icon(
+            icon: const Icon(Icons.edit_rounded, size: 16),
+            label: const Text('Edit My Request',
+                style: TextStyle(fontSize: 13)),
+            onPressed: () => showModalBottomSheet(
+              context: context,
+              isScrollControlled: true,
+              backgroundColor: Colors.transparent,
+              builder: (_) =>
+                  EditJoinRequestSheet(request: widget.request),
+            ),
+            style: OutlinedButton.styleFrom(
+              padding: const EdgeInsets.symmetric(vertical: 12),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10)),
+            ),
+          ),
+        ),
+        const SizedBox(height: 8),
+        SizedBox(
+          width: double.infinity,
+          child: OutlinedButton.icon(
+            icon: _withdrawing
+                ? const SizedBox(
+                    width: 16,
+                    height: 16,
+                    child: CircularProgressIndicator(
+                        strokeWidth: 2, color: Colors.red),
+                  )
+                : const Icon(Icons.undo_rounded, size: 16),
+            label: const Text('Withdraw Request',
+                style: TextStyle(fontSize: 13)),
+            onPressed: _withdrawing ? null : _withdraw,
+            style: OutlinedButton.styleFrom(
+              foregroundColor: Colors.red,
+              side: BorderSide(color: Colors.red.withOpacity(0.6)),
+              padding: const EdgeInsets.symmetric(vertical: 12),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10)),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildChangesRequired(BuildContext context, dynamic colors) {
+    return Column(
+      children: [
+        // Amber warning banner
+        Container(
+          padding: const EdgeInsets.all(14),
+          decoration: BoxDecoration(
+            color: Colors.amber.shade50,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: Colors.amber.shade400),
+          ),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Icon(Icons.warning_amber_rounded,
+                  color: Colors.amber.shade700, size: 22),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Documents Update Required',
+                      style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.amber.shade800),
+                    ),
+                    const SizedBox(height: 2),
+                    if (widget.request.changesNote != null &&
+                        widget.request.changesNote!.isNotEmpty)
+                      Text(
+                        widget.request.changesNote!,
+                        style: TextStyle(
+                            fontSize: 12, color: Colors.amber.shade900),
+                      )
+                    else
+                      Text(
+                        'The organizer has requested changes to your documents.',
+                        style: TextStyle(
+                            fontSize: 12, color: Colors.amber.shade900),
+                      ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
         const SizedBox(height: 12),
+        // Update Documents button
+        SizedBox(
+          width: double.infinity,
+          child: FilledButton.icon(
+            icon: const Icon(Icons.upload_file, size: 16),
+            label: const Text('Update Documents',
+                style: TextStyle(fontSize: 13)),
+            onPressed: () => showModalBottomSheet(
+              context: context,
+              isScrollControlled: true,
+              backgroundColor: Colors.transparent,
+              builder: (_) => JoinRequestReuploadSheet(
+                request: widget.request,
+                onResubmitted: () {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Request resubmitted for review!'),
+                      backgroundColor: Colors.green,
+                    ),
+                  );
+                },
+              ),
+            ),
+            style: FilledButton.styleFrom(
+              backgroundColor: Colors.amber.shade700,
+              padding: const EdgeInsets.symmetric(vertical: 12),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10)),
+            ),
+          ),
+        ),
+        const SizedBox(height: 8),
+        // Edit my request details
+        SizedBox(
+          width: double.infinity,
+          child: OutlinedButton.icon(
+            icon: const Icon(Icons.edit_rounded, size: 16),
+            label: const Text('Edit My Request',
+                style: TextStyle(fontSize: 13)),
+            onPressed: () => showModalBottomSheet(
+              context: context,
+              isScrollControlled: true,
+              backgroundColor: Colors.transparent,
+              builder: (_) =>
+                  EditJoinRequestSheet(request: widget.request),
+            ),
+            style: OutlinedButton.styleFrom(
+              padding: const EdgeInsets.symmetric(vertical: 12),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10)),
+            ),
+          ),
+        ),
+        const SizedBox(height: 8),
+        // Still allow withdraw
         SizedBox(
           width: double.infinity,
           child: OutlinedButton.icon(
@@ -704,6 +882,115 @@ class _ApprovedCTA extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+// ── Organizer CTA ─────────────────────────────────────────────────────────────
+
+class _OrganizerCTA extends StatefulWidget {
+  final GroupBooking group;
+  const _OrganizerCTA({required this.group});
+
+  @override
+  State<_OrganizerCTA> createState() => _OrganizerCTAState();
+}
+
+class _OrganizerCTAState extends State<_OrganizerCTA> {
+  bool _resubmitting = false;
+
+  bool get _editable =>
+      GroupBookingService.isEditable(widget.group.status);
+
+  Future<void> _resubmit() async {
+    setState(() => _resubmitting = true);
+    try {
+      await GroupBookingService.instance.resubmitGroup(widget.group.id);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Group resubmitted for admin review.'),
+            backgroundColor: Colors.green,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to resubmit: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _resubmitting = false);
+    }
+  }
+
+  void _openEdit() {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => EditGroupSheet(group: widget.group),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (!_editable) return const SizedBox.shrink();
+
+    final isChangesRequired = widget.group.status == 'changes_required';
+
+    return Column(
+      children: [
+        // Edit group button
+        SizedBox(
+          width: double.infinity,
+          child: OutlinedButton.icon(
+            icon: const Icon(Icons.edit_rounded, size: 16),
+            label: const Text('Edit Group Details',
+                style: TextStyle(fontSize: 13)),
+            onPressed: _openEdit,
+            style: OutlinedButton.styleFrom(
+              padding: const EdgeInsets.symmetric(vertical: 12),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10)),
+            ),
+          ),
+        ),
+        // Resubmit button — only shown when admin sent it back
+        if (isChangesRequired) ...[
+          const SizedBox(height: 8),
+          SizedBox(
+            width: double.infinity,
+            child: FilledButton.icon(
+              icon: _resubmitting
+                  ? const SizedBox(
+                      width: 16,
+                      height: 16,
+                      child: CircularProgressIndicator(
+                          strokeWidth: 2, color: Colors.white),
+                    )
+                  : const Icon(Icons.send_rounded, size: 16),
+              label: Text(
+                _resubmitting
+                    ? 'Resubmitting...'
+                    : 'Resubmit for Review',
+                style: const TextStyle(fontSize: 13),
+              ),
+              onPressed: _resubmitting ? null : _resubmit,
+              style: FilledButton.styleFrom(
+                backgroundColor: Colors.amber.shade700,
+                padding: const EdgeInsets.symmetric(vertical: 12),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10)),
+              ),
+            ),
+          ),
+        ],
+      ],
     );
   }
 }
@@ -1423,7 +1710,7 @@ class _DetailRow extends StatelessWidget {
 // TAB — Documents
 // ══════════════════════════════════════════════════════════════════════════════
 
-class _DocumentsTab extends StatelessWidget {
+class _DocumentsTab extends StatefulWidget {
   final GroupBooking group;
   final GroupRole role;
   final JoinRequest? myRequest;
@@ -1435,32 +1722,158 @@ class _DocumentsTab extends StatelessWidget {
   });
 
   @override
+  State<_DocumentsTab> createState() => _DocumentsTabState();
+}
+
+class _DocumentsTabState extends State<_DocumentsTab> {
+  bool get _editable =>
+      widget.role == GroupRole.organizer &&
+      GroupBookingService.isEditable(widget.group.status);
+
+  Future<void> _deleteGroupAttachment(Attachment att) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: const Text('Delete File'),
+        content: Text('Remove "${att.fileName}" from the group?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Delete',
+                style: TextStyle(color: Colors.red)),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true) return;
+    try {
+      await GroupBookingService.instance.deleteGroupAttachment(
+          widget.group.id, att);
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to delete "${att.fileName}"'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
+  Future<void> _uploadGroupFiles() async {
+    final result = await FilePicker.platform.pickFiles(
+      allowMultiple: true,
+      type: FileType.custom,
+      allowedExtensions: ['pdf', 'jpg', 'jpeg', 'png', 'doc', 'docx'],
+      withData: true,
+    );
+    if (result == null || !mounted) return;
+    for (final file in result.files) {
+      try {
+        await GroupBookingService.instance.uploadMemberAttachment(
+          widget.group.id,
+          file,
+          memberName: widget.group.organizerName,
+        );
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Failed to upload "${file.name}"'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      }
+    }
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Files uploaded.'),
+          backgroundColor: Colors.green,
+        ),
+      );
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     final colors = context.colors;
     return ListView(
       padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
       children: [
+        // Editable hint
+        if (_editable)
+          Container(
+            margin: const EdgeInsets.only(bottom: 14),
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: Colors.blue.shade50,
+              border: Border.all(color: Colors.blue.shade200),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Row(
+              children: [
+                Icon(Icons.info_outline_rounded,
+                    size: 16, color: Colors.blue.shade700),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    'You can delete or add files while the group is editable.',
+                    style: TextStyle(
+                        fontSize: 12, color: Colors.blue.shade800),
+                  ),
+                ),
+              ],
+            ),
+          ),
+
         // Letter of Communication
-        if (group.letterOfCommunication != null) ...[
+        if (widget.group.letterOfCommunication != null) ...[
           _DocSectionLabel('Letter of Communication'),
-          _AttachmentTile(att: group.letterOfCommunication!),
+          _AttachmentTile(att: widget.group.letterOfCommunication!),
           const SizedBox(height: 14),
         ],
 
         // Group-level member documents
-        if (group.attachments.isNotEmpty) ...[
+        if (widget.group.attachments.isNotEmpty) ...[
           _DocSectionLabel(
-              'Member Documents (${group.attachments.length})'),
-          ...group.attachments.map((a) => _AttachmentTile(att: a)),
+              'Member Documents (${widget.group.attachments.length})'),
+          ...widget.group.attachments.map(
+            (a) => _AttachmentTile(
+              att: a,
+              onDelete: _editable ? () => _deleteGroupAttachment(a) : null,
+            ),
+          ),
+          const SizedBox(height: 8),
+        ],
+
+        // Upload button for organizer when editable
+        if (_editable) ...[
+          OutlinedButton.icon(
+            onPressed: _uploadGroupFiles,
+            icon: const Icon(Icons.upload_file, size: 18),
+            label: const Text('Upload More Files'),
+            style: OutlinedButton.styleFrom(
+              padding: const EdgeInsets.symmetric(vertical: 12),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10)),
+            ),
+          ),
           const SizedBox(height: 14),
         ],
 
         // Organizer: show all join-request attachments
-        if (role == GroupRole.organizer) ...[
+        if (widget.role == GroupRole.organizer) ...[
           _DocSectionLabel('Join Request Documents'),
           StreamBuilder<List<JoinRequest>>(
             stream: GroupBookingService.instance
-                .streamJoinRequests(group.id),
+                .streamJoinRequests(widget.group.id),
             builder: (ctx, snap) {
               if (snap.connectionState == ConnectionState.waiting) {
                 return const Center(
@@ -1492,19 +1905,20 @@ class _DocumentsTab extends StatelessWidget {
         ],
 
         // Approved member: show only their own request's attachments
-        if (role == GroupRole.approvedMember &&
-            myRequest != null &&
-            myRequest!.attachments.isNotEmpty) ...[
+        if (widget.role == GroupRole.approvedMember &&
+            widget.myRequest != null &&
+            widget.myRequest!.attachments.isNotEmpty) ...[
           _DocSectionLabel('Your Documents'),
-          ...myRequest!.attachments
+          ...widget.myRequest!.attachments
               .map((a) => _AttachmentTile(att: a)),
         ],
 
         // Empty state
-        if (group.letterOfCommunication == null &&
-            group.attachments.isEmpty &&
-            role != GroupRole.organizer &&
-            (myRequest == null || myRequest!.attachments.isEmpty))
+        if (widget.group.letterOfCommunication == null &&
+            widget.group.attachments.isEmpty &&
+            widget.role != GroupRole.organizer &&
+            (widget.myRequest == null ||
+                widget.myRequest!.attachments.isEmpty))
           Center(
             child: Padding(
               padding: const EdgeInsets.only(top: 48),
@@ -1552,7 +1966,9 @@ class _DocSectionLabel extends StatelessWidget {
 class _AttachmentTile extends StatelessWidget {
   final Attachment att;
   final String? owner;
-  const _AttachmentTile({required this.att, this.owner});
+  /// When non-null, a delete button is shown alongside the copy button.
+  final VoidCallback? onDelete;
+  const _AttachmentTile({required this.att, this.owner, this.onDelete});
 
   @override
   Widget build(BuildContext context) {
@@ -1615,20 +2031,33 @@ class _AttachmentTile extends StatelessWidget {
               ),
           ],
         ),
-        trailing: IconButton(
-          icon: Icon(Icons.copy_rounded,
-              size: 18, color: colors.textSecondary),
-          tooltip: 'Copy download link',
-          onPressed: () {
-            Clipboard.setData(
-                ClipboardData(text: att.downloadURL));
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('Download link copied to clipboard.'),
-                duration: Duration(seconds: 2),
+        trailing: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            IconButton(
+              icon: Icon(Icons.copy_rounded,
+                  size: 18, color: colors.textSecondary),
+              tooltip: 'Copy download link',
+              onPressed: () {
+                Clipboard.setData(
+                    ClipboardData(text: att.downloadURL));
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content:
+                        Text('Download link copied to clipboard.'),
+                    duration: Duration(seconds: 2),
+                  ),
+                );
+              },
+            ),
+            if (onDelete != null)
+              IconButton(
+                icon: const Icon(Icons.delete_outline_rounded,
+                    size: 18, color: Colors.red),
+                tooltip: 'Delete file',
+                onPressed: onDelete,
               ),
-            );
-          },
+          ],
         ),
       ),
     );

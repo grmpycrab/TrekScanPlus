@@ -2,7 +2,6 @@ import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_app_check/firebase_app_check.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 import '../firebase_options.dart';
 import '../utils/app_logger.dart';
 import '../services/connectivity_service.dart';
@@ -12,7 +11,7 @@ import '../services/theme_service.dart';
 ///
 /// ## Phase 1 — [preRunAppInit] (before [runApp])
 /// Fast, synchronous-equivalent tasks that produce no observable latency:
-/// theme prefs, env vars, logging config, connectivity monitor.
+/// theme prefs, logging config, connectivity monitor.
 /// Firebase is deliberately excluded so [runApp] returns as early as possible
 /// and the [StartupView] can render its first frame before Firebase completes.
 ///
@@ -30,11 +29,7 @@ class AppInit {
   /// Neither Firebase nor any Firestore/Auth call is made here, so this
   /// completes in < 50 ms on most devices.
   static Future<void> preRunAppInit() async {
-    // ThemeService and dotenv are independent — run in parallel.
-    await Future.wait([
-      ThemeService().initialize(),
-      dotenv.load(fileName: '.env'),
-    ]);
+    await ThemeService().initialize();
 
     _configureLogging();
 

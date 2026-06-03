@@ -209,7 +209,7 @@ function GroupRow({ group, expanded, onToggle }) {
           <div className="gbp-admin-bar">
             <span className="gbp-admin-label">Admin Override:</span>
             {/* Gap H2 — 'completed' added to status override buttons */}
-            {['open', 'pending_review', 'approved', 'declined', 'completed', 'cancelled'].map((s) => (
+            {['open', 'pending_review', 'approved', 'changes_required', 'declined', 'completed', 'cancelled'].map((s) => (
               <button
                 key={s}
                 className={`gbp-status-btn${group.status === s ? ' gbp-status-btn-active' : ''}`}

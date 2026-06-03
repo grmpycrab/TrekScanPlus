@@ -1,4 +1,4 @@
-package com.example.hamiguitan_trekscan_plus
+package com.hamiguitan.trekscanplus
 
 import io.flutter.embedding.android.FlutterActivity
 

@@ -100,7 +100,7 @@ class UserService {
     } catch (e, st) {
       if (kDebugMode) {
         AppLogger.i('Error creating/updating user document: $e');
-        print(st);
+        AppLogger.d('$st');
       }
       rethrow;
     }
@@ -358,7 +358,7 @@ class UserService {
     } catch (e, st) {
       if (kDebugMode) {
         AppLogger.i('Error deleting user: $e');
-        print(st);
+        AppLogger.d('$st');
       }
       rethrow;
     }
@@ -392,7 +392,7 @@ class UserService {
     } catch (e, st) {
       if (kDebugMode) {
         AppLogger.i('Error updating user info: $e');
-        print(st);
+        AppLogger.d('$st');
       }
       rethrow;
     }
@@ -438,7 +438,7 @@ class UserService {
     } catch (e, st) {
       if (kDebugMode) {
         AppLogger.i('Error updating user name: $e');
-        print(st);
+        AppLogger.d('$st');
       }
       rethrow;
     }
@@ -467,7 +467,7 @@ class UserService {
     } catch (e, st) {
       if (kDebugMode) {
         AppLogger.i('Error checking name change cooldown: $e');
-        print(st);
+        AppLogger.d('$st');
       }
       return 0;
     }
@@ -523,7 +523,7 @@ class UserService {
     } catch (e, st) {
       if (kDebugMode) {
         AppLogger.i('Error toggling follow: $e');
-        print(st);
+        AppLogger.d('$st');
       }
       rethrow;
     }
@@ -577,7 +577,7 @@ class UserService {
     } catch (e, st) {
       if (kDebugMode) {
         AppLogger.i('Error accepting follow request: $e');
-        print(st);
+        AppLogger.d('$st');
       }
       rethrow;
     }
@@ -605,7 +605,7 @@ class UserService {
     } catch (e, st) {
       if (kDebugMode) {
         AppLogger.i('Error rejecting follow request: $e');
-        print(st);
+        AppLogger.d('$st');
       }
       rethrow;
     }
@@ -676,7 +676,7 @@ class UserService {
     } catch (e, st) {
       if (kDebugMode) {
         AppLogger.i('Error unfollowing: $e');
-        print(st);
+        AppLogger.d('$st');
       }
       rethrow;
     }
@@ -693,7 +693,7 @@ class UserService {
     } catch (e, st) {
       if (kDebugMode) {
         AppLogger.i('Error checking follow status: $e');
-        print(st);
+        AppLogger.d('$st');
       }
       return false;
     }
@@ -714,7 +714,7 @@ class UserService {
     } catch (e, st) {
       if (kDebugMode) {
         AppLogger.i('Error checking pending follow request: $e');
-        print(st);
+        AppLogger.d('$st');
       }
       return false;
     }
@@ -739,7 +739,7 @@ class UserService {
     } catch (e, st) {
       if (kDebugMode) {
         AppLogger.i('Error cancelling follow request: $e');
-        print(st);
+        AppLogger.d('$st');
       }
       rethrow;
     }
@@ -757,7 +757,7 @@ class UserService {
     } catch (e, st) {
       if (kDebugMode) {
         AppLogger.i('Error incrementing post count: $e');
-        print(st);
+        AppLogger.d('$st');
       }
       rethrow;
     }
@@ -775,7 +775,7 @@ class UserService {
     } catch (e, st) {
       if (kDebugMode) {
         AppLogger.i('Error decrementing post count: $e');
-        print(st);
+        AppLogger.d('$st');
       }
       rethrow;
     }
@@ -820,7 +820,7 @@ class UserService {
     } catch (e, st) {
       if (kDebugMode) {
         AppLogger.i('Error fixing negative counts: $e');
-        print(st);
+        AppLogger.d('$st');
       }
       rethrow;
     }

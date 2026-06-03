@@ -577,3 +577,176 @@ exports.sendVerificationEmail = functions.runWith(runtimeOpts).region(region).fi
         }
     });
 
+/**
+ * Send a single certificate email with PDF attachment.
+ * Called directly from the Flutter app — credentials never leave the server.
+ */
+exports.sendCertificateEmail = functions.runWith({
+    timeoutSeconds: 60,
+    maxInstances: 10,
+}).region(region).https.onCall(async (data, context) => {
+    if (!context.auth) {
+        throw new functions.https.HttpsError('unauthenticated', 'Must be signed in.');
+    }
+
+    const { to, recipientName, certificateData, pdfBase64 } = data;
+
+    if (!to || !certificateData) {
+        throw new functions.https.HttpsError('invalid-argument', 'Missing required fields: to, certificateData');
+    }
+
+    // Only allow users to send to their own verified email
+    if (to !== context.auth.token.email) {
+        throw new functions.https.HttpsError('permission-denied', 'Can only send certificates to your own email.');
+    }
+
+    if (!sendgridKey) {
+        throw new functions.https.HttpsError('internal', 'Email service is not configured.');
+    }
+
+    const attachments = pdfBase64 ? [{
+        content: pdfBase64,
+        filename: `${(certificateData.title || 'Certificate').replace(/\s+/g, '_')}_Certificate.pdf`,
+        type: 'application/pdf',
+        disposition: 'attachment',
+    }] : [];
+
+    const msg = {
+        to,
+        from: { email: 'keyntharly@gmail.com', name: 'Mt. Hamiguitan TrekScan' },
+        subject: `🏆 Your Mt. Hamiguitan ${certificateData.title} Certificate`,
+        html: _buildCertificateEmailHtml(certificateData, recipientName || 'Trekker'),
+        attachments,
+    };
+
+    try {
+        await sgMail.send(msg);
+        console.log(`✅ Certificate email sent to ${to}`);
+        return { success: true };
+    } catch (error) {
+        console.error('❌ sendCertificateEmail error:', error.response?.body || error.message);
+        throw new functions.https.HttpsError('internal', 'Failed to send certificate email.');
+    }
+});
+
+/**
+ * Send all earned certificates in a single email with multiple PDF attachments.
+ */
+exports.sendAllCertificatesEmail = functions.runWith({
+    timeoutSeconds: 120,
+    maxInstances: 10,
+}).region(region).https.onCall(async (data, context) => {
+    if (!context.auth) {
+        throw new functions.https.HttpsError('unauthenticated', 'Must be signed in.');
+    }
+
+    const { to, recipientName, certificates } = data;
+
+    if (!to || !certificates || !Array.isArray(certificates) || certificates.length === 0) {
+        throw new functions.https.HttpsError('invalid-argument', 'Missing required fields: to, certificates[]');
+    }
+
+    if (to !== context.auth.token.email) {
+        throw new functions.https.HttpsError('permission-denied', 'Can only send certificates to your own email.');
+    }
+
+    if (!sendgridKey) {
+        throw new functions.https.HttpsError('internal', 'Email service is not configured.');
+    }
+
+    const attachments = certificates
+        .filter(c => c.pdfBase64)
+        .map(c => ({
+            content: c.pdfBase64,
+            filename: `${(c.certificateData.title || 'Certificate').replace(/\s+/g, '_')}_Certificate.pdf`,
+            type: 'application/pdf',
+            disposition: 'attachment',
+        }));
+
+    const certificateItems = certificates.map(c => {
+        const cd = c.certificateData;
+        return `
+        <div style="background:white;padding:15px;margin:10px 0;border-left:4px solid ${cd.colorHex || '#4CAF50'};border-radius:4px;">
+            <h4 style="margin:0 0 10px 0;">${cd.title}</h4>
+            <p style="margin:5px 0;font-size:14px;">Earned on: ${cd.dateEarned}</p>
+            <p style="margin:5px 0;font-size:14px;">Stations: ${cd.stationsVisited} | Distance: ${cd.totalDistance} km</p>
+        </div>`;
+    }).join('');
+
+    const html = `
+<!DOCTYPE html><html><head>
+<style>
+  body{font-family:Arial,sans-serif;line-height:1.6;color:#333;max-width:600px;margin:0 auto;padding:20px}
+  .header{background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);color:white;padding:30px;text-align:center;border-radius:10px 10px 0 0}
+  .content{background:#f9f9f9;padding:30px;border-radius:0 0 10px 10px}
+</style></head><body>
+  <div class="header"><h1>🎉 Amazing Achievement!</h1>
+    <p>You've earned ${certificates.length} Mt. Hamiguitan Certificates</p></div>
+  <div class="content">
+    <p>Dear <strong>${recipientName || 'Trekker'}</strong>,</p>
+    <p>Congratulations! You've earned multiple certificates for your trekking achievements:</p>
+    ${certificateItems}
+    <p style="margin-top:30px;">All certificates are attached to this email as PDF files.</p>
+    <p>Best regards,<br><strong>The Mt. Hamiguitan TrekScan Team</strong></p>
+  </div>
+</body></html>`;
+
+    const msg = {
+        to,
+        from: { email: 'keyntharly@gmail.com', name: 'Mt. Hamiguitan TrekScan' },
+        subject: `Your Mt. Hamiguitan Certificates (${certificates.length} earned)`,
+        html,
+        attachments,
+    };
+
+    try {
+        await sgMail.send(msg);
+        console.log(`✅ Bulk certificate email (${certificates.length}) sent to ${to}`);
+        return { success: true };
+    } catch (error) {
+        console.error('❌ sendAllCertificatesEmail error:', error.response?.body || error.message);
+        throw new functions.https.HttpsError('internal', 'Failed to send certificates email.');
+    }
+});
+
+// ---------------------------------------------------------------------------
+// Private helpers
+// ---------------------------------------------------------------------------
+
+function _buildCertificateEmailHtml(cert, userName) {
+    return `
+<!DOCTYPE html><html><head><style>
+  body{font-family:Arial,sans-serif;line-height:1.6;color:#333;max-width:600px;margin:0 auto;padding:20px}
+  .header{background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);color:white;padding:30px;text-align:center;border-radius:10px 10px 0 0}
+  .content{background:#f9f9f9;padding:30px;border-radius:0 0 10px 10px}
+  .badge{background:${cert.colorHex || '#4CAF50'};color:white;padding:15px;border-radius:8px;text-align:center;margin:20px 0}
+  .details{background:white;padding:20px;border-left:4px solid ${cert.colorHex || '#4CAF50'};margin:20px 0}
+  .row{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #eee}
+  .footer{text-align:center;padding:20px;color:#666;font-size:12px}
+</style></head><body>
+  <div class="header"><h1>🏔️ Congratulations!</h1><p>You've earned a Mt. Hamiguitan Certificate</p></div>
+  <div class="content">
+    <p>Dear <strong>${userName}</strong>,</p>
+    <p>Congratulations on achieving this incredible milestone! We are thrilled to present you with your official certificate for completing:</p>
+    <div class="badge"><h2 style="margin:0">${cert.title}</h2></div>
+    <p>${cert.description}</p>
+    <div class="details">
+      <h3>Your Achievement Details:</h3>
+      <div class="row"><span><strong>Date Completed:</strong></span><span>${cert.dateEarned}</span></div>
+      <div class="row"><span><strong>Stations Visited:</strong></span><span>${cert.stationsVisited} stations</span></div>
+      <div class="row"><span><strong>Total Distance:</strong></span><span>${cert.totalDistance} km</span></div>
+      <div class="row"><span><strong>Total Time:</strong></span><span>${(cert.totalTimeMinutes / 60).toFixed(1)} hours</span></div>
+      <div class="row"><span><strong>Verification Code:</strong></span><span><code>${cert.verificationCode}</code></span></div>
+    </div>
+    <p>Your official certificate is attached to this email as a PDF file.</p>
+    <p style="margin-top:30px;">Thank you for exploring the beautiful Mt. Hamiguitan Range Wildlife Sanctuary, a UNESCO World Heritage Site.</p>
+    <p><strong>Keep exploring!</strong></p>
+    <p>Best regards,<br><strong>The Mt. Hamiguitan TrekScan Team</strong></p>
+  </div>
+  <div class="footer">
+    <p>Mt. Hamiguitan Range Wildlife Sanctuary<br>UNESCO World Heritage Site<br>This is an automated email. Please do not reply.</p>
+    <p style="font-size:10px;margin-top:20px;">Certificate issued on ${cert.createdAt}</p>
+  </div>
+</body></html>`;
+}
+

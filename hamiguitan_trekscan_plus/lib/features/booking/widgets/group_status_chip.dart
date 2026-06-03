@@ -69,6 +69,11 @@ class GroupStatusChip extends StatelessWidget {
         const Color(0xFF1565C0),
         Icons.check_circle_rounded,
       ),
+      'changes_required' => (
+        'Changes Required',
+        const Color(0xFFF57F17),
+        Icons.edit_note_rounded,
+      ),
       'declined' => ('Declined', const Color(0xFFC62828), Icons.cancel_rounded),
       'completed' => ('Completed', const Color(0xFF00695C), Icons.flag_rounded),
       'cancelled' => (

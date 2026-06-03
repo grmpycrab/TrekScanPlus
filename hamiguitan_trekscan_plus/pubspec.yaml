@@ -1,7 +1,7 @@
 name: hamiguitan_trekscan_plus
 description: "A new Flutter project."
 publish_to: "none"
-version: 0.1.0
+version: 1.0.0+1
 
 environment:
   sdk: ^3.9.0
@@ -32,8 +32,7 @@ dependencies:
   printing: ^5.11.0
   path_provider: ^2.1.1
   share_plus: ^7.2.1
-  mailer: ^6.0.1
-  flutter_dotenv: ^5.1.0
+  cloud_functions: ^4.3.0
   app_links: ^6.4.1
   cached_network_image: ^3.3.1
   flutter_cache_manager: ^3.3.3
@@ -75,7 +74,6 @@ flutter:
     - assets/icons/
     - assets/data/
     - assets/data/badge.json
-    - .env
 
   fonts:
     - family: Montserrat

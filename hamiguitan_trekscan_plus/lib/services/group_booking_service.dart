@@ -11,6 +11,7 @@ import 'package:image/image.dart' as img;
 
 import '../models/booking_model.dart';
 import '../models/group_booking.dart';
+import '../models/member.dart';
 import '../models/trek_type.dart';
 import 'pricing_service.dart';
 import '../models/join_request.dart';
@@ -67,6 +68,12 @@ class GroupBookingService {
 
   static String resolveSeasonType(DateTime date) =>
       isOffSeason(date) ? 'off_season' : 'regular';
+
+  /// Returns true when the organizer is allowed to edit the group.
+  /// Editing is permitted only when the group has not yet been submitted
+  /// for admin review, or when the admin has sent it back for changes.
+  static bool isEditable(String status) =>
+      status == 'open' || status == 'changes_required';
 
   // ──────────────────────────────────────────────────────────────────────────
   // GROUP BOOKING CRUD
@@ -177,6 +184,93 @@ class GroupBookingService {
       if (status == 'cancelled') 'isArchived': true,
       'updatedAt': FieldValue.serverTimestamp(),
     });
+  }
+
+  // ──────────────────────────────────────────────────────────────────────────
+  // GROUP EDITING
+  // ──────────────────────────────────────────────────────────────────────────
+
+  /// Update editable group booking fields.
+  /// Only call when [isEditable] returns true for the current status.
+  Future<void> updateGroupBooking(
+    String groupId, {
+    String? groupName,
+    Timestamp? trekDate,
+    int? maxSlots,
+    String? trekType,
+    String? affiliation,
+    bool? guideRequired,
+    bool? scientistRequired,
+    String? notes,
+    Member? organizerMember,
+    List<Member>? guestMembers,
+  }) async {
+    final data = <String, dynamic>{
+      'updatedAt': FieldValue.serverTimestamp(),
+    };
+    if (groupName != null) data['groupName'] = groupName;
+    if (trekDate != null) {
+      data['trekDate'] = trekDate;
+      data['seasonType'] = resolveSeasonType(trekDate.toDate());
+    }
+    if (maxSlots != null) data['maxSlots'] = maxSlots;
+    if (trekType != null) data['trekType'] = trekType;
+    if (affiliation != null) data['affiliation'] = affiliation;
+    if (guideRequired != null) data['guideRequired'] = guideRequired;
+    if (scientistRequired != null) data['scientistRequired'] = scientistRequired;
+    if (notes != null) data['notes'] = notes;
+    if (organizerMember != null) {
+      data['organizerMember'] = organizerMember.toMap();
+    }
+    if (guestMembers != null) {
+      data['guestMembers'] = guestMembers.map((m) => m.toMap()).toList();
+    }
+    await _groups.doc(groupId).update(data);
+    AppLogger.i('GroupBooking $groupId updated');
+  }
+
+  /// Delete a group-level attachment from both Storage and Firestore.
+  Future<void> deleteGroupAttachment(
+    String groupId,
+    Attachment attachment,
+  ) async {
+    try {
+      await _storage.ref(attachment.storagePath).delete();
+    } catch (e) {
+      AppLogger.w('Storage delete failed for ${attachment.storagePath}: $e');
+    }
+    await _groups.doc(groupId).update({
+      'attachments': FieldValue.arrayRemove([attachment.toMap()]),
+      'updatedAt': FieldValue.serverTimestamp(),
+    });
+  }
+
+  /// After fixing what the admin flagged, reset status to pending_review
+  /// and clear the admin's note so they see a fresh submission.
+  Future<void> resubmitGroup(String groupId) async {
+    await _groups.doc(groupId).update({
+      'status': 'pending_review',
+      'adminNotes': null,
+      'updatedAt': FieldValue.serverTimestamp(),
+    });
+    AppLogger.i('GroupBooking $groupId resubmitted for review');
+  }
+
+  /// Update a join request's member details and/or porter preference.
+  /// Only call when the request status allows editing (pending / changes_required).
+  Future<void> updateJoinRequestDetails(
+    String groupId,
+    String requestId, {
+    Member? member,
+    bool? porterRequested,
+  }) async {
+    final data = <String, dynamic>{
+      'updatedAt': FieldValue.serverTimestamp(),
+    };
+    if (member != null) data['member'] = member.toMap();
+    if (porterRequested != null) data['porterRequested'] = porterRequested;
+    await _requests(groupId).doc(requestId).update(data);
+    AppLogger.i('JoinRequest $requestId details updated');
   }
 
   /// Soft-deletes a group by marking it archived — hidden from all list views.
@@ -495,6 +589,58 @@ class GroupBookingService {
     });
 
     return attachment;
+  }
+
+  /// Organizer requests a member to fix/replace their documents.
+  /// Sets the join request status to 'changes_required' and stores the note.
+  Future<void> requestJoinDocumentChanges(
+    String groupId,
+    String requestId, {
+    required String note,
+  }) async {
+    final organizerId = _auth.currentUser?.uid;
+    if (organizerId == null) throw Exception('Not authenticated');
+
+    await _requests(groupId).doc(requestId).update({
+      'status': 'changes_required',
+      'changesNote': note,
+      'reviewedAt': FieldValue.serverTimestamp(),
+      'reviewedBy': organizerId,
+      'updatedAt': FieldValue.serverTimestamp(),
+    });
+
+    AppLogger.i('Requested document changes for join request $requestId');
+  }
+
+  /// Delete a specific attachment from a join request (Storage + Firestore).
+  Future<void> deleteJoinRequestAttachment(
+    String groupId,
+    String requestId,
+    Attachment attachment,
+  ) async {
+    try {
+      await _storage.ref(attachment.storagePath).delete();
+    } catch (e) {
+      AppLogger.w('Storage delete failed for ${attachment.storagePath}: $e');
+    }
+    await _requests(groupId).doc(requestId).update({
+      'attachments': FieldValue.arrayRemove([attachment.toMap()]),
+      'updatedAt': FieldValue.serverTimestamp(),
+    });
+  }
+
+  /// Member resubmits their join request after fixing their documents.
+  /// Resets status back to 'pending' and clears the organizer's note.
+  Future<void> resubmitJoinRequest(
+    String groupId,
+    String requestId,
+  ) async {
+    await _requests(groupId).doc(requestId).update({
+      'status': 'pending',
+      'changesNote': null,
+      'updatedAt': FieldValue.serverTimestamp(),
+    });
+    AppLogger.i('Join request $requestId resubmitted for group $groupId');
   }
 
   /// Upload the Letter of Communication for a special/official group booking.

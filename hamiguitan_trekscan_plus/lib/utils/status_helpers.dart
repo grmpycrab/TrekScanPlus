@@ -25,6 +25,8 @@ class BookingStatusHelper {
         return Colors.red;
       case 'Pending':
         return Colors.orange;
+      case 'Changes Required':
+        return Colors.amber.shade700;
       default:
         return const Color(0xFF252B30); // primary
     }
