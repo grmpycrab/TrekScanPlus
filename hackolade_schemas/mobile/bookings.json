@@ -1,0 +1,64 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "bookings",
+  "description": "Trek booking requests submitted by users.",
+  "type": "object",
+  "properties": {
+    "id":                   { "type": "string" },
+    "userId":               { "type": "string",  "description": "ref → users.uid" },
+    "groupId":              { "type": "string",  "description": "ref → groupBookings.id (optional)" },
+    "affiliation":          { "type": "string" },
+    "trekDate":             { "type": "string",  "format": "date-time" },
+    "trekType":             { "type": "string",  "description": "regular | special | research | benchmarking | government_official" },
+    "bookingClassification":{ "type": "string",  "description": "regular | special | government_official | off_season" },
+    "seasonType":           { "type": "string",  "description": "regular | off_season" },
+    "hometown":             { "type": "string" },
+    "phoneNumber":          { "type": "string" },
+    "notes":                { "type": "string" },
+    "adminNotes":           { "type": "string",  "description": "[ADMIN WRITE] Feedback on status change" },
+    "status":               { "type": "string",  "description": "pending | approved | rejected | cancelled | changes_required" },
+    "submissionStatus":     { "type": "string",  "description": "draft | submitted" },
+    "isArchived":           { "type": "boolean" },
+    "totalMembers":         { "type": "integer" },
+    "attachments": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "storagePath":  { "type": "string" },
+          "downloadURL":  { "type": "string" },
+          "fileName":     { "type": "string" },
+          "mimeType":     { "type": "string" },
+          "size":         { "type": "integer" },
+          "uploadedAt":   { "type": "string", "format": "date-time" },
+          "memberName":   { "type": "string" }
+        }
+      }
+    },
+    "members": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id":               { "type": "string" },
+          "firstName":        { "type": "string" },
+          "lastName":         { "type": "string" },
+          "gender":           { "type": "string" },
+          "birthDate":        { "type": "string" },
+          "contactNumber":    { "type": "string" },
+          "nationality":      { "type": "string" },
+          "homeAddress":      { "type": "string" },
+          "category":         { "type": "string", "description": "student | senior_citizen | davao_oriental_resident | ocfdo | outside_davao_oriental | children_8_15 | mfsm" },
+          "isPrimaryContact": { "type": "boolean" },
+          "hasAccount":       { "type": "boolean" },
+          "userId":           { "type": "string" },
+          "memberStatus":     { "type": "string" },
+          "createdAt":        { "type": "string", "format": "date-time" },
+          "updatedAt":        { "type": "string", "format": "date-time" }
+        }
+      }
+    },
+    "createdAt": { "type": "string", "format": "date-time" },
+    "updatedAt": { "type": "string", "format": "date-time" }
+  }
+}

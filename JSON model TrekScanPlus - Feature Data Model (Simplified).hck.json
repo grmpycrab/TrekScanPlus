@@ -1,0 +1,1974 @@
+{
+  "modelName": "TrekScanPlus - Feature Data Model (Simplified)",
+  "collections": [
+    {
+      "collectionName": "stations",
+      "type": "object",
+      "properties": [
+        {
+          "code": "",
+          "name": "id",
+          "isActivated": true,
+          "type": "string",
+          "properties": [],
+          "GUID": "sf000001-0000-4000-8000-000000000000",
+          "description": "Document ID — matches QR code key"
+        },
+        {
+          "code": "",
+          "name": "name",
+          "isActivated": true,
+          "type": "string",
+          "properties": [],
+          "GUID": "sf000002-0000-4000-8000-000000000000"
+        },
+        {
+          "code": "",
+          "name": "description",
+          "isActivated": true,
+          "type": "string",
+          "properties": [],
+          "GUID": "sf000003-0000-4000-8000-000000000000"
+        },
+        {
+          "code": "",
+          "name": "difficulty",
+          "isActivated": true,
+          "type": "string",
+          "properties": [],
+          "GUID": "sf000004-0000-4000-8000-000000000000"
+        },
+        {
+          "code": "",
+          "name": "elevation",
+          "isActivated": true,
+          "type": "number",
+          "properties": [],
+          "GUID": "sf000005-0000-4000-8000-000000000000",
+          "description": "In meters"
+        },
+        {
+          "code": "",
+          "name": "latitude",
+          "isActivated": true,
+          "type": "number",
+          "properties": [],
+          "GUID": "sf000006-0000-4000-8000-000000000000"
+        },
+        {
+          "code": "",
+          "name": "longitude",
+          "isActivated": true,
+          "type": "number",
+          "properties": [],
+          "GUID": "sf000007-0000-4000-8000-000000000000"
+        },
+        {
+          "code": "",
+          "name": "images",
+          "isActivated": true,
+          "type": "array",
+          "properties": [],
+          "GUID": "sf000008-0000-4000-8000-000000000000"
+        },
+        {
+          "code": "",
+          "name": "steps",
+          "isActivated": true,
+          "type": "number",
+          "properties": [],
+          "GUID": "sf000009-0000-4000-8000-000000000000",
+          "description": "Steps from previous station"
+        },
+        {
+          "code": "",
+          "name": "nextStationId",
+          "isActivated": true,
+          "type": "string",
+          "properties": [],
+          "GUID": "sf000010-0000-4000-8000-000000000000"
+        },
+        {
+          "code": "",
+          "name": "distanceToNextKm",
+          "isActivated": true,
+          "type": "number",
+          "properties": [],
+          "GUID": "sf000011-0000-4000-8000-000000000000"
+        },
+        {
+          "code": "",
+          "name": "flora",
+          "isActivated": true,
+          "type": "array",
+          "properties": [],
+          "GUID": "sf000012-0000-4000-8000-000000000000"
+        },
+        {
+          "code": "",
+          "name": "fauna",
+          "isActivated": true,
+          "type": "array",
+          "properties": [],
+          "GUID": "sf000013-0000-4000-8000-000000000000"
+        },
+        {
+          "code": "",
+          "name": "isCheckpoint",
+          "isActivated": true,
+          "type": "boolean",
+          "properties": [],
+          "GUID": "sf000014-0000-4000-8000-000000000000"
+        },
+        {
+          "code": "",
+          "name": "trailDetails",
+          "isActivated": true,
+          "type": "object",
+          "GUID": "sf000015-0000-4000-8000-000000000000",
+          "properties": [
+            {
+              "code": "",
+              "name": "trailType",
+              "isActivated": true,
+              "type": "array",
+              "properties": [],
+              "GUID": "sf000016-0000-4000-8000-000000000000"
+            },
+            {
+              "code": "",
+              "name": "plants",
+              "isActivated": true,
+              "type": "array",
+              "properties": [],
+              "GUID": "sf000017-0000-4000-8000-000000000000"
+            },
+            {
+              "code": "",
+              "name": "animals",
+              "isActivated": true,
+              "type": "array",
+              "properties": [],
+              "GUID": "sf000018-0000-4000-8000-000000000000"
+            },
+            {
+              "code": "",
+              "name": "facilities",
+              "isActivated": true,
+              "type": "array",
+              "properties": [],
+              "GUID": "sf000019-0000-4000-8000-000000000000"
+            },
+            {
+              "code": "",
+              "name": "utilities",
+              "isActivated": true,
+              "type": "array",
+              "properties": [],
+              "GUID": "sf000020-0000-4000-8000-000000000000"
+            },
+            {
+              "code": "",
+              "name": "warnings",
+              "isActivated": true,
+              "type": "object",
+              "properties": [],
+              "GUID": "sf000021-0000-4000-8000-000000000000",
+              "description": "Map of warning key → description"
+            }
+          ]
+        },
+        {
+          "code": "",
+          "name": "averageRating",
+          "isActivated": true,
+          "type": "number",
+          "properties": [],
+          "GUID": "sf000022-0000-4000-8000-000000000000",
+          "description": "Aggregated average of all reviews (1-5)"
+        },
+        {
+          "code": "",
+          "name": "totalReviews",
+          "isActivated": true,
+          "type": "number",
+          "properties": [],
+          "GUID": "sf000023-0000-4000-8000-000000000000"
+        },
+        {
+          "code": "",
+          "name": "reviews",
+          "isActivated": true,
+          "type": "array",
+          "GUID": "sf000024-0000-4000-8000-000000000000",
+          "description": "Subcollection: station_reviews/{stationId}/reviews/{userId}",
+          "properties": [
+            {
+              "code": "",
+              "name": "id",
+              "isActivated": true,
+              "type": "string",
+              "properties": [],
+              "GUID": "sf000025-0000-4000-8000-000000000000",
+              "description": "Document ID = userId (one per user per station)"
+            },
+            {
+              "code": "",
+              "name": "userId",
+              "isActivated": true,
+              "type": "string",
+              "properties": [],
+              "GUID": "sf000026-0000-4000-8000-000000000000",
+              "description": "ref → users.uid"
+            },
+            {
+              "code": "",
+              "name": "userDisplayName",
+              "isActivated": true,
+              "type": "string",
+              "properties": [],
+              "GUID": "sf000027-0000-4000-8000-000000000000"
+            },
+            {
+              "code": "",
+              "name": "rating",
+              "isActivated": true,
+              "type": "number",
+              "properties": [],
+              "GUID": "sf000028-0000-4000-8000-000000000000",
+              "description": "1-5"
+            },
+            {
+              "code": "",
+              "name": "comment",
+              "isActivated": true,
+              "type": "string",
+              "properties": [],
+              "GUID": "sf000029-0000-4000-8000-000000000000"
+            },
+            {
+              "code": "",
+              "name": "createdAt",
+              "isActivated": true,
+              "type": "string",
+              "properties": [],
+              "GUID": "sf000030-0000-4000-8000-000000000000",
+              "format": "date-time"
+            },
+            {
+              "code": "",
+              "name": "updatedAt",
+              "isActivated": true,
+              "type": "string",
+              "properties": [],
+              "GUID": "sf000031-0000-4000-8000-000000000000",
+              "format": "date-time"
+            }
+          ]
+        }
+      ],
+      "definitions": {
+        "type": "definitions",
+        "GUID": "sd000001-0000-4000-8000-000000000000",
+        "properties": []
+      },
+      "isActivated": true,
+      "additionalProperties": true,
+      "GUID": "sc000001-0000-4000-8000-000000000000",
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "description": "LOCAL STATIC DATA (assets) + station_reviews Firestore data. Document ID = QR code key.",
+      "bucketId": "sb000001-0000-4000-8000-000000000000",
+      "hackoladeMeta": {
+        "validationErrors": {}
+      }
+    },
+    {
+      "collectionName": "users",
+      "type": "object",
+      "properties": [
+        {
+          "code": "",
+          "name": "uid",
+          "isActivated": true,
+          "type": "string",
+          "properties": [],
+          "GUID": "sf000050-0000-4000-8000-000000000000",
+          "description": "Firebase Auth UID — document ID"
+        },
+        {
+          "code": "",
+          "name": "firstName",
+          "isActivated": true,
+          "type": "string",
+          "properties": [],
+          "GUID": "sf000051-0000-4000-8000-000000000000"
+        },
+        {
+          "code": "",
+          "name": "lastName",
+          "isActivated": true,
+          "type": "string",
+          "properties": [],
+          "GUID": "sf000052-0000-4000-8000-000000000000"
+        },
+        {
+          "code": "",
+          "name": "email",
+          "isActivated": true,
+          "type": "string",
+          "properties": [],
+          "GUID": "sf000053-0000-4000-8000-000000000000"
+        },
+        {
+          "code": "",
+          "name": "birthDate",
+          "isActivated": true,
+          "type": "string",
+          "properties": [],
+          "GUID": "sf000054-0000-4000-8000-000000000000"
+        },
+        {
+          "code": "",
+          "name": "gender",
+          "isActivated": true,
+          "type": "string",
+          "properties": [],
+          "GUID": "sf000055-0000-4000-8000-000000000000"
+        },
+        {
+          "code": "",
+          "name": "nationality",
+          "isActivated": true,
+          "type": "string",
+          "properties": [],
+          "GUID": "sf000056-0000-4000-8000-000000000000"
+        },
+        {
+          "code": "",
+          "name": "profileImage",
+          "isActivated": true,
+          "type": "string",
+          "properties": [],
+          "GUID": "sf000057-0000-4000-8000-000000000000"
+        },
+        {
+          "code": "",
+          "name": "followingCount",
+          "isActivated": true,
+          "type": "number",
+          "properties": [],
+          "GUID": "sf000058-0000-4000-8000-000000000000"
+        },
+        {
+          "code": "",
+          "name": "followersCount",
+          "isActivated": true,
+          "type": "number",
+          "properties": [],
+          "GUID": "sf000059-0000-4000-8000-000000000000"
+        },
+        {
+          "code": "",
+          "name": "emailVerified",
+          "isActivated": true,
+          "type": "boolean",
+          "properties": [],
+          "GUID": "sf000060-0000-4000-8000-000000000000"
+        },
+        {
+          "code": "",
+          "name": "fcmToken",
+          "isActivated": true,
+          "type": "string",
+          "properties": [],
+          "GUID": "sf000061-0000-4000-8000-000000000000"
+        },
+        {
+          "code": "",
+          "name": "createdAt",
+          "isActivated": true,
+          "type": "string",
+          "properties": [],
+          "GUID": "sf000062-0000-4000-8000-000000000000",
+          "format": "date-time"
+        },
+        {
+          "code": "",
+          "name": "visitedStations",
+          "isActivated": true,
+          "type": "array",
+          "GUID": "sf000063-0000-4000-8000-000000000000",
+          "description": "Subcollection: users/{uid}/visitedStations/{stationId}",
+          "properties": [
+            {
+              "code": "",
+              "name": "stationId",
+              "isActivated": true,
+              "type": "string",
+              "properties": [],
+              "GUID": "sf000064-0000-4000-8000-000000000000"
+            },
+            {
+              "code": "",
+              "name": "stationName",
+              "isActivated": true,
+              "type": "string",
+              "properties": [],
+              "GUID": "sf000065-0000-4000-8000-000000000000"
+            },
+            {
+              "code": "",
+              "name": "elevation",
+              "isActivated": true,
+              "type": "number",
+              "properties": [],
+              "GUID": "sf000066-0000-4000-8000-000000000000"
+            },
+            {
+              "code": "",
+              "name": "latitude",
+              "isActivated": true,
+              "type": "number",
+              "properties": [],
+              "GUID": "sf000067-0000-4000-8000-000000000000"
+            },
+            {
+              "code": "",
+              "name": "longitude",
+              "isActivated": true,
+              "type": "number",
+              "properties": [],
+              "GUID": "sf000068-0000-4000-8000-000000000000"
+            },
+            {
+              "code": "",
+              "name": "visitedAt",
+              "isActivated": true,
+              "type": "string",
+              "properties": [],
+              "GUID": "sf000069-0000-4000-8000-000000000000",
+              "format": "date-time"
+            }
+          ]
+        },
+        {
+          "code": "",
+          "name": "climbs",
+          "isActivated": true,
+          "type": "array",
+          "GUID": "sf000070-0000-4000-8000-000000000000",
+          "description": "Subcollection: users/{uid}/climbs/{climbId}",
+          "properties": [
+            {
+              "code": "",
+              "name": "id",
+              "isActivated": true,
+              "type": "string",
+              "properties": [],
+              "GUID": "sf000071-0000-4000-8000-000000000000"
+            },
+            {
+              "code": "",
+              "name": "trekType",
+              "isActivated": true,
+              "type": "string",
+              "properties": [],
+              "GUID": "sf000072-0000-4000-8000-000000000000",
+              "description": "regular | special | research | benchmarking | government_official"
+            },
+            {
+              "code": "",
+              "name": "status",
+              "isActivated": true,
+              "type": "string",
+              "properties": [],
+              "GUID": "sf000073-0000-4000-8000-000000000000",
+              "description": "ongoing | completed | abandoned | auto_completed"
+            },
+            {
+              "code": "",
+              "name": "startedAt",
+              "isActivated": true,
+              "type": "string",
+              "properties": [],
+              "GUID": "sf000074-0000-4000-8000-000000000000",
+              "format": "date-time"
+            },
+            {
+              "code": "",
+              "name": "completedAt",
+              "isActivated": true,
+              "type": "string",
+              "properties": [],
+              "GUID": "sf000075-0000-4000-8000-000000000000",
+              "format": "date-time"
+            },
+            {
+              "code": "",
+              "name": "totalDuration",
+              "isActivated": true,
+              "type": "number",
+              "properties": [],
+              "GUID": "sf000076-0000-4000-8000-000000000000",
+              "description": "Seconds"
+            },
+            {
+              "code": "",
+              "name": "totalDistance",
+              "isActivated": true,
+              "type": "number",
+              "properties": [],
+              "GUID": "sf000077-0000-4000-8000-000000000000",
+              "description": "Kilometers"
+            },
+            {
+              "code": "",
+              "name": "scannedStations",
+              "isActivated": true,
+              "type": "array",
+              "GUID": "sf000078-0000-4000-8000-000000000000",
+              "description": "Per-scan log within this session",
+              "properties": [
+                {
+                  "code": "",
+                  "name": "stationId",
+                  "isActivated": true,
+                  "type": "string",
+                  "properties": [],
+                  "GUID": "sf000079-0000-4000-8000-000000000000"
+                },
+                {
+                  "code": "",
+                  "name": "scannedAt",
+                  "isActivated": true,
+                  "type": "string",
+                  "properties": [],
+                  "GUID": "sf000080-0000-4000-8000-000000000000",
+                  "format": "date-time"
+                },
+                {
+                  "code": "",
+                  "name": "elevation",
+                  "isActivated": true,
+                  "type": "number",
+                  "properties": [],
+                  "GUID": "sf000081-0000-4000-8000-000000000000"
+                },
+                {
+                  "code": "",
+                  "name": "distanceFromPrevious",
+                  "isActivated": true,
+                  "type": "number",
+                  "properties": [],
+                  "GUID": "sf000082-0000-4000-8000-000000000000",
+                  "description": "km"
+                },
+                {
+                  "code": "",
+                  "name": "durationAtStation",
+                  "isActivated": true,
+                  "type": "number",
+                  "properties": [],
+                  "GUID": "sf000083-0000-4000-8000-000000000000",
+                  "description": "seconds"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "code": "",
+          "name": "achievements",
+          "isActivated": true,
+          "type": "array",
+          "GUID": "sf000085-0000-4000-8000-000000000000",
+          "description": "Subcollection: users/{uid}/achievements/{badgeId}",
+          "properties": [
+            {
+              "code": "",
+              "name": "id",
+              "isActivated": true,
+              "type": "string",
+              "properties": [],
+              "GUID": "sf000086-0000-4000-8000-000000000000",
+              "description": "Document ID = badge ID"
+            },
+            {
+              "code": "",
+              "name": "tier",
+              "isActivated": true,
+              "type": "string",
+              "properties": [],
+              "GUID": "sf000087-0000-4000-8000-000000000000",
+              "description": "bronze | silver | gold | platinum"
+            },
+            {
+              "code": "",
+              "name": "verificationType",
+              "isActivated": true,
+              "type": "string",
+              "properties": [],
+              "GUID": "sf000088-0000-4000-8000-000000000000",
+              "description": "SCAN | MANUAL_IMAGE_REVIEW | SESSION"
+            },
+            {
+              "code": "",
+              "name": "isUnlocked",
+              "isActivated": true,
+              "type": "boolean",
+              "properties": [],
+              "GUID": "sf000089-0000-4000-8000-000000000000"
+            },
+            {
+              "code": "",
+              "name": "unlockedAt",
+              "isActivated": true,
+              "type": "string",
+              "properties": [],
+              "GUID": "sf000090-0000-4000-8000-000000000000",
+              "format": "date-time"
+            },
+            {
+              "code": "",
+              "name": "claimStatus",
+              "isActivated": true,
+              "type": "string",
+              "properties": [],
+              "GUID": "sf000091-0000-4000-8000-000000000000"
+            }
+          ]
+        },
+        {
+          "code": "",
+          "name": "certificates",
+          "isActivated": true,
+          "type": "array",
+          "GUID": "sf000092-0000-4000-8000-000000000000",
+          "description": "Subcollection: users/{uid}/certificates/{certId}",
+          "properties": [
+            {
+              "code": "",
+              "name": "certificateId",
+              "isActivated": true,
+              "type": "string",
+              "properties": [],
+              "GUID": "sf000093-0000-4000-8000-000000000000"
+            },
+            {
+              "code": "",
+              "name": "certificateType",
+              "isActivated": true,
+              "type": "string",
+              "properties": [],
+              "GUID": "sf000094-0000-4000-8000-000000000000",
+              "description": "camp3 | fullTrek | peakConqueror"
+            },
+            {
+              "code": "",
+              "name": "dateEarned",
+              "isActivated": true,
+              "type": "string",
+              "properties": [],
+              "GUID": "sf000095-0000-4000-8000-000000000000",
+              "format": "date-time"
+            },
+            {
+              "code": "",
+              "name": "stationsVisited",
+              "isActivated": true,
+              "type": "number",
+              "properties": [],
+              "GUID": "sf000096-0000-4000-8000-000000000000"
+            },
+            {
+              "code": "",
+              "name": "isVerified",
+              "isActivated": true,
+              "type": "boolean",
+              "properties": [],
+              "GUID": "sf000097-0000-4000-8000-000000000000"
+            }
+          ]
+        },
+        {
+          "code": "",
+          "name": "notifications",
+          "isActivated": true,
+          "type": "array",
+          "GUID": "sf000098-0000-4000-8000-000000000000",
+          "description": "Subcollection: users/{uid}/notifications/{notifId}",
+          "properties": [
+            {
+              "code": "",
+              "name": "id",
+              "isActivated": true,
+              "type": "string",
+              "properties": [],
+              "GUID": "sf000099-0000-4000-8000-000000000000"
+            },
+            {
+              "code": "",
+              "name": "title",
+              "isActivated": true,
+              "type": "string",
+              "properties": [],
+              "GUID": "sf000100-0000-4000-8000-000000000000"
+            },
+            {
+              "code": "",
+              "name": "type",
+              "isActivated": true,
+              "type": "string",
+              "properties": [],
+              "GUID": "sf000101-0000-4000-8000-000000000000",
+              "description": "success | warning | info | alert"
+            },
+            {
+              "code": "",
+              "name": "timestamp",
+              "isActivated": true,
+              "type": "string",
+              "properties": [],
+              "GUID": "sf000102-0000-4000-8000-000000000000",
+              "format": "date-time"
+            },
+            {
+              "code": "",
+              "name": "isRead",
+              "isActivated": true,
+              "type": "boolean",
+              "properties": [],
+              "GUID": "sf000103-0000-4000-8000-000000000000"
+            },
+            {
+              "code": "",
+              "name": "actionType",
+              "isActivated": true,
+              "type": "string",
+              "properties": [],
+              "GUID": "sf000104-0000-4000-8000-000000000000",
+              "description": "post | booking | achievement | follow_request"
+            }
+          ]
+        }
+      ],
+      "definitions": {
+        "type": "definitions",
+        "GUID": "sd000003-0000-4000-8000-000000000000",
+        "properties": []
+      },
+      "isActivated": true,
+      "additionalProperties": true,
+      "GUID": "sc000003-0000-4000-8000-000000000000",
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "description": "User profiles. Parent of visitedStations, climbs, achievements, certificates, notifications subcollections.",
+      "bucketId": "sb000003-0000-4000-8000-000000000000",
+      "hackoladeMeta": {
+        "validationErrors": {}
+      }
+    },
+    {
+      "collectionName": "bookings",
+      "type": "object",
+      "properties": [
+        {
+          "code": "",
+          "name": "id",
+          "isActivated": true,
+          "type": "string",
+          "properties": [],
+          "GUID": "sf000120-0000-4000-8000-000000000000"
+        },
+        {
+          "code": "",
+          "name": "userId",
+          "isActivated": true,
+          "type": "string",
+          "properties": [],
+          "GUID": "sf000121-0000-4000-8000-000000000000",
+          "description": "ref → users.uid — group organizer"
+        },
+        {
+          "code": "",
+          "name": "affiliation",
+          "isActivated": true,
+          "type": "string",
+          "properties": [],
+          "GUID": "sf000123-0000-4000-8000-000000000000"
+        },
+        {
+          "code": "",
+          "name": "trekDate",
+          "isActivated": true,
+          "type": "string",
+          "properties": [],
+          "GUID": "sf000124-0000-4000-8000-000000000000",
+          "format": "date-time"
+        },
+        {
+          "code": "",
+          "name": "trekType",
+          "isActivated": true,
+          "type": "string",
+          "properties": [],
+          "GUID": "sf000125-0000-4000-8000-000000000000",
+          "description": "regular | special | research | benchmarking | government_official"
+        },
+        {
+          "code": "",
+          "name": "bookingClassification",
+          "isActivated": true,
+          "type": "string",
+          "properties": [],
+          "GUID": "sf000126-0000-4000-8000-000000000000",
+          "description": "regular | special | government_official | off_season"
+        },
+        {
+          "code": "",
+          "name": "hometown",
+          "isActivated": true,
+          "type": "string",
+          "properties": [],
+          "GUID": "sf000127-0000-4000-8000-000000000000"
+        },
+        {
+          "code": "",
+          "name": "phoneNumber",
+          "isActivated": true,
+          "type": "string",
+          "properties": [],
+          "GUID": "sf000128-0000-4000-8000-000000000000"
+        },
+        {
+          "code": "",
+          "name": "notes",
+          "isActivated": true,
+          "type": "string",
+          "properties": [],
+          "GUID": "sf000129-0000-4000-8000-000000000000"
+        },
+        {
+          "code": "",
+          "name": "adminNotes",
+          "isActivated": true,
+          "type": "string",
+          "properties": [],
+          "GUID": "sf000130-0000-4000-8000-000000000000",
+          "description": "[ADMIN WRITE]"
+        },
+        {
+          "code": "",
+          "name": "status",
+          "isActivated": true,
+          "type": "string",
+          "properties": [],
+          "GUID": "sf000131-0000-4000-8000-000000000000",
+          "description": "individual: pending|approved|rejected|cancelled|changes_required / group: open|pending_review|approved|declined|full|completed|cancelled"
+        },
+        {
+          "code": "",
+          "name": "submissionStatus",
+          "isActivated": true,
+          "type": "string",
+          "properties": [],
+          "GUID": "sf000132-0000-4000-8000-000000000000",
+          "description": "draft | submitted"
+        },
+        {
+          "code": "",
+          "name": "totalMembers",
+          "isActivated": true,
+          "type": "number",
+          "properties": [],
+          "GUID": "sf000133-0000-4000-8000-000000000000"
+        },
+        {
+          "code": "",
+          "name": "isArchived",
+          "isActivated": true,
+          "type": "boolean",
+          "properties": [],
+          "GUID": "sf000134-0000-4000-8000-000000000000"
+        },
+        {
+          "code": "",
+          "name": "groupName",
+          "isActivated": true,
+          "type": "string",
+          "properties": [],
+          "GUID": "sf000163-0000-4000-8000-000000000000"
+        },
+        {
+          "code": "",
+          "name": "maxSlots",
+          "isActivated": true,
+          "type": "number",
+          "properties": [],
+          "GUID": "sf000167-0000-4000-8000-000000000000"
+        },
+        {
+          "code": "",
+          "name": "currentSlots",
+          "isActivated": true,
+          "type": "number",
+          "properties": [],
+          "GUID": "sf000168-0000-4000-8000-000000000000"
+        },
+        {
+          "code": "",
+          "name": "attachments",
+          "isActivated": true,
+          "type": "array",
+          "GUID": "sf000135-0000-4000-8000-000000000000",
+          "description": "Uploaded files — includes letter of communication and member documents",
+          "properties": [
+            {
+              "code": "",
+              "name": "storagePath",
+              "isActivated": true,
+              "type": "string",
+              "properties": [],
+              "GUID": "sf000136-0000-4000-8000-000000000000"
+            },
+            {
+              "code": "",
+              "name": "downloadURL",
+              "isActivated": true,
+              "type": "string",
+              "properties": [],
+              "GUID": "sf000137-0000-4000-8000-000000000000"
+            },
+            {
+              "code": "",
+              "name": "fileName",
+              "isActivated": true,
+              "type": "string",
+              "properties": [],
+              "GUID": "sf000138-0000-4000-8000-000000000000"
+            },
+            {
+              "code": "",
+              "name": "mimeType",
+              "isActivated": true,
+              "type": "string",
+              "properties": [],
+              "GUID": "sf000139-0000-4000-8000-000000000000"
+            },
+            {
+              "code": "",
+              "name": "size",
+              "isActivated": true,
+              "type": "number",
+              "properties": [],
+              "GUID": "sf000140-0000-4000-8000-000000000000"
+            }
+          ]
+        },
+        {
+          "code": "",
+          "name": "members",
+          "isActivated": true,
+          "type": "array",
+          "GUID": "sf000141-0000-4000-8000-000000000000",
+          "description": "Pre-registered member list",
+          "properties": [
+            {
+              "code": "",
+              "name": "id",
+              "isActivated": true,
+              "type": "string",
+              "properties": [],
+              "GUID": "sf000142-0000-4000-8000-000000000000"
+            },
+            {
+              "code": "",
+              "name": "firstName",
+              "isActivated": true,
+              "type": "string",
+              "properties": [],
+              "GUID": "sf000143-0000-4000-8000-000000000000"
+            },
+            {
+              "code": "",
+              "name": "lastName",
+              "isActivated": true,
+              "type": "string",
+              "properties": [],
+              "GUID": "sf000144-0000-4000-8000-000000000000"
+            },
+            {
+              "code": "",
+              "name": "category",
+              "isActivated": true,
+              "type": "string",
+              "properties": [],
+              "GUID": "sf000145-0000-4000-8000-000000000000",
+              "description": "student | senior_citizen | davao_oriental_resident | ocfdo | outside_davao_oriental | children_8_15 | mfsm"
+            },
+            {
+              "code": "",
+              "name": "isPrimaryContact",
+              "isActivated": true,
+              "type": "boolean",
+              "properties": [],
+              "GUID": "sf000146-0000-4000-8000-000000000000"
+            },
+            {
+              "code": "",
+              "name": "hasAccount",
+              "isActivated": true,
+              "type": "boolean",
+              "properties": [],
+              "GUID": "sf000147-0000-4000-8000-000000000000"
+            },
+            {
+              "code": "",
+              "name": "userId",
+              "isActivated": true,
+              "type": "string",
+              "properties": [],
+              "GUID": "sf000148-0000-4000-8000-000000000000"
+            }
+          ]
+        },
+        {
+          "code": "",
+          "name": "joinRequests",
+          "isActivated": true,
+          "type": "array",
+          "GUID": "sf000177-0000-4000-8000-000000000000",
+          "description": "Subcollection: bookings/{id}/joinRequests/{requestId}",
+          "properties": [
+            {
+              "code": "",
+              "name": "id",
+              "isActivated": true,
+              "type": "string",
+              "properties": [],
+              "GUID": "sf000178-0000-4000-8000-000000000000"
+            },
+            {
+              "code": "",
+              "name": "userId",
+              "isActivated": true,
+              "type": "string",
+              "properties": [],
+              "GUID": "sf000179-0000-4000-8000-000000000000",
+              "description": "ref → users.uid"
+            },
+            {
+              "code": "",
+              "name": "userDisplayName",
+              "isActivated": true,
+              "type": "string",
+              "properties": [],
+              "GUID": "sf000180-0000-4000-8000-000000000000"
+            },
+            {
+              "code": "",
+              "name": "affiliation",
+              "isActivated": true,
+              "type": "string",
+              "properties": [],
+              "GUID": "sf000181-0000-4000-8000-000000000000"
+            },
+            {
+              "code": "",
+              "name": "status",
+              "isActivated": true,
+              "type": "string",
+              "properties": [],
+              "GUID": "sf000182-0000-4000-8000-000000000000",
+              "description": "pending | approved | declined | changes_required"
+            },
+            {
+              "code": "",
+              "name": "declineReason",
+              "isActivated": true,
+              "type": "string",
+              "properties": [],
+              "GUID": "sf000183-0000-4000-8000-000000000000"
+            },
+            {
+              "code": "",
+              "name": "reviewedAt",
+              "isActivated": true,
+              "type": "string",
+              "properties": [],
+              "GUID": "sf000184-0000-4000-8000-000000000000",
+              "format": "date-time"
+            },
+            {
+              "code": "",
+              "name": "createdAt",
+              "isActivated": true,
+              "type": "string",
+              "properties": [],
+              "GUID": "sf000185-0000-4000-8000-000000000000",
+              "format": "date-time"
+            }
+          ]
+        },
+        {
+          "code": "",
+          "name": "createdAt",
+          "isActivated": true,
+          "type": "string",
+          "properties": [],
+          "GUID": "sf000149-0000-4000-8000-000000000000",
+          "format": "date-time"
+        },
+        {
+          "code": "",
+          "name": "updatedAt",
+          "isActivated": true,
+          "type": "string",
+          "properties": [],
+          "GUID": "sf000150-0000-4000-8000-000000000000",
+          "format": "date-time"
+        }
+      ],
+      "definitions": {
+        "type": "definitions",
+        "GUID": "sd000004-0000-4000-8000-000000000000",
+        "properties": []
+      },
+      "isActivated": true,
+      "additionalProperties": true,
+      "GUID": "sc000004-0000-4000-8000-000000000000",
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "description": "All treks are booked as a group. attachments handles all file uploads (letter of communication, member documents). joinRequests is the subcollection for users joining an open group trek.",
+      "bucketId": "sb000004-0000-4000-8000-000000000000",
+      "hackoladeMeta": {
+        "validationErrors": {}
+      }
+    },
+    {
+      "collectionName": "posts",
+      "type": "object",
+      "properties": [
+        {
+          "code": "",
+          "name": "id",
+          "isActivated": true,
+          "type": "string",
+          "properties": [],
+          "GUID": "sf000240-0000-4000-8000-000000000000"
+        },
+        {
+          "code": "",
+          "name": "userId",
+          "isActivated": true,
+          "type": "string",
+          "properties": [],
+          "GUID": "sf000241-0000-4000-8000-000000000000",
+          "description": "ref → users.uid"
+        },
+        {
+          "code": "",
+          "name": "userName",
+          "isActivated": true,
+          "type": "string",
+          "properties": [],
+          "GUID": "sf000242-0000-4000-8000-000000000000"
+        },
+        {
+          "code": "",
+          "name": "caption",
+          "isActivated": true,
+          "type": "string",
+          "properties": [],
+          "GUID": "sf000243-0000-4000-8000-000000000000"
+        },
+        {
+          "code": "",
+          "name": "imageUrls",
+          "isActivated": true,
+          "type": "array",
+          "properties": [],
+          "GUID": "sf000244-0000-4000-8000-000000000000",
+          "description": "Max 4 images"
+        },
+        {
+          "code": "",
+          "name": "privacy",
+          "isActivated": true,
+          "type": "string",
+          "properties": [],
+          "GUID": "sf000245-0000-4000-8000-000000000000",
+          "description": "public | followers | private"
+        },
+        {
+          "code": "",
+          "name": "status",
+          "isActivated": true,
+          "type": "string",
+          "properties": [],
+          "GUID": "sf000246-0000-4000-8000-000000000000",
+          "description": "pending | approved | declined"
+        },
+        {
+          "code": "",
+          "name": "moderatorNote",
+          "isActivated": true,
+          "type": "string",
+          "properties": [],
+          "GUID": "sf000247-0000-4000-8000-000000000000",
+          "description": "[ADMIN WRITE]"
+        },
+        {
+          "code": "",
+          "name": "likesCount",
+          "isActivated": true,
+          "type": "number",
+          "properties": [],
+          "GUID": "sf000248-0000-4000-8000-000000000000"
+        },
+        {
+          "code": "",
+          "name": "commentsCount",
+          "isActivated": true,
+          "type": "number",
+          "properties": [],
+          "GUID": "sf000249-0000-4000-8000-000000000000"
+        },
+        {
+          "code": "",
+          "name": "createdAt",
+          "isActivated": true,
+          "type": "string",
+          "properties": [],
+          "GUID": "sf000250-0000-4000-8000-000000000000",
+          "format": "date-time"
+        },
+        {
+          "code": "",
+          "name": "comments",
+          "isActivated": true,
+          "type": "array",
+          "GUID": "sf000251-0000-4000-8000-000000000000",
+          "description": "Subcollection: posts/{postId}/comments/{commentId}",
+          "properties": [
+            {
+              "code": "",
+              "name": "id",
+              "isActivated": true,
+              "type": "string",
+              "properties": [],
+              "GUID": "sf000252-0000-4000-8000-000000000000"
+            },
+            {
+              "code": "",
+              "name": "userId",
+              "isActivated": true,
+              "type": "string",
+              "properties": [],
+              "GUID": "sf000253-0000-4000-8000-000000000000",
+              "description": "ref → users.uid"
+            },
+            {
+              "code": "",
+              "name": "userName",
+              "isActivated": true,
+              "type": "string",
+              "properties": [],
+              "GUID": "sf000254-0000-4000-8000-000000000000"
+            },
+            {
+              "code": "",
+              "name": "text",
+              "isActivated": true,
+              "type": "string",
+              "properties": [],
+              "GUID": "sf000255-0000-4000-8000-000000000000"
+            },
+            {
+              "code": "",
+              "name": "likesCount",
+              "isActivated": true,
+              "type": "number",
+              "properties": [],
+              "GUID": "sf000256-0000-4000-8000-000000000000"
+            },
+            {
+              "code": "",
+              "name": "createdAt",
+              "isActivated": true,
+              "type": "string",
+              "properties": [],
+              "GUID": "sf000257-0000-4000-8000-000000000000",
+              "format": "date-time"
+            }
+          ]
+        }
+      ],
+      "definitions": {
+        "type": "definitions",
+        "GUID": "sd000008-0000-4000-8000-000000000000",
+        "properties": []
+      },
+      "isActivated": true,
+      "additionalProperties": true,
+      "GUID": "sc000008-0000-4000-8000-000000000000",
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "description": "User social posts with comments subcollection. Requires admin approval.",
+      "bucketId": "sb000008-0000-4000-8000-000000000000",
+      "hackoladeMeta": {
+        "validationErrors": {}
+      }
+    },
+    {
+      "collectionName": "Calendar",
+      "type": "object",
+      "properties": [
+        {
+          "code": "",
+          "name": "dateKey",
+          "isActivated": true,
+          "type": "string",
+          "properties": [],
+          "GUID": "sf000270-0000-4000-8000-000000000000",
+          "description": "Document ID: YYYY-MM-DD"
+        },
+        {
+          "code": "",
+          "name": "isClosed",
+          "isActivated": true,
+          "type": "boolean",
+          "properties": [],
+          "GUID": "sf000271-0000-4000-8000-000000000000",
+          "description": "[ADMIN WRITE]"
+        },
+        {
+          "code": "",
+          "name": "maxSlots",
+          "isActivated": true,
+          "type": "number",
+          "properties": [],
+          "GUID": "sf000272-0000-4000-8000-000000000000",
+          "description": "[ADMIN WRITE] 0 = closed"
+        },
+        {
+          "code": "",
+          "name": "reason",
+          "isActivated": true,
+          "type": "string",
+          "properties": [],
+          "GUID": "sf000273-0000-4000-8000-000000000000",
+          "description": "[ADMIN WRITE]"
+        },
+        {
+          "code": "",
+          "name": "customNote",
+          "isActivated": true,
+          "type": "string",
+          "properties": [],
+          "GUID": "sf000274-0000-4000-8000-000000000000"
+        },
+        {
+          "code": "",
+          "name": "isTrekDownDay",
+          "isActivated": true,
+          "type": "boolean",
+          "properties": [],
+          "GUID": "sf000275-0000-4000-8000-000000000000",
+          "description": "Auto-set by Cloud Function after booking approval"
+        },
+        {
+          "code": "",
+          "name": "originalTrekDate",
+          "isActivated": true,
+          "type": "string",
+          "properties": [],
+          "GUID": "sf000276-0000-4000-8000-000000000000",
+          "description": "YYYY-MM-DD of the trek that triggered this buffer day"
+        },
+        {
+          "code": "",
+          "name": "lastUpdated",
+          "isActivated": true,
+          "type": "string",
+          "properties": [],
+          "GUID": "sf000277-0000-4000-8000-000000000000",
+          "format": "date-time"
+        }
+      ],
+      "definitions": {
+        "type": "definitions",
+        "GUID": "sd000009-0000-4000-8000-000000000000",
+        "properties": []
+      },
+      "isActivated": true,
+      "additionalProperties": true,
+      "GUID": "sc000009-0000-4000-8000-000000000000",
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "description": "Trek availability per date. Admin-managed; auto-updated by Cloud Functions on booking approval/cancellation.",
+      "bucketId": "sb000009-0000-4000-8000-000000000000",
+      "hackoladeMeta": {
+        "validationErrors": {}
+      }
+    },
+    {
+      "collectionName": "pricingVersions",
+      "type": "object",
+      "properties": [
+        {
+          "code": "",
+          "name": "id",
+          "isActivated": true,
+          "type": "string",
+          "properties": [],
+          "GUID": "sf000290-0000-4000-8000-000000000000"
+        },
+        {
+          "code": "",
+          "name": "version",
+          "isActivated": true,
+          "type": "number",
+          "properties": [],
+          "GUID": "sf000291-0000-4000-8000-000000000000"
+        },
+        {
+          "code": "",
+          "name": "isActive",
+          "isActivated": true,
+          "type": "boolean",
+          "properties": [],
+          "GUID": "sf000292-0000-4000-8000-000000000000",
+          "description": "Mobile app watches this — only one true at a time"
+        },
+        {
+          "code": "",
+          "name": "basePrice",
+          "isActivated": true,
+          "type": "number",
+          "properties": [],
+          "GUID": "sf000293-0000-4000-8000-000000000000"
+        },
+        {
+          "code": "",
+          "name": "servicePricing",
+          "isActivated": true,
+          "type": "object",
+          "GUID": "sf000294-0000-4000-8000-000000000000",
+          "properties": [
+            {
+              "code": "",
+              "name": "porter",
+              "isActivated": true,
+              "type": "number",
+              "properties": [],
+              "GUID": "sf000295-0000-4000-8000-000000000000"
+            },
+            {
+              "code": "",
+              "name": "guide",
+              "isActivated": true,
+              "type": "number",
+              "properties": [],
+              "GUID": "sf000296-0000-4000-8000-000000000000"
+            },
+            {
+              "code": "",
+              "name": "scientist",
+              "isActivated": true,
+              "type": "number",
+              "properties": [],
+              "GUID": "sf000297-0000-4000-8000-000000000000"
+            }
+          ]
+        },
+        {
+          "code": "",
+          "name": "categoryPricing",
+          "isActivated": true,
+          "type": "object",
+          "GUID": "sf000298-0000-4000-8000-000000000000",
+          "properties": [
+            {
+              "code": "",
+              "name": "student",
+              "isActivated": true,
+              "type": "object",
+              "GUID": "sf000299-0000-4000-8000-000000000000",
+              "properties": [
+                {
+                  "code": "",
+                  "name": "displayName",
+                  "isActivated": true,
+                  "type": "string",
+                  "properties": [],
+                  "GUID": "sf000300-0000-4000-8000-000000000000"
+                },
+                {
+                  "code": "",
+                  "name": "discount",
+                  "isActivated": true,
+                  "type": "number",
+                  "properties": [],
+                  "GUID": "sf000301-0000-4000-8000-000000000000"
+                },
+                {
+                  "code": "",
+                  "name": "notes",
+                  "isActivated": true,
+                  "type": "string",
+                  "properties": [],
+                  "GUID": "sf000302-0000-4000-8000-000000000000"
+                }
+              ]
+            },
+            {
+              "code": "",
+              "name": "senior_citizen",
+              "isActivated": true,
+              "type": "object",
+              "properties": [],
+              "GUID": "sf000303-0000-4000-8000-000000000000"
+            },
+            {
+              "code": "",
+              "name": "davao_oriental_resident",
+              "isActivated": true,
+              "type": "object",
+              "properties": [],
+              "GUID": "sf000304-0000-4000-8000-000000000000"
+            },
+            {
+              "code": "",
+              "name": "ocfdo",
+              "isActivated": true,
+              "type": "object",
+              "properties": [],
+              "GUID": "sf000305-0000-4000-8000-000000000000"
+            },
+            {
+              "code": "",
+              "name": "outside_davao_oriental",
+              "isActivated": true,
+              "type": "object",
+              "properties": [],
+              "GUID": "sf000306-0000-4000-8000-000000000000"
+            },
+            {
+              "code": "",
+              "name": "children_8_15",
+              "isActivated": true,
+              "type": "object",
+              "properties": [],
+              "GUID": "sf000307-0000-4000-8000-000000000000"
+            },
+            {
+              "code": "",
+              "name": "mfsm",
+              "isActivated": true,
+              "type": "object",
+              "properties": [],
+              "GUID": "sf000308-0000-4000-8000-000000000000"
+            }
+          ]
+        },
+        {
+          "code": "",
+          "name": "seasonalRules",
+          "isActivated": true,
+          "type": "object",
+          "GUID": "sf000309-0000-4000-8000-000000000000",
+          "properties": [
+            {
+              "code": "",
+              "name": "offSeasonStart",
+              "isActivated": true,
+              "type": "string",
+              "properties": [],
+              "GUID": "sf000310-0000-4000-8000-000000000000",
+              "description": "MM-DD e.g. 07-01"
+            },
+            {
+              "code": "",
+              "name": "offSeasonEnd",
+              "isActivated": true,
+              "type": "string",
+              "properties": [],
+              "GUID": "sf000311-0000-4000-8000-000000000000",
+              "description": "MM-DD e.g. 09-30"
+            },
+            {
+              "code": "",
+              "name": "allowedBookingTypes",
+              "isActivated": true,
+              "type": "array",
+              "properties": [],
+              "GUID": "sf000312-0000-4000-8000-000000000000"
+            }
+          ]
+        },
+        {
+          "code": "",
+          "name": "createdAt",
+          "isActivated": true,
+          "type": "string",
+          "properties": [],
+          "GUID": "sf000313-0000-4000-8000-000000000000",
+          "format": "date-time"
+        },
+        {
+          "code": "",
+          "name": "updatedAt",
+          "isActivated": true,
+          "type": "string",
+          "properties": [],
+          "GUID": "sf000314-0000-4000-8000-000000000000",
+          "format": "date-time"
+        }
+      ],
+      "definitions": {
+        "type": "definitions",
+        "GUID": "sd000010-0000-4000-8000-000000000000",
+        "properties": []
+      },
+      "isActivated": true,
+      "additionalProperties": true,
+      "GUID": "sc000010-0000-4000-8000-000000000000",
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "description": "Trek pricing. Admin-managed. isActive=true version is synced to the mobile app in real time.",
+      "bucketId": "sb000010-0000-4000-8000-000000000000",
+      "hackoladeMeta": {
+        "validationErrors": {}
+      }
+    }
+  ],
+  "buckets": [
+    {
+      "name": "Scans",
+      "type": "bucket",
+      "collectionIds": [
+        "sc000001-0000-4000-8000-000000000000"
+      ],
+      "backgroundColor": {
+        "r": 178,
+        "g": 235,
+        "b": 242,
+        "a": 1
+      },
+      "show": true,
+      "isActivated": true,
+      "GUID": "sb000001-0000-4000-8000-000000000000",
+      "hackoladeMeta": {
+        "validationErrors": {}
+      }
+    },
+    {
+      "name": "users",
+      "type": "bucket",
+      "collectionIds": [
+        "sc000003-0000-4000-8000-000000000000"
+      ],
+      "backgroundColor": {
+        "r": 207,
+        "g": 216,
+        "b": 220,
+        "a": 1
+      },
+      "show": true,
+      "isActivated": true,
+      "GUID": "sb000003-0000-4000-8000-000000000000",
+      "hackoladeMeta": {
+        "validationErrors": {}
+      }
+    },
+    {
+      "name": "bookings",
+      "type": "bucket",
+      "collectionIds": [
+        "sc000004-0000-4000-8000-000000000000"
+      ],
+      "backgroundColor": {
+        "r": 187,
+        "g": 222,
+        "b": 251,
+        "a": 1
+      },
+      "show": true,
+      "isActivated": true,
+      "GUID": "sb000004-0000-4000-8000-000000000000",
+      "hackoladeMeta": {
+        "validationErrors": {}
+      }
+    },
+    {
+      "name": "posts",
+      "type": "bucket",
+      "collectionIds": [
+        "sc000008-0000-4000-8000-000000000000"
+      ],
+      "backgroundColor": {
+        "r": 248,
+        "g": 187,
+        "b": 208,
+        "a": 1
+      },
+      "show": true,
+      "isActivated": true,
+      "GUID": "sb000008-0000-4000-8000-000000000000",
+      "hackoladeMeta": {
+        "validationErrors": {}
+      }
+    },
+    {
+      "name": "Calendar",
+      "type": "bucket",
+      "collectionIds": [
+        "sc000009-0000-4000-8000-000000000000"
+      ],
+      "backgroundColor": {
+        "r": 187,
+        "g": 222,
+        "b": 251,
+        "a": 1
+      },
+      "show": true,
+      "isActivated": true,
+      "GUID": "sb000009-0000-4000-8000-000000000000",
+      "hackoladeMeta": {
+        "validationErrors": {}
+      }
+    },
+    {
+      "name": "pricingVersions",
+      "type": "bucket",
+      "collectionIds": [
+        "sc000010-0000-4000-8000-000000000000"
+      ],
+      "backgroundColor": {
+        "r": 220,
+        "g": 237,
+        "b": 200,
+        "a": 1
+      },
+      "show": true,
+      "isActivated": true,
+      "GUID": "sb000010-0000-4000-8000-000000000000",
+      "hackoladeMeta": {
+        "validationErrors": {}
+      }
+    }
+  ],
+  "views": [],
+  "relationships": [],
+  "users": [],
+  "diagramViews": [],
+  "idToNameHashTable": {
+    "sb000001-0000-4000-8000-000000000000": "Scans",
+    "sb000003-0000-4000-8000-000000000000": "users",
+    "sb000004-0000-4000-8000-000000000000": "bookings",
+    "sb000008-0000-4000-8000-000000000000": "posts",
+    "sb000009-0000-4000-8000-000000000000": "Calendar",
+    "sb000010-0000-4000-8000-000000000000": "pricingVersions",
+    "sc000001-0000-4000-8000-000000000000": "stations",
+    "sc000003-0000-4000-8000-000000000000": "users",
+    "sc000004-0000-4000-8000-000000000000": "bookings",
+    "sc000008-0000-4000-8000-000000000000": "posts",
+    "sc000009-0000-4000-8000-000000000000": "Calendar",
+    "sc000010-0000-4000-8000-000000000000": "pricingVersions"
+  },
+  "definitions": {
+    "type": "definitions",
+    "properties": [],
+    "GUID": "sm000002-0000-4000-8000-000000000000"
+  },
+  "polyglotDefinitions": {
+    "type": "polyglotDefinitions",
+    "properties": [],
+    "GUID": "sm000003-0000-4000-8000-000000000000"
+  },
+  "externalDefinitions": {
+    "type": "externalDefinitions",
+    "properties": [],
+    "GUID": "sm000004-0000-4000-8000-000000000000"
+  },
+  "sources": [],
+  "decorativeSymbols": [],
+  "businessGlossaries": [],
+  "businessGlossaryTerms": [],
+  "dbVendor": "JSON",
+  "dbVersion": "2019-09",
+  "appTarget": "JSON",
+  "creationTS": "2026-06-04T00:00:00.000Z",
+  "GUID": "sm000001-0000-4000-8000-000000000000",
+  "isLineageEnabled": false,
+  "lastModifTS": "2026-06-04T04:54:02.995Z",
+  "persistenceSchemaVersion": "8",
+  "isCreatedByPlugin": true,
+  "pluginInformation": {
+    "pluginEngineVersion": "1.0.0"
+  },
+  "applicationInformation": {
+    "version": "8.11.4"
+  },
+  "hackoladeMeta": {},
+  "settings": {
+    "centralPane": {
+      "dbLevel": {
+        "erd": [
+          {
+            "GUID": "sc000001-0000-4000-8000-000000000000",
+            "x": 7050.666666666662,
+            "y": 1582.6666666666688,
+            "width": 279.99999999999983,
+            "height": 591.999999999999,
+            "color": {
+              "hex": "#000000"
+            }
+          },
+          {
+            "GUID": "sc000003-0000-4000-8000-000000000000",
+            "x": 6570.666666666667,
+            "y": 1581.3333333333353,
+            "width": 322,
+            "height": 1004,
+            "color": {
+              "hex": "#000000"
+            }
+          },
+          {
+            "GUID": "sc000004-0000-4000-8000-000000000000",
+            "x": 7511.999999999995,
+            "y": 1580.0000000000036,
+            "width": 303.3333333333329,
+            "height": 789.3333333333331,
+            "color": {
+              "hex": "#000000"
+            }
+          },
+          {
+            "GUID": "sc000008-0000-4000-8000-000000000000",
+            "x": 8007.333333333335,
+            "y": 2191.333333333322,
+            "width": 345.33333333333354,
+            "height": 354.0000000000003,
+            "color": {
+              "hex": "#000000"
+            }
+          },
+          {
+            "GUID": "sc000009-0000-4000-8000-000000000000",
+            "x": 7055.999999999998,
+            "y": 2361.9999999999945,
+            "width": 247.99999999999974,
+            "height": 179.3333333333332,
+            "color": {
+              "hex": "#000000"
+            }
+          },
+          {
+            "GUID": "sc000010-0000-4000-8000-000000000000",
+            "x": 8006.666666666665,
+            "y": 1582.0000000000014,
+            "width": 339.99999999999983,
+            "height": 483.33333333333337,
+            "color": {
+              "hex": "#000000"
+            }
+          }
+        ],
+        "erdDefinitions": {
+          "erd": [],
+          "rootPath": [],
+          "entities": [],
+          "decorativeSymbols": []
+        },
+        "buckets": [
+          {
+            "x": 6986.666666666662,
+            "y": 1518.6666666666688,
+            "GUID": "sb000001-0000-4000-8000-000000000000"
+          },
+          {
+            "x": 6506.666666666667,
+            "y": 1517.3333333333353,
+            "GUID": "sb000003-0000-4000-8000-000000000000"
+          },
+          {
+            "x": 7447.999999999995,
+            "y": 1516.0000000000036,
+            "GUID": "sb000004-0000-4000-8000-000000000000"
+          },
+          {
+            "x": 7943.333333333335,
+            "y": 2127.333333333322,
+            "GUID": "sb000008-0000-4000-8000-000000000000"
+          },
+          {
+            "x": 6991.999999999998,
+            "y": 2297.9999999999945,
+            "GUID": "sb000009-0000-4000-8000-000000000000"
+          },
+          {
+            "x": 7942.666666666665,
+            "y": 1518.0000000000014,
+            "GUID": "sb000010-0000-4000-8000-000000000000"
+          }
+        ],
+        "collapsedNodes": [],
+        "activeRelationship": "",
+        "activeRelationshipFields": {
+          "childField": [],
+          "parentField": []
+        },
+        "selectedCollections": [],
+        "displayColorPicker": false,
+        "graphView": {
+          "erd": [],
+          "buckets": [],
+          "decorativeSymbols": [],
+          "forceLayout": true,
+          "defaultLinkLength": 300,
+          "options": []
+        },
+        "diagramViews": [],
+        "decorativeSymbols": [],
+        "nestedCollectionsLayout": "horizontal",
+        "options": [
+          {
+            "autoWidth": false,
+            "autoHeight": false,
+            "GUID": "sc000004-0000-4000-8000-000000000000"
+          },
+          {
+            "autoWidth": true,
+            "autoHeight": true,
+            "GUID": "sc000003-0000-4000-8000-000000000000"
+          },
+          {
+            "autoWidth": false,
+            "autoHeight": false,
+            "GUID": "sc000009-0000-4000-8000-000000000000"
+          },
+          {
+            "autoWidth": false,
+            "autoHeight": false,
+            "GUID": "sc000001-0000-4000-8000-000000000000"
+          },
+          {
+            "autoWidth": false,
+            "autoHeight": false,
+            "GUID": "sc000008-0000-4000-8000-000000000000"
+          },
+          {
+            "autoWidth": false,
+            "autoHeight": false,
+            "GUID": "sc000010-0000-4000-8000-000000000000"
+          }
+        ],
+        "relationshipUpdateDisabled": false
+      },
+      "collectionLevel": {},
+      "changed": false
+    },
+    "dtDiagram": {
+      "collapsedNodes": [],
+      "shouldDistributeCollections": false
+    }
+  }
+}

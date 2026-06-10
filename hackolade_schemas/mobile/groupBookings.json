@@ -1,0 +1,39 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "groupBookings",
+  "description": "Group trek bookings. Organizer creates the group; others join via joinRequests subcollection.",
+  "type": "object",
+  "properties": {
+    "id":                     { "type": "string" },
+    "organizerId":            { "type": "string",  "description": "ref → users.uid" },
+    "linkedBookingId":        { "type": "string",  "description": "ref → bookings.id (set after admin approval)" },
+    "organizerName":          { "type": "string" },
+    "groupName":              { "type": "string" },
+    "trekDate":               { "type": "string",  "format": "date-time" },
+    "trekType":               { "type": "string" },
+    "bookingClassification":  { "type": "string" },
+    "seasonType":             { "type": "string" },
+    "affiliation":            { "type": "string" },
+    "maxSlots":               { "type": "integer" },
+    "currentSlots":           { "type": "integer" },
+    "status":                 { "type": "string",  "description": "open | pending_review | approved | declined | full | completed | cancelled" },
+    "guideRequired":          { "type": "boolean" },
+    "scientistRequired":      { "type": "boolean" },
+    "notes":                  { "type": "string" },
+    "adminNotes":             { "type": "string",  "description": "[ADMIN WRITE]" },
+    "letterOfCommunication": {
+      "type": "object",
+      "properties": {
+        "storagePath": { "type": "string" },
+        "downloadURL": { "type": "string" },
+        "fileName":    { "type": "string" }
+      }
+    },
+    "organizerMember":  { "type": "object",  "description": "Organizer member info snapshot" },
+    "guestMembers":     { "type": "array",   "items": { "type": "object" } },
+    "attachments":      { "type": "array",   "items": { "type": "object" } },
+    "isArchived":       { "type": "boolean" },
+    "createdAt":        { "type": "string",  "format": "date-time" },
+    "updatedAt":        { "type": "string",  "format": "date-time" }
+  }
+}

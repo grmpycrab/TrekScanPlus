@@ -1,0 +1,3461 @@
+{
+  "modelName": "TrekScanPlus - Feature Data Model (Simplified)",
+  "collections": [
+    {
+      "collectionName": "stations",
+      "type": "object",
+      "properties": [
+        {
+          "code": "",
+          "name": "stationId",
+          "isActivated": true,
+          "type": "string",
+          "properties": [],
+          "GUID": "f6409028-0e81-4b9d-bdf1-434d20c9e2ef",
+          "description": "Document ID — matches QR code key",
+          "foreignCollection": "",
+          "foreignField": [],
+          "hackoladeMeta": {},
+          "error": {
+            "name": false,
+            "code": false
+          },
+          "childRelationships": [
+            "3a6e6b96-39e9-4cb0-be0b-939126456baf",
+            "e972101c-0028-4a7e-822d-5f13b1ba42c5"
+          ]
+        },
+        {
+          "code": "",
+          "name": "stationname",
+          "isActivated": true,
+          "type": "string",
+          "properties": [],
+          "GUID": "b31b6c3f-8b7b-409e-944a-e49e7738a018",
+          "foreignCollection": "",
+          "foreignField": [],
+          "error": {
+            "name": false,
+            "code": false
+          }
+        },
+        {
+          "code": "",
+          "name": "description",
+          "isActivated": true,
+          "type": "string",
+          "properties": [],
+          "GUID": "f0cc53eb-a072-4ed0-b900-f9359dcbdce0",
+          "foreignCollection": "",
+          "foreignField": [],
+          "error": {
+            "name": false,
+            "code": false
+          }
+        },
+        {
+          "code": "",
+          "name": "difficulty",
+          "isActivated": true,
+          "type": "string",
+          "properties": [],
+          "GUID": "41e40466-ae8d-47a0-837c-f06f69f2c8f3",
+          "foreignCollection": "",
+          "foreignField": [],
+          "error": {
+            "name": false,
+            "code": false
+          }
+        },
+        {
+          "code": "",
+          "name": "elevation",
+          "isActivated": true,
+          "type": "number",
+          "properties": [],
+          "GUID": "35627032-069c-42cd-808e-ba90beff15de",
+          "description": "In meters",
+          "foreignCollection": "",
+          "foreignField": [],
+          "error": {
+            "name": false,
+            "code": false
+          }
+        },
+        {
+          "code": "",
+          "name": "latitude",
+          "isActivated": true,
+          "type": "number",
+          "properties": [],
+          "GUID": "72826eb3-5a51-4e5f-81db-3186c75a53c8",
+          "foreignCollection": "",
+          "foreignField": [],
+          "error": {
+            "name": false,
+            "code": false
+          }
+        },
+        {
+          "code": "",
+          "name": "longitude",
+          "isActivated": true,
+          "type": "number",
+          "properties": [],
+          "GUID": "61266b2c-3634-4c77-b185-1f8115223dcd",
+          "foreignCollection": "",
+          "foreignField": [],
+          "error": {
+            "name": false,
+            "code": false
+          }
+        },
+        {
+          "code": "",
+          "name": "images",
+          "isActivated": true,
+          "type": "array",
+          "properties": [],
+          "GUID": "2a53c905-24d9-4dc5-8920-8227cede5b9c",
+          "foreignCollection": "",
+          "foreignField": [],
+          "error": {
+            "name": false,
+            "code": false
+          }
+        },
+        {
+          "code": "",
+          "name": "steps",
+          "isActivated": true,
+          "type": "number",
+          "properties": [],
+          "GUID": "04494a11-7e97-4b2b-bd51-58d667933040",
+          "description": "Steps from previous station",
+          "foreignCollection": "",
+          "foreignField": [],
+          "error": {
+            "name": false,
+            "code": false
+          }
+        },
+        {
+          "code": "",
+          "name": "nextStationId",
+          "isActivated": true,
+          "type": "string",
+          "properties": [],
+          "GUID": "6fa2ce31-ea81-4149-811e-36fd68b3c10e",
+          "foreignCollection": "",
+          "foreignField": [],
+          "error": {
+            "name": false,
+            "code": false
+          }
+        },
+        {
+          "code": "",
+          "name": "distanceToNextKm",
+          "isActivated": true,
+          "type": "number",
+          "properties": [],
+          "GUID": "f9e62fe4-f5c2-4642-bb71-9d095469aa9c",
+          "foreignCollection": "",
+          "foreignField": [],
+          "error": {
+            "name": false,
+            "code": false
+          }
+        },
+        {
+          "code": "",
+          "name": "flora",
+          "isActivated": true,
+          "type": "array",
+          "properties": [],
+          "GUID": "bde8e653-90c4-431a-a573-e2740bb027f5",
+          "foreignCollection": "",
+          "foreignField": [],
+          "error": {
+            "name": false,
+            "code": false
+          }
+        },
+        {
+          "code": "",
+          "name": "fauna",
+          "isActivated": true,
+          "type": "array",
+          "properties": [],
+          "GUID": "64dd9e8c-c14d-46a4-90b6-00101b13858f",
+          "foreignCollection": "",
+          "foreignField": [],
+          "error": {
+            "name": false,
+            "code": false
+          }
+        },
+        {
+          "code": "",
+          "name": "isCheckpoint",
+          "isActivated": true,
+          "type": "boolean",
+          "properties": [],
+          "GUID": "b96b5542-93bd-4ae2-9452-f81d53b16de0",
+          "foreignCollection": "",
+          "foreignField": [],
+          "error": {
+            "name": false,
+            "code": false
+          }
+        },
+        {
+          "code": "",
+          "name": "trailDetails",
+          "isActivated": true,
+          "type": "object",
+          "GUID": "5ad10c1c-158a-41bb-9c60-7dd7c5eed596",
+          "properties": [
+            {
+              "code": "",
+              "name": "trailType",
+              "isActivated": true,
+              "type": "array",
+              "properties": [],
+              "GUID": "9fc27bcf-8192-4053-9223-9a32c0c788a6",
+              "foreignCollection": "",
+              "foreignField": []
+            },
+            {
+              "code": "",
+              "name": "plants",
+              "isActivated": true,
+              "type": "array",
+              "properties": [],
+              "GUID": "b634f214-984d-47a3-8ec0-1096e745ed7e",
+              "foreignCollection": "",
+              "foreignField": []
+            },
+            {
+              "code": "",
+              "name": "animals",
+              "isActivated": true,
+              "type": "array",
+              "properties": [],
+              "GUID": "d051247a-7acf-4dec-9bae-70b5ab69f18c",
+              "foreignCollection": "",
+              "foreignField": []
+            },
+            {
+              "code": "",
+              "name": "facilities",
+              "isActivated": true,
+              "type": "array",
+              "properties": [],
+              "GUID": "4cfcafc5-98b8-4b6c-900e-5eed3a45fa25",
+              "foreignCollection": "",
+              "foreignField": []
+            },
+            {
+              "code": "",
+              "name": "utilities",
+              "isActivated": true,
+              "type": "array",
+              "properties": [],
+              "GUID": "cae76050-6b47-49de-9a65-d03df10aa70d",
+              "foreignCollection": "",
+              "foreignField": []
+            },
+            {
+              "code": "",
+              "name": "warnings",
+              "isActivated": true,
+              "type": "object",
+              "properties": [],
+              "GUID": "cedf58e3-755b-44b2-9421-f4bca4f6a9cb",
+              "description": "Map of warning key → description",
+              "foreignCollection": "",
+              "foreignField": []
+            }
+          ],
+          "foreignCollection": "",
+          "foreignField": [],
+          "error": {
+            "name": false,
+            "code": false
+          }
+        },
+        {
+          "code": "",
+          "name": "averageRating",
+          "isActivated": true,
+          "type": "number",
+          "properties": [],
+          "GUID": "aef7dec9-620f-4179-ab82-f09ee5d5f276",
+          "description": "Aggregated average of all reviews (1-5)",
+          "foreignCollection": "",
+          "foreignField": [],
+          "error": {
+            "name": false,
+            "code": false
+          }
+        },
+        {
+          "code": "",
+          "name": "totalReviews",
+          "isActivated": true,
+          "type": "number",
+          "properties": [],
+          "GUID": "45151ed5-23b0-4c4e-a447-f15604567578",
+          "foreignCollection": "",
+          "foreignField": [],
+          "error": {
+            "name": false,
+            "code": false
+          }
+        },
+        {
+          "code": "",
+          "name": "reviews",
+          "isActivated": true,
+          "type": "array",
+          "GUID": "23b3db4d-1e2a-4f9e-a59d-59caa5ce44ec",
+          "description": "Subcollection: station_reviews/{stationId}/reviews/{userId}",
+          "properties": [
+            {
+              "code": "",
+              "name": "id",
+              "isActivated": true,
+              "type": "string",
+              "properties": [],
+              "GUID": "75b4eec0-9071-4550-aefb-373e6861e911",
+              "description": "Document ID = userId (one per user per station)",
+              "foreignCollection": "",
+              "foreignField": [],
+              "error": {
+                "name": false,
+                "code": false
+              }
+            },
+            {
+              "code": "",
+              "name": "uid",
+              "isActivated": true,
+              "type": "string",
+              "properties": [],
+              "GUID": "bb897053-d672-4a12-b099-477ceed36e20",
+              "description": "ref → users.uid",
+              "foreignCollection": "",
+              "foreignField": [],
+              "error": {
+                "name": false,
+                "code": false
+              }
+            },
+            {
+              "code": "",
+              "name": "userDisplayName",
+              "isActivated": true,
+              "type": "string",
+              "properties": [],
+              "GUID": "a9f7984f-88a8-4f3f-88b0-1f645c4c88d4",
+              "foreignCollection": "",
+              "foreignField": [],
+              "error": {
+                "name": false,
+                "code": false
+              }
+            },
+            {
+              "code": "",
+              "name": "rating",
+              "isActivated": true,
+              "type": "number",
+              "properties": [],
+              "GUID": "7d7efc91-6588-49ad-b405-350e9b3b26c6",
+              "description": "1-5",
+              "foreignCollection": "",
+              "foreignField": [],
+              "error": {
+                "name": false,
+                "code": false
+              }
+            },
+            {
+              "code": "",
+              "name": "comment",
+              "isActivated": true,
+              "type": "string",
+              "properties": [],
+              "GUID": "fd72cd79-e1bf-492a-bdc6-642ac41d1bbf",
+              "foreignCollection": "",
+              "foreignField": [],
+              "error": {
+                "name": false,
+                "code": false
+              }
+            },
+            {
+              "code": "",
+              "name": "createdAt",
+              "isActivated": true,
+              "type": "string",
+              "properties": [],
+              "GUID": "14fcb9da-01c2-431e-8e0c-3b9d3093f817",
+              "format": "date-time",
+              "foreignCollection": "",
+              "foreignField": [],
+              "error": {
+                "name": false,
+                "code": false
+              }
+            },
+            {
+              "code": "",
+              "name": "updatedAt",
+              "isActivated": true,
+              "type": "string",
+              "properties": [],
+              "GUID": "a60b88fa-b64a-4b45-b1c3-29b5610a7315",
+              "format": "date-time",
+              "foreignCollection": "",
+              "foreignField": [],
+              "error": {
+                "name": false,
+                "code": false
+              }
+            }
+          ],
+          "foreignCollection": "",
+          "foreignField": [],
+          "error": {
+            "name": false,
+            "code": false
+          }
+        }
+      ],
+      "definitions": {
+        "type": "definitions",
+        "GUID": "9cfb5613-950b-4e12-ba45-47f24ccb46c1",
+        "properties": []
+      },
+      "isActivated": true,
+      "additionalProperties": true,
+      "GUID": "3a5c2610-a83b-44b4-8c6c-fb3a5f668ce0",
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "description": "LOCAL STATIC DATA (assets) + station_reviews Firestore data. Document ID = QR code key.",
+      "bucketId": "",
+      "hackoladeMeta": {
+        "validationErrors": {}
+      }
+    },
+    {
+      "collectionName": "users",
+      "type": "object",
+      "properties": [
+        {
+          "code": "",
+          "name": "uid",
+          "isActivated": true,
+          "type": "string",
+          "properties": [],
+          "GUID": "b0f0ca4a-96a7-4fe9-8259-ca58633fda73",
+          "description": "Firebase Auth UID — document ID",
+          "foreignCollection": "745a8a43-4d57-464d-8878-549e589b9b62",
+          "foreignField": [
+            "745a8a43-4d57-464d-8878-549e589b9b62",
+            "9bcc58db-4760-4e5c-82a3-804022fbfc54"
+          ],
+          "hackoladeMeta": {},
+          "error": {
+            "name": false,
+            "code": false
+          },
+          "relationshipType": "Foreign Key",
+          "parentRelationship": "8a710e7f-6ae3-4457-b21a-9fcbb990263c",
+          "childRelationships": [
+            "81a5b8a4-18d3-4e62-9667-d94533ffcf09"
+          ]
+        },
+        {
+          "code": "",
+          "name": "firstName",
+          "isActivated": true,
+          "type": "string",
+          "properties": [],
+          "GUID": "6483b4e2-b33b-4cfb-a94c-330d84370f2f",
+          "foreignCollection": "",
+          "foreignField": [],
+          "error": {
+            "name": false,
+            "code": false
+          }
+        },
+        {
+          "code": "",
+          "name": "lastName",
+          "isActivated": true,
+          "type": "string",
+          "properties": [],
+          "GUID": "002a5055-cdc5-4480-8497-c3e388039494",
+          "foreignCollection": "",
+          "foreignField": [],
+          "error": {
+            "name": false,
+            "code": false
+          }
+        },
+        {
+          "code": "",
+          "name": "email",
+          "isActivated": true,
+          "type": "string",
+          "properties": [],
+          "GUID": "a1b42542-202c-4680-815c-9e1a0a65c718",
+          "foreignCollection": "",
+          "foreignField": [],
+          "error": {
+            "name": false,
+            "code": false
+          }
+        },
+        {
+          "code": "",
+          "name": "birthDate",
+          "isActivated": true,
+          "type": "string",
+          "properties": [],
+          "GUID": "47e2c735-c644-4c18-ace1-e1d183afc4af",
+          "foreignCollection": "",
+          "foreignField": [],
+          "error": {
+            "name": false,
+            "code": false
+          }
+        },
+        {
+          "code": "",
+          "name": "gender",
+          "isActivated": true,
+          "type": "string",
+          "properties": [],
+          "GUID": "1d3eb640-aa4a-4cea-8257-791049611ef7",
+          "foreignCollection": "",
+          "foreignField": [],
+          "error": {
+            "name": false,
+            "code": false
+          }
+        },
+        {
+          "code": "",
+          "name": "nationality",
+          "isActivated": true,
+          "type": "string",
+          "properties": [],
+          "GUID": "6ebf04fd-e1ae-4b32-a9d7-55f06c49e6c4",
+          "foreignCollection": "",
+          "foreignField": [],
+          "error": {
+            "name": false,
+            "code": false
+          }
+        },
+        {
+          "code": "",
+          "name": "profileImage",
+          "isActivated": true,
+          "type": "string",
+          "properties": [],
+          "GUID": "9fad96cb-0686-4ad2-ade4-0f807aa05f51",
+          "foreignCollection": "",
+          "foreignField": [],
+          "error": {
+            "name": false,
+            "code": false
+          }
+        },
+        {
+          "code": "",
+          "name": "followingCount",
+          "isActivated": true,
+          "type": "number",
+          "properties": [],
+          "GUID": "cd363791-3f50-477e-9fc7-abd288fbcd31",
+          "foreignCollection": "",
+          "foreignField": [],
+          "error": {
+            "name": false,
+            "code": false
+          }
+        },
+        {
+          "code": "",
+          "name": "followersCount",
+          "isActivated": true,
+          "type": "number",
+          "properties": [],
+          "GUID": "a81eee27-1112-424b-ad72-673bfe4243f9",
+          "foreignCollection": "",
+          "foreignField": [],
+          "error": {
+            "name": false,
+            "code": false
+          }
+        },
+        {
+          "code": "",
+          "name": "emailVerified",
+          "isActivated": true,
+          "type": "boolean",
+          "properties": [],
+          "GUID": "085fbc69-e8ed-4a8b-acb6-d79a8f3a992f",
+          "foreignCollection": "",
+          "foreignField": [],
+          "error": {
+            "name": false,
+            "code": false
+          }
+        },
+        {
+          "code": "",
+          "name": "fcmToken",
+          "isActivated": true,
+          "type": "string",
+          "properties": [],
+          "GUID": "646a4b67-81e6-46c4-b20e-f03df352d7f8",
+          "foreignCollection": "",
+          "foreignField": [],
+          "error": {
+            "name": false,
+            "code": false
+          }
+        },
+        {
+          "code": "",
+          "name": "createdAt",
+          "isActivated": true,
+          "type": "string",
+          "properties": [],
+          "GUID": "0fbc2fe4-8a35-41e2-9635-3a445d3f3c13",
+          "format": "date-time",
+          "foreignCollection": "",
+          "foreignField": [],
+          "error": {
+            "name": false,
+            "code": false
+          }
+        },
+        {
+          "code": "",
+          "name": "visitedStations",
+          "isActivated": true,
+          "type": "array",
+          "GUID": "40a118cf-e8a9-4510-a089-090f3bd195a4",
+          "description": "Subcollection: users/{uid}/visitedStations/{stationId}",
+          "properties": [
+            {
+              "code": "",
+              "name": "stationId",
+              "isActivated": true,
+              "type": "string",
+              "properties": [],
+              "GUID": "2270dee1-0a5c-4b10-9a23-abf0d2d35b79",
+              "foreignCollection": "3a5c2610-a83b-44b4-8c6c-fb3a5f668ce0",
+              "foreignField": [
+                "3a5c2610-a83b-44b4-8c6c-fb3a5f668ce0",
+                "f6409028-0e81-4b9d-bdf1-434d20c9e2ef"
+              ],
+              "relationshipType": "Foreign Key",
+              "parentRelationship": "3a6e6b96-39e9-4cb0-be0b-939126456baf",
+              "error": {
+                "name": false,
+                "code": false
+              }
+            },
+            {
+              "code": "",
+              "name": "stationName",
+              "isActivated": true,
+              "type": "string",
+              "properties": [],
+              "GUID": "64b1f28b-fdca-4428-a2dc-559de180084e",
+              "foreignCollection": "",
+              "foreignField": [],
+              "error": {
+                "name": false,
+                "code": false
+              }
+            },
+            {
+              "code": "",
+              "name": "elevation",
+              "isActivated": true,
+              "type": "number",
+              "properties": [],
+              "GUID": "190eb1c6-9efb-4bd8-92ef-81d2f3ceb355",
+              "foreignCollection": "",
+              "foreignField": [],
+              "error": {
+                "name": false,
+                "code": false
+              }
+            },
+            {
+              "code": "",
+              "name": "latitude",
+              "isActivated": true,
+              "type": "number",
+              "properties": [],
+              "GUID": "e8431bea-28a7-4fda-b834-80643796a2d8",
+              "foreignCollection": "",
+              "foreignField": [],
+              "error": {
+                "name": false,
+                "code": false
+              }
+            },
+            {
+              "code": "",
+              "name": "longitude",
+              "isActivated": true,
+              "type": "number",
+              "properties": [],
+              "GUID": "d4c289bc-d4bf-4599-aab7-d7d1f3db7420",
+              "foreignCollection": "",
+              "foreignField": [],
+              "error": {
+                "name": false,
+                "code": false
+              }
+            },
+            {
+              "code": "",
+              "name": "visitedAt",
+              "isActivated": true,
+              "type": "string",
+              "properties": [],
+              "GUID": "1ae7aac5-2e8f-4d25-a2a3-12e516b153de",
+              "format": "date-time",
+              "foreignCollection": "",
+              "foreignField": [],
+              "error": {
+                "name": false,
+                "code": false
+              }
+            }
+          ],
+          "foreignCollection": "",
+          "foreignField": [],
+          "error": {
+            "name": false,
+            "code": false
+          }
+        },
+        {
+          "code": "",
+          "name": "climbs",
+          "isActivated": true,
+          "type": "array",
+          "GUID": "c7f83073-3928-45ca-92a0-bb98bdb75544",
+          "description": "Subcollection: users/{uid}/climbs/{climbId}",
+          "properties": [
+            {
+              "code": "",
+              "name": "id",
+              "isActivated": true,
+              "type": "string",
+              "properties": [],
+              "GUID": "c886276d-94c0-4521-b115-b7ecdb13dd25",
+              "foreignCollection": "",
+              "foreignField": []
+            },
+            {
+              "code": "",
+              "name": "trekType",
+              "isActivated": true,
+              "type": "string",
+              "properties": [],
+              "GUID": "5a33b269-376c-4e31-a632-ed563c11afac",
+              "description": "regular | special | research | benchmarking | government_official",
+              "foreignCollection": "",
+              "foreignField": []
+            },
+            {
+              "code": "",
+              "name": "status",
+              "isActivated": true,
+              "type": "string",
+              "properties": [],
+              "GUID": "b5822979-25d2-4974-82e5-ab4f727dd5e7",
+              "description": "ongoing | completed | abandoned | auto_completed",
+              "foreignCollection": "",
+              "foreignField": []
+            },
+            {
+              "code": "",
+              "name": "startedAt",
+              "isActivated": true,
+              "type": "string",
+              "properties": [],
+              "GUID": "2f2a948b-6e83-4e81-adb3-5a2685bb4824",
+              "format": "date-time",
+              "foreignCollection": "",
+              "foreignField": []
+            },
+            {
+              "code": "",
+              "name": "completedAt",
+              "isActivated": true,
+              "type": "string",
+              "properties": [],
+              "GUID": "41d00694-dcab-44f9-b75d-fb872ac39ab1",
+              "format": "date-time",
+              "foreignCollection": "",
+              "foreignField": []
+            },
+            {
+              "code": "",
+              "name": "totalDuration",
+              "isActivated": true,
+              "type": "number",
+              "properties": [],
+              "GUID": "9ce73331-b1c5-40ba-b6dd-ea832dbb809b",
+              "description": "Seconds",
+              "foreignCollection": "",
+              "foreignField": []
+            },
+            {
+              "code": "",
+              "name": "totalDistance",
+              "isActivated": true,
+              "type": "number",
+              "properties": [],
+              "GUID": "30fe357b-6db1-4bb1-ac3e-e34225b3b1e4",
+              "description": "Kilometers",
+              "foreignCollection": "",
+              "foreignField": []
+            },
+            {
+              "code": "",
+              "name": "scannedStations",
+              "isActivated": true,
+              "type": "array",
+              "GUID": "6042f62b-af3a-4038-afc9-a995786c5599",
+              "description": "Per-scan log within this session",
+              "properties": [
+                {
+                  "code": "",
+                  "name": "stationId",
+                  "isActivated": true,
+                  "type": "string",
+                  "properties": [],
+                  "GUID": "b6eb4080-795e-407d-abdd-45e084ea1ec9",
+                  "foreignCollection": "",
+                  "foreignField": []
+                },
+                {
+                  "code": "",
+                  "name": "scannedAt",
+                  "isActivated": true,
+                  "type": "string",
+                  "properties": [],
+                  "GUID": "4a595ad0-9fad-4e6e-bae2-53a30bfc2e5f",
+                  "format": "date-time",
+                  "foreignCollection": "",
+                  "foreignField": []
+                },
+                {
+                  "code": "",
+                  "name": "elevation",
+                  "isActivated": true,
+                  "type": "number",
+                  "properties": [],
+                  "GUID": "4c19d8cb-7903-4ad1-b941-6d1d430235b2",
+                  "foreignCollection": "",
+                  "foreignField": []
+                },
+                {
+                  "code": "",
+                  "name": "distanceFromPrevious",
+                  "isActivated": true,
+                  "type": "number",
+                  "properties": [],
+                  "GUID": "b6a966d9-99d2-49f1-bfd2-b425bec281af",
+                  "description": "km",
+                  "foreignCollection": "",
+                  "foreignField": []
+                },
+                {
+                  "code": "",
+                  "name": "durationAtStation",
+                  "isActivated": true,
+                  "type": "number",
+                  "properties": [],
+                  "GUID": "e9e5e8c9-965c-4a55-8d5b-68d653913c34",
+                  "description": "seconds",
+                  "foreignCollection": "",
+                  "foreignField": []
+                }
+              ],
+              "foreignCollection": "",
+              "foreignField": []
+            }
+          ],
+          "foreignCollection": "",
+          "foreignField": [],
+          "error": {
+            "name": false,
+            "code": false
+          }
+        },
+        {
+          "name": "category",
+          "hackoladeMeta": {},
+          "isActivated": true,
+          "type": "string",
+          "properties": [],
+          "GUID": "29d5093e-a209-44e7-86b5-0471c431ae03",
+          "error": {
+            "name": false,
+            "code": false
+          },
+          "relationshipType": "Foreign Key",
+          "foreignCollection": "d4cbbb09-6a9f-48bf-a2e5-edd4a943f03c",
+          "foreignField": [
+            "d4cbbb09-6a9f-48bf-a2e5-edd4a943f03c",
+            "e1821e13-a890-4aee-959c-fb908fe3cef1"
+          ],
+          "parentRelationship": "6cb1718d-d1ae-4fa8-993a-c753f70cd4bb"
+        },
+        {
+          "name": "badges",
+          "hackoladeMeta": {},
+          "isActivated": true,
+          "type": "string",
+          "properties": [],
+          "GUID": "529a8668-9428-488e-93f8-555bdc0b346b",
+          "error": {
+            "name": false,
+            "code": false
+          },
+          "relationshipType": "Foreign Key",
+          "foreignCollection": "0da7e12c-57bd-4b38-9516-aa03afdc5be8",
+          "foreignField": [
+            "0da7e12c-57bd-4b38-9516-aa03afdc5be8",
+            "f87947e8-1f12-4cf5-92f3-62057de91029"
+          ],
+          "parentRelationship": "0a29f360-298a-4bd7-95a1-1e4cc3c9c5eb"
+        }
+      ],
+      "definitions": {
+        "type": "definitions",
+        "GUID": "bfe67cbf-02e7-4932-a0b2-437b9bb10b42",
+        "properties": []
+      },
+      "isActivated": true,
+      "additionalProperties": true,
+      "GUID": "630f304e-0f53-4294-9a3d-1f4ab1a9987c",
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "description": "User profiles. Parent of visitedStations, climbs, achievements, certificates, notifications subcollections.",
+      "bucketId": "",
+      "hackoladeMeta": {
+        "validationErrors": {}
+      }
+    },
+    {
+      "collectionName": "pricingVersions",
+      "type": "object",
+      "properties": [
+        {
+          "code": "",
+          "name": "id",
+          "isActivated": true,
+          "type": "string",
+          "properties": [],
+          "GUID": "e834d491-42fa-4107-b2fc-7e9a6f6092ba",
+          "foreignCollection": "",
+          "foreignField": [],
+          "childRelationships": [
+            "84f0d96c-9bdf-4424-a1f3-4392f094d288"
+          ]
+        },
+        {
+          "code": "",
+          "name": "version",
+          "isActivated": true,
+          "type": "number",
+          "properties": [],
+          "GUID": "400f4055-4c4f-40f9-85da-a51499ca0072",
+          "foreignCollection": "",
+          "foreignField": []
+        },
+        {
+          "code": "",
+          "name": "isActive",
+          "isActivated": true,
+          "type": "boolean",
+          "properties": [],
+          "GUID": "bf86dd9c-c6f4-403e-9152-98456ba5c17a",
+          "description": "Mobile app watches this — only one true at a time",
+          "foreignCollection": "",
+          "foreignField": []
+        },
+        {
+          "code": "",
+          "name": "basePrice",
+          "isActivated": true,
+          "type": "number",
+          "properties": [],
+          "GUID": "2cc376a3-3090-45d0-bfc9-432473a0f7e8",
+          "foreignCollection": "",
+          "foreignField": []
+        },
+        {
+          "code": "",
+          "name": "servicePricing",
+          "isActivated": true,
+          "type": "object",
+          "GUID": "1ecf9b54-5d4e-4319-a25a-36f043729028",
+          "properties": [
+            {
+              "code": "",
+              "name": "porter",
+              "isActivated": true,
+              "type": "number",
+              "properties": [],
+              "GUID": "135b6222-42f7-4bf6-a2dd-0dd3b3d6b447",
+              "foreignCollection": "",
+              "foreignField": []
+            },
+            {
+              "code": "",
+              "name": "guide",
+              "isActivated": true,
+              "type": "number",
+              "properties": [],
+              "GUID": "c0d01a97-fb5b-40d9-ac15-f2bc7f33187f",
+              "foreignCollection": "",
+              "foreignField": []
+            },
+            {
+              "code": "",
+              "name": "scientist",
+              "isActivated": true,
+              "type": "number",
+              "properties": [],
+              "GUID": "b9ec5fa7-ff03-4db0-b561-10f3fae748a0",
+              "foreignCollection": "",
+              "foreignField": []
+            }
+          ],
+          "foreignCollection": "",
+          "foreignField": []
+        },
+        {
+          "code": "",
+          "name": "categoryPricing",
+          "isActivated": true,
+          "type": "object",
+          "GUID": "c9809ee1-b1e8-46c3-b4e9-b54f3e3c6ce2",
+          "properties": [
+            {
+              "code": "",
+              "name": "student",
+              "isActivated": true,
+              "type": "object",
+              "GUID": "fb224468-e7fb-442c-87ef-e4ef3fb902c3",
+              "properties": [
+                {
+                  "code": "",
+                  "name": "displayName",
+                  "isActivated": true,
+                  "type": "string",
+                  "properties": [],
+                  "GUID": "c5c1b700-35ef-4cd9-ba30-f3231abae9e1",
+                  "foreignCollection": "",
+                  "foreignField": []
+                },
+                {
+                  "code": "",
+                  "name": "discount",
+                  "isActivated": true,
+                  "type": "number",
+                  "properties": [],
+                  "GUID": "17552aab-8ab7-4a67-aeeb-6fa905a1905f",
+                  "foreignCollection": "",
+                  "foreignField": []
+                },
+                {
+                  "code": "",
+                  "name": "notes",
+                  "isActivated": true,
+                  "type": "string",
+                  "properties": [],
+                  "GUID": "6d4a3c04-cd43-405f-854e-8a5d316a50aa",
+                  "foreignCollection": "",
+                  "foreignField": []
+                }
+              ],
+              "foreignCollection": "",
+              "foreignField": []
+            },
+            {
+              "code": "",
+              "name": "senior_citizen",
+              "isActivated": true,
+              "type": "object",
+              "properties": [],
+              "GUID": "4c09e551-f236-494c-a36f-85a961f95633",
+              "foreignCollection": "",
+              "foreignField": []
+            },
+            {
+              "code": "",
+              "name": "davao_oriental_resident",
+              "isActivated": true,
+              "type": "object",
+              "properties": [],
+              "GUID": "f8e929e2-8bf0-403c-be16-999d983e10a4",
+              "foreignCollection": "",
+              "foreignField": []
+            },
+            {
+              "code": "",
+              "name": "ocfdo",
+              "isActivated": true,
+              "type": "object",
+              "properties": [],
+              "GUID": "8e1d312a-8824-48c4-995d-3f724406840c",
+              "foreignCollection": "",
+              "foreignField": []
+            },
+            {
+              "code": "",
+              "name": "outside_davao_oriental",
+              "isActivated": true,
+              "type": "object",
+              "properties": [],
+              "GUID": "e76f45be-eabb-43b8-800d-3d9420641bf2",
+              "foreignCollection": "",
+              "foreignField": []
+            },
+            {
+              "code": "",
+              "name": "children_8_15",
+              "isActivated": true,
+              "type": "object",
+              "properties": [],
+              "GUID": "13ee7046-40c7-424a-a859-0a5c60b61777",
+              "foreignCollection": "",
+              "foreignField": []
+            },
+            {
+              "code": "",
+              "name": "mfsm",
+              "isActivated": true,
+              "type": "object",
+              "properties": [],
+              "GUID": "5a262171-61e1-4485-ba3e-7119fd3e7bf6",
+              "foreignCollection": "",
+              "foreignField": []
+            }
+          ],
+          "foreignCollection": "",
+          "foreignField": []
+        },
+        {
+          "code": "",
+          "name": "seasonalRules",
+          "isActivated": true,
+          "type": "object",
+          "GUID": "ddf97bf9-7bed-498b-a7ff-017cefd1792e",
+          "properties": [
+            {
+              "code": "",
+              "name": "offSeasonStart",
+              "isActivated": true,
+              "type": "string",
+              "properties": [],
+              "GUID": "0e9ec777-b94b-4295-943e-893b3cef3fb5",
+              "description": "MM-DD e.g. 07-01",
+              "foreignCollection": "",
+              "foreignField": []
+            },
+            {
+              "code": "",
+              "name": "offSeasonEnd",
+              "isActivated": true,
+              "type": "string",
+              "properties": [],
+              "GUID": "99ce0760-1b18-497d-84b8-d1219e0c85ca",
+              "description": "MM-DD e.g. 09-30",
+              "foreignCollection": "",
+              "foreignField": []
+            },
+            {
+              "code": "",
+              "name": "allowedBookingTypes",
+              "isActivated": true,
+              "type": "array",
+              "properties": [],
+              "GUID": "b39f496c-a516-46d4-b253-bd0d77c033ee",
+              "foreignCollection": "",
+              "foreignField": []
+            }
+          ],
+          "foreignCollection": "",
+          "foreignField": []
+        },
+        {
+          "code": "",
+          "name": "createdAt",
+          "isActivated": true,
+          "type": "string",
+          "properties": [],
+          "GUID": "064bd0a5-efdc-497a-8568-608539bc1872",
+          "format": "date-time",
+          "foreignCollection": "",
+          "foreignField": []
+        },
+        {
+          "code": "",
+          "name": "updatedAt",
+          "isActivated": true,
+          "type": "string",
+          "properties": [],
+          "GUID": "b28f8ced-056b-4a1c-9da5-85549d510950",
+          "format": "date-time",
+          "foreignCollection": "",
+          "foreignField": []
+        }
+      ],
+      "definitions": {
+        "type": "definitions",
+        "GUID": "acb01008-695c-4ac0-84e4-5e9288eb8da1",
+        "properties": []
+      },
+      "isActivated": true,
+      "additionalProperties": true,
+      "GUID": "e5278810-1b68-469a-9945-5e24b27f902b",
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "description": "Trek pricing. Admin-managed. isActive=true version is synced to the mobile app in real time.",
+      "bucketId": "",
+      "hackoladeMeta": {
+        "validationErrors": {}
+      }
+    },
+    {
+      "collectionName": "bookings",
+      "type": "object",
+      "properties": [
+        {
+          "code": "",
+          "name": "id",
+          "isActivated": true,
+          "type": "string",
+          "properties": [],
+          "GUID": "423123f2-8a1f-440e-8878-d357eab04393",
+          "foreignCollection": "",
+          "foreignField": [],
+          "error": {
+            "name": false,
+            "code": false
+          }
+        },
+        {
+          "code": "",
+          "name": "uid",
+          "isActivated": true,
+          "type": "string",
+          "properties": [],
+          "GUID": "39858774-5ff9-4963-b692-76d48fc6d576",
+          "description": "ref → users.uid — group organizer",
+          "foreignCollection": "",
+          "foreignField": [],
+          "error": {
+            "name": false,
+            "code": false
+          },
+          "childRelationships": [
+            "f538759c-1ea6-4467-bd27-9b15ffa08a0b"
+          ]
+        },
+        {
+          "code": "",
+          "name": "affiliation",
+          "isActivated": true,
+          "type": "string",
+          "properties": [],
+          "GUID": "9e295aee-7b02-455b-8a1c-07ac1f8e2a84",
+          "foreignCollection": "",
+          "foreignField": [],
+          "error": {
+            "name": false,
+            "code": false
+          }
+        },
+        {
+          "code": "",
+          "name": "trekDate",
+          "isActivated": true,
+          "type": "string",
+          "properties": [],
+          "GUID": "9af2c0ab-20d5-40bf-b167-8dce43617b35",
+          "format": "date-time",
+          "foreignCollection": "",
+          "foreignField": [],
+          "error": {
+            "name": false,
+            "code": false
+          },
+          "childRelationships": [
+            "075e815e-e704-4678-b63c-d0769b75c7d8"
+          ]
+        },
+        {
+          "code": "",
+          "name": "trekType",
+          "isActivated": true,
+          "type": "string",
+          "properties": [],
+          "GUID": "27e1089b-878b-4a3b-9e23-262eec8dc60e",
+          "description": "regular | special | research | benchmarking | government_official",
+          "foreignCollection": "",
+          "foreignField": [],
+          "error": {
+            "name": false,
+            "code": false
+          }
+        },
+        {
+          "code": "",
+          "name": "bookingClassification",
+          "isActivated": true,
+          "type": "string",
+          "properties": [],
+          "GUID": "14fa0e62-a350-4402-9317-8b22df1c9da1",
+          "description": "regular | special | government_official | off_season",
+          "foreignCollection": "",
+          "foreignField": [],
+          "error": {
+            "name": false,
+            "code": false
+          }
+        },
+        {
+          "code": "",
+          "name": "hometown",
+          "isActivated": true,
+          "type": "string",
+          "properties": [],
+          "GUID": "1793ad5e-ed36-4287-bc85-cc69525fee21",
+          "foreignCollection": "",
+          "foreignField": [],
+          "error": {
+            "name": false,
+            "code": false
+          }
+        },
+        {
+          "code": "",
+          "name": "phoneNumber",
+          "isActivated": true,
+          "type": "string",
+          "properties": [],
+          "GUID": "18a7d495-55f7-4c5f-907a-36dc21024170",
+          "foreignCollection": "",
+          "foreignField": [],
+          "error": {
+            "name": false,
+            "code": false
+          }
+        },
+        {
+          "code": "",
+          "name": "notes",
+          "isActivated": true,
+          "type": "string",
+          "properties": [],
+          "GUID": "cd8a5395-fb03-4070-8748-47a0a5f78db8",
+          "foreignCollection": "",
+          "foreignField": [],
+          "error": {
+            "name": false,
+            "code": false
+          }
+        },
+        {
+          "code": "",
+          "name": "adminNotes",
+          "isActivated": true,
+          "type": "string",
+          "properties": [],
+          "GUID": "097d444e-3a97-4aa2-88c2-67079b258d75",
+          "description": "[ADMIN WRITE]",
+          "foreignCollection": "",
+          "foreignField": [],
+          "error": {
+            "name": false,
+            "code": false
+          }
+        },
+        {
+          "code": "",
+          "name": "status",
+          "isActivated": true,
+          "type": "string",
+          "properties": [],
+          "GUID": "148daa6b-706b-421b-858a-cadb7cc4ec67",
+          "description": "individual: pending|approved|rejected|cancelled|changes_required / group: open|pending_review|approved|declined|full|completed|cancelled",
+          "foreignCollection": "",
+          "foreignField": [],
+          "error": {
+            "name": false,
+            "code": false
+          }
+        },
+        {
+          "code": "",
+          "name": "submissionStatus",
+          "isActivated": true,
+          "type": "string",
+          "properties": [],
+          "GUID": "a3b9fbf8-0f3c-4a0d-b714-34caadd1beba",
+          "description": "draft | submitted",
+          "foreignCollection": "",
+          "foreignField": [],
+          "error": {
+            "name": false,
+            "code": false
+          }
+        },
+        {
+          "code": "",
+          "name": "totalMembers",
+          "isActivated": true,
+          "type": "number",
+          "properties": [],
+          "GUID": "31353d52-96a2-4cf3-af57-dac97f5474d4",
+          "foreignCollection": "",
+          "foreignField": [],
+          "error": {
+            "name": false,
+            "code": false
+          }
+        },
+        {
+          "code": "",
+          "name": "isArchived",
+          "isActivated": true,
+          "type": "boolean",
+          "properties": [],
+          "GUID": "c6644c6f-a5dd-4f3e-b060-b62a86c786d2",
+          "foreignCollection": "",
+          "foreignField": [],
+          "error": {
+            "name": false,
+            "code": false
+          }
+        },
+        {
+          "code": "",
+          "name": "groupName",
+          "isActivated": true,
+          "type": "string",
+          "properties": [],
+          "GUID": "3e11a39d-99f3-4e11-8f29-f2ce195afac1",
+          "foreignCollection": "",
+          "foreignField": [],
+          "error": {
+            "name": false,
+            "code": false
+          }
+        },
+        {
+          "code": "",
+          "name": "maxSlots",
+          "isActivated": true,
+          "type": "number",
+          "properties": [],
+          "GUID": "e5e5d1fb-9a41-4fe6-8e6b-69d1913aebeb",
+          "foreignCollection": "",
+          "foreignField": [],
+          "error": {
+            "name": false,
+            "code": false
+          }
+        },
+        {
+          "code": "",
+          "name": "currentSlots",
+          "isActivated": true,
+          "type": "number",
+          "properties": [],
+          "GUID": "6511f3e8-b932-4b83-950a-50e65c817abc",
+          "foreignCollection": "",
+          "foreignField": [],
+          "error": {
+            "name": false,
+            "code": false
+          }
+        },
+        {
+          "code": "",
+          "name": "attachments",
+          "isActivated": true,
+          "type": "array",
+          "GUID": "a012a0ad-e6ca-442f-bb15-7530c5a987b1",
+          "description": "Uploaded files — includes letter of communication and member documents",
+          "properties": [
+            {
+              "code": "",
+              "name": "storagePath",
+              "isActivated": true,
+              "type": "string",
+              "properties": [],
+              "GUID": "b5127aea-adf2-4df4-a6fc-470551b88851",
+              "foreignCollection": "",
+              "foreignField": []
+            },
+            {
+              "code": "",
+              "name": "downloadURL",
+              "isActivated": true,
+              "type": "string",
+              "properties": [],
+              "GUID": "c3990636-ed86-4913-95db-f67593f5c758",
+              "foreignCollection": "",
+              "foreignField": []
+            },
+            {
+              "code": "",
+              "name": "fileName",
+              "isActivated": true,
+              "type": "string",
+              "properties": [],
+              "GUID": "9df28398-9eec-40b8-b5f2-74ddfcfe4d15",
+              "foreignCollection": "",
+              "foreignField": []
+            },
+            {
+              "code": "",
+              "name": "mimeType",
+              "isActivated": true,
+              "type": "string",
+              "properties": [],
+              "GUID": "8663cf72-0e7f-4910-afe2-cd072aca105e",
+              "foreignCollection": "",
+              "foreignField": []
+            },
+            {
+              "code": "",
+              "name": "size",
+              "isActivated": true,
+              "type": "number",
+              "properties": [],
+              "GUID": "f6235d02-e5f1-493a-b7cb-60d8df17d551",
+              "foreignCollection": "",
+              "foreignField": []
+            }
+          ],
+          "foreignCollection": "",
+          "foreignField": [],
+          "error": {
+            "name": false,
+            "code": false
+          }
+        },
+        {
+          "code": "",
+          "name": "members",
+          "isActivated": true,
+          "type": "array",
+          "GUID": "c55fa42f-d8de-44cc-be75-ab2230e7c107",
+          "description": "Pre-registered member list",
+          "properties": [
+            {
+              "code": "",
+              "name": "id",
+              "isActivated": true,
+              "type": "string",
+              "properties": [],
+              "GUID": "033b5be4-d129-4b47-a633-e38632105f65",
+              "foreignCollection": "",
+              "foreignField": []
+            },
+            {
+              "code": "",
+              "name": "firstName",
+              "isActivated": true,
+              "type": "string",
+              "properties": [],
+              "GUID": "b685cdc5-9247-45ab-a9a1-cad737312821",
+              "foreignCollection": "",
+              "foreignField": []
+            },
+            {
+              "code": "",
+              "name": "lastName",
+              "isActivated": true,
+              "type": "string",
+              "properties": [],
+              "GUID": "1f8084f0-ac81-4182-b459-4f4d59954941",
+              "foreignCollection": "",
+              "foreignField": []
+            },
+            {
+              "code": "",
+              "name": "category",
+              "isActivated": true,
+              "type": "string",
+              "properties": [],
+              "GUID": "5668448e-0d81-4366-949b-316a01dd8ad6",
+              "description": "student | senior_citizen | davao_oriental_resident | ocfdo | outside_davao_oriental | children_8_15 | mfsm",
+              "foreignCollection": "",
+              "foreignField": []
+            },
+            {
+              "code": "",
+              "name": "isPrimaryContact",
+              "isActivated": true,
+              "type": "boolean",
+              "properties": [],
+              "GUID": "144e0f8c-1edb-4748-9014-1e4d5824afa1",
+              "foreignCollection": "",
+              "foreignField": []
+            },
+            {
+              "code": "",
+              "name": "hasAccount",
+              "isActivated": true,
+              "type": "boolean",
+              "properties": [],
+              "GUID": "06c9b9a0-66e0-4a2e-a345-fa0ad6b21fa1",
+              "foreignCollection": "",
+              "foreignField": []
+            },
+            {
+              "code": "",
+              "name": "userId",
+              "isActivated": true,
+              "type": "string",
+              "properties": [],
+              "GUID": "73d643b8-6080-46d1-8164-3d1ec6042820",
+              "foreignCollection": "",
+              "foreignField": []
+            }
+          ],
+          "foreignCollection": "",
+          "foreignField": [],
+          "error": {
+            "name": false,
+            "code": false
+          }
+        },
+        {
+          "code": "",
+          "name": "joinRequests",
+          "isActivated": true,
+          "type": "array",
+          "GUID": "7d6ca70d-3134-4581-b46d-7f3a686affff",
+          "description": "Subcollection: bookings/{id}/joinRequests/{requestId}",
+          "properties": [
+            {
+              "code": "",
+              "name": "id",
+              "isActivated": true,
+              "type": "string",
+              "properties": [],
+              "GUID": "765556af-63ab-4fe8-9a42-b6eb94049465",
+              "foreignCollection": "",
+              "foreignField": []
+            },
+            {
+              "code": "",
+              "name": "userId",
+              "isActivated": true,
+              "type": "string",
+              "properties": [],
+              "GUID": "aab351b2-d5a9-4b96-8b0a-626d587fa436",
+              "description": "ref → users.uid",
+              "foreignCollection": "",
+              "foreignField": []
+            },
+            {
+              "code": "",
+              "name": "userDisplayName",
+              "isActivated": true,
+              "type": "string",
+              "properties": [],
+              "GUID": "bd6865a1-278c-4267-b14c-82d734e6f05f",
+              "foreignCollection": "",
+              "foreignField": []
+            },
+            {
+              "code": "",
+              "name": "affiliation",
+              "isActivated": true,
+              "type": "string",
+              "properties": [],
+              "GUID": "17d92d79-7bfc-4536-ab5a-7b0c0f51146f",
+              "foreignCollection": "",
+              "foreignField": []
+            },
+            {
+              "code": "",
+              "name": "status",
+              "isActivated": true,
+              "type": "string",
+              "properties": [],
+              "GUID": "a160626f-d7c1-4fb4-b31b-101be6cf38fd",
+              "description": "pending | approved | declined | changes_required",
+              "foreignCollection": "",
+              "foreignField": []
+            },
+            {
+              "code": "",
+              "name": "declineReason",
+              "isActivated": true,
+              "type": "string",
+              "properties": [],
+              "GUID": "f34064e3-c0ea-4271-b9ea-d208cc421982",
+              "foreignCollection": "",
+              "foreignField": []
+            },
+            {
+              "code": "",
+              "name": "reviewedAt",
+              "isActivated": true,
+              "type": "string",
+              "properties": [],
+              "GUID": "190b6a96-2e4c-40d7-9456-88ca9f804fb8",
+              "format": "date-time",
+              "foreignCollection": "",
+              "foreignField": []
+            },
+            {
+              "code": "",
+              "name": "createdAt",
+              "isActivated": true,
+              "type": "string",
+              "properties": [],
+              "GUID": "9e73fbf0-930b-4ec6-b94f-db73bd93c6b6",
+              "format": "date-time",
+              "foreignCollection": "",
+              "foreignField": []
+            }
+          ],
+          "foreignCollection": "",
+          "foreignField": [],
+          "error": {
+            "name": false,
+            "code": false
+          }
+        },
+        {
+          "code": "",
+          "name": "createdAt",
+          "isActivated": true,
+          "type": "string",
+          "properties": [],
+          "GUID": "630aedb9-09af-43ec-adf7-4a893872e543",
+          "format": "date-time",
+          "foreignCollection": "",
+          "foreignField": [],
+          "error": {
+            "name": false,
+            "code": false
+          }
+        },
+        {
+          "code": "",
+          "name": "updatedAt",
+          "isActivated": true,
+          "type": "string",
+          "properties": [],
+          "GUID": "6bccfd49-a050-470f-880a-51fe293cd34a",
+          "format": "date-time",
+          "foreignCollection": "",
+          "foreignField": [],
+          "error": {
+            "name": false,
+            "code": false
+          }
+        },
+        {
+          "name": "category",
+          "hackoladeMeta": {},
+          "isActivated": true,
+          "type": "string",
+          "properties": [],
+          "error": {
+            "name": false,
+            "code": false
+          },
+          "GUID": "e1821e13-a890-4aee-959c-fb908fe3cef1",
+          "childRelationships": [
+            "6cb1718d-d1ae-4fa8-993a-c753f70cd4bb"
+          ],
+          "relationshipType": "Foreign Key",
+          "foreignCollection": "e5278810-1b68-469a-9945-5e24b27f902b",
+          "foreignField": [
+            "e5278810-1b68-469a-9945-5e24b27f902b",
+            "e834d491-42fa-4107-b2fc-7e9a6f6092ba"
+          ],
+          "parentRelationship": "84f0d96c-9bdf-4424-a1f3-4392f094d288"
+        }
+      ],
+      "definitions": {
+        "type": "definitions",
+        "GUID": "ed0322d4-b577-49fd-8cee-527a735743b0",
+        "properties": []
+      },
+      "isActivated": true,
+      "additionalProperties": true,
+      "GUID": "d4cbbb09-6a9f-48bf-a2e5-edd4a943f03c",
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "description": "All treks are booked as a group. attachments handles all file uploads (letter of communication, member documents). joinRequests is the subcollection for users joining an open group trek.",
+      "bucketId": "",
+      "hackoladeMeta": {
+        "validationErrors": {}
+      }
+    },
+    {
+      "collectionName": "posts",
+      "type": "object",
+      "properties": [
+        {
+          "code": "",
+          "name": "id",
+          "isActivated": true,
+          "type": "string",
+          "properties": [],
+          "GUID": "400d6ca3-24b7-431f-85ec-b680aeb9f6bb",
+          "foreignCollection": "",
+          "foreignField": [],
+          "error": {
+            "name": false,
+            "code": false
+          }
+        },
+        {
+          "code": "",
+          "name": "uid",
+          "isActivated": true,
+          "type": "string",
+          "properties": [],
+          "GUID": "2b0eaa0c-bed6-4ef9-92de-2d16bae07c5c",
+          "description": "ref → users.uid",
+          "foreignCollection": "",
+          "foreignField": [],
+          "error": {
+            "name": false,
+            "code": false
+          },
+          "childRelationships": [
+            "1bb18a8f-be78-450d-a1c4-1f1fe8048280"
+          ]
+        },
+        {
+          "code": "",
+          "name": "userName",
+          "isActivated": true,
+          "type": "string",
+          "properties": [],
+          "GUID": "3b0b16e4-3d75-419c-a69a-65755a16e964",
+          "foreignCollection": "",
+          "foreignField": [],
+          "error": {
+            "name": false,
+            "code": false
+          }
+        },
+        {
+          "code": "",
+          "name": "caption",
+          "isActivated": true,
+          "type": "string",
+          "properties": [],
+          "GUID": "4c9ce989-9550-43ce-9dc7-15bf134697de",
+          "foreignCollection": "",
+          "foreignField": [],
+          "error": {
+            "name": false,
+            "code": false
+          }
+        },
+        {
+          "code": "",
+          "name": "imageUrls",
+          "isActivated": true,
+          "type": "array",
+          "properties": [],
+          "GUID": "ee512b28-62a6-443d-9e4a-0cf1b1d081eb",
+          "description": "Max 4 images",
+          "foreignCollection": "",
+          "foreignField": [],
+          "error": {
+            "name": false,
+            "code": false
+          }
+        },
+        {
+          "code": "",
+          "name": "privacy",
+          "isActivated": true,
+          "type": "string",
+          "properties": [],
+          "GUID": "70dbfc93-6a98-4212-a9f5-543d51dd8b87",
+          "description": "public | followers | private",
+          "foreignCollection": "",
+          "foreignField": [],
+          "error": {
+            "name": false,
+            "code": false
+          }
+        },
+        {
+          "code": "",
+          "name": "status",
+          "isActivated": true,
+          "type": "string",
+          "properties": [],
+          "GUID": "1f986837-28f5-4184-88a2-7bae7ff8807e",
+          "description": "pending | approved | declined",
+          "foreignCollection": "",
+          "foreignField": [],
+          "error": {
+            "name": false,
+            "code": false
+          }
+        },
+        {
+          "code": "",
+          "name": "moderatorNote",
+          "isActivated": true,
+          "type": "string",
+          "properties": [],
+          "GUID": "859afef6-0b41-4e6d-a890-69399ec70793",
+          "description": "[ADMIN WRITE]",
+          "foreignCollection": "",
+          "foreignField": [],
+          "error": {
+            "name": false,
+            "code": false
+          }
+        },
+        {
+          "code": "",
+          "name": "likesCount",
+          "isActivated": true,
+          "type": "number",
+          "properties": [],
+          "GUID": "39509996-3aa8-49e4-b29a-bc858e588120",
+          "foreignCollection": "",
+          "foreignField": [],
+          "error": {
+            "name": false,
+            "code": false
+          }
+        },
+        {
+          "code": "",
+          "name": "commentsCount",
+          "isActivated": true,
+          "type": "number",
+          "properties": [],
+          "GUID": "653bbe94-6835-4595-b359-e8e99f8e2073",
+          "foreignCollection": "",
+          "foreignField": [],
+          "error": {
+            "name": false,
+            "code": false
+          }
+        },
+        {
+          "code": "",
+          "name": "createdAt",
+          "isActivated": true,
+          "type": "string",
+          "properties": [],
+          "GUID": "f1cddc78-0a17-4b03-bdd1-62bcc7f0f69a",
+          "format": "date-time",
+          "foreignCollection": "",
+          "foreignField": [],
+          "error": {
+            "name": false,
+            "code": false
+          }
+        },
+        {
+          "code": "",
+          "name": "comments",
+          "isActivated": true,
+          "type": "array",
+          "GUID": "278b842d-a9a1-42f1-b962-407200430ede",
+          "description": "Subcollection: posts/{postId}/comments/{commentId}",
+          "properties": [
+            {
+              "code": "",
+              "name": "id",
+              "isActivated": true,
+              "type": "string",
+              "properties": [],
+              "GUID": "399295d1-85a9-44ab-8dbf-52a6b6214b81",
+              "foreignCollection": "",
+              "foreignField": []
+            },
+            {
+              "code": "",
+              "name": "userId",
+              "isActivated": true,
+              "type": "string",
+              "properties": [],
+              "GUID": "a8572d65-9898-445f-af9c-95b40d64537c",
+              "description": "ref → users.uid",
+              "foreignCollection": "630f304e-0f53-4294-9a3d-1f4ab1a9987c",
+              "foreignField": [
+                "630f304e-0f53-4294-9a3d-1f4ab1a9987c",
+                "b0f0ca4a-96a7-4fe9-8259-ca58633fda73"
+              ],
+              "relationshipType": "Foreign Key",
+              "parentRelationship": "81a5b8a4-18d3-4e62-9667-d94533ffcf09"
+            },
+            {
+              "code": "",
+              "name": "userName",
+              "isActivated": true,
+              "type": "string",
+              "properties": [],
+              "GUID": "695bcaa3-1046-4a59-aaf5-864b9747d0e1",
+              "foreignCollection": "",
+              "foreignField": []
+            },
+            {
+              "code": "",
+              "name": "text",
+              "isActivated": true,
+              "type": "string",
+              "properties": [],
+              "GUID": "ca3472b5-b041-4673-b664-0eb424907d38",
+              "foreignCollection": "",
+              "foreignField": []
+            },
+            {
+              "code": "",
+              "name": "likesCount",
+              "isActivated": true,
+              "type": "number",
+              "properties": [],
+              "GUID": "e99776b1-97c2-4262-87e4-ba46fc1e696b",
+              "foreignCollection": "",
+              "foreignField": []
+            },
+            {
+              "code": "",
+              "name": "createdAt",
+              "isActivated": true,
+              "type": "string",
+              "properties": [],
+              "GUID": "faaecb74-6c81-41e7-8651-7414c8f9ca34",
+              "format": "date-time",
+              "foreignCollection": "",
+              "foreignField": []
+            }
+          ],
+          "foreignCollection": "",
+          "foreignField": [],
+          "error": {
+            "name": false,
+            "code": false
+          }
+        }
+      ],
+      "definitions": {
+        "type": "definitions",
+        "GUID": "a350f23c-5c6b-431e-a934-09e46df3a051",
+        "properties": []
+      },
+      "isActivated": true,
+      "additionalProperties": true,
+      "GUID": "d92d3e9f-ae24-4a16-b32c-7a4d1edec429",
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "description": "User social posts with comments subcollection. Requires admin approval.",
+      "bucketId": "",
+      "hackoladeMeta": {
+        "validationErrors": {}
+      }
+    },
+    {
+      "collectionName": "Calendar",
+      "type": "object",
+      "properties": [
+        {
+          "code": "",
+          "name": "dateKey",
+          "isActivated": true,
+          "type": "string",
+          "properties": [],
+          "GUID": "41bd7247-9912-4c44-98b7-e84f3ef5e308",
+          "description": "Document ID: YYYY-MM-DD",
+          "foreignCollection": "d4cbbb09-6a9f-48bf-a2e5-edd4a943f03c",
+          "foreignField": [
+            "d4cbbb09-6a9f-48bf-a2e5-edd4a943f03c",
+            "9af2c0ab-20d5-40bf-b167-8dce43617b35"
+          ],
+          "relationshipType": "Foreign Key",
+          "parentRelationship": "075e815e-e704-4678-b63c-d0769b75c7d8"
+        },
+        {
+          "code": "",
+          "name": "isClosed",
+          "isActivated": true,
+          "type": "boolean",
+          "properties": [],
+          "GUID": "c9605421-e2a9-42d9-bf1a-16adf50defd1",
+          "description": "[ADMIN WRITE]",
+          "foreignCollection": "",
+          "foreignField": []
+        },
+        {
+          "code": "",
+          "name": "maxSlots",
+          "isActivated": true,
+          "type": "number",
+          "properties": [],
+          "GUID": "ac7be11e-80b0-43b1-bf2e-c4c9fc7b382b",
+          "description": "[ADMIN WRITE] 0 = closed",
+          "foreignCollection": "",
+          "foreignField": []
+        },
+        {
+          "code": "",
+          "name": "reason",
+          "isActivated": true,
+          "type": "string",
+          "properties": [],
+          "GUID": "43c02701-4e8b-467a-a7ff-848398b4851b",
+          "description": "[ADMIN WRITE]",
+          "foreignCollection": "",
+          "foreignField": []
+        },
+        {
+          "code": "",
+          "name": "customNote",
+          "isActivated": true,
+          "type": "string",
+          "properties": [],
+          "GUID": "40a9f1c5-3074-46e3-8039-436952d168ed",
+          "foreignCollection": "",
+          "foreignField": []
+        },
+        {
+          "code": "",
+          "name": "isTrekDownDay",
+          "isActivated": true,
+          "type": "boolean",
+          "properties": [],
+          "GUID": "111986b8-6ab7-452b-a5e7-abe883bc9844",
+          "description": "Auto-set by Cloud Function after booking approval",
+          "foreignCollection": "",
+          "foreignField": []
+        },
+        {
+          "code": "",
+          "name": "originalTrekDate",
+          "isActivated": true,
+          "type": "string",
+          "properties": [],
+          "GUID": "a48eff63-ee1f-41ec-9c05-f8d59e4d60db",
+          "description": "YYYY-MM-DD of the trek that triggered this buffer day",
+          "foreignCollection": "",
+          "foreignField": []
+        },
+        {
+          "code": "",
+          "name": "lastUpdated",
+          "isActivated": true,
+          "type": "string",
+          "properties": [],
+          "GUID": "3229538c-6cc3-49a6-af44-5bddfbd286db",
+          "format": "date-time",
+          "foreignCollection": "",
+          "foreignField": []
+        }
+      ],
+      "definitions": {
+        "type": "definitions",
+        "GUID": "863e897b-3cda-4e90-b00b-0f7d70c1781d",
+        "properties": []
+      },
+      "isActivated": true,
+      "additionalProperties": true,
+      "GUID": "b54685d9-6c72-47bc-af74-04724d0bf450",
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "description": "Trek availability per date. Admin-managed; auto-updated by Cloud Functions on booking approval/cancellation.",
+      "bucketId": "",
+      "hackoladeMeta": {
+        "validationErrors": {}
+      }
+    },
+    {
+      "collectionName": "Badge",
+      "type": "object",
+      "properties": [
+        {
+          "name": "id",
+          "hackoladeMeta": {},
+          "isActivated": true,
+          "type": "string",
+          "properties": [],
+          "GUID": "f87947e8-1f12-4cf5-92f3-62057de91029",
+          "error": {
+            "name": false,
+            "code": false
+          },
+          "childRelationships": [
+            "0a29f360-298a-4bd7-95a1-1e4cc3c9c5eb"
+          ]
+        },
+        {
+          "name": "category",
+          "hackoladeMeta": {},
+          "isActivated": true,
+          "type": "string",
+          "properties": [],
+          "GUID": "ad8fbb1c-4a25-4056-abe4-d29394ac6f00",
+          "error": {
+            "name": false,
+            "code": false
+          }
+        },
+        {
+          "name": "tier",
+          "hackoladeMeta": {},
+          "isActivated": true,
+          "type": "string",
+          "properties": [],
+          "GUID": "5f5107fa-5c3a-4463-87a2-858a42db3518",
+          "error": {
+            "name": false,
+            "code": false
+          }
+        },
+        {
+          "name": "verificationType",
+          "hackoladeMeta": {},
+          "isActivated": true,
+          "type": "string",
+          "properties": [],
+          "GUID": "5726aaa3-1acb-43f8-a763-1b15ee26f6c4",
+          "error": {
+            "name": false,
+            "code": false
+          }
+        },
+        {
+          "name": "requirement",
+          "hackoladeMeta": {},
+          "isActivated": true,
+          "type": "array",
+          "properties": [
+            {
+              "hackoladeMeta": {},
+              "isActivated": true,
+              "type": "string",
+              "properties": [],
+              "GUID": "00efb2e3-ce4d-48d9-9d86-7022bbb1ee46",
+              "arrayItem": true
+            }
+          ],
+          "additionalItems": true,
+          "error": {
+            "name": false,
+            "code": false
+          },
+          "GUID": "17f366d2-7863-4bde-92b4-a9eeff2182c2"
+        },
+        {
+          "name": "isUnlocked",
+          "hackoladeMeta": {},
+          "isActivated": true,
+          "type": "boolean",
+          "error": {
+            "name": false,
+            "code": false
+          },
+          "GUID": "384e93c6-da32-4ce9-a3b1-040605114e30"
+        },
+        {
+          "name": "unlockedAt",
+          "hackoladeMeta": {},
+          "isActivated": true,
+          "type": "string",
+          "properties": [],
+          "error": {
+            "name": false,
+            "code": false
+          },
+          "GUID": "9187e28c-2526-4259-ab8f-dd454b3287ac"
+        },
+        {
+          "name": "triggerStationId",
+          "hackoladeMeta": {},
+          "isActivated": true,
+          "type": "string",
+          "properties": [],
+          "GUID": "375fb4ba-d824-4cc8-9327-beb6556043a4",
+          "error": {
+            "name": false,
+            "code": false
+          },
+          "relationshipType": "Foreign Key",
+          "foreignCollection": "3a5c2610-a83b-44b4-8c6c-fb3a5f668ce0",
+          "foreignField": [
+            "3a5c2610-a83b-44b4-8c6c-fb3a5f668ce0",
+            "f6409028-0e81-4b9d-bdf1-434d20c9e2ef"
+          ],
+          "parentRelationship": "e972101c-0028-4a7e-822d-5f13b1ba42c5"
+        },
+        {
+          "name": "points",
+          "hackoladeMeta": {},
+          "isActivated": true,
+          "type": "integer",
+          "properties": [],
+          "error": {
+            "name": false,
+            "code": false
+          },
+          "GUID": "14a5a932-ac59-452d-b9b1-25f20d2c4f9d"
+        },
+        {
+          "name": "isLimitedEdition",
+          "hackoladeMeta": {},
+          "isActivated": true,
+          "type": "boolean",
+          "error": {
+            "name": false,
+            "code": false
+          },
+          "GUID": "1ade5de3-aa5d-449f-82fa-9670ef89adfb"
+        },
+        {
+          "name": "claimStatus",
+          "hackoladeMeta": {},
+          "isActivated": true,
+          "type": "string",
+          "properties": [],
+          "GUID": "75d353bb-58e3-44a5-8993-b7e9fbf2754a",
+          "error": {
+            "name": false,
+            "code": false
+          }
+        }
+      ],
+      "definitions": {
+        "type": "definitions",
+        "properties": [],
+        "GUID": "75a07324-16f2-41b7-93ce-945834ef92ca"
+      },
+      "isActivated": true,
+      "additionalProperties": false,
+      "GUID": "0da7e12c-57bd-4b38-9516-aa03afdc5be8",
+      "hackoladeMeta": {
+        "validationErrors": {}
+      }
+    },
+    {
+      "collectionName": "ECertificate",
+      "type": "object",
+      "properties": [
+        {
+          "name": "certificateId",
+          "hackoladeMeta": {},
+          "isActivated": true,
+          "type": "string",
+          "properties": [],
+          "GUID": "86704569-dc4e-42ba-b99a-c9fcc478a8f5",
+          "error": {
+            "name": false,
+            "code": false
+          }
+        },
+        {
+          "name": "uid",
+          "hackoladeMeta": {},
+          "isActivated": true,
+          "type": "string",
+          "properties": [],
+          "GUID": "9bcc58db-4760-4e5c-82a3-804022fbfc54",
+          "error": {
+            "name": false,
+            "code": false
+          },
+          "childRelationships": [
+            "8a710e7f-6ae3-4457-b21a-9fcbb990263c"
+          ]
+        },
+        {
+          "name": "dateEarned",
+          "hackoladeMeta": {},
+          "isActivated": true,
+          "type": "string",
+          "properties": [],
+          "error": {
+            "name": false,
+            "code": false
+          },
+          "GUID": "57d62635-411b-43d5-8e27-4a3e9afbf81f"
+        },
+        {
+          "name": "stationVisited",
+          "hackoladeMeta": {},
+          "isActivated": true,
+          "type": "integer",
+          "properties": [],
+          "error": {
+            "name": false,
+            "code": false
+          },
+          "GUID": "c15011df-2f88-4e49-bb96-c1dd41d4a8d6"
+        },
+        {
+          "type": "string",
+          "properties": [],
+          "name": "startDate",
+          "isActivated": true,
+          "GUID": "3c549c79-80c8-4e0e-8ae3-a9894c1add6d",
+          "hackoladeMeta": {
+            "namingConvention": ""
+          },
+          "error": {
+            "name": false,
+            "code": false
+          }
+        },
+        {
+          "name": "endDate",
+          "hackoladeMeta": {},
+          "isActivated": true,
+          "type": "string",
+          "properties": [],
+          "GUID": "4fa49e5b-f0ea-4757-a738-0b73938c2b28",
+          "error": {
+            "name": false,
+            "code": false
+          }
+        },
+        {
+          "name": "verificationCode",
+          "hackoladeMeta": {},
+          "isActivated": true,
+          "type": "string",
+          "properties": [],
+          "GUID": "537f79aa-4167-4ad8-aa17-f152efbb7c89",
+          "error": {
+            "name": false,
+            "code": false
+          }
+        },
+        {
+          "name": "certificateType",
+          "hackoladeMeta": {},
+          "isActivated": true,
+          "type": "string",
+          "properties": [],
+          "GUID": "8caef292-e857-4095-a751-3b95c3e097b2",
+          "error": {
+            "name": false,
+            "code": false
+          }
+        },
+        {
+          "name": "createdAt",
+          "hackoladeMeta": {},
+          "isActivated": true,
+          "type": "string",
+          "properties": [],
+          "GUID": "f945be31-15a2-4cfa-b33f-55b82674fbb2",
+          "error": {
+            "name": false,
+            "code": false
+          }
+        }
+      ],
+      "definitions": {
+        "type": "definitions",
+        "properties": [],
+        "GUID": "a27b6d9c-80f6-4d39-8eee-120b0dd17a62"
+      },
+      "isActivated": true,
+      "additionalProperties": false,
+      "GUID": "745a8a43-4d57-464d-8878-549e589b9b62",
+      "hackoladeMeta": {
+        "validationErrors": {}
+      }
+    }
+  ],
+  "buckets": [],
+  "views": [],
+  "relationships": [
+    {
+      "name": "fk_bookings_uid_to_users_uid",
+      "relationshipType": "Foreign Key",
+      "parentField": [
+        [
+          "d4cbbb09-6a9f-48bf-a2e5-edd4a943f03c",
+          "39858774-5ff9-4963-b692-76d48fc6d576"
+        ]
+      ],
+      "parentCardinality": "1",
+      "childField": [
+        [
+          "630f304e-0f53-4294-9a3d-1f4ab1a9987c",
+          "b0f0ca4a-96a7-4fe9-8259-ca58633fda73"
+        ]
+      ],
+      "isActivated": true,
+      "childCardinality": "0..n",
+      "parentCollection": "d4cbbb09-6a9f-48bf-a2e5-edd4a943f03c",
+      "childCollection": "630f304e-0f53-4294-9a3d-1f4ab1a9987c",
+      "GUID": "f538759c-1ea6-4467-bd27-9b15ffa08a0b",
+      "hackoladeMeta": {
+        "validationErrors": {}
+      },
+      "hackoladeStyles": {
+        "GUID": "e9eccc33-3e65-44fa-a06d-cd1c089e5880",
+        "autoPositioning": true,
+        "type": "Orthogonal",
+        "thickness": 2,
+        "color": "#79c4ff",
+        "dataType": "",
+        "shape": [
+          {
+            "x": 6519.7424416379645,
+            "y": 1396.781477229239
+          },
+          {
+            "x": 6519.7424416379645,
+            "y": 1367.6666666666667
+          },
+          {
+            "x": 6261.666666666662,
+            "y": 1367.6666666666667
+          },
+          {
+            "x": 6261.666666666662,
+            "y": 1392.6666666666667
+          }
+        ],
+        "sides": [
+          "top",
+          "top"
+        ]
+      }
+    },
+    {
+      "name": "fk_stations_stationId_to_users_visitedStations.stationId",
+      "relationshipType": "Foreign Key",
+      "parentField": [
+        [
+          "3a5c2610-a83b-44b4-8c6c-fb3a5f668ce0",
+          "f6409028-0e81-4b9d-bdf1-434d20c9e2ef"
+        ]
+      ],
+      "parentCardinality": "1",
+      "childField": [
+        [
+          "630f304e-0f53-4294-9a3d-1f4ab1a9987c",
+          "40a118cf-e8a9-4510-a089-090f3bd195a4",
+          "2270dee1-0a5c-4b10-9a23-abf0d2d35b79"
+        ]
+      ],
+      "isActivated": true,
+      "childCardinality": "0..n",
+      "parentCollection": "3a5c2610-a83b-44b4-8c6c-fb3a5f668ce0",
+      "childCollection": "630f304e-0f53-4294-9a3d-1f4ab1a9987c",
+      "GUID": "3a6e6b96-39e9-4cb0-be0b-939126456baf",
+      "hackoladeMeta": {
+        "validationErrors": {}
+      },
+      "hackoladeStyles": {
+        "GUID": "84617954-04a7-4ead-bb3c-f899df202fd1",
+        "autoPositioning": true,
+        "type": "Orthogonal",
+        "thickness": 2,
+        "color": "#79c4ff",
+        "dataType": "",
+        "shape": [
+          {
+            "x": 6603.0757749712975,
+            "y": 1619.781477229239
+          },
+          {
+            "x": 6633.42698048221,
+            "y": 1619.781477229239
+          },
+          {
+            "x": 6633.42698048221,
+            "y": 1794.7749712973616
+          },
+          {
+            "x": 6663.778185993122,
+            "y": 1794.7749712973616
+          }
+        ],
+        "sides": [
+          "right",
+          "left"
+        ]
+      }
+    },
+    {
+      "name": "fk_posts_uid_to_users_uid",
+      "relationshipType": "Foreign Key",
+      "parentField": [
+        [
+          "d92d3e9f-ae24-4a16-b32c-7a4d1edec429",
+          "2b0eaa0c-bed6-4ef9-92de-2d16bae07c5c"
+        ]
+      ],
+      "parentCardinality": "1",
+      "childField": [
+        [
+          "630f304e-0f53-4294-9a3d-1f4ab1a9987c",
+          "b0f0ca4a-96a7-4fe9-8259-ca58633fda73"
+        ]
+      ],
+      "isActivated": true,
+      "childCardinality": "0..n",
+      "parentCollection": "d92d3e9f-ae24-4a16-b32c-7a4d1edec429",
+      "childCollection": "630f304e-0f53-4294-9a3d-1f4ab1a9987c",
+      "GUID": "1bb18a8f-be78-450d-a1c4-1f1fe8048280",
+      "hackoladeMeta": {
+        "validationErrors": {}
+      },
+      "hackoladeStyles": {
+        "GUID": "5e104842-69e7-42fb-aa54-c4f4e617ae82",
+        "autoPositioning": true,
+        "type": "Orthogonal",
+        "thickness": 2,
+        "color": "#79c4ff",
+        "dataType": "",
+        "shape": [
+          {
+            "x": 6436.4091083046305,
+            "y": 1842.781477229239
+          },
+          {
+            "x": 6436.4091083046305,
+            "y": 1900.5574052812865
+          },
+          {
+            "x": 6447.333333333337,
+            "y": 1900.5574052812865
+          },
+          {
+            "x": 6447.333333333337,
+            "y": 1958.333333333334
+          }
+        ],
+        "sides": [
+          "bottom",
+          "top"
+        ]
+      }
+    },
+    {
+      "name": "fk_users_uid_to_posts_comments.userId",
+      "relationshipType": "Foreign Key",
+      "parentField": [
+        [
+          "630f304e-0f53-4294-9a3d-1f4ab1a9987c",
+          "b0f0ca4a-96a7-4fe9-8259-ca58633fda73"
+        ]
+      ],
+      "parentCardinality": "1",
+      "childField": [
+        [
+          "d92d3e9f-ae24-4a16-b32c-7a4d1edec429",
+          "278b842d-a9a1-42f1-b962-407200430ede",
+          "a8572d65-9898-445f-af9c-95b40d64537c"
+        ]
+      ],
+      "isActivated": true,
+      "childCardinality": "0..n",
+      "parentCollection": "630f304e-0f53-4294-9a3d-1f4ab1a9987c",
+      "childCollection": "d92d3e9f-ae24-4a16-b32c-7a4d1edec429",
+      "GUID": "81a5b8a4-18d3-4e62-9667-d94533ffcf09",
+      "hackoladeMeta": {
+        "validationErrors": {}
+      },
+      "hackoladeStyles": {
+        "GUID": "b90e2e88-fb7a-4657-aec7-012062724026",
+        "autoPositioning": true,
+        "type": "Orthogonal",
+        "thickness": 2,
+        "color": "#79c4ff",
+        "dataType": "",
+        "shape": [
+          {
+            "x": 6531.000000000003,
+            "y": 1958.333333333334
+          },
+          {
+            "x": 6531.000000000003,
+            "y": 1900.5574052812865
+          },
+          {
+            "x": 6519.7424416379645,
+            "y": 1900.5574052812865
+          },
+          {
+            "x": 6519.7424416379645,
+            "y": 1842.781477229239
+          }
+        ],
+        "sides": [
+          "top",
+          "bottom"
+        ]
+      }
+    },
+    {
+      "name": "fk_bookings_trekDate_to_Calendar_dateKey",
+      "relationshipType": "Foreign Key",
+      "parentField": [
+        [
+          "d4cbbb09-6a9f-48bf-a2e5-edd4a943f03c",
+          "9af2c0ab-20d5-40bf-b167-8dce43617b35"
+        ]
+      ],
+      "parentCardinality": "1",
+      "childField": [
+        [
+          "b54685d9-6c72-47bc-af74-04724d0bf450",
+          "41bd7247-9912-4c44-98b7-e84f3ef5e308"
+        ]
+      ],
+      "isActivated": true,
+      "childCardinality": "0..n",
+      "parentCollection": "d4cbbb09-6a9f-48bf-a2e5-edd4a943f03c",
+      "childCollection": "b54685d9-6c72-47bc-af74-04724d0bf450",
+      "GUID": "075e815e-e704-4678-b63c-d0769b75c7d8",
+      "hackoladeMeta": {
+        "validationErrors": {}
+      },
+      "hackoladeStyles": {
+        "GUID": "4fc4f5ea-4d99-4436-91ce-d20f479bcec4",
+        "autoPositioning": true,
+        "type": "Orthogonal",
+        "thickness": 2,
+        "color": "#79c4ff",
+        "dataType": "",
+        "shape": [
+          {
+            "x": 5992.99999999999,
+            "y": 1830.666666666668
+          },
+          {
+            "x": 6023.833333333327,
+            "y": 1830.666666666668
+          },
+          {
+            "x": 6023.833333333327,
+            "y": 1723.6666666666667
+          },
+          {
+            "x": 6054.666666666662,
+            "y": 1723.6666666666667
+          }
+        ],
+        "sides": [
+          "right",
+          "left"
+        ]
+      }
+    },
+    {
+      "name": "fk_bookings_category_to_users_category",
+      "relationshipType": "Foreign Key",
+      "parentField": [
+        [
+          "d4cbbb09-6a9f-48bf-a2e5-edd4a943f03c",
+          "e1821e13-a890-4aee-959c-fb908fe3cef1"
+        ]
+      ],
+      "parentCardinality": "1",
+      "childField": [
+        [
+          "630f304e-0f53-4294-9a3d-1f4ab1a9987c",
+          "29d5093e-a209-44e7-86b5-0471c431ae03"
+        ]
+      ],
+      "isActivated": true,
+      "childCardinality": "0..n",
+      "parentCollection": "d4cbbb09-6a9f-48bf-a2e5-edd4a943f03c",
+      "childCollection": "630f304e-0f53-4294-9a3d-1f4ab1a9987c",
+      "GUID": "6cb1718d-d1ae-4fa8-993a-c753f70cd4bb",
+      "hackoladeMeta": {
+        "validationErrors": {}
+      },
+      "hackoladeStyles": {
+        "GUID": "a58358ff-1b17-465d-8948-983f9c03e5fc",
+        "autoPositioning": true,
+        "type": "Orthogonal",
+        "thickness": 2,
+        "color": "#79c4ff",
+        "dataType": "",
+        "shape": [
+          {
+            "x": 6436.4091083046305,
+            "y": 1396.781477229239
+          },
+          {
+            "x": 6436.4091083046305,
+            "y": 1367.6666666666667
+          },
+          {
+            "x": 6192.666666666662,
+            "y": 1367.6666666666667
+          },
+          {
+            "x": 6192.666666666662,
+            "y": 1392.6666666666667
+          }
+        ],
+        "sides": [
+          "top",
+          "top"
+        ]
+      }
+    },
+    {
+      "name": "fk_pricingVersions_id_to_bookings_category",
+      "relationshipType": "Foreign Key",
+      "parentField": [
+        [
+          "e5278810-1b68-469a-9945-5e24b27f902b",
+          "e834d491-42fa-4107-b2fc-7e9a6f6092ba"
+        ]
+      ],
+      "parentCardinality": "1",
+      "childField": [
+        [
+          "d4cbbb09-6a9f-48bf-a2e5-edd4a943f03c",
+          "e1821e13-a890-4aee-959c-fb908fe3cef1"
+        ]
+      ],
+      "isActivated": true,
+      "childCardinality": "0..n",
+      "parentCollection": "e5278810-1b68-469a-9945-5e24b27f902b",
+      "childCollection": "d4cbbb09-6a9f-48bf-a2e5-edd4a943f03c",
+      "GUID": "84f0d96c-9bdf-4424-a1f3-4392f094d288",
+      "hackoladeMeta": {
+        "validationErrors": {}
+      },
+      "hackoladeStyles": {
+        "GUID": "06596250-b35e-49c5-a8d9-79ea5103bf46",
+        "autoPositioning": true,
+        "type": "Orthogonal",
+        "thickness": 2,
+        "color": "#79c4ff",
+        "dataType": "",
+        "shape": [
+          {
+            "x": 6123.666666666662,
+            "y": 1392.6666666666667
+          },
+          {
+            "x": 6123.666666666662,
+            "y": 1365.3333333333385
+          },
+          {
+            "x": 5887.000000000003,
+            "y": 1365.3333333333385
+          },
+          {
+            "x": 5887.000000000003,
+            "y": 1390.3333333333385
+          }
+        ],
+        "sides": [
+          "top",
+          "top"
+        ]
+      }
+    },
+    {
+      "name": "fk_Badge_id_to_users_badges",
+      "relationshipType": "Foreign Key",
+      "parentField": [
+        [
+          "0da7e12c-57bd-4b38-9516-aa03afdc5be8",
+          "f87947e8-1f12-4cf5-92f3-62057de91029"
+        ]
+      ],
+      "parentCardinality": "1",
+      "childField": [
+        [
+          "630f304e-0f53-4294-9a3d-1f4ab1a9987c",
+          "529a8668-9428-488e-93f8-555bdc0b346b"
+        ]
+      ],
+      "isActivated": true,
+      "childCardinality": "0..n",
+      "parentCollection": "0da7e12c-57bd-4b38-9516-aa03afdc5be8",
+      "childCollection": "630f304e-0f53-4294-9a3d-1f4ab1a9987c",
+      "GUID": "0a29f360-298a-4bd7-95a1-1e4cc3c9c5eb",
+      "hackoladeMeta": {
+        "validationErrors": {}
+      },
+      "hackoladeStyles": {
+        "GUID": "9ab490dd-4ac9-43c2-a2aa-7ed7c2ada984",
+        "autoPositioning": true,
+        "type": "Orthogonal",
+        "thickness": 2,
+        "color": "#79c4ff",
+        "dataType": "",
+        "shape": [
+          {
+            "x": 6603.0757749712975,
+            "y": 1508.281477229239
+          },
+          {
+            "x": 6648.204554152315,
+            "y": 1508.281477229239
+          },
+          {
+            "x": 6648.204554152315,
+            "y": 1406.333333333335
+          },
+          {
+            "x": 6693.333333333331,
+            "y": 1406.333333333335
+          }
+        ],
+        "sides": [
+          "right",
+          "left"
+        ]
+      }
+    },
+    {
+      "name": "fk_stations_stationId_to_Badge_triggerStationId",
+      "relationshipType": "Foreign Key",
+      "parentField": [
+        [
+          "3a5c2610-a83b-44b4-8c6c-fb3a5f668ce0",
+          "f6409028-0e81-4b9d-bdf1-434d20c9e2ef"
+        ]
+      ],
+      "parentCardinality": "1",
+      "childField": [
+        [
+          "0da7e12c-57bd-4b38-9516-aa03afdc5be8",
+          "375fb4ba-d824-4cc8-9327-beb6556043a4"
+        ]
+      ],
+      "isActivated": true,
+      "childCardinality": "0..n",
+      "parentCollection": "3a5c2610-a83b-44b4-8c6c-fb3a5f668ce0",
+      "childCollection": "0da7e12c-57bd-4b38-9516-aa03afdc5be8",
+      "GUID": "e972101c-0028-4a7e-822d-5f13b1ba42c5",
+      "hackoladeMeta": {
+        "validationErrors": {}
+      },
+      "hackoladeStyles": {
+        "GUID": "2d99d145-a5f1-47f4-8048-6803bf34ba0f",
+        "autoPositioning": true,
+        "type": "Orthogonal",
+        "thickness": 2,
+        "color": "#79c4ff",
+        "dataType": "",
+        "shape": [
+          {
+            "x": 6909.333333333331,
+            "y": 1406.333333333335
+          },
+          {
+            "x": 6964.778185993122,
+            "y": 1406.333333333335
+          },
+          {
+            "x": 6964.778185993122,
+            "y": 1794.7749712973616
+          },
+          {
+            "x": 6939.778185993122,
+            "y": 1794.7749712973616
+          }
+        ],
+        "sides": [
+          "right",
+          "right"
+        ]
+      }
+    },
+    {
+      "name": "fk_ECertificate_uid_to_users_uid",
+      "relationshipType": "Foreign Key",
+      "parentField": [
+        [
+          "745a8a43-4d57-464d-8878-549e589b9b62",
+          "9bcc58db-4760-4e5c-82a3-804022fbfc54"
+        ]
+      ],
+      "parentCardinality": "1",
+      "childField": [
+        [
+          "630f304e-0f53-4294-9a3d-1f4ab1a9987c",
+          "b0f0ca4a-96a7-4fe9-8259-ca58633fda73"
+        ]
+      ],
+      "isActivated": true,
+      "childCardinality": "0..n",
+      "parentCollection": "745a8a43-4d57-464d-8878-549e589b9b62",
+      "childCollection": "630f304e-0f53-4294-9a3d-1f4ab1a9987c",
+      "GUID": "8a710e7f-6ae3-4457-b21a-9fcbb990263c",
+      "hackoladeMeta": {
+        "validationErrors": {}
+      },
+      "hackoladeStyles": {
+        "GUID": "b88d708f-9f3b-4c2b-bfa8-6f5c70fda848",
+        "autoPositioning": true,
+        "type": "Orthogonal",
+        "thickness": 2,
+        "color": "#79c4ff",
+        "dataType": "",
+        "shape": [
+          {
+            "x": 6603.0757749712975,
+            "y": 1731.281477229239
+          },
+          {
+            "x": 6634.037887485649,
+            "y": 1731.281477229239
+          },
+          {
+            "x": 6634.037887485649,
+            "y": 2147.9999999999995
+          },
+          {
+            "x": 6665,
+            "y": 2147.9999999999995
+          }
+        ],
+        "sides": [
+          "right",
+          "left"
+        ]
+      }
+    }
+  ],
+  "users": [],
+  "diagramViews": [],
+  "idToNameHashTable": {
+    "b31b6c3f-8b7b-409e-944a-e49e7738a018": "stationname",
+    "f0cc53eb-a072-4ed0-b900-f9359dcbdce0": "description",
+    "41e40466-ae8d-47a0-837c-f06f69f2c8f3": "difficulty",
+    "35627032-069c-42cd-808e-ba90beff15de": "elevation",
+    "72826eb3-5a51-4e5f-81db-3186c75a53c8": "latitude",
+    "61266b2c-3634-4c77-b185-1f8115223dcd": "longitude",
+    "2a53c905-24d9-4dc5-8920-8227cede5b9c": "images",
+    "04494a11-7e97-4b2b-bd51-58d667933040": "steps",
+    "6fa2ce31-ea81-4149-811e-36fd68b3c10e": "nextStationId",
+    "f9e62fe4-f5c2-4642-bb71-9d095469aa9c": "distanceToNextKm",
+    "bde8e653-90c4-431a-a573-e2740bb027f5": "flora",
+    "64dd9e8c-c14d-46a4-90b6-00101b13858f": "fauna",
+    "b96b5542-93bd-4ae2-9452-f81d53b16de0": "isCheckpoint",
+    "5ad10c1c-158a-41bb-9c60-7dd7c5eed596": "trailDetails",
+    "9fc27bcf-8192-4053-9223-9a32c0c788a6": "trailType",
+    "b634f214-984d-47a3-8ec0-1096e745ed7e": "plants",
+    "d051247a-7acf-4dec-9bae-70b5ab69f18c": "animals",
+    "4cfcafc5-98b8-4b6c-900e-5eed3a45fa25": "facilities",
+    "cae76050-6b47-49de-9a65-d03df10aa70d": "utilities",
+    "cedf58e3-755b-44b2-9421-f4bca4f6a9cb": "warnings",
+    "aef7dec9-620f-4179-ab82-f09ee5d5f276": "averageRating",
+    "45151ed5-23b0-4c4e-a447-f15604567578": "totalReviews",
+    "23b3db4d-1e2a-4f9e-a59d-59caa5ce44ec": "reviews",
+    "75b4eec0-9071-4550-aefb-373e6861e911": "id",
+    "bb897053-d672-4a12-b099-477ceed36e20": "uid",
+    "a9f7984f-88a8-4f3f-88b0-1f645c4c88d4": "userDisplayName",
+    "7d7efc91-6588-49ad-b405-350e9b3b26c6": "rating",
+    "fd72cd79-e1bf-492a-bdc6-642ac41d1bbf": "comment",
+    "14fcb9da-01c2-431e-8e0c-3b9d3093f817": "createdAt",
+    "a60b88fa-b64a-4b45-b1c3-29b5610a7315": "updatedAt",
+    "3a5c2610-a83b-44b4-8c6c-fb3a5f668ce0": "stations",
+    "6483b4e2-b33b-4cfb-a94c-330d84370f2f": "firstName",
+    "002a5055-cdc5-4480-8497-c3e388039494": "lastName",
+    "a1b42542-202c-4680-815c-9e1a0a65c718": "email",
+    "47e2c735-c644-4c18-ace1-e1d183afc4af": "birthDate",
+    "1d3eb640-aa4a-4cea-8257-791049611ef7": "gender",
+    "6ebf04fd-e1ae-4b32-a9d7-55f06c49e6c4": "nationality",
+    "9fad96cb-0686-4ad2-ade4-0f807aa05f51": "profileImage",
+    "cd363791-3f50-477e-9fc7-abd288fbcd31": "followingCount",
+    "a81eee27-1112-424b-ad72-673bfe4243f9": "followersCount",
+    "085fbc69-e8ed-4a8b-acb6-d79a8f3a992f": "emailVerified",
+    "646a4b67-81e6-46c4-b20e-f03df352d7f8": "fcmToken",
+    "0fbc2fe4-8a35-41e2-9635-3a445d3f3c13": "createdAt",
+    "40a118cf-e8a9-4510-a089-090f3bd195a4": "visitedStations",
+    "2270dee1-0a5c-4b10-9a23-abf0d2d35b79": "stationId",
+    "64b1f28b-fdca-4428-a2dc-559de180084e": "stationName",
+    "190eb1c6-9efb-4bd8-92ef-81d2f3ceb355": "elevation",
+    "e8431bea-28a7-4fda-b834-80643796a2d8": "latitude",
+    "d4c289bc-d4bf-4599-aab7-d7d1f3db7420": "longitude",
+    "1ae7aac5-2e8f-4d25-a2a3-12e516b153de": "visitedAt",
+    "c7f83073-3928-45ca-92a0-bb98bdb75544": "climbs",
+    "c886276d-94c0-4521-b115-b7ecdb13dd25": "id",
+    "5a33b269-376c-4e31-a632-ed563c11afac": "trekType",
+    "b5822979-25d2-4974-82e5-ab4f727dd5e7": "status",
+    "2f2a948b-6e83-4e81-adb3-5a2685bb4824": "startedAt",
+    "41d00694-dcab-44f9-b75d-fb872ac39ab1": "completedAt",
+    "9ce73331-b1c5-40ba-b6dd-ea832dbb809b": "totalDuration",
+    "30fe357b-6db1-4bb1-ac3e-e34225b3b1e4": "totalDistance",
+    "6042f62b-af3a-4038-afc9-a995786c5599": "scannedStations",
+    "b6eb4080-795e-407d-abdd-45e084ea1ec9": "stationId",
+    "4a595ad0-9fad-4e6e-bae2-53a30bfc2e5f": "scannedAt",
+    "4c19d8cb-7903-4ad1-b941-6d1d430235b2": "elevation",
+    "b6a966d9-99d2-49f1-bfd2-b425bec281af": "distanceFromPrevious",
+    "e9e5e8c9-965c-4a55-8d5b-68d653913c34": "durationAtStation",
+    "630f304e-0f53-4294-9a3d-1f4ab1a9987c": "users",
+    "e834d491-42fa-4107-b2fc-7e9a6f6092ba": "id",
+    "400f4055-4c4f-40f9-85da-a51499ca0072": "version",
+    "bf86dd9c-c6f4-403e-9152-98456ba5c17a": "isActive",
+    "2cc376a3-3090-45d0-bfc9-432473a0f7e8": "basePrice",
+    "1ecf9b54-5d4e-4319-a25a-36f043729028": "servicePricing",
+    "135b6222-42f7-4bf6-a2dd-0dd3b3d6b447": "porter",
+    "c0d01a97-fb5b-40d9-ac15-f2bc7f33187f": "guide",
+    "b9ec5fa7-ff03-4db0-b561-10f3fae748a0": "scientist",
+    "c9809ee1-b1e8-46c3-b4e9-b54f3e3c6ce2": "categoryPricing",
+    "fb224468-e7fb-442c-87ef-e4ef3fb902c3": "student",
+    "c5c1b700-35ef-4cd9-ba30-f3231abae9e1": "displayName",
+    "17552aab-8ab7-4a67-aeeb-6fa905a1905f": "discount",
+    "6d4a3c04-cd43-405f-854e-8a5d316a50aa": "notes",
+    "4c09e551-f236-494c-a36f-85a961f95633": "senior_citizen",
+    "f8e929e2-8bf0-403c-be16-999d983e10a4": "davao_oriental_resident",
+    "8e1d312a-8824-48c4-995d-3f724406840c": "ocfdo",
+    "e76f45be-eabb-43b8-800d-3d9420641bf2": "outside_davao_oriental",
+    "13ee7046-40c7-424a-a859-0a5c60b61777": "children_8_15",
+    "5a262171-61e1-4485-ba3e-7119fd3e7bf6": "mfsm",
+    "ddf97bf9-7bed-498b-a7ff-017cefd1792e": "seasonalRules",
+    "0e9ec777-b94b-4295-943e-893b3cef3fb5": "offSeasonStart",
+    "99ce0760-1b18-497d-84b8-d1219e0c85ca": "offSeasonEnd",
+    "b39f496c-a516-46d4-b253-bd0d77c033ee": "allowedBookingTypes",
+    "064bd0a5-efdc-497a-8568-608539bc1872": "createdAt",
+    "b28f8ced-056b-4a1c-9da5-85549d510950": "updatedAt",
+    "e5278810-1b68-469a-9945-5e24b27f902b": "pricingVersions",
+    "423123f2-8a1f-440e-8878-d357eab04393": "id",
+    "39858774-5ff9-4963-b692-76d48fc6d576": "uid",
+    "9e295aee-7b02-455b-8a1c-07ac1f8e2a84": "affiliation",
+    "9af2c0ab-20d5-40bf-b167-8dce43617b35": "trekDate",
+    "27e1089b-878b-4a3b-9e23-262eec8dc60e": "trekType",
+    "14fa0e62-a350-4402-9317-8b22df1c9da1": "bookingClassification",
+    "1793ad5e-ed36-4287-bc85-cc69525fee21": "hometown",
+    "18a7d495-55f7-4c5f-907a-36dc21024170": "phoneNumber",
+    "cd8a5395-fb03-4070-8748-47a0a5f78db8": "notes",
+    "097d444e-3a97-4aa2-88c2-67079b258d75": "adminNotes",
+    "148daa6b-706b-421b-858a-cadb7cc4ec67": "status",
+    "a3b9fbf8-0f3c-4a0d-b714-34caadd1beba": "submissionStatus",
+    "31353d52-96a2-4cf3-af57-dac97f5474d4": "totalMembers",
+    "c6644c6f-a5dd-4f3e-b060-b62a86c786d2": "isArchived",
+    "3e11a39d-99f3-4e11-8f29-f2ce195afac1": "groupName",
+    "e5e5d1fb-9a41-4fe6-8e6b-69d1913aebeb": "maxSlots",
+    "6511f3e8-b932-4b83-950a-50e65c817abc": "currentSlots",
+    "a012a0ad-e6ca-442f-bb15-7530c5a987b1": "attachments",
+    "b5127aea-adf2-4df4-a6fc-470551b88851": "storagePath",
+    "c3990636-ed86-4913-95db-f67593f5c758": "downloadURL",
+    "9df28398-9eec-40b8-b5f2-74ddfcfe4d15": "fileName",
+    "8663cf72-0e7f-4910-afe2-cd072aca105e": "mimeType",
+    "f6235d02-e5f1-493a-b7cb-60d8df17d551": "size",
+    "c55fa42f-d8de-44cc-be75-ab2230e7c107": "members",
+    "033b5be4-d129-4b47-a633-e38632105f65": "id",
+    "b685cdc5-9247-45ab-a9a1-cad737312821": "firstName",
+    "1f8084f0-ac81-4182-b459-4f4d59954941": "lastName",
+    "5668448e-0d81-4366-949b-316a01dd8ad6": "category",
+    "144e0f8c-1edb-4748-9014-1e4d5824afa1": "isPrimaryContact",
+    "06c9b9a0-66e0-4a2e-a345-fa0ad6b21fa1": "hasAccount",
+    "73d643b8-6080-46d1-8164-3d1ec6042820": "userId",
+    "7d6ca70d-3134-4581-b46d-7f3a686affff": "joinRequests",
+    "765556af-63ab-4fe8-9a42-b6eb94049465": "id",
+    "aab351b2-d5a9-4b96-8b0a-626d587fa436": "userId",
+    "bd6865a1-278c-4267-b14c-82d734e6f05f": "userDisplayName",
+    "17d92d79-7bfc-4536-ab5a-7b0c0f51146f": "affiliation",
+    "a160626f-d7c1-4fb4-b31b-101be6cf38fd": "status",
+    "f34064e3-c0ea-4271-b9ea-d208cc421982": "declineReason",
+    "190b6a96-2e4c-40d7-9456-88ca9f804fb8": "reviewedAt",
+    "9e73fbf0-930b-4ec6-b94f-db73bd93c6b6": "createdAt",
+    "630aedb9-09af-43ec-adf7-4a893872e543": "createdAt",
+    "6bccfd49-a050-470f-880a-51fe293cd34a": "updatedAt",
+    "d4cbbb09-6a9f-48bf-a2e5-edd4a943f03c": "bookings",
+    "400d6ca3-24b7-431f-85ec-b680aeb9f6bb": "id",
+    "2b0eaa0c-bed6-4ef9-92de-2d16bae07c5c": "uid",
+    "3b0b16e4-3d75-419c-a69a-65755a16e964": "userName",
+    "4c9ce989-9550-43ce-9dc7-15bf134697de": "caption",
+    "ee512b28-62a6-443d-9e4a-0cf1b1d081eb": "imageUrls",
+    "70dbfc93-6a98-4212-a9f5-543d51dd8b87": "privacy",
+    "1f986837-28f5-4184-88a2-7bae7ff8807e": "status",
+    "859afef6-0b41-4e6d-a890-69399ec70793": "moderatorNote",
+    "39509996-3aa8-49e4-b29a-bc858e588120": "likesCount",
+    "653bbe94-6835-4595-b359-e8e99f8e2073": "commentsCount",
+    "f1cddc78-0a17-4b03-bdd1-62bcc7f0f69a": "createdAt",
+    "278b842d-a9a1-42f1-b962-407200430ede": "comments",
+    "399295d1-85a9-44ab-8dbf-52a6b6214b81": "id",
+    "a8572d65-9898-445f-af9c-95b40d64537c": "userId",
+    "695bcaa3-1046-4a59-aaf5-864b9747d0e1": "userName",
+    "ca3472b5-b041-4673-b664-0eb424907d38": "text",
+    "e99776b1-97c2-4262-87e4-ba46fc1e696b": "likesCount",
+    "faaecb74-6c81-41e7-8651-7414c8f9ca34": "createdAt",
+    "d92d3e9f-ae24-4a16-b32c-7a4d1edec429": "posts",
+    "41bd7247-9912-4c44-98b7-e84f3ef5e308": "dateKey",
+    "c9605421-e2a9-42d9-bf1a-16adf50defd1": "isClosed",
+    "ac7be11e-80b0-43b1-bf2e-c4c9fc7b382b": "maxSlots",
+    "43c02701-4e8b-467a-a7ff-848398b4851b": "reason",
+    "40a9f1c5-3074-46e3-8039-436952d168ed": "customNote",
+    "111986b8-6ab7-452b-a5e7-abe883bc9844": "isTrekDownDay",
+    "a48eff63-ee1f-41ec-9c05-f8d59e4d60db": "originalTrekDate",
+    "3229538c-6cc3-49a6-af44-5bddfbd286db": "lastUpdated",
+    "b54685d9-6c72-47bc-af74-04724d0bf450": "Calendar",
+    "b0f0ca4a-96a7-4fe9-8259-ca58633fda73": "uid",
+    "f6409028-0e81-4b9d-bdf1-434d20c9e2ef": "stationId",
+    "f538759c-1ea6-4467-bd27-9b15ffa08a0b": "fk_bookings_uid_to_users_uid",
+    "3a6e6b96-39e9-4cb0-be0b-939126456baf": "fk_stations_stationId_to_users_visitedStations.stationId",
+    "1bb18a8f-be78-450d-a1c4-1f1fe8048280": "fk_posts_uid_to_users_uid",
+    "81a5b8a4-18d3-4e62-9667-d94533ffcf09": "fk_users_uid_to_posts_comments.userId",
+    "e1821e13-a890-4aee-959c-fb908fe3cef1": "category",
+    "075e815e-e704-4678-b63c-d0769b75c7d8": "fk_bookings_trekDate_to_Calendar_dateKey",
+    "29d5093e-a209-44e7-86b5-0471c431ae03": "category",
+    "6cb1718d-d1ae-4fa8-993a-c753f70cd4bb": "fk_bookings_category_to_users_category",
+    "84f0d96c-9bdf-4424-a1f3-4392f094d288": "fk_pricingVersions_id_to_bookings_category",
+    "0da7e12c-57bd-4b38-9516-aa03afdc5be8": "Badge",
+    "f87947e8-1f12-4cf5-92f3-62057de91029": "id",
+    "ad8fbb1c-4a25-4056-abe4-d29394ac6f00": "category",
+    "384e93c6-da32-4ce9-a3b1-040605114e30": "isUnlocked",
+    "9187e28c-2526-4259-ab8f-dd454b3287ac": "unlockedAt",
+    "75d353bb-58e3-44a5-8993-b7e9fbf2754a": "claimStatus",
+    "5f5107fa-5c3a-4463-87a2-858a42db3518": "tier",
+    "5726aaa3-1acb-43f8-a763-1b15ee26f6c4": "verificationType",
+    "17f366d2-7863-4bde-92b4-a9eeff2182c2": "requirement",
+    "1ade5de3-aa5d-449f-82fa-9670ef89adfb": "isLimitedEdition",
+    "14a5a932-ac59-452d-b9b1-25f20d2c4f9d": "points",
+    "375fb4ba-d824-4cc8-9327-beb6556043a4": "triggerStationId",
+    "529a8668-9428-488e-93f8-555bdc0b346b": "badges",
+    "0a29f360-298a-4bd7-95a1-1e4cc3c9c5eb": "fk_Badge_id_to_users_badges",
+    "e972101c-0028-4a7e-822d-5f13b1ba42c5": "fk_stations_stationId_to_Badge_triggerStationId",
+    "745a8a43-4d57-464d-8878-549e589b9b62": "ECertificate",
+    "86704569-dc4e-42ba-b99a-c9fcc478a8f5": "certificateId",
+    "9bcc58db-4760-4e5c-82a3-804022fbfc54": "uid",
+    "8caef292-e857-4095-a751-3b95c3e097b2": "certificateType",
+    "c15011df-2f88-4e49-bb96-c1dd41d4a8d6": "stationVisited",
+    "57d62635-411b-43d5-8e27-4a3e9afbf81f": "dateEarned",
+    "3c549c79-80c8-4e0e-8ae3-a9894c1add6d": "startDate",
+    "537f79aa-4167-4ad8-aa17-f152efbb7c89": "verificationCode",
+    "4fa49e5b-f0ea-4757-a738-0b73938c2b28": "endDate",
+    "f945be31-15a2-4cfa-b33f-55b82674fbb2": "createdAt",
+    "8a710e7f-6ae3-4457-b21a-9fcbb990263c": "fk_ECertificate_uid_to_users_uid"
+  },
+  "definitions": {
+    "type": "definitions",
+    "properties": [],
+    "GUID": "sm000002-0000-4000-8000-000000000000"
+  },
+  "polyglotDefinitions": {
+    "type": "polyglotDefinitions",
+    "properties": [],
+    "GUID": "sm000003-0000-4000-8000-000000000000"
+  },
+  "externalDefinitions": {
+    "type": "externalDefinitions",
+    "properties": [],
+    "GUID": "sm000004-0000-4000-8000-000000000000"
+  },
+  "sources": [],
+  "decorativeSymbols": [],
+  "businessGlossaries": [],
+  "businessGlossaryTerms": [],
+  "dbVendor": "JSON",
+  "dbVersion": "2019-09",
+  "appTarget": "JSON",
+  "creationTS": "2026-06-04T00:00:00.000Z",
+  "GUID": "sm000001-0000-4000-8000-000000000000",
+  "isLineageEnabled": false,
+  "lastModifTS": "2026-06-06T16:59:16.107Z",
+  "persistenceSchemaVersion": "8",
+  "isCreatedByPlugin": true,
+  "pluginInformation": {
+    "pluginEngineVersion": "1.0.0"
+  },
+  "applicationInformation": {
+    "version": "8.11.4"
+  },
+  "hackoladeMeta": {},
+  "settings": {
+    "centralPane": {
+      "dbLevel": {
+        "erd": [
+          {
+            "GUID": "3a5c2610-a83b-44b4-8c6c-fb3a5f668ce0",
+            "x": 6663.778185993122,
+            "y": 1553.7749712973616,
+            "width": 276,
+            "height": 482,
+            "color": {
+              "hex": "#000000"
+            }
+          },
+          {
+            "GUID": "630f304e-0f53-4294-9a3d-1f4ab1a9987c",
+            "x": 6353.0757749712975,
+            "y": 1396.781477229239,
+            "width": 250,
+            "height": 446,
+            "color": {
+              "hex": "#000000"
+            }
+          },
+          {
+            "GUID": "e5278810-1b68-469a-9945-5e24b27f902b",
+            "x": 5744.333333333336,
+            "y": 1390.3333333333385,
+            "width": 285.33333333333314,
+            "height": 324.6666666666666,
+            "color": {
+              "hex": "#000000"
+            }
+          },
+          {
+            "GUID": "d4cbbb09-6a9f-48bf-a2e5-edd4a943f03c",
+            "x": 6054.666666666662,
+            "y": 1392.6666666666667,
+            "width": 276,
+            "height": 662,
+            "color": {
+              "hex": "#000000"
+            }
+          },
+          {
+            "GUID": "d92d3e9f-ae24-4a16-b32c-7a4d1edec429",
+            "x": 6363.66666666667,
+            "y": 1958.333333333334,
+            "width": 251,
+            "height": 248,
+            "color": {
+              "hex": "#000000"
+            }
+          },
+          {
+            "GUID": "b54685d9-6c72-47bc-af74-04724d0bf450",
+            "x": 5742.99999999999,
+            "y": 1742.666666666668,
+            "width": 250,
+            "height": 176,
+            "color": {
+              "hex": "#000000"
+            }
+          },
+          {
+            "GUID": "0da7e12c-57bd-4b38-9516-aa03afdc5be8",
+            "x": 6693.333333333331,
+            "y": 1282.333333333335,
+            "width": 216,
+            "height": 248,
+            "color": {
+              "hex": "#000000"
+            }
+          },
+          {
+            "GUID": "745a8a43-4d57-464d-8878-549e589b9b62",
+            "x": 6665,
+            "y": 2050.9999999999995,
+            "width": 208,
+            "height": 194,
+            "color": {
+              "hex": "#000000"
+            }
+          }
+        ],
+        "erdDefinitions": {
+          "erd": [],
+          "rootPath": [],
+          "entities": [],
+          "decorativeSymbols": []
+        },
+        "buckets": [],
+        "collapsedNodes": [
+          "d4cbbb09-6a9f-48bf-a2e5-edd4a943f03c7d6ca70d-3134-4581-b46d-7f3a686affff",
+          "3a5c2610-a83b-44b4-8c6c-fb3a5f668ce05ad10c1c-158a-41bb-9c60-7dd7c5eed596",
+          "630f304e-0f53-4294-9a3d-1f4ab1a9987cc7f83073-3928-45ca-92a0-bb98bdb755446042f62b-af3a-4038-afc9-a995786c5599",
+          "e5278810-1b68-469a-9945-5e24b27f902bc9809ee1-b1e8-46c3-b4e9-b54f3e3c6ce2fb224468-e7fb-442c-87ef-e4ef3fb902c3",
+          "e5278810-1b68-469a-9945-5e24b27f902bddf97bf9-7bed-498b-a7ff-017cefd1792e",
+          "e5278810-1b68-469a-9945-5e24b27f902b1ecf9b54-5d4e-4319-a25a-36f043729028",
+          "630f304e-0f53-4294-9a3d-1f4ab1a9987cc7f83073-3928-45ca-92a0-bb98bdb75544",
+          "d92d3e9f-ae24-4a16-b32c-7a4d1edec429278b842d-a9a1-42f1-b962-407200430ede"
+        ],
+        "activeRelationship": "",
+        "activeRelationshipFields": {
+          "childField": [],
+          "parentField": []
+        },
+        "selectedCollections": [],
+        "displayColorPicker": false,
+        "graphView": {
+          "erd": [],
+          "buckets": [],
+          "decorativeSymbols": [],
+          "forceLayout": true,
+          "defaultLinkLength": 300,
+          "options": []
+        },
+        "diagramViews": [],
+        "decorativeSymbols": [],
+        "nestedCollectionsLayout": "horizontal",
+        "options": [
+          {
+            "autoWidth": true,
+            "autoHeight": true,
+            "GUID": "3a5c2610-a83b-44b4-8c6c-fb3a5f668ce0"
+          },
+          {
+            "autoWidth": true,
+            "autoHeight": true,
+            "GUID": "630f304e-0f53-4294-9a3d-1f4ab1a9987c"
+          },
+          {
+            "autoWidth": false,
+            "autoHeight": false,
+            "GUID": "e5278810-1b68-469a-9945-5e24b27f902b"
+          },
+          {
+            "autoWidth": true,
+            "autoHeight": true,
+            "GUID": "d4cbbb09-6a9f-48bf-a2e5-edd4a943f03c"
+          },
+          {
+            "autoWidth": true,
+            "autoHeight": true,
+            "GUID": "d92d3e9f-ae24-4a16-b32c-7a4d1edec429"
+          },
+          {
+            "autoWidth": true,
+            "autoHeight": true,
+            "GUID": "b54685d9-6c72-47bc-af74-04724d0bf450"
+          },
+          {
+            "autoWidth": true,
+            "autoHeight": true,
+            "GUID": "0da7e12c-57bd-4b38-9516-aa03afdc5be8"
+          }
+        ],
+        "relationshipUpdateDisabled": false
+      },
+      "collectionLevel": {},
+      "changed": false
+    },
+    "dtDiagram": {
+      "collapsedNodes": [],
+      "shouldDistributeCollections": false
+    }
+  }
+}

@@ -1,9 +1,8 @@
 import React, { useState, useEffect } from 'react';
+import logoImage from '../../assets/trek_logo.png';
 import { signIn, signInWithGoogle, getCurrentUser, onAuthStateChange } from '../../services/firebaseAuthService';
 import { Visibility, VisibilityOff } from '@mui/icons-material';
 import '../style/Login.css';
-import logoImage from '../../assets/Logo_admin_portal.png';
-import trekScanText from '../../assets/TrekScan_welomelogo.png';
 
 // Login page component
 function Login({ onLoginSuccess }) {
@@ -162,13 +161,60 @@ function Login({ onLoginSuccess }) {
 
   return (
     <div className="login-container">
+      {/* ── Left image panel ── */}
       <div className="login-left">
-        <img src={trekScanText} alt="TrekScan+ Text" className="trek-scan-text" />
+        <div className="login-left-overlay">
+          <span className="login-brand-tag">Admin Portal</span>
+          <h1 className="login-brand-title">TrekScan+</h1>
+          <p className="login-brand-subtitle">Mt. Hamiguitan Wildlife Range Sanctuary</p>
+          <div className="login-brand-divider" />
+          <p className="login-brand-note">
+            Manage trek bookings, monitor trail activity, and oversee the
+            Mt. Hamiguitan trekking experience from one secure dashboard.
+          </p>
+        </div>
       </div>
-      <div className="login-card">
+
+      {/* ── Right form panel ── */}
+      <div className="login-right">
+
+        {/* Top-right botanical decoration */}
+        <svg className="login-deco login-deco--tr" viewBox="0 0 260 280" fill="none" aria-hidden="true">
+          <path d="M 260 0 C 210 50 170 110 120 200" stroke="#1a6b2a" strokeWidth="1.8" strokeOpacity="0.18" strokeLinecap="round"/>
+          <path d="M 260 0 C 220 -5 185 30 210 60 C 235 45 255 20 260 0 Z" fill="#1a6b2a" fillOpacity="0.08"/>
+          <path d="M 260 0 C 235 30 215 45 210 60" stroke="#1a6b2a" strokeWidth="0.8" strokeOpacity="0.14"/>
+          <path d="M 210 65 C 175 45 150 80 175 108 C 195 96 210 82 210 65 Z" fill="#1a6b2a" fillOpacity="0.09"/>
+          <path d="M 210 65 C 190 85 180 95 175 108" stroke="#1a6b2a" strokeWidth="0.8" strokeOpacity="0.14"/>
+          <path d="M 160 142 C 124 120 98 152 120 176 C 140 166 158 156 160 142 Z" fill="#1a6b2a" fillOpacity="0.09"/>
+          <path d="M 160 142 C 140 157 132 164 120 176" stroke="#1a6b2a" strokeWidth="0.8" strokeOpacity="0.14"/>
+          <path d="M 248 16 C 234 4 220 12 228 29 C 237 22 246 20 248 16 Z" fill="#1a6b2a" fillOpacity="0.11"/>
+          <path d="M 238 42 C 228 32 218 36 224 48 C 231 43 238 44 238 42 Z" fill="#1a6b2a" fillOpacity="0.09"/>
+        </svg>
+
+        {/* Bottom-left botanical decoration */}
+        <svg className="login-deco login-deco--bl" viewBox="0 0 220 250" fill="none" aria-hidden="true">
+          <path d="M 0 250 C 30 200 62 162 92 112 C 112 80 132 50 152 18" stroke="#1a6b2a" strokeWidth="1.8" strokeOpacity="0.18" strokeLinecap="round"/>
+          <path d="M 28 205 C 0 178 -4 148 20 142 C 44 147 44 182 28 205 Z" fill="#1a6b2a" fillOpacity="0.09"/>
+          <path d="M 28 205 C 18 178 16 156 20 142" stroke="#1a6b2a" strokeWidth="0.8" strokeOpacity="0.14"/>
+          <path d="M 80 116 C 52 96 44 66 66 61 C 88 65 92 96 80 116 Z" fill="#1a6b2a" fillOpacity="0.09"/>
+          <path d="M 80 116 C 70 92 66 74 66 61" stroke="#1a6b2a" strokeWidth="0.8" strokeOpacity="0.14"/>
+          <path d="M 140 32 C 118 14 108 -8 130 -10 C 150 -6 152 20 140 32 Z" fill="#1a6b2a" fillOpacity="0.08"/>
+          <path d="M 140 32 C 130 16 126 6 130 -10" stroke="#1a6b2a" strokeWidth="0.8" strokeOpacity="0.14"/>
+          <path d="M 152 18 C 164 4 170 10 164 22 C 158 30 152 24 152 18" stroke="#1a6b2a" strokeWidth="1.2" strokeOpacity="0.18"/>
+          <path d="M 56 160 C 40 148 36 132 50 130 C 62 132 62 152 56 160 Z" fill="#1a6b2a" fillOpacity="0.07"/>
+        </svg>
+
+        <div className="login-card">
         <div className="login-header">
-          <img src={logoImage} alt="TrekScan+ Admin Portal" className="login-logo" />
-          <h2 className="welcome-text">Welcome back, Admin!</h2>
+          <div className="login-app-brand">
+            <img src={logoImage} alt="TrekScan+" className="login-logo" />
+            <div className="login-app-name">
+              <span className="login-app-title">TrekScan+</span>
+              <span className="login-app-label">Admin Portal</span>
+            </div>
+          </div>
+          <h2 className="welcome-text">Welcome back!</h2>
+          <p className="welcome-subtext">Sign in to your admin account to continue</p>
         </div>
 
         <form onSubmit={handleSubmit} className="login-form">
@@ -320,6 +366,7 @@ function Login({ onLoginSuccess }) {
               </div>
             </div>
           )}
+        </div>
         </div>
       </div>
     </div>

@@ -1,0 +1,17 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "calendar_config",
+  "description": "Date-specific booking availability. Document ID = YYYY-MM-DD. Admin-managed; also auto-updated by Cloud Functions on booking approval.",
+  "type": "object",
+  "properties": {
+    "dateKey":           { "type": "string",  "description": "Document ID: YYYY-MM-DD" },
+    "date":              { "type": "string",  "format": "date-time" },
+    "isClosed":          { "type": "boolean", "description": "[ADMIN WRITE]" },
+    "maxSlots":          { "type": "integer", "description": "[ADMIN WRITE] 0 = closed" },
+    "reason":            { "type": "string",  "description": "[ADMIN WRITE]" },
+    "customNote":        { "type": "string",  "description": "[ADMIN WRITE]" },
+    "isTrekDownDay":     { "type": "boolean", "description": "Auto-set by Cloud Function — day after an approved trek" },
+    "originalTrekDate":  { "type": "string",  "description": "YYYY-MM-DD of the trek that created this buffer day" },
+    "lastUpdated":       { "type": "string",  "format": "date-time" }
+  }
+}

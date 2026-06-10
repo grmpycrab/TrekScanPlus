@@ -24,7 +24,7 @@
         },
         {
             "id": "river_crossing",
-            "name": "River Crossing",
+            "name": "Crossing Stampa Passer",
             "description": "Across cool rushing waters and polished white stones, you've crossed the first true test of the trail. Not all trekkers make it this far.",
             "tier": "bronze",
             "category": "trail_completion",
@@ -46,7 +46,7 @@
         },
         {
             "id": "first_horizon",
-            "name": "First Horizon",
+            "name": "Lantawan 1 Passer",
             "description": "From Lantawan 1, the horizon expands and the valley spreads wide below. The mountain has finally given you your first full view — and it's just the beginning.",
             "tier": "bronze",
             "category": "trail_completion",
@@ -68,7 +68,7 @@
         },
         {
             "id": "root_climber",
-            "name": "The Root Climber",
+            "name": "Uwang-Uwang Trail",
             "description": "This ancient trail weaves through gnarled roots and narrow ridges. Only those who learned to read the mountain's floor can pass through the Uwang-Uwang path.",
             "tier": "silver",
             "category": "trail_completion",
@@ -90,7 +90,7 @@
         },
         {
             "id": "pygmy_settler",
-            "name": "Pygmy Settler",
+            "name": "Camp 3 Settler",
             "description": "Camp 3 is where the mountain offers rest before the ascent grows steeper. You've settled here for a moment — a small victory that fuels the climb ahead.",
             "tier": "silver",
             "category": "trail_completion",
@@ -112,7 +112,7 @@
         },
         {
             "id": "dwarf_guardian",
-            "name": "Dwarf Guardian",
+            "name": "Pygmy Field",
             "description": "In the pygmy forest, ancient bonsai trees stand no taller than your knee — yet they've weathered centuries. To earn this badge is to understand that true strength needs no height.",
             "tier": "silver",
             "category": "trail_completion",
@@ -134,7 +134,7 @@
         },
         {
             "id": "serpentinite_soul",
-            "name": "Serpentinite Soul",
+            "name": "Black Mountain",
             "description": "Black Mountain's serpentinite soil filters out the ordinary and fosters only the extraordinary. By reaching this point, you've proven you belong here.",
             "tier": "silver",
             "category": "trail_completion",
@@ -156,7 +156,7 @@
         },
         {
             "id": "hydrological_finale",
-            "name": "Hydrological Finale",
+            "name": "Twin Falls",
             "description": "Twin Falls marks where two streams reunite in a final flourish before silence reclaims the valley. You've witnessed one of Hamiguitan's most serene hidden rewards.",
             "tier": "silver",
             "category": "trail_completion",
@@ -178,7 +178,7 @@
         },
         {
             "id": "apex_overlook",
-            "name": "Apex Overlook",
+            "name": "The Peak",
             "description": "Standing at the peak of Mt. Hamiguitan, you've earned a view that very few humans have ever witnessed. This is what legends are made of.",
             "tier": "gold",
             "category": "trail_completion",
@@ -200,7 +200,7 @@
         },
         {
             "id": "lost_ocean",
-            "name": "The Lost Ocean",
+            "name": "Tinagong Dagat",
             "description": "Tinagong Dagat — the hidden sea — reveals itself only to those who push beyond the ordinary path. You've found the unfindable. The mountain kept this secret just for you.",
             "tier": "gold",
             "category": "trail_completion",
@@ -222,7 +222,7 @@
         },
         {
             "id": "mist_walker",
-            "name": "Mist Walker",
+            "name": "Lantawan 3 Wanderer",
             "description": "Where the clouds settle between the treetops and every stone wears a coat of velvet moss, you walked through Hamiguitan's most mystical corridor.",
             "tier": "gold",
             "category": "trail_completion",
@@ -244,7 +244,7 @@
         },
         {
             "id": "botanists_veil",
-            "name": "Botanist's Veil",
+            "name": "Hidden Garden",
             "description": "The endemic pitcher plants, carnivorous mosses, and rare orchids of Hamiguitan exist nowhere else on Earth. Photograph and document three unique endemic species to earn this badge.",
             "tier": "gold",
             "category": "biodiversity",

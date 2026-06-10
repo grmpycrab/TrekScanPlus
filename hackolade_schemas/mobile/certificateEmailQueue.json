@@ -1,0 +1,18 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "certificateEmailQueue",
+  "description": "Certificate email queue. Cloud Function processCertificateEmailQueue listens and sends PDF certificates via SendGrid.",
+  "type": "object",
+  "properties": {
+    "id":              { "type": "string" },
+    "to":              { "type": "string" },
+    "recipientName":   { "type": "string" },
+    "bulk":            { "type": "boolean", "description": "true = multiple certificates in one email" },
+    "certificates":    { "type": "array",   "items": { "type": "object" }, "description": "Array of certificate data objects (used when bulk=true)" },
+    "pdfBase64":       { "type": "string",  "description": "Single certificate PDF (used when bulk=false)" },
+    "certificateData": { "type": "object",  "description": "Single certificate metadata (used when bulk=false)" },
+    "processed":       { "type": "boolean" },
+    "status":          { "type": "string",  "description": "sent | error | no_api_key" },
+    "processedAt":     { "type": "string",  "format": "date-time" }
+  }
+}

@@ -1,0 +1,10 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "users / visitedStations",
+  "description": "Subcollection of users. QR-scanned stations per user.",
+  "type": "object",
+  "properties": {
+    "stationId": { "type": "string", "description": "Document ID = station ID" },
+    "scannedAt": { "type": "string", "format": "date-time" }
+  }
+}

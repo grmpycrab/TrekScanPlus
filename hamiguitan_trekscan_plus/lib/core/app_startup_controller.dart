@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import '../config/app_router.dart';
 import '../services/achievement_service.dart';
@@ -126,7 +127,9 @@ class AppStartupController {
             userId,
           );
           if (!hasSeenOnboarding && isMounted() && ctx != null) {
-            unawaited(OnboardingService.showOnboarding(ctx, userId)); // ignore: use_build_context_synchronously
+            unawaited(
+              OnboardingService.showOnboarding(ctx, userId),
+            ); // ignore: use_build_context_synchronously
           }
         } catch (e) {
           AppLogger.e('Onboarding check error: $e');
@@ -165,6 +168,7 @@ class AppStartupController {
 
   /// Handles app foreground/background transitions for presence tracking.
   void handleLifecycle(AppLifecycleState state) {
+    if (Firebase.apps.isEmpty) return;
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) return;
 

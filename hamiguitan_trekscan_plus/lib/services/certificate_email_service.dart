@@ -1,10 +1,14 @@
 import 'dart:convert';
-import 'package:cloud_functions/cloud_functions.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../models/e_certificate.dart';
 import 'certificate_pdf_service.dart';
 import '../../utils/app_logger.dart';
 
+/// Sends certificate emails by writing to the `certificateEmailQueue`
+/// Firestore collection. A Cloud Function listens to that collection and
+/// delivers the email via SendGrid — the same pattern used for verification
+/// code emails (the `mail` collection).
 class CertificateEmailService {
   static final CertificateEmailService _instance =
       CertificateEmailService._internal();
@@ -19,9 +23,7 @@ class CertificateEmailService {
 
   final _pdfService = CertificatePdfService.instance;
   final _auth = FirebaseAuth.instance;
-
-  FirebaseFunctions get _functions =>
-      FirebaseFunctions.instanceFor(region: 'asia-southeast1');
+  final _firestore = FirebaseFirestore.instance;
 
   Future<bool> sendCertificateEmail(ECertificate certificate) async {
     try {
@@ -31,20 +33,19 @@ class CertificateEmailService {
       final pdfFile = await _pdfService.generateCertificatePdf(certificate);
       final pdfBase64 = base64Encode(await pdfFile.readAsBytes());
 
-      final callable = _functions.httpsCallable('sendCertificateEmail');
-      await callable.call({
+      await _firestore.collection('certificateEmailQueue').add({
         'to': user.email,
         'recipientName': user.displayName ?? 'Trekker',
         'certificateData': _certificateToMap(certificate),
         'pdfBase64': pdfBase64,
+        'bulk': false,
+        'createdAt': FieldValue.serverTimestamp(),
+        'processed': false,
       });
 
       return true;
-    } on FirebaseFunctionsException catch (e) {
-      AppLogger.e('Certificate email failed [${e.code}]: ${e.message}');
-      return false;
     } catch (e) {
-      AppLogger.e('Certificate email failed: $e');
+      AppLogger.e('Certificate email queue failed: $e');
       return false;
     }
   }
@@ -65,19 +66,18 @@ class CertificateEmailService {
         });
       }
 
-      final callable = _functions.httpsCallable('sendAllCertificatesEmail');
-      await callable.call({
+      await _firestore.collection('certificateEmailQueue').add({
         'to': user.email,
         'recipientName': user.displayName ?? 'Trekker',
         'certificates': certs,
+        'bulk': true,
+        'createdAt': FieldValue.serverTimestamp(),
+        'processed': false,
       });
 
       return true;
-    } on FirebaseFunctionsException catch (e) {
-      AppLogger.e('Bulk certificate email failed [${e.code}]: ${e.message}');
-      return false;
     } catch (e) {
-      AppLogger.e('Bulk certificate email failed: $e');
+      AppLogger.e('Bulk certificate email queue failed: $e');
       return false;
     }
   }

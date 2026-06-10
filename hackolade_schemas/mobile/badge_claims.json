@@ -1,0 +1,18 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "badge_claims",
+  "description": "User badge claim submissions for MANUAL_IMAGE_REVIEW badges. Admin approves or rejects.",
+  "type": "object",
+  "properties": {
+    "id":          { "type": "string" },
+    "userId":      { "type": "string",  "description": "ref → users.uid" },
+    "badgeId":     { "type": "string",  "description": "ref → badge_definitions.id" },
+    "badgeName":   { "type": "string" },
+    "imageUrl":    { "type": "string",  "description": "Evidence photo in Firebase Storage" },
+    "status":      { "type": "string",  "description": "pending | approved | rejected" },
+    "claimNote":   { "type": "string" },
+    "submittedAt": { "type": "string",  "format": "date-time" },
+    "reviewedAt":  { "type": "string",  "format": "date-time", "description": "[ADMIN WRITE]" },
+    "reviewNote":  { "type": "string",  "description": "[ADMIN WRITE] Approval or rejection message" }
+  }
+}

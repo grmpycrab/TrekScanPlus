@@ -1,0 +1,14 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "system_settings",
+  "description": "Global booking system configuration. Admin-exclusive. Document ID: 'calendar'.",
+  "type": "object",
+  "properties": {
+    "id":                   { "type": "string",  "description": "Document ID: 'calendar'" },
+    "defaultMaxSlots":      { "type": "integer", "description": "[ADMIN WRITE] Default maximum bookings allowed per day" },
+    "criticalThreshold":    { "type": "integer", "description": "[ADMIN WRITE] Slot count that triggers low-availability warning" },
+    "allowWeekendBookings": { "type": "boolean", "description": "[ADMIN WRITE]" },
+    "advanceBookingDays":   { "type": "integer", "description": "[ADMIN WRITE] How many days in advance users can book" },
+    "lastUpdated":          { "type": "string",  "format": "date-time" }
+  }
+}

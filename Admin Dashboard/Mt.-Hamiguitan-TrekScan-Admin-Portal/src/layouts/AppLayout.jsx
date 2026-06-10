@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import './AppLayout.css';
-import logoImage from '../assets/TrekScan.png';
+import logoImage from '../assets/trek_logo.png';
 import { Home, BarChart2, Settings, FileText, Shield, Award, MapPin, Calendar, Bell, X, Search, CheckCircle, Trash2, MoreVertical, LogOut, Clock } from 'lucide-react';
 import { Hiking, Build, RateReview, CardMembership, LocationOn } from '@mui/icons-material';
 import { getAllBookings } from '../services/bookingService';

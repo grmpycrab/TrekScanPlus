@@ -1,0 +1,26 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "posts",
+  "description": "User social media posts. Requires admin approval before becoming visible.",
+  "type": "object",
+  "properties": {
+    "id":            { "type": "string" },
+    "userId":        { "type": "string",  "description": "ref → users.uid" },
+    "userName":      { "type": "string" },
+    "userPhotoUrl":  { "type": "string" },
+    "userRole":      { "type": "string" },
+    "caption":       { "type": "string" },
+    "imageUrls":     { "type": "array",   "items": { "type": "string" }, "maxItems": 4 },
+    "privacy":       { "type": "string",  "description": "public | followers | private" },
+    "status":        { "type": "string",  "description": "pending | approved | declined" },
+    "moderatorNote": { "type": "string",  "description": "[ADMIN WRITE] Reason shown to user on decline" },
+    "reviewedAt":    { "type": "string",  "format": "date-time", "description": "[ADMIN WRITE]" },
+    "reviewedBy":    { "type": "string",  "description": "[ADMIN WRITE] Admin UID" },
+    "likesCount":    { "type": "integer" },
+    "commentsCount": { "type": "integer" },
+    "sharesCount":   { "type": "integer" },
+    "isBookmarked":  { "type": "boolean" },
+    "createdAt":     { "type": "string",  "format": "date-time" },
+    "updatedAt":     { "type": "string",  "format": "date-time" }
+  }
+}

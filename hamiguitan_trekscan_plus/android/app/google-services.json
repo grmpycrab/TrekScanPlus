@@ -12,7 +12,20 @@
           "package_name": "com.example.hamiguitan_trekscan_plus"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "431638508645-6ka1c01ck194pre7ok41n9851p192rtg.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.hamiguitan_trekscan_plus",
+            "certificate_hash": "9bde88a6d95ed4c46b790a0d84789c699d4b1134"
+          }
+        },
+        {
+          "client_id": "431638508645-fb9mn7r2f2f64rklv1u5l05moq45nqaq.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyAEVhCzB7gY6ubvCXcJ_8svmINIDs_RyTo"
@@ -20,7 +33,55 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "431638508645-fb9mn7r2f2f64rklv1u5l05moq45nqaq.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "431638508645-g4qrqt3ct75vk445k9c0takaafdeakpr.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.hamiguitanTrekscanPlus"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:431638508645:android:99b99d5bf1e930f4af028c",
+        "android_client_info": {
+          "package_name": "com.hamiguitan.trekscanplus"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "431638508645-fb9mn7r2f2f64rklv1u5l05moq45nqaq.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAEVhCzB7gY6ubvCXcJ_8svmINIDs_RyTo"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "431638508645-fb9mn7r2f2f64rklv1u5l05moq45nqaq.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "431638508645-g4qrqt3ct75vk445k9c0takaafdeakpr.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.hamiguitanTrekscanPlus"
+              }
+            }
+          ]
         }
       }
     }

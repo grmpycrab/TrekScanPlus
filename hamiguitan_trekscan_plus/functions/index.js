@@ -578,10 +578,106 @@ exports.sendVerificationEmail = functions.runWith(runtimeOpts).region(region).fi
     });
 
 /**
- * Send a single certificate email with PDF attachment.
- * Called directly from the Flutter app — credentials never leave the server.
+ * Process certificate email queue.
+ * Flutter writes to certificateEmailQueue/{docId} — this trigger picks it up
+ * and sends via SendGrid (same pattern as sendVerificationEmail).
  */
-exports.sendCertificateEmail = functions.runWith({
+exports.processCertificateEmailQueue = functions.runWith({
+    timeoutSeconds: 120,
+    maxInstances: 10,
+}).region(region).firestore
+    .document('certificateEmailQueue/{docId}')
+    .onCreate(async (snap, context) => {
+        const data = snap.data();
+        const docId = context.params.docId;
+
+        console.log(`📧 Processing certificate email ${docId} to: ${data.to}`);
+
+        if (!sendgridKey) {
+            console.warn('⚠️ SendGrid API key not configured. Certificate email not sent.');
+            await snap.ref.update({ processed: true, status: 'no_api_key',
+                processedAt: admin.firestore.FieldValue.serverTimestamp() });
+            return;
+        }
+
+        try {
+            let msg;
+            if (data.bulk && Array.isArray(data.certificates)) {
+                // Bulk: multiple certificates in one email
+                const attachments = data.certificates
+                    .filter(c => c.pdfBase64)
+                    .map(c => ({
+                        content: c.pdfBase64,
+                        filename: `${(c.certificateData.title || 'Certificate').replace(/\s+/g, '_')}_Certificate.pdf`,
+                        type: 'application/pdf',
+                        disposition: 'attachment',
+                    }));
+                const items = data.certificates.map(c => {
+                    const cd = c.certificateData;
+                    return `<div style="background:white;padding:15px;margin:10px 0;border-left:4px solid ${cd.colorHex||'#4CAF50'};border-radius:4px;">
+                        <h4 style="margin:0 0 10px 0;">${cd.title}</h4>
+                        <p style="margin:5px 0;font-size:14px;">Earned on: ${cd.dateEarned}</p>
+                        <p style="margin:5px 0;font-size:14px;">Stations: ${cd.stationsVisited} | Distance: ${cd.totalDistance} km</p>
+                    </div>`;
+                }).join('');
+                msg = {
+                    to: data.to,
+                    from: { email: 'keyntharly@gmail.com', name: 'Mt. Hamiguitan TrekScan' },
+                    subject: `Your Mt. Hamiguitan Certificates (${data.certificates.length} earned)`,
+                    html: `<!DOCTYPE html><html><body style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:20px">
+                        <div style="background:linear-gradient(135deg,#667eea,#764ba2);color:white;padding:30px;text-align:center;border-radius:10px 10px 0 0">
+                            <h1>🎉 Amazing Achievement!</h1>
+                            <p>You've earned ${data.certificates.length} Mt. Hamiguitan Certificates</p>
+                        </div>
+                        <div style="background:#f9f9f9;padding:30px;border-radius:0 0 10px 10px">
+                            <p>Dear <strong>${data.recipientName || 'Trekker'}</strong>,</p>
+                            ${items}
+                            <p>All certificates are attached as PDF files.</p>
+                            <p>Best regards,<br><strong>The Mt. Hamiguitan TrekScan Team</strong></p>
+                        </div></body></html>`,
+                    attachments,
+                };
+            } else {
+                // Single certificate
+                const cert = data.certificateData;
+                const attachments = data.pdfBase64 ? [{
+                    content: data.pdfBase64,
+                    filename: `${(cert.title || 'Certificate').replace(/\s+/g, '_')}_Certificate.pdf`,
+                    type: 'application/pdf',
+                    disposition: 'attachment',
+                }] : [];
+                msg = {
+                    to: data.to,
+                    from: { email: 'keyntharly@gmail.com', name: 'Mt. Hamiguitan TrekScan' },
+                    subject: `🏆 Your Mt. Hamiguitan ${cert.title} Certificate`,
+                    html: _buildCertificateEmailHtml(cert, data.recipientName || 'Trekker'),
+                    attachments,
+                };
+            }
+
+            await sgMail.send(msg);
+            console.log(`✅ Certificate email sent to ${data.to}`);
+            await snap.ref.update({
+                processed: true,
+                status: 'sent',
+                processedAt: admin.firestore.FieldValue.serverTimestamp(),
+            });
+        } catch (error) {
+            console.error(`❌ Certificate email error:`, error.response?.body || error.message);
+            await snap.ref.update({
+                processed: true,
+                status: 'error',
+                error: error.message,
+                processedAt: admin.firestore.FieldValue.serverTimestamp(),
+            });
+        }
+    });
+
+/**
+ * (Kept for reference — no longer called from the Flutter app.
+ *  Certificate emails now go through certificateEmailQueue Firestore trigger.)
+ */
+exports._sendCertificateEmail_deprecated = functions.runWith({
     timeoutSeconds: 60,
     maxInstances: 10,
 }).region(region).https.onCall(async (data, context) => {

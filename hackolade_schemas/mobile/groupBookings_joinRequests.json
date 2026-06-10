@@ -1,0 +1,24 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "groupBookings / joinRequests",
+  "description": "Subcollection of groupBookings. Users request to join a group trek.",
+  "type": "object",
+  "properties": {
+    "id":              { "type": "string" },
+    "groupId":         { "type": "string",  "description": "ref → groupBookings.id" },
+    "userId":          { "type": "string",  "description": "ref → users.uid" },
+    "userDisplayName": { "type": "string" },
+    "member":          { "type": "object",  "description": "Member info snapshot" },
+    "porterRequested": { "type": "boolean" },
+    "affiliation":     { "type": "string" },
+    "status":          { "type": "string",  "description": "pending | approved | declined | changes_required" },
+    "notes":           { "type": "string" },
+    "declineReason":   { "type": "string" },
+    "changesNote":     { "type": "string" },
+    "attachments":     { "type": "array",   "items": { "type": "object" } },
+    "createdAt":       { "type": "string",  "format": "date-time" },
+    "updatedAt":       { "type": "string",  "format": "date-time" },
+    "reviewedAt":      { "type": "string",  "format": "date-time" },
+    "reviewedBy":      { "type": "string",  "description": "Organizer userId who reviewed" }
+  }
+}

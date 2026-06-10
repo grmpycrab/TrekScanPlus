@@ -1,0 +1,24 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "users / climbs",
+  "description": "Subcollection of users. Trek/climb sessions recorded per user.",
+  "type": "object",
+  "properties": {
+    "id":              { "type": "string" },
+    "name":            { "type": "string" },
+    "description":     { "type": "string" },
+    "trekType":        { "type": "string",  "description": "regular | special | research | benchmarking | government_official" },
+    "createdAt":       { "type": "string",  "format": "date-time" },
+    "trekStartDate":   { "type": "string",  "format": "date-time" },
+    "trekEndDate":     { "type": "string",  "format": "date-time" },
+    "startedAt":       { "type": "string",  "format": "date-time" },
+    "completedAt":     { "type": "string",  "format": "date-time" },
+    "status":          { "type": "string",  "description": "ongoing | completed | abandoned | auto_completed" },
+    "visitedStations": { "type": "array",   "items": { "type": "string" } },
+    "totalDuration":   { "type": "number",  "description": "Duration in minutes" },
+    "totalDistance":   { "type": "number",  "description": "Distance in kilometers" },
+    "lastActivityAt":  { "type": "string",  "format": "date-time" },
+    "syncPending":     { "type": "boolean" },
+    "createdOffline":  { "type": "boolean" }
+  }
+}

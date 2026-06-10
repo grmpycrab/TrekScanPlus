@@ -1,0 +1,43 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "pricingVersions",
+  "description": "Trek pricing configurations. Only the document with isActive=true is used by the mobile app. Admin-managed.",
+  "type": "object",
+  "properties": {
+    "id":       { "type": "string" },
+    "version":  { "type": "integer" },
+    "isActive": { "type": "boolean", "description": "Only one document should be true at a time" },
+    "basePrice":{ "type": "number" },
+    "servicePricing": {
+      "type": "object",
+      "properties": {
+        "porter":    { "type": "number" },
+        "guide":     { "type": "number" },
+        "scientist": { "type": "number" }
+      }
+    },
+    "categoryPricing": {
+      "type": "object",
+      "description": "Discount categories for pricing",
+      "properties": {
+        "student":                  { "type": "object", "properties": { "displayName": { "type": "string" }, "discount": { "type": "number" }, "notes": { "type": "string" } } },
+        "senior_citizen":           { "type": "object", "properties": { "displayName": { "type": "string" }, "discount": { "type": "number" }, "notes": { "type": "string" } } },
+        "davao_oriental_resident":  { "type": "object", "properties": { "displayName": { "type": "string" }, "discount": { "type": "number" }, "notes": { "type": "string" } } },
+        "ocfdo":                    { "type": "object", "properties": { "displayName": { "type": "string" }, "discount": { "type": "number" }, "notes": { "type": "string" } } },
+        "outside_davao_oriental":   { "type": "object", "properties": { "displayName": { "type": "string" }, "discount": { "type": "number" }, "notes": { "type": "string" } } },
+        "children_8_15":            { "type": "object", "properties": { "displayName": { "type": "string" }, "discount": { "type": "number" }, "notes": { "type": "string" } } },
+        "mfsm":                     { "type": "object", "properties": { "displayName": { "type": "string" }, "discount": { "type": "number" }, "notes": { "type": "string" } } }
+      }
+    },
+    "seasonalRules": {
+      "type": "object",
+      "properties": {
+        "offSeasonStart":      { "type": "string", "description": "MM-DD e.g. 07-01" },
+        "offSeasonEnd":        { "type": "string", "description": "MM-DD e.g. 09-30" },
+        "allowedBookingTypes": { "type": "array",  "items": { "type": "string" } }
+      }
+    },
+    "createdAt": { "type": "string", "format": "date-time" },
+    "updatedAt": { "type": "string", "format": "date-time" }
+  }
+}

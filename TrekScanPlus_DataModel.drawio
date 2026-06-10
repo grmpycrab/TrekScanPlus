@@ -1,0 +1,252 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mxfile host="app.diagrams.net">
+  <diagram name="TrekScanPlus Relationships" id="trekscanplus-erd">
+    <mxGraphModel dx="1664" dy="881" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1654" pageHeight="1169" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+
+        <!-- ===== stations (incl. reviews subcollection) ===== -->
+        <mxCell id="tbl_stations" parent="1" style="swimlane;startSize=30;fillColor=#dae8fc;strokeColor=#6c8ebf;fontStyle=1;fontSize=13;" value="stations" vertex="1">
+          <mxGeometry height="360" width="220" x="80" y="100" as="geometry" />
+        </mxCell>
+        <mxCell id="stations_id" parent="tbl_stations" style="text;strokeColor=#6c8ebf;fillColor=#dae8fc;align=left;verticalAlign=middle;spacingLeft=10;fontSize=11;" value="PK  id" vertex="1">
+          <mxGeometry height="30" width="220" y="30" as="geometry" />
+        </mxCell>
+        <mxCell id="stations_name" parent="tbl_stations" style="text;strokeColor=#6c8ebf;fillColor=#dae8fc;align=left;verticalAlign=middle;spacingLeft=10;fontSize=11;" value="name" vertex="1">
+          <mxGeometry height="30" width="220" y="60" as="geometry" />
+        </mxCell>
+        <mxCell id="stations_difficulty" parent="tbl_stations" style="text;strokeColor=#6c8ebf;fillColor=#dae8fc;align=left;verticalAlign=middle;spacingLeft=10;fontSize=11;" value="difficulty" vertex="1">
+          <mxGeometry height="30" width="220" y="90" as="geometry" />
+        </mxCell>
+        <mxCell id="stations_elevation" parent="tbl_stations" style="text;strokeColor=#6c8ebf;fillColor=#dae8fc;align=left;verticalAlign=middle;spacingLeft=10;fontSize=11;" value="elevation" vertex="1">
+          <mxGeometry height="30" width="220" y="120" as="geometry" />
+        </mxCell>
+        <mxCell id="stations_lat" parent="tbl_stations" style="text;strokeColor=#6c8ebf;fillColor=#dae8fc;align=left;verticalAlign=middle;spacingLeft=10;fontSize=11;" value="latitude" vertex="1">
+          <mxGeometry height="30" width="220" y="150" as="geometry" />
+        </mxCell>
+        <mxCell id="stations_lng" parent="tbl_stations" style="text;strokeColor=#6c8ebf;fillColor=#dae8fc;align=left;verticalAlign=middle;spacingLeft=10;fontSize=11;" value="longitude" vertex="1">
+          <mxGeometry height="30" width="220" y="180" as="geometry" />
+        </mxCell>
+        <mxCell id="stations_checkpoint" parent="tbl_stations" style="text;strokeColor=#6c8ebf;fillColor=#dae8fc;align=left;verticalAlign=middle;spacingLeft=10;fontSize=11;" value="isCheckpoint" vertex="1">
+          <mxGeometry height="30" width="220" y="210" as="geometry" />
+        </mxCell>
+        <mxCell id="stations_nextId" parent="tbl_stations" style="text;strokeColor=#6c8ebf;fillColor=#dae8fc;align=left;verticalAlign=middle;spacingLeft=10;fontSize=11;" value="nextStationId" vertex="1">
+          <mxGeometry height="30" width="220" y="240" as="geometry" />
+        </mxCell>
+        <mxCell id="stations_rating" parent="tbl_stations" style="text;strokeColor=#6c8ebf;fillColor=#dae8fc;align=left;verticalAlign=middle;spacingLeft=10;fontSize=11;" value="averageRating" vertex="1">
+          <mxGeometry height="30" width="220" y="270" as="geometry" />
+        </mxCell>
+        <mxCell id="stations_reviews_userId" parent="tbl_stations" style="text;strokeColor=#6c8ebf;fillColor=#dae8fc;align=left;verticalAlign=middle;spacingLeft=10;fontSize=11;" value="↳  reviews.userId" vertex="1">
+          <mxGeometry height="30" width="220" y="300" as="geometry" />
+        </mxCell>
+        <mxCell id="stations_reviews_rating" parent="tbl_stations" style="text;strokeColor=#6c8ebf;fillColor=#dae8fc;align=left;verticalAlign=middle;spacingLeft=10;fontSize=11;" value="↳  reviews.rating" vertex="1">
+          <mxGeometry height="30" width="220" y="330" as="geometry" />
+        </mxCell>
+
+        <!-- ===== users ===== -->
+        <mxCell id="tbl_users" parent="1" style="swimlane;startSize=30;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=1;fontSize=13;" value="users" vertex="1">
+          <mxGeometry height="300" width="250" x="470" y="100" as="geometry" />
+        </mxCell>
+        <mxCell id="users_uid" parent="tbl_users" style="text;strokeColor=#82b366;fillColor=#d5e8d4;align=left;verticalAlign=middle;spacingLeft=10;fontSize=11;" value="PK  uid" vertex="1">
+          <mxGeometry height="30" width="250" y="30" as="geometry" />
+        </mxCell>
+        <mxCell id="users_firstName" parent="tbl_users" style="text;strokeColor=#82b366;fillColor=#d5e8d4;align=left;verticalAlign=middle;spacingLeft=10;fontSize=11;" value="firstName" vertex="1">
+          <mxGeometry height="30" width="250" y="60" as="geometry" />
+        </mxCell>
+        <mxCell id="users_lastName" parent="tbl_users" style="text;strokeColor=#82b366;fillColor=#d5e8d4;align=left;verticalAlign=middle;spacingLeft=10;fontSize=11;" value="lastName" vertex="1">
+          <mxGeometry height="30" width="250" y="90" as="geometry" />
+        </mxCell>
+        <mxCell id="users_email" parent="tbl_users" style="text;strokeColor=#82b366;fillColor=#d5e8d4;align=left;verticalAlign=middle;spacingLeft=10;fontSize=11;" value="email" vertex="1">
+          <mxGeometry height="30" width="250" y="120" as="geometry" />
+        </mxCell>
+        <mxCell id="users_profileImage" parent="tbl_users" style="text;strokeColor=#82b366;fillColor=#d5e8d4;align=left;verticalAlign=middle;spacingLeft=10;fontSize=11;" value="profileImage" vertex="1">
+          <mxGeometry height="30" width="250" y="150" as="geometry" />
+        </mxCell>
+        <mxCell id="users_emailVerified" parent="tbl_users" style="text;strokeColor=#82b366;fillColor=#d5e8d4;align=left;verticalAlign=middle;spacingLeft=10;fontSize=11;" value="emailVerified" vertex="1">
+          <mxGeometry height="30" width="250" y="180" as="geometry" />
+        </mxCell>
+        <mxCell id="users_createdAt" parent="tbl_users" style="text;strokeColor=#82b366;fillColor=#d5e8d4;align=left;verticalAlign=middle;spacingLeft=10;fontSize=11;" value="createdAt" vertex="1">
+          <mxGeometry height="30" width="250" y="210" as="geometry" />
+        </mxCell>
+        <mxCell id="users_vs" parent="tbl_users" style="text;strokeColor=#82b366;fillColor=#d5e8d4;align=left;verticalAlign=middle;spacingLeft=10;fontSize=11;" value="↳  visitedStations.stationId" vertex="1">
+          <mxGeometry height="30" width="250" y="240" as="geometry" />
+        </mxCell>
+        <mxCell id="users_ach" parent="tbl_users" style="text;strokeColor=#82b366;fillColor=#d5e8d4;align=left;verticalAlign=middle;spacingLeft=10;fontSize=11;" value="↳  achievements.id" vertex="1">
+          <mxGeometry height="30" width="250" y="270" as="geometry" />
+        </mxCell>
+
+        <!-- ===== badges (merged: definition + claims subcollection) ===== -->
+        <mxCell id="tbl_badges" parent="1" style="swimlane;startSize=30;fillColor=#fff2cc;strokeColor=#d6b656;fontStyle=1;fontSize=13;" value="badges" vertex="1">
+          <mxGeometry height="360" width="250" x="900" y="100" as="geometry" />
+        </mxCell>
+        <mxCell id="bdg_id" parent="tbl_badges" style="text;strokeColor=#d6b656;fillColor=#fff2cc;align=left;verticalAlign=middle;spacingLeft=10;fontSize=11;" value="PK  id" vertex="1">
+          <mxGeometry height="30" width="250" y="30" as="geometry" />
+        </mxCell>
+        <mxCell id="bdg_name" parent="tbl_badges" style="text;strokeColor=#d6b656;fillColor=#fff2cc;align=left;verticalAlign=middle;spacingLeft=10;fontSize=11;" value="name" vertex="1">
+          <mxGeometry height="30" width="250" y="60" as="geometry" />
+        </mxCell>
+        <mxCell id="bdg_tier" parent="tbl_badges" style="text;strokeColor=#d6b656;fillColor=#fff2cc;align=left;verticalAlign=middle;spacingLeft=10;fontSize=11;" value="tier" vertex="1">
+          <mxGeometry height="30" width="250" y="90" as="geometry" />
+        </mxCell>
+        <mxCell id="bdg_verType" parent="tbl_badges" style="text;strokeColor=#d6b656;fillColor=#fff2cc;align=left;verticalAlign=middle;spacingLeft=10;fontSize=11;" value="verificationType" vertex="1">
+          <mxGeometry height="30" width="250" y="120" as="geometry" />
+        </mxCell>
+        <mxCell id="bdg_trigger" parent="tbl_badges" style="text;strokeColor=#d6b656;fillColor=#fff2cc;align=left;verticalAlign=middle;spacingLeft=10;fontSize=11;" value="FK  triggerStationId" vertex="1">
+          <mxGeometry height="30" width="250" y="150" as="geometry" />
+        </mxCell>
+        <mxCell id="bdg_imageUrl" parent="tbl_badges" style="text;strokeColor=#d6b656;fillColor=#fff2cc;align=left;verticalAlign=middle;spacingLeft=10;fontSize=11;" value="imageUrl" vertex="1">
+          <mxGeometry height="30" width="250" y="180" as="geometry" />
+        </mxCell>
+        <mxCell id="bdg_isActive" parent="tbl_badges" style="text;strokeColor=#d6b656;fillColor=#fff2cc;align=left;verticalAlign=middle;spacingLeft=10;fontSize=11;" value="isActive" vertex="1">
+          <mxGeometry height="30" width="250" y="210" as="geometry" />
+        </mxCell>
+        <mxCell id="bdg_claims_userId" parent="tbl_badges" style="text;strokeColor=#d6b656;fillColor=#fff2cc;align=left;verticalAlign=middle;spacingLeft=10;fontSize=11;" value="↳  claims.userId" vertex="1">
+          <mxGeometry height="30" width="250" y="240" as="geometry" />
+        </mxCell>
+        <mxCell id="bdg_claims_proofUrl" parent="tbl_badges" style="text;strokeColor=#d6b656;fillColor=#fff2cc;align=left;verticalAlign=middle;spacingLeft=10;fontSize=11;" value="↳  claims.proofImageUrl" vertex="1">
+          <mxGeometry height="30" width="250" y="270" as="geometry" />
+        </mxCell>
+        <mxCell id="bdg_claims_status" parent="tbl_badges" style="text;strokeColor=#d6b656;fillColor=#fff2cc;align=left;verticalAlign=middle;spacingLeft=10;fontSize=11;" value="↳  claims.status" vertex="1">
+          <mxGeometry height="30" width="250" y="300" as="geometry" />
+        </mxCell>
+        <mxCell id="bdg_claims_reviewedAt" parent="tbl_badges" style="text;strokeColor=#d6b656;fillColor=#fff2cc;align=left;verticalAlign=middle;spacingLeft=10;fontSize=11;" value="↳  claims.reviewedAt" vertex="1">
+          <mxGeometry height="30" width="250" y="330" as="geometry" />
+        </mxCell>
+
+        <!-- ===== bookings ===== -->
+        <mxCell id="tbl_bk" parent="1" style="swimlane;startSize=30;fillColor=#e1d5e7;strokeColor=#9673a6;fontStyle=1;fontSize=13;" value="bookings" vertex="1">
+          <mxGeometry height="330" width="240" x="900" y="560" as="geometry" />
+        </mxCell>
+        <mxCell id="bk_id" parent="tbl_bk" style="text;strokeColor=#9673a6;fillColor=#e1d5e7;align=left;verticalAlign=middle;spacingLeft=10;fontSize=11;" value="PK  id" vertex="1">
+          <mxGeometry height="30" width="240" y="30" as="geometry" />
+        </mxCell>
+        <mxCell id="bk_userId" parent="tbl_bk" style="text;strokeColor=#9673a6;fillColor=#e1d5e7;align=left;verticalAlign=middle;spacingLeft=10;fontSize=11;" value="FK  userId" vertex="1">
+          <mxGeometry height="30" width="240" y="60" as="geometry" />
+        </mxCell>
+        <mxCell id="bk_trekDate" parent="tbl_bk" style="text;strokeColor=#9673a6;fillColor=#e1d5e7;align=left;verticalAlign=middle;spacingLeft=10;fontSize=11;" value="trekDate" vertex="1">
+          <mxGeometry height="30" width="240" y="90" as="geometry" />
+        </mxCell>
+        <mxCell id="bk_trekType" parent="tbl_bk" style="text;strokeColor=#9673a6;fillColor=#e1d5e7;align=left;verticalAlign=middle;spacingLeft=10;fontSize=11;" value="trekType" vertex="1">
+          <mxGeometry height="30" width="240" y="120" as="geometry" />
+        </mxCell>
+        <mxCell id="bk_status" parent="tbl_bk" style="text;strokeColor=#9673a6;fillColor=#e1d5e7;align=left;verticalAlign=middle;spacingLeft=10;fontSize=11;" value="status" vertex="1">
+          <mxGeometry height="30" width="240" y="150" as="geometry" />
+        </mxCell>
+        <mxCell id="bk_classification" parent="tbl_bk" style="text;strokeColor=#9673a6;fillColor=#e1d5e7;align=left;verticalAlign=middle;spacingLeft=10;fontSize=11;" value="bookingClassification" vertex="1">
+          <mxGeometry height="30" width="240" y="180" as="geometry" />
+        </mxCell>
+        <mxCell id="bk_totalMembers" parent="tbl_bk" style="text;strokeColor=#9673a6;fillColor=#e1d5e7;align=left;verticalAlign=middle;spacingLeft=10;fontSize=11;" value="totalMembers" vertex="1">
+          <mxGeometry height="30" width="240" y="210" as="geometry" />
+        </mxCell>
+        <mxCell id="bk_groupName" parent="tbl_bk" style="text;strokeColor=#9673a6;fillColor=#e1d5e7;align=left;verticalAlign=middle;spacingLeft=10;fontSize=11;" value="groupName" vertex="1">
+          <mxGeometry height="30" width="240" y="240" as="geometry" />
+        </mxCell>
+        <mxCell id="bk_submissionStatus" parent="tbl_bk" style="text;strokeColor=#9673a6;fillColor=#e1d5e7;align=left;verticalAlign=middle;spacingLeft=10;fontSize=11;" value="submissionStatus" vertex="1">
+          <mxGeometry height="30" width="240" y="270" as="geometry" />
+        </mxCell>
+        <mxCell id="bk_createdAt" parent="tbl_bk" style="text;strokeColor=#9673a6;fillColor=#e1d5e7;align=left;verticalAlign=middle;spacingLeft=10;fontSize=11;" value="createdAt" vertex="1">
+          <mxGeometry height="30" width="240" y="300" as="geometry" />
+        </mxCell>
+
+        <!-- ===== calendar_config ===== -->
+        <mxCell id="tbl_cc" parent="1" style="swimlane;startSize=30;fillColor=#ffe6cc;strokeColor=#d79b00;fontStyle=1;fontSize=13;" value="calendar_config" vertex="1">
+          <mxGeometry height="210" width="250" x="470" y="620" as="geometry" />
+        </mxCell>
+        <mxCell id="cc_dateKey" parent="tbl_cc" style="text;strokeColor=#d79b00;fillColor=#ffe6cc;align=left;verticalAlign=middle;spacingLeft=10;fontSize=11;" value="PK  dateKey" vertex="1">
+          <mxGeometry height="30" width="250" y="30" as="geometry" />
+        </mxCell>
+        <mxCell id="cc_isClosed" parent="tbl_cc" style="text;strokeColor=#d79b00;fillColor=#ffe6cc;align=left;verticalAlign=middle;spacingLeft=10;fontSize=11;" value="isClosed" vertex="1">
+          <mxGeometry height="30" width="250" y="60" as="geometry" />
+        </mxCell>
+        <mxCell id="cc_maxSlots" parent="tbl_cc" style="text;strokeColor=#d79b00;fillColor=#ffe6cc;align=left;verticalAlign=middle;spacingLeft=10;fontSize=11;" value="maxSlots" vertex="1">
+          <mxGeometry height="30" width="250" y="90" as="geometry" />
+        </mxCell>
+        <mxCell id="cc_reason" parent="tbl_cc" style="text;strokeColor=#d79b00;fillColor=#ffe6cc;align=left;verticalAlign=middle;spacingLeft=10;fontSize=11;" value="reason" vertex="1">
+          <mxGeometry height="30" width="250" y="120" as="geometry" />
+        </mxCell>
+        <mxCell id="cc_trekDownDay" parent="tbl_cc" style="text;strokeColor=#d79b00;fillColor=#ffe6cc;align=left;verticalAlign=middle;spacingLeft=10;fontSize=11;" value="isTrekDownDay" vertex="1">
+          <mxGeometry height="30" width="250" y="150" as="geometry" />
+        </mxCell>
+        <mxCell id="cc_lastUpdated" parent="tbl_cc" style="text;strokeColor=#d79b00;fillColor=#ffe6cc;align=left;verticalAlign=middle;spacingLeft=10;fontSize=11;" value="lastUpdated" vertex="1">
+          <mxGeometry height="30" width="250" y="180" as="geometry" />
+        </mxCell>
+
+        <!-- ===== posts ===== -->
+        <mxCell id="tbl_posts" parent="1" style="swimlane;startSize=30;fillColor=#dae8fc;strokeColor=#6c8ebf;fontStyle=1;fontSize=13;" value="posts" vertex="1">
+          <mxGeometry height="300" width="220" x="80" y="560" as="geometry" />
+        </mxCell>
+        <mxCell id="posts_id" parent="tbl_posts" style="text;strokeColor=#6c8ebf;fillColor=#dae8fc;align=left;verticalAlign=middle;spacingLeft=10;fontSize=11;" value="PK  id" vertex="1">
+          <mxGeometry height="30" width="220" y="30" as="geometry" />
+        </mxCell>
+        <mxCell id="posts_userId" parent="tbl_posts" style="text;strokeColor=#6c8ebf;fillColor=#dae8fc;align=left;verticalAlign=middle;spacingLeft=10;fontSize=11;" value="FK  userId" vertex="1">
+          <mxGeometry height="30" width="220" y="60" as="geometry" />
+        </mxCell>
+        <mxCell id="posts_userName" parent="tbl_posts" style="text;strokeColor=#6c8ebf;fillColor=#dae8fc;align=left;verticalAlign=middle;spacingLeft=10;fontSize=11;" value="userName" vertex="1">
+          <mxGeometry height="30" width="220" y="90" as="geometry" />
+        </mxCell>
+        <mxCell id="posts_caption" parent="tbl_posts" style="text;strokeColor=#6c8ebf;fillColor=#dae8fc;align=left;verticalAlign=middle;spacingLeft=10;fontSize=11;" value="caption" vertex="1">
+          <mxGeometry height="30" width="220" y="120" as="geometry" />
+        </mxCell>
+        <mxCell id="posts_privacy" parent="tbl_posts" style="text;strokeColor=#6c8ebf;fillColor=#dae8fc;align=left;verticalAlign=middle;spacingLeft=10;fontSize=11;" value="privacy" vertex="1">
+          <mxGeometry height="30" width="220" y="150" as="geometry" />
+        </mxCell>
+        <mxCell id="posts_status" parent="tbl_posts" style="text;strokeColor=#6c8ebf;fillColor=#dae8fc;align=left;verticalAlign=middle;spacingLeft=10;fontSize=11;" value="status" vertex="1">
+          <mxGeometry height="30" width="220" y="180" as="geometry" />
+        </mxCell>
+        <mxCell id="posts_likesCount" parent="tbl_posts" style="text;strokeColor=#6c8ebf;fillColor=#dae8fc;align=left;verticalAlign=middle;spacingLeft=10;fontSize=11;" value="likesCount" vertex="1">
+          <mxGeometry height="30" width="220" y="210" as="geometry" />
+        </mxCell>
+        <mxCell id="posts_commentsCount" parent="tbl_posts" style="text;strokeColor=#6c8ebf;fillColor=#dae8fc;align=left;verticalAlign=middle;spacingLeft=10;fontSize=11;" value="commentsCount" vertex="1">
+          <mxGeometry height="30" width="220" y="240" as="geometry" />
+        </mxCell>
+        <mxCell id="posts_createdAt" parent="tbl_posts" style="text;strokeColor=#6c8ebf;fillColor=#dae8fc;align=left;verticalAlign=middle;spacingLeft=10;fontSize=11;" value="createdAt" vertex="1">
+          <mxGeometry height="30" width="220" y="270" as="geometry" />
+        </mxCell>
+
+        <!-- ===== RELATIONSHIPS ===== -->
+
+        <!-- e1: stations.id → users.visitedStations.stationId (user scans station) -->
+        <mxCell id="e1" edge="1" parent="1" source="stations_id" target="users_vs" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;strokeColor=#6c8ebf;fontStyle=2;fontSize=10;labelBackgroundColor=#ffffff;" value="user scans station">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- e2: stations.id → badges.triggerStationId (station triggers badge) -->
+        <mxCell id="e2" edge="1" parent="1" source="stations_id" target="bdg_trigger" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;strokeColor=#d6b656;fontStyle=2;fontSize=10;labelBackgroundColor=#ffffff;" value="station triggers badge">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- e3: badges.id → users.achievements.id (badge → achievement) -->
+        <mxCell id="e3" edge="1" parent="1" source="bdg_id" target="users_ach" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;strokeColor=#d6b656;fontStyle=2;fontSize=10;labelBackgroundColor=#ffffff;" value="badge → achievement">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- e4: users.uid → badges.claims.userId (user submits claim) -->
+        <mxCell id="e4" edge="1" parent="1" source="users_uid" target="bdg_claims_userId" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;strokeColor=#b85450;fontStyle=2;fontSize=10;labelBackgroundColor=#ffffff;" value="user submits claim">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- e5: users.uid → bookings.userId (user creates booking) -->
+        <mxCell id="e5" edge="1" parent="1" source="users_uid" target="bk_userId" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;strokeColor=#9673a6;fontStyle=2;fontSize=10;labelBackgroundColor=#ffffff;" value="user creates booking">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- e6: calendar_config.dateKey → bookings.trekDate (booking checks availability) -->
+        <mxCell id="e6" edge="1" parent="1" source="cc_dateKey" target="bk_trekDate" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;strokeColor=#d79b00;fontStyle=2;fontSize=10;labelBackgroundColor=#ffffff;" value="booking checks availability">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- e7: users.uid → posts.userId (user creates post) -->
+        <mxCell id="e7" edge="1" parent="1" source="users_uid" target="posts_userId" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;strokeColor=#6c8ebf;fontStyle=2;fontSize=10;labelBackgroundColor=#ffffff;" value="user creates post">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- e8: users.uid → stations.reviews.userId (user writes review) -->
+        <mxCell id="e8" edge="1" parent="1" source="users_uid" target="stations_reviews_userId" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;strokeColor=#82b366;fontStyle=2;fontSize=10;labelBackgroundColor=#ffffff;" value="user writes review">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

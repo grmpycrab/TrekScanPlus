@@ -1,49 +1,120 @@
-/* Login page styles */
+/* Login page styles — split layout */
 .login-container {
-  min-height: 100vh;
-  min-width: 100vw;
-  width: 100%;
   display: flex;
-  align-items: center;
-  justify-content: flex-start;
-  background: url('../../assets/TrekkScanBg.png');
-  background-attachment: fixed;
-  background-repeat: no-repeat;
+  height: 100vh;
+  width: 100vw;
+  overflow: hidden;
+}
+
+/* ── Left image panel ── */
+.login-left {
+  flex: 0 0 55%;
+  position: relative;
+  background-image: url('../../assets/Pygmy Forest.jpg');
   background-size: cover;
   background-position: center;
-  padding: 20px;
+  background-repeat: no-repeat;
 }
 
-.login-left {
-  flex: 0 0 auto;
+.login-left-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    160deg,
+    rgba(0, 0, 0, 0.45) 0%,
+    rgba(10, 45, 10, 0.65) 100%
+  );
   display: flex;
-  justify-content: flex-start;
-  align-items: flex-start;
-  padding-left: 80px;
-  padding-top: -50px;
-  margin-right: 60px;
+  flex-direction: column;
+  justify-content: flex-end;
+  padding: 52px 48px;
 }
 
-.trek-scan-text {
-  max-width: 450px;
-  height: auto;
-  margin-top: -100px;
-  margin-left: 30px;
-  transform: translateY(-40px);
+.login-brand-tag {
+  display: inline-block;
+  background: rgba(255, 255, 255, 0.15);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  padding: 5px 12px;
+  border-radius: 20px;
+  margin-bottom: 16px;
+  width: fit-content;
+}
+
+.login-brand-title {
+  font-size: 52px;
+  font-weight: 800;
+  color: #ffffff;
+  margin: 0 0 6px 0;
+  line-height: 1.1;
+  letter-spacing: -1px;
+}
+
+.login-brand-subtitle {
+  font-size: 18px;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.75);
+  margin: 0 0 28px 0;
+}
+
+.login-brand-divider {
+  width: 48px;
+  height: 3px;
+  background: rgba(255, 255, 255, 0.4);
+  border-radius: 2px;
+  margin-bottom: 20px;
+}
+
+.login-brand-note {
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.55);
+  max-width: 340px;
+  line-height: 1.6;
+  margin: 0;
+}
+
+/* ── Right form panel ── */
+.login-right {
+  flex: 1;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #ffffff;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 40px 48px;
+}
+
+/* ── Botanical corner decorations ── */
+.login-deco {
+  position: absolute;
+  pointer-events: none;
+  user-select: none;
+}
+
+.login-deco--tr {
+  top: 0;
+  right: 0;
+  width: 210px;
+  height: 230px;
+}
+
+.login-deco--bl {
+  bottom: 0;
+  left: 0;
+  width: 170px;
+  height: 190px;
 }
 
 .login-card {
-  background: rgba(255, 255, 255, 0.85);
-  border-radius: 12px;
-  box-shadow: 0 25px 50px rgba(0, 0, 0, 0.25), 0 10px 20px rgba(0, 0, 0, 0.15);
-  padding: 40px;
   width: 100%;
-  max-width: 460px;
-  animation: slideUp 0.6s ease-out;
-  margin-left: 250px;
-  margin-top: -20px;
-  -webkit-backdrop-filter: blur(40px);
-  backdrop-filter: blur(40px);
+  max-width: 380px;
+  animation: slideUp 0.5s ease-out;
 }
 
 @keyframes slideUp {
@@ -58,24 +129,64 @@
 }
 
 .login-header {
-  text-align: center;
-  margin-bottom: 30px;
+  text-align: left;
+  margin-bottom: 32px;
+}
+
+.login-app-brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 32px;
+  padding-bottom: 28px;
+  border-bottom: 1px solid #f0f0f0;
 }
 
 .login-logo {
-  max-width: 280px;
-  height: auto;
-  margin: 0;
-  margin-top: -20px;
-  display: block;
+  height: 48px;
+  width: auto;
+  object-fit: contain;
+  flex-shrink: 0;
+}
+
+.login-app-name {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.login-app-title {
+  font-size: 20px;
+  font-weight: 800;
+  color: #0f370e;
+  line-height: 1.2;
+  letter-spacing: -0.3px;
+}
+
+.login-app-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: #9ca3af;
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
 }
 
 .welcome-text {
-  color: #333;
-  font-size: 20px;
-  font-weight: 600;
-  margin: 15px 0 0 0;
+  color: #111827;
+  font-size: 26px;
+  font-weight: 700;
+  margin: 0 0 6px 0;
   text-align: left;
+  letter-spacing: -0.4px;
+}
+
+.welcome-subtext {
+  color: #6b7280;
+  font-size: 14px;
+  font-weight: 400;
+  margin: 0;
+  text-align: left;
+  line-height: 1.5;
 }
 
 .login-form {
@@ -509,83 +620,80 @@
 
 /* Responsive design */
 @media (max-width: 1024px) {
-  .login-container {
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    padding: 20px;
-  }
-
   .login-left {
-    padding-left: 0;
-    margin-right: 0;
-    margin-bottom: 20px;
-    justify-content: center;
-    width: 100%;
+    flex: 0 0 45%;
   }
 
-  .trek-scan-text {
-    max-width: 300px;
-    margin-top: 0;
-    margin-left: 0;
-    transform: none;
-  }
-
-  .login-card {
-    margin-left: 0;
-    margin-top: 0;
-    max-width: 500px;
+  .login-right {
+    padding: 40px 32px;
   }
 }
 
 @media (max-width: 768px) {
   .login-container {
-    padding: 16px;
+    flex-direction: column;
+    height: auto;
     min-height: 100vh;
+    overflow-y: auto;
   }
 
   .login-left {
-    margin-bottom: 16px;
-  }
-
-  .trek-scan-text {
-    max-width: 250px;
-  }
-
-  .login-card {
-    padding: 32px 24px;
-    max-width: 100%;
+    flex: 0 0 260px;
     width: 100%;
   }
 
-  .login-logo {
-    max-width: 220px;
+  .login-left-overlay {
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    padding: 32px 24px;
   }
 
-  .welcome-text {
-    font-size: 18px;
+  .login-brand-title {
+    font-size: 38px;
+  }
+
+  .login-brand-subtitle {
+    font-size: 15px;
+  }
+
+  .login-brand-note {
+    display: none;
+  }
+
+  .login-brand-tag {
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  .login-brand-divider {
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  .login-right {
+    padding: 40px 24px;
+    justify-content: flex-start;
+    align-items: flex-start;
+    padding-top: 48px;
+  }
+
+  .login-card {
+    max-width: 100%;
   }
 }
 
 @media (max-width: 480px) {
-  .login-container {
-    padding: 10px;
-  }
-  
-  .login-card {
-    padding: 24px 16px;
+  .login-left {
+    flex: 0 0 200px;
   }
 
-  .login-logo {
-    max-width: 180px;
+  .login-brand-title {
+    font-size: 30px;
   }
 
-  .welcome-text {
-    font-size: 16px;
-  }
-
-  .trek-scan-text {
-    max-width: 200px;
+  .login-right {
+    padding: 32px 20px;
   }
 
   .form-group input {

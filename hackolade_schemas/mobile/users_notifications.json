@@ -1,0 +1,18 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "users / notifications",
+  "description": "Subcollection of users. In-app notifications per user.",
+  "type": "object",
+  "properties": {
+    "id":                 { "type": "string" },
+    "title":              { "type": "string" },
+    "message":            { "type": "string" },
+    "type":               { "type": "string",  "description": "success | warning | info | alert" },
+    "timestamp":          { "type": "string",  "format": "date-time" },
+    "isRead":             { "type": "boolean" },
+    "actionType":         { "type": "string",  "description": "post | booking | achievement | follow_request" },
+    "actionData":         { "type": "object",  "description": "Payload for navigation on tap" },
+    "showActionButtons":  { "type": "boolean" },
+    "followRequestId":    { "type": "string" }
+  }
+}

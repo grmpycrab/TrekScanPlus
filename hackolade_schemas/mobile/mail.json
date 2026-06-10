@@ -1,0 +1,16 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "mail",
+  "description": "Email verification queue. Cloud Function sendVerificationEmail listens to this collection and sends via SendGrid.",
+  "type": "object",
+  "properties": {
+    "id":          { "type": "string" },
+    "to":          { "type": "string" },
+    "subject":     { "type": "string" },
+    "code":        { "type": "string" },
+    "processed":   { "type": "boolean" },
+    "processedAt": { "type": "string",  "format": "date-time" },
+    "status":      { "type": "string",  "description": "sent | error | no_api_key" },
+    "error":       { "type": "string" }
+  }
+}

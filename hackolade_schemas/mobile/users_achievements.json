@@ -1,0 +1,29 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "users / achievements",
+  "description": "Subcollection of users. Stores unlocked badges/achievements per user.",
+  "type": "object",
+  "properties": {
+    "id":               { "type": "string",  "description": "Document ID = badge ID" },
+    "name":             { "type": "string" },
+    "description":      { "type": "string" },
+    "category":         { "type": "string" },
+    "icon":             { "type": "string" },
+    "tier":             { "type": "string",  "description": "bronze | silver | gold | platinum" },
+    "rarity":           { "type": "string" },
+    "difficulty":       { "type": "string" },
+    "verificationType": { "type": "string",  "description": "SCAN | MANUAL_IMAGE_REVIEW | SESSION" },
+    "triggerStationId": { "type": "string" },
+    "points":           { "type": "integer" },
+    "isUnlocked":       { "type": "boolean" },
+    "unlockedAt":       { "type": "string",  "format": "date-time" },
+    "claimStatus":      { "type": "string" },
+    "syncStatus":       { "type": "string" },
+    "isLimitedEdition": { "type": "boolean" },
+    "startDate":        { "type": "string",  "format": "date-time" },
+    "endDate":          { "type": "string",  "format": "date-time" },
+    "visibilityRule":   { "type": "string",  "description": "ALWAYS_VISIBLE" },
+    "requirement":      { "type": "object",  "description": "Badge unlock criteria" },
+    "tracking":         { "type": "object",  "description": "Progress tracking data" }
+  }
+}

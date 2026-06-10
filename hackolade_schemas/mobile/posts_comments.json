@@ -1,0 +1,16 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "posts / comments",
+  "description": "Subcollection of posts. Comments on a post.",
+  "type": "object",
+  "properties": {
+    "id":           { "type": "string" },
+    "userId":       { "type": "string",  "description": "ref → users.uid" },
+    "userName":     { "type": "string" },
+    "text":         { "type": "string" },
+    "likesCount":   { "type": "integer" },
+    "repliesCount": { "type": "integer" },
+    "createdAt":    { "type": "string",  "format": "date-time" },
+    "updatedAt":    { "type": "string",  "format": "date-time" }
+  }
+}

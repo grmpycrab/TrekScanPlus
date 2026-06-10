@@ -1,0 +1,16 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "email_verifications",
+  "description": "Email verification state. Document ID = user UID.",
+  "type": "object",
+  "properties": {
+    "uid":        { "type": "string",  "description": "Document ID = Firebase Auth UID" },
+    "code":       { "type": "string" },
+    "email":      { "type": "string" },
+    "attempts":   { "type": "integer" },
+    "verified":   { "type": "boolean" },
+    "verifiedAt": { "type": "string",  "format": "date-time" },
+    "createdAt":  { "type": "string",  "format": "date-time" },
+    "expiresAt":  { "type": "string",  "format": "date-time" }
+  }
+}

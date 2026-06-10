@@ -1,0 +1,235 @@
+{
+  "modelName": "New Model",
+  "collections": [
+    {
+      "collectionName": "badge_claims",
+      "type": "object",
+      "properties": [
+        {
+          "code": "",
+          "name": "id",
+          "isActivated": true,
+          "type": "string",
+          "properties": [],
+          "GUID": "f286e033-f3c4-4957-b55c-5f469910ba79"
+        },
+        {
+          "code": "",
+          "name": "userId",
+          "isActivated": true,
+          "type": "string",
+          "properties": [],
+          "description": "ref → users.uid",
+          "GUID": "ec170ab3-fdba-45a2-a5b8-e4da48d6e51d"
+        },
+        {
+          "code": "",
+          "name": "badgeId",
+          "isActivated": true,
+          "type": "string",
+          "properties": [],
+          "description": "ref → badge_definitions.id",
+          "GUID": "e2ed6996-8bb9-4a54-8911-489378ba22f0"
+        },
+        {
+          "code": "",
+          "name": "badgeName",
+          "isActivated": true,
+          "type": "string",
+          "properties": [],
+          "GUID": "5f00dc79-65c2-4bf4-bfee-3c6fe584a53f"
+        },
+        {
+          "code": "",
+          "name": "imageUrl",
+          "isActivated": true,
+          "type": "string",
+          "properties": [],
+          "description": "Evidence photo in Firebase Storage",
+          "GUID": "70c3acdf-5a2c-4ae0-bb10-91764bf1d9ed"
+        },
+        {
+          "code": "",
+          "name": "status",
+          "isActivated": true,
+          "type": "string",
+          "properties": [],
+          "description": "pending | approved | rejected",
+          "GUID": "ebee2cc9-e67c-4c80-9a3e-f222599fe4c9"
+        },
+        {
+          "code": "",
+          "name": "claimNote",
+          "isActivated": true,
+          "type": "string",
+          "properties": [],
+          "GUID": "d51d7c6a-6784-4293-a971-d88d0e8ebf4c"
+        },
+        {
+          "code": "",
+          "name": "submittedAt",
+          "isActivated": true,
+          "type": "string",
+          "properties": [],
+          "format": "date-time",
+          "GUID": "584cda19-4ac8-4787-a064-a65e7ab174bc"
+        },
+        {
+          "code": "",
+          "name": "reviewedAt",
+          "isActivated": true,
+          "type": "string",
+          "properties": [],
+          "format": "date-time",
+          "description": "[ADMIN WRITE]",
+          "GUID": "18b1ecd9-12fa-44ac-b587-58e4165efdec"
+        },
+        {
+          "code": "",
+          "name": "reviewNote",
+          "isActivated": true,
+          "type": "string",
+          "properties": [],
+          "description": "[ADMIN WRITE] Approval or rejection message",
+          "GUID": "52777622-a668-4ff9-b11b-1b715d6eb2a0"
+        }
+      ],
+      "definitions": {
+        "type": "definitions",
+        "GUID": "05b2b7d0-4469-449f-be48-930a827d7b2c",
+        "properties": []
+      },
+      "isActivated": true,
+      "additionalProperties": true,
+      "GUID": "d205400d-0f5e-4d26-b12a-42f07fd9b018",
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "description": "User badge claim submissions for MANUAL_IMAGE_REVIEW badges. Admin approves or rejects.",
+      "bucketId": "3dd42660-634e-4480-b1e7-b9e1aa16bee9"
+    }
+  ],
+  "buckets": [
+    {
+      "name": "badge_claims",
+      "type": "bucket",
+      "collectionIds": [
+        "d205400d-0f5e-4d26-b12a-42f07fd9b018"
+      ],
+      "backgroundColor": {
+        "r": 129,
+        "g": 212,
+        "b": 250,
+        "a": 1
+      },
+      "show": true,
+      "isActivated": true,
+      "GUID": "3dd42660-634e-4480-b1e7-b9e1aa16bee9"
+    }
+  ],
+  "views": [],
+  "relationships": [],
+  "users": [],
+  "diagramViews": [],
+  "idToNameHashTable": {
+    "3dd42660-634e-4480-b1e7-b9e1aa16bee9": "badge_claims",
+    "f286e033-f3c4-4957-b55c-5f469910ba79": "id",
+    "ec170ab3-fdba-45a2-a5b8-e4da48d6e51d": "userId",
+    "e2ed6996-8bb9-4a54-8911-489378ba22f0": "badgeId",
+    "5f00dc79-65c2-4bf4-bfee-3c6fe584a53f": "badgeName",
+    "70c3acdf-5a2c-4ae0-bb10-91764bf1d9ed": "imageUrl",
+    "ebee2cc9-e67c-4c80-9a3e-f222599fe4c9": "status",
+    "d51d7c6a-6784-4293-a971-d88d0e8ebf4c": "claimNote",
+    "584cda19-4ac8-4787-a064-a65e7ab174bc": "submittedAt",
+    "18b1ecd9-12fa-44ac-b587-58e4165efdec": "reviewedAt",
+    "52777622-a668-4ff9-b11b-1b715d6eb2a0": "reviewNote",
+    "d205400d-0f5e-4d26-b12a-42f07fd9b018": "badge_claims"
+  },
+  "definitions": {
+    "type": "definitions",
+    "properties": [],
+    "GUID": "a573db75-27eb-4f24-b9a7-19958e788df4"
+  },
+  "polyglotDefinitions": {
+    "type": "polyglotDefinitions",
+    "properties": [],
+    "GUID": "b6f8affa-bb45-4aec-8979-b69f4d717e84"
+  },
+  "externalDefinitions": {
+    "type": "externalDefinitions",
+    "properties": [],
+    "GUID": "1013931a-4b0a-46c6-805b-e3769b540887"
+  },
+  "sources": [],
+  "decorativeSymbols": [],
+  "businessGlossaries": [],
+  "businessGlossaryTerms": [],
+  "dbVendor": "JSON",
+  "dbVersion": "2019-09",
+  "appTarget": "JSON",
+  "creationTS": "2026-06-04T03:33:34.931Z",
+  "GUID": "53213f0a-96ee-46fe-bbd3-76e95590f7f8",
+  "isLineageEnabled": false,
+  "lastModifTS": "2026-06-04T03:34:08.808Z",
+  "persistenceSchemaVersion": "8",
+  "isCreatedByPlugin": true,
+  "pluginInformation": {
+    "pluginEngineVersion": "1.0.0"
+  },
+  "applicationInformation": {
+    "version": "8.11.4"
+  },
+  "settings": {
+    "centralPane": {
+      "dbLevel": {
+        "erd": [
+          {
+            "GUID": "d205400d-0f5e-4d26-b12a-42f07fd9b018",
+            "x": 1064,
+            "y": 1064,
+            "width": 240,
+            "height": 216,
+            "color": {}
+          }
+        ],
+        "erdDefinitions": {
+          "erd": [],
+          "rootPath": [],
+          "entities": [],
+          "decorativeSymbols": []
+        },
+        "buckets": [
+          {
+            "x": 1000,
+            "y": 1000,
+            "GUID": "3dd42660-634e-4480-b1e7-b9e1aa16bee9"
+          }
+        ],
+        "collapsedNodes": [],
+        "activeRelationship": "",
+        "activeRelationshipFields": {
+          "childField": [],
+          "parentField": []
+        },
+        "selectedCollections": [],
+        "displayColorPicker": false,
+        "graphView": {
+          "erd": [],
+          "buckets": [],
+          "decorativeSymbols": [],
+          "forceLayout": true,
+          "defaultLinkLength": 300
+        },
+        "diagramViews": [],
+        "decorativeSymbols": [],
+        "nestedCollectionsLayout": "horizontal",
+        "options": [],
+        "relationshipUpdateDisabled": false
+      },
+      "collectionLevel": {},
+      "changed": false
+    },
+    "dtDiagram": {
+      "collapsedNodes": [],
+      "shouldDistributeCollections": false
+    }
+  }
+}
